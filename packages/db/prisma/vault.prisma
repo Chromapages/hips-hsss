@@ -1,0 +1,48 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/vault"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("VAULT_DATABASE_URL")
+}
+
+enum VaultAccessPurpose {
+  RECORD_CREATE
+  RECORD_READ
+  CRISIS_DISCLOSURE
+  AUDIT_REVIEW
+}
+
+model IdentityRecord {
+  id                         String   @id @default(uuid()) @db.Uuid
+  subjectRef                 String   @unique
+  encryptedRealName          Bytes
+  encryptedEmergencyContact  Bytes
+  encryptedRegion            Bytes
+  encryptedDisclosure        Bytes?
+  encryptedIpAddress         Bytes?
+  encryptedDeviceFingerprint Bytes?
+  ipExpiresAt                DateTime?
+  deviceFingerprintExpiresAt DateTime?
+  createdAt                  DateTime @default(now())
+  updatedAt                  DateTime @updatedAt
+
+  @@index([subjectRef])
+  @@index([ipExpiresAt])
+  @@index([deviceFingerprintExpiresAt])
+}
+
+model VaultAccessLog {
+  id          String             @id @default(uuid()) @db.Uuid
+  subjectRef  String
+  purpose     VaultAccessPurpose
+  actorRef    String
+  requestId   String
+  createdAt   DateTime           @default(now())
+
+  @@index([subjectRef])
+  @@index([purpose])
+  @@index([createdAt])
+}

@@ -1,0 +1,48 @@
+
+> @hips/vault-service@0.1.0 test
+> vitest run
+
+
+[7m[1m[36m RUN [39m[22m[27m [36mv1.6.1[39m [90mD:/WORK/hips-hsss/build/services/vault[39m
+
+ [33m❯[39m src/vault/vault-crypto.service.spec.ts [2m ([22m[2m2 tests[22m [2m|[22m [31m2 failed[39m[2m)[22m[90m 11[2mms[22m[39m
+[31m   [33m❯[31m src/vault/vault-crypto.service.spec.ts[2m > [22mVaultCryptoService[2m > [22mshould be defined[39m
+[31m     → Cannot read properties of undefined (reading 'get')[39m
+[31m   [33m❯[31m src/vault/vault-crypto.service.spec.ts[2m > [22mVaultCryptoService[2m > [22mshould encrypt and decrypt text correctly using mock KMS[39m
+[31m     → Cannot read properties of undefined (reading 'get')[39m
+
+[31m⎯⎯⎯⎯⎯⎯⎯[1m[7m Failed Tests 2 [27m[22m⎯⎯⎯⎯⎯⎯⎯[39m
+
+[31m[1m[7m FAIL [27m[22m[39m src/vault/vault-crypto.service.spec.ts[2m > [22mVaultCryptoService[2m > [22mshould be defined
+[31m[1m[7m FAIL [27m[22m[39m src/vault/vault-crypto.service.spec.ts[2m > [22mVaultCryptoService[2m > [22mshould encrypt and decrypt text correctly using mock KMS
+[31m[1mTypeError[22m: Cannot read properties of undefined (reading 'get')[39m
+[36m [2m❯[22m new VaultCryptoService src/vault/vault-crypto.service.ts:[2m13:34[22m[39m
+    [90m 11| [39m  [34mconstructor[39m([35mprivate[39m configService[33m:[39m [33mConfigService[39m) {
+    [90m 12| [39m    [35mthis[39m[33m.[39mkmsClient [33m=[39m [35mnew[39m [33mKMSClient[39m({
+    [90m 13| [39m      region[33m:[39m [35mthis[39m[33m.[39mconfigService[33m.[39m[35mget[39m[33m<[39mstring[33m>[39m([32m'AWS_REGION'[39m) [33m||[39m [32m'us-east[39m…
+    [90m   | [39m                                 [31m^[39m
+    [90m 14| [39m    })[33m;[39m
+    [90m 15| [39m    [35mthis[39m[33m.[39mkeyId [33m=[39m [35mthis[39m[33m.[39mconfigService[33m.[39m[35mget[39m[33m<[39mstring[33m>[39m([32m'VAULT_KMS_KEY_ID'[39m)[33m;[39m
+[90m [2m❯[22m TestingInjector.instantiateClass ../../node_modules/.pnpm/@nestjs+core@10.4.22_@nestjs+common@10.4.22_reflect-metadata@0.1.14_rxjs@7.8.2__@nestjs+platf_oj4hkzme45iwqrqmzsnyjlvt24/node_modules/@nestjs/core/injector/injector.js:[2m373:19[22m[39m
+[90m [2m❯[22m callback ../../node_modules/.pnpm/@nestjs+core@10.4.22_@nestjs+common@10.4.22_reflect-metadata@0.1.14_rxjs@7.8.2__@nestjs+platf_oj4hkzme45iwqrqmzsnyjlvt24/node_modules/@nestjs/core/injector/injector.js:[2m65:45[22m[39m
+[90m [2m❯[22m TestingInjector.resolveConstructorParams ../../node_modules/.pnpm/@nestjs+core@10.4.22_@nestjs+common@10.4.22_reflect-metadata@0.1.14_rxjs@7.8.2__@nestjs+platf_oj4hkzme45iwqrqmzsnyjlvt24/node_modules/@nestjs/core/injector/injector.js:[2m145:24[22m[39m
+[90m [2m❯[22m TestingInjector.loadInstance ../../node_modules/.pnpm/@nestjs+core@10.4.22_@nestjs+common@10.4.22_reflect-metadata@0.1.14_rxjs@7.8.2__@nestjs+platf_oj4hkzme45iwqrqmzsnyjlvt24/node_modules/@nestjs/core/injector/injector.js:[2m70:13[22m[39m
+[90m [2m❯[22m TestingInjector.loadProvider ../../node_modules/.pnpm/@nestjs+core@10.4.22_@nestjs+common@10.4.22_reflect-metadata@0.1.14_rxjs@7.8.2__@nestjs+platf_oj4hkzme45iwqrqmzsnyjlvt24/node_modules/@nestjs/core/injector/injector.js:[2m98:9[22m[39m
+[90m [2m❯[22m ../../node_modules/.pnpm/@nestjs+core@10.4.22_@nestjs+common@10.4.22_reflect-metadata@0.1.14_rxjs@7.8.2__@nestjs+platf_oj4hkzme45iwqrqmzsnyjlvt24/node_modules/@nestjs/core/injector/instance-loader.js:[2m56:13[22m[39m
+[90m [2m❯[22m TestingInstanceLoader.createInstancesOfProviders ../../node_modules/.pnpm/@nestjs+core@10.4.22_@nestjs+common@10.4.22_reflect-metadata@0.1.14_rxjs@7.8.2__@nestjs+platf_oj4hkzme45iwqrqmzsnyjlvt24/node_modules/@nestjs/core/injector/instance-loader.js:[2m55:9[22m[39m
+[90m [2m❯[22m ../../node_modules/.pnpm/@nestjs+core@10.4.22_@nestjs+common@10.4.22_reflect-metadata@0.1.14_rxjs@7.8.2__@nestjs+platf_oj4hkzme45iwqrqmzsnyjlvt24/node_modules/@nestjs/core/injector/instance-loader.js:[2m40:13[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯[22m[39m
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m2 failed[39m[22m[90m (2)[39m
+[2m   Start at [22m 14:24:55
+[2m   Duration [22m 1.51s[2m (transform 63ms, setup 0ms, collect 982ms, tests 11ms, environment 0ms, prepare 194ms)[22m
+
+npm error Lifecycle script `test` failed with error:
+npm error code 1
+npm error path D:\WORK\hips-hsss\build\services\vault
+npm error workspace @hips/vault-service@0.1.0
+npm error location D:\WORK\hips-hsss\build\services\vault
+npm error command failed
+npm error command C:\WINDOWS\system32\cmd.exe /d /s /c vitest run

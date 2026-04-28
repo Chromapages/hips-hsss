@@ -1,0 +1,8 @@
+{
+  "name": "@hips/db",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "validate:separation": "node ../../scripts/check-data-separation.mjs"
+  }
+}

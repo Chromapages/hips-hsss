@@ -1,0 +1,63 @@
+import { Button } from "@/components/ui/button"
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card"
+
+export default function DonatePage() {
+  return (
+    <main className="min-h-screen bg-black text-white pb-32">
+      <header className="pt-24 pb-16 text-center border-b border-white/5 bg-gray-900/30">
+        <div className="container mx-auto px-6 max-w-3xl">
+          <h1 className="text-4xl md:text-5xl font-bold mb-6">Support the Mission</h1>
+          <p className="text-xl text-gray-400">
+            Your tax-deductible donation funds our scholarship program, enabling individuals in financial distress to access our secure, anonymous support services for free.
+          </p>
+        </div>
+      </header>
+
+      <section className="container mx-auto px-6 max-w-4xl mt-16">
+        <div className="grid md:grid-cols-2 gap-8">
+          {/* Donation Form Area */}
+          <Card className="bg-gray-900 border-gray-800">
+            <CardHeader>
+              <CardTitle className="text-white text-2xl">Make a Contribution</CardTitle>
+              <CardDescription className="text-gray-400">Select a tier or enter a custom amount.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 gap-4 mb-6">
+                <Button variant="outline" className="h-16 text-lg border-gray-700 hover:bg-indigo-600 hover:text-white hover:border-indigo-600">$25</Button>
+                <Button variant="outline" className="h-16 text-lg border-indigo-500 bg-indigo-500/10 text-indigo-400">$50</Button>
+                <Button variant="outline" className="h-16 text-lg border-gray-700 hover:bg-indigo-600 hover:text-white hover:border-indigo-600">$100</Button>
+                <Button variant="outline" className="h-16 text-lg border-gray-700 hover:bg-indigo-600 hover:text-white hover:border-indigo-600">Custom</Button>
+              </div>
+              <Button size="lg" className="w-full h-14 bg-white text-black hover:bg-gray-200 text-lg">
+                Continue to Payment
+              </Button>
+              <p className="text-xs text-center text-gray-500 mt-4">
+                Secure payment processed by Stripe. You will receive an IRS-compliant receipt for your 501(c)(3) contribution.
+              </p>
+            </CardContent>
+          </Card>
+
+          {/* Impact Info */}
+          <div className="flex flex-col justify-center">
+            <h3 className="text-2xl font-bold mb-6">Your Impact</h3>
+            <div className="space-y-6">
+              <div>
+                <h4 className="font-semibold text-indigo-400 mb-2">$50 funds one session</h4>
+                <p className="text-gray-400 text-sm">Provides a full 45-minute peer support session for someone who otherwise couldn&apos;t afford it.</p>
+              </div>
+              <div>
+                <h4 className="font-semibold text-purple-400 mb-2">$200 funds a full program</h4>
+                <p className="text-gray-400 text-sm">Covers a 4-week workshop series for a participant dealing with severe workplace burnout.</p>
+              </div>
+              <div className="pt-6 border-t border-gray-800">
+                <p className="text-sm text-gray-500 italic">
+                  &quot;H.I.P.S. allowed me to get help without risking my security clearance. The scholarship made it possible when I was between jobs. Thank you.&quot;
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  )
+}
