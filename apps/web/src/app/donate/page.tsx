@@ -1,7 +1,49 @@
+"use client";
+
+import { useState } from "react";
 import { Button } from "@/components/ui/button"
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card"
+import { Loader2 } from "lucide-react";
+import { useRouter } from "next/navigation";
+
+const tiers = [
+  { label: "$25", value: 2500, tier: 'SUPPORTER' },
+  { label: "$50", value: 5000, tier: 'BUILDER' },
+  { label: "$100", value: 10000, tier: 'SUSTAINER' },
+  { label: "$500", value: 50000, tier: 'CATALYST' },
+] as const;
 
 export default function DonatePage() {
+  const [selected, setSelected] = useState<(typeof tiers)[number]>(tiers[1]);
+  const [loading, setLoading] = useState(false);
+  const router = useRouter();
+
+  const handleDonate = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch('/api/donations', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          tier: selected.tier,
+          amountCents: selected.value,
+        }),
+      });
+      const data = await res.json();
+      if (data.clientSecret) {
+        // Redirect to checkout with the client secret
+        router.push(`/checkout/donate?secret=${data.clientSecret}`);
+      } else {
+        alert(data.error || 'Failed to initialize donation');
+      }
+    } catch (e) {
+      console.error('Donation initialization failed:', e);
+      alert('An error occurred. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  }
+
   return (
     <main className="min-h-screen bg-black text-white pb-32">
       <header className="pt-24 pb-16 text-center border-b border-white/5 bg-gray-900/30">
@@ -15,7 +57,6 @@ export default function DonatePage() {
 
       <section className="container mx-auto px-6 max-w-4xl mt-16">
         <div className="grid md:grid-cols-2 gap-8">
-          {/* Donation Form Area */}
           <Card className="bg-gray-900 border-gray-800">
             <CardHeader>
               <CardTitle className="text-white text-2xl">Make a Contribution</CardTitle>
@@ -23,13 +64,23 @@ export default function DonatePage() {
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-2 gap-4 mb-6">
-                <Button variant="outline" className="h-16 text-lg border-gray-700 hover:bg-indigo-600 hover:text-white hover:border-indigo-600">$25</Button>
-                <Button variant="outline" className="h-16 text-lg border-indigo-500 bg-indigo-500/10 text-indigo-400">$50</Button>
-                <Button variant="outline" className="h-16 text-lg border-gray-700 hover:bg-indigo-600 hover:text-white hover:border-indigo-600">$100</Button>
-                <Button variant="outline" className="h-16 text-lg border-gray-700 hover:bg-indigo-600 hover:text-white hover:border-indigo-600">Custom</Button>
+                {tiers.map(t => (
+                  <button 
+                    key={t.tier}
+                    className={`h-16 text-lg border rounded-md transition-all ${selected.tier === t.tier ? 'border-indigo-500 bg-indigo-500/10 text-indigo-400' : 'border-gray-700 hover:bg-indigo-600 hover:text-white hover:border-indigo-600'}`}
+                    onClick={() => setSelected(t)}
+                  >
+                    {t.label}
+                  </button>
+                ))}
               </div>
-              <Button size="lg" className="w-full h-14 bg-white text-black hover:bg-gray-200 text-lg">
-                Continue to Payment
+              <Button 
+                size="lg" 
+                className="w-full h-14 bg-white text-black hover:bg-gray-200 text-lg disabled:opacity-50"
+                onClick={handleDonate}
+                disabled={loading}
+              >
+                {loading ? <Loader2 className="animate-spin h-5 w-5" /> : "Continue to Payment"}
               </Button>
               <p className="text-xs text-center text-gray-500 mt-4">
                 Secure payment processed by Stripe. You will receive an IRS-compliant receipt for your 501(c)(3) contribution.
@@ -37,7 +88,6 @@ export default function DonatePage() {
             </CardContent>
           </Card>
 
-          {/* Impact Info */}
           <div className="flex flex-col justify-center">
             <h3 className="text-2xl font-bold mb-6">Your Impact</h3>
             <div className="space-y-6">

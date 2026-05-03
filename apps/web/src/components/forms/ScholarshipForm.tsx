@@ -1,202 +1,278 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
 import { useToast } from "@/components/polish/ToastProvider";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Check, ChevronRight, ChevronLeft } from "lucide-react";
+import { cn } from "@/lib/utils";
 
-type ScholarshipData = {
-  employmentStatus: string;
-  incomeRange: string;
-  serviceType: string;
-  personalStatement: string;
-  referralSource: string;
-  consentAcknowledged: boolean;
-};
+const scholarshipSchema = z.object({
+  employmentStatus: z.enum(["employed", "unemployed", "student", "disabled"], {
+    errorMap: () => ({ message: "Please select your status" }),
+  }),
+  incomeRange: z.string().min(1, "Income estimate is required"),
+  serviceType: z.string().min(1, "Please select a service"),
+  personalStatement: z.string()
+    .min(50, "Statement must be at least 50 characters")
+    .max(500, "Statement must not exceed 500 characters"),
+  referralSource: z.string().min(1, "Please tell us how you heard about us"),
+  consentAcknowledged: z.boolean().refine((value) => value, "You must confirm the accuracy"),
+});
 
-const initial: ScholarshipData = {
-  employmentStatus: "",
-  incomeRange: "",
-  serviceType: "",
-  personalStatement: "",
-  referralSource: "",
-  consentAcknowledged: false,
-};
+type ScholarshipValues = z.infer<typeof scholarshipSchema>;
+
+const STEPS = ["Eligibility", "Details", "Review"];
 
 export function ScholarshipForm() {
-  const [step, setStep] = useState(0);
-  const [loading, setLoading] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
-  const [data, setData] = useState(initial);
+  const [currentStep, setCurrentStep] = useState(0);
+  const [isSubmitted, setIsSubmitted] = useState(false);
   const toast = useToast();
 
-  const valid = useMemo(() => {
-    if (step === 0) {
-      return data.employmentStatus && data.incomeRange && data.serviceType;
-    }
-    if (step === 1) {
-      return data.personalStatement.length >= 50 && data.referralSource;
-    }
-    return data.consentAcknowledged;
-  }, [data, step]);
+  const {
+    register,
+    handleSubmit,
+    trigger,
+    watch,
+    formState: { errors, isSubmitting },
+  } = useForm<ScholarshipValues>({
+    resolver: zodResolver(scholarshipSchema),
+    defaultValues: {
+      incomeRange: "",
+      serviceType: "",
+      personalStatement: "",
+      referralSource: "",
+      consentAcknowledged: false,
+    },
+  });
 
-  if (submitted) {
+  const watchAll = watch();
+
+  const nextStep = async () => {
+    let fieldsToValidate: (keyof ScholarshipValues)[] = [];
+    if (currentStep === 0) {
+      fieldsToValidate = ["employmentStatus", "incomeRange", "serviceType"];
+    } else if (currentStep === 1) {
+      fieldsToValidate = ["personalStatement", "referralSource"];
+    }
+
+    const isValid = await trigger(fieldsToValidate);
+    if (isValid) {
+      setCurrentStep((prev) => Math.min(prev + 1, STEPS.length - 1));
+    }
+  };
+
+  const prevStep = () => {
+    setCurrentStep((prev) => Math.max(prev - 1, 0));
+  };
+
+  const onSubmit = async (values: ScholarshipValues) => {
+    // Simulate API call
+    await new Promise((resolve) => setTimeout(resolve, 1500));
+    console.log("Scholarship Submission:", values);
+    setIsSubmitted(true);
+    toast("success", "Application submitted successfully.");
+  };
+
+  if (isSubmitted) {
     return (
-      <div className="rounded-lg border border-emerald-500/30 bg-emerald-950/30 p-8">
-        <h2 className="text-2xl font-bold text-emerald-100">Application received</h2>
-        <p className="mt-3 text-emerald-100/80">
-          The team will review it within 48 hours and reply with next steps.
+      <div className="rounded-[2.5rem] bg-white/5 border border-white/10 p-12 text-center animate-in fade-in zoom-in-95 duration-500">
+        <div className="mx-auto w-20 h-20 bg-emerald-500/10 border border-emerald-500/20 rounded-full flex items-center justify-center mb-6">
+          <Check className="w-10 h-10 text-emerald-500" />
+        </div>
+        <h2 className="text-3xl font-bold text-white mb-4">Application Received</h2>
+        <p className="text-zinc-400 max-w-sm mx-auto leading-relaxed">
+          Our team will review your request within 48 hours. You will receive an update via your secure dashboard.
         </p>
+        <Button 
+          variant="outline" 
+          className="mt-8 rounded-2xl px-8 h-12"
+          onClick={() => window.location.href = '/dashboard'}
+        >
+          Go to Dashboard
+        </Button>
       </div>
     );
   }
 
   return (
-    <form
-      className="rounded-lg border border-white/10 bg-gray-950 p-6"
-      onSubmit={(event) => {
-        event.preventDefault();
-        setLoading(true);
-        window.setTimeout(() => {
-          setLoading(false);
-          setSubmitted(true);
-          toast("success", "Scholarship application submitted.");
-        }, 500);
-      }}
-    >
-      <div role="list" aria-label="Application steps" className="mb-6 flex gap-2">
-        {(["Eligibility", "Details", "Review"] as const).map((label, index) => (
-          <span
-            role="listitem"
-            aria-current={step === index ? "step" : undefined}
-            className={[
-              "rounded-full border px-3 py-1 text-xs",
-              step === index
-                ? "border-indigo-500 bg-indigo-500/15 text-indigo-200"
-                : "border-white/10 text-gray-400",
-            ].join(" ")}
-            key={label}
-          >
-            {label}
-          </span>
+    <div className="w-full max-w-2xl mx-auto">
+      {/* Progress Indicator */}
+      <div className="flex justify-between mb-12 relative">
+        <div className="absolute top-1/2 left-0 w-full h-[1px] bg-white/5 -translate-y-1/2 z-0" />
+        {STEPS.map((label, index) => (
+          <div key={label} className="relative z-10 flex flex-col items-center gap-3">
+            <div 
+              className={cn(
+                "w-10 h-10 rounded-full flex items-center justify-center border transition-all duration-300",
+                currentStep === index 
+                  ? "bg-indigo-600 border-indigo-500 shadow-[0_0_20px_rgba(99,102,241,0.3)]" 
+                  : currentStep > index
+                    ? "bg-emerald-500/20 border-emerald-500/50"
+                    : "bg-black border-white/10"
+              )}
+            >
+              {currentStep > index ? (
+                <Check className="w-5 h-5 text-emerald-400" />
+              ) : (
+                <span className={cn("text-sm font-bold", currentStep === index ? "text-white" : "text-zinc-500")}>
+                  {index + 1}
+                </span>
+              )}
+            </div>
+            <span className={cn(
+              "text-[10px] uppercase tracking-widest font-bold",
+              currentStep === index ? "text-indigo-400" : "text-zinc-600"
+            )}>
+              {label}
+            </span>
+          </div>
         ))}
       </div>
 
-      {step === 0 ? (
-        <div className="grid gap-5">
-          <label className="grid gap-2">
-            <span>Current employment status</span>
-            <select
-              className="min-h-11 rounded-md border border-white/10 bg-black px-3"
-              onChange={(event) => setData({ ...data, employmentStatus: event.target.value })}
-              value={data.employmentStatus}
-            >
-              <option value="">Select one</option>
-              <option value="employed">Employed</option>
-              <option value="unemployed">Unemployed</option>
-              <option value="student">Student</option>
-              <option value="disabled">Disabled</option>
-            </select>
-          </label>
-          <label className="grid gap-2">
-            <span>Monthly income estimate</span>
-            <input
-              className="min-h-11 rounded-md border border-white/10 bg-black px-3"
-              onChange={(event) => setData({ ...data, incomeRange: event.target.value })}
-              value={data.incomeRange}
-            />
-          </label>
-          <label className="grid gap-2">
-            <span>Service type</span>
-            <select
-              className="min-h-11 rounded-md border border-white/10 bg-black px-3"
-              onChange={(event) => setData({ ...data, serviceType: event.target.value })}
-              value={data.serviceType}
-            >
-              <option value="">Select one</option>
-              <option value="peer-support">Peer support</option>
-              <option value="support-navigation">Support navigation</option>
-              <option value="group-coaching">Group coaching</option>
-            </select>
-          </label>
-        </div>
-      ) : null}
-
-      {step === 1 ? (
-        <div className="grid gap-5">
-          <label className="grid gap-2">
-            <span>Personal statement</span>
-            <textarea
-              className="min-h-40 rounded-md border border-white/10 bg-black p-3"
-              maxLength={500}
-              onChange={(event) => setData({ ...data, personalStatement: event.target.value })}
-              value={data.personalStatement}
-            />
-            <span className="text-sm text-gray-400">{data.personalStatement.length}/500</span>
-          </label>
-          <label className="grid gap-2">
-            <span>How did you hear about us?</span>
-            <input
-              className="min-h-11 rounded-md border border-white/10 bg-black px-3"
-              onChange={(event) => setData({ ...data, referralSource: event.target.value })}
-              value={data.referralSource}
-            />
-          </label>
-        </div>
-      ) : null}
-
-      {step === 2 ? (
-        <div className="grid gap-4 text-sm text-gray-300">
-          {([
-            { key: 'employmentStatus', label: 'Employment Status' },
-            { key: 'incomeRange',       label: 'Monthly Income' },
-            { key: 'serviceType',       label: 'Service Type' },
-            { key: 'personalStatement', label: 'Personal Statement' },
-            { key: 'referralSource',    label: 'Referral Source' },
-          ] as const).map(({ key, label }) => (
-            <div className="flex justify-between gap-4 border-b border-white/10 pb-2" key={key}>
-              <span className="text-gray-500">{label}</span>
-              <span className="text-right max-w-[60%] truncate">{String(data[key])}</span>
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-8 bg-white/5 border border-white/10 rounded-[2.5rem] p-8 backdrop-blur-xl">
+        {currentStep === 0 && (
+          <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500">
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-zinc-300 ml-1">Employment Status</label>
+              <select 
+                {...register("employmentStatus")}
+                className="w-full h-12 rounded-2xl border border-white/5 bg-white/5 px-4 text-sm text-white focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500/50 outline-none transition-all appearance-none"
+              >
+                <option value="" className="bg-zinc-900">Select your status</option>
+                <option value="employed" className="bg-zinc-900">Employed</option>
+                <option value="unemployed" className="bg-zinc-900">Unemployed</option>
+                <option value="student" className="bg-zinc-900">Student</option>
+                <option value="disabled" className="bg-zinc-900">Disabled</option>
+              </select>
+              {errors.employmentStatus && <p className="text-xs text-red-500 ml-1">{errors.employmentStatus.message}</p>}
             </div>
-          ))}
-          <label className="flex gap-3">
-            <input
-              checked={data.consentAcknowledged}
-              className="mt-1 h-4 w-4 accent-indigo-500"
-              onChange={(event) => setData({ ...data, consentAcknowledged: event.target.checked })}
-              type="checkbox"
-            />
-            <span>I confirm this request is accurate.</span>
-          </label>
-        </div>
-      ) : null}
 
-      <div className="mt-8 flex justify-between gap-3">
-        <button
-          className="min-h-11 rounded-md border border-white/10 px-4 text-sm font-semibold transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-50"
-          disabled={step === 0}
-          onClick={() => setStep((value) => Math.max(0, value - 1))}
-          type="button"
-        >
-          Back
-        </button>
-        {step < 2 ? (
-          <button
-            className="min-h-11 rounded-md bg-indigo-500 px-4 text-sm font-semibold transition hover:bg-indigo-400 disabled:cursor-not-allowed disabled:opacity-50"
-            disabled={!valid}
-            onClick={() => setStep((value) => value + 1)}
-            type="button"
-          >
-            Continue
-          </button>
-        ) : (
-          <button
-            className="min-h-11 rounded-md bg-indigo-500 px-4 text-sm font-semibold transition hover:bg-indigo-400 disabled:cursor-not-allowed disabled:opacity-50"
-            disabled={!valid || loading}
-            type="submit"
-          >
-            {loading ? "Submitting..." : "Submit application"}
-          </button>
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-zinc-300 ml-1">Monthly Income Estimate</label>
+              <Input 
+                placeholder="e.g. $2,500"
+                {...register("incomeRange")}
+              />
+              {errors.incomeRange && <p className="text-xs text-red-500 ml-1">{errors.incomeRange.message}</p>}
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-zinc-300 ml-1">Desired Service</label>
+              <select 
+                {...register("serviceType")}
+                className="w-full h-12 rounded-2xl border border-white/5 bg-white/5 px-4 text-sm text-white focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500/50 outline-none transition-all appearance-none"
+              >
+                <option value="" className="bg-zinc-900">Select a service</option>
+                <option value="peer-support" className="bg-zinc-900">1:1 Peer Support</option>
+                <option value="group-coaching" className="bg-zinc-900">Group Coaching</option>
+                <option value="care-navigation" className="bg-zinc-900">Care Navigation</option>
+              </select>
+              {errors.serviceType && <p className="text-xs text-red-500 ml-1">{errors.serviceType.message}</p>}
+            </div>
+          </div>
         )}
-      </div>
-    </form>
+
+        {currentStep === 1 && (
+          <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500">
+            <div className="space-y-2">
+              <div className="flex justify-between items-center ml-1">
+                <label className="text-sm font-medium text-zinc-300">Personal Statement</label>
+                <span className={cn(
+                  "text-[10px] font-bold uppercase tracking-tighter",
+                  watchAll.personalStatement.length >= 50 ? "text-emerald-500" : "text-zinc-500"
+                )}>
+                  {watchAll.personalStatement.length}/500
+                </span>
+              </div>
+              <Textarea 
+                placeholder="Briefly describe why you are seeking support access..."
+                className="min-h-[160px]"
+                {...register("personalStatement")}
+              />
+              <p className="text-[10px] text-zinc-500 ml-1">Min 50 characters required for review.</p>
+              {errors.personalStatement && <p className="text-xs text-red-500 ml-1">{errors.personalStatement.message}</p>}
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-zinc-300 ml-1">How did you hear about us?</label>
+              <Input 
+                placeholder="e.g. Social media, Friend, Healthcare provider"
+                {...register("referralSource")}
+              />
+              {errors.referralSource && <p className="text-xs text-red-500 ml-1">{errors.referralSource.message}</p>}
+            </div>
+          </div>
+        )}
+
+        {currentStep === 2 && (
+          <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500">
+            <div className="rounded-2xl bg-black/40 border border-white/5 divide-y divide-white/5 overflow-hidden">
+              {[
+                { label: "Status", value: watchAll.employmentStatus },
+                { label: "Income", value: watchAll.incomeRange },
+                { label: "Service", value: watchAll.serviceType },
+              ].map((item) => (
+                <div key={item.label} className="flex justify-between px-5 py-4 text-sm">
+                  <span className="text-zinc-500">{item.label}</span>
+                  <span className="text-zinc-200 font-medium capitalize">{item.value}</span>
+                </div>
+              ))}
+            </div>
+
+            <div className="space-y-3 px-1">
+              <label className="flex gap-3 cursor-pointer group">
+                <input 
+                  type="checkbox" 
+                  className="mt-1 h-4 w-4 rounded border-zinc-800 bg-zinc-950 text-indigo-600 focus:ring-indigo-500 focus:ring-offset-black"
+                  {...register("consentAcknowledged")}
+                />
+                <span className="text-xs text-zinc-400 leading-relaxed group-hover:text-zinc-300 transition-colors">
+                  I confirm that the information provided is accurate and that I am requesting access support in good faith.
+                </span>
+              </label>
+              {errors.consentAcknowledged && <p className="text-xs text-red-500 ml-7">{errors.consentAcknowledged.message}</p>}
+            </div>
+          </div>
+        )}
+
+        {/* Form Actions */}
+        <div className="flex gap-4 pt-4">
+          {currentStep > 0 && (
+            <Button 
+              type="button" 
+              variant="secondary" 
+              onClick={prevStep}
+              className="flex-1 h-12 rounded-2xl"
+            >
+              <ChevronLeft className="w-4 h-4 mr-2" />
+              Back
+            </Button>
+          )}
+          {currentStep < STEPS.length - 1 ? (
+            <Button 
+              type="button" 
+              onClick={nextStep}
+              className="flex-1 h-12 rounded-2xl bg-indigo-600 hover:bg-indigo-500 shadow-lg shadow-indigo-900/20"
+            >
+              Continue
+              <ChevronRight className="w-4 h-4 ml-2" />
+            </Button>
+          ) : (
+            <Button 
+              type="submit" 
+              isLoading={isSubmitting}
+              className="flex-1 h-12 rounded-2xl bg-indigo-600 hover:bg-indigo-500 shadow-lg shadow-indigo-900/20"
+            >
+              Submit Application
+            </Button>
+          )}
+        </div>
+      </form>
+    </div>
   );
 }

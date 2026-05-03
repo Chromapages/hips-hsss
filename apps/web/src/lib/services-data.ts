@@ -7,6 +7,7 @@ export interface Service {
   description: string;
   price: string;
   duration: string;
+  category: "coaching" | "peer-support" | "workshop";
   icon: LucideIcon;
   longDescription: string;
 }
@@ -20,6 +21,7 @@ export const SERVICES_CATALOG: Service[] = [
     longDescription: "This session provides a confidential space to discuss your challenges with a trained peer support specialist. Whether you are dealing with workplace stress, relationship issues, or daily stress, our specialists are here to listen and guide you.",
     price: "$50",
     duration: "45 min",
+    category: "peer-support",
     icon: User,
   },
   {
@@ -30,6 +32,7 @@ export const SERVICES_CATALOG: Service[] = [
     longDescription: "Our group sessions offer a collaborative environment where you can learn from others facing similar challenges. Facilitated by certified coaches, these sessions focus on evidence-based stress reduction techniques.",
     price: "$30",
     duration: "60 min",
+    category: "coaching",
     icon: Users,
   },
   {
@@ -40,6 +43,7 @@ export const SERVICES_CATALOG: Service[] = [
     longDescription: "Navigating a career change can be isolating. This workshop provides professional guidance and peer support for those looking to transition roles or industries anonymously.",
     price: "$75",
     duration: "90 min",
+    category: "workshop",
     icon: Clock,
   }
 ]

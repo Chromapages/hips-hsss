@@ -3,8 +3,7 @@
 import SessionRoom from '@/components/session/SessionRoom';
 
 export default function TestSessionPage() {
-  // A hardcoded room name for testing purposes
-  const testRoomName = 'prototype-demo-room';
+  const testSessionId = 'prototype-demo-room';
 
   return (
     <main className="min-h-screen bg-black">
@@ -14,7 +13,7 @@ export default function TestSessionPage() {
       </div>
       
       <div className="h-[calc(100vh-68px)]">
-        <SessionRoom roomName={testRoomName} />
+        <SessionRoom sessionId={testSessionId} />
       </div>
     </main>
   );

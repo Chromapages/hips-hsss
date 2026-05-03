@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { ToastProvider } from "@/components/polish/ToastProvider";
+import { AuthProvider } from "@/components/auth/AuthProvider";
 import { GlobalDisclaimerBanner } from "@/components/polish/GlobalDisclaimerBanner";
 import "./globals.css";
 
@@ -31,10 +32,12 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <body className="min-h-full flex flex-col" suppressHydrationWarning>
-        <ToastProvider>
-          <GlobalDisclaimerBanner />
-          {children}
-        </ToastProvider>
+        <AuthProvider>
+          <ToastProvider>
+            <GlobalDisclaimerBanner />
+            {children}
+          </ToastProvider>
+        </AuthProvider>
       </body>
     </html>
   );

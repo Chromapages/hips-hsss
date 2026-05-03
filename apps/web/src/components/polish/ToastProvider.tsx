@@ -14,10 +14,12 @@ export function ToastProvider({ children }: { children: ReactNode }) {
         position="top-right" 
         toastOptions={{
           style: {
-            background: 'rgba(3, 7, 18, 0.8)',
-            backdropFilter: 'blur(12px)',
-            border: '1px solid rgba(255, 255, 255, 0.1)',
-            color: 'white'
+            background: '#000000',
+            backdropFilter: 'blur(20px)',
+            border: '1px solid rgba(255, 255, 255, 0.08)',
+            color: 'white',
+            borderRadius: '16px',
+            fontSize: '13px'
           }
         }} 
       />

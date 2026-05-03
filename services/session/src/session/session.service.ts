@@ -1,15 +1,11 @@
-import { Injectable, UnauthorizedException, OnModuleInit } from '@nestjs/common';
+import { Injectable, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import * as admin from 'firebase-admin';
-import * as crypto from 'node:crypto';
+import { LiveKitTokenService } from '../livekit-token-service.js';
 import { PrismaService } from '../prisma.service.js';
 
 @Injectable()
 export class SessionService implements OnModuleInit {
-  private firebaseApp!: admin.app.App;
-  // In-memory token store: Map<opaqueToken, { sessionId, role, expiresAt }>
-  // TODO: Move to Redis for production
-  private tokenStore = new Map<string, { sessionId: string; role: string; expiresAt: number }>();
+  private livekitService!: LiveKitTokenService;
 
   constructor(
     private configService: ConfigService,
@@ -17,62 +13,42 @@ export class SessionService implements OnModuleInit {
   ) {}
 
   onModuleInit() {
-    const projectId = this.configService.get<string>('FIREBASE_PROJECT_ID');
-    const clientEmail = this.configService.get<string>('FIREBASE_CLIENT_EMAIL');
-    const privateKey = this.configService.get<string>('FIREBASE_PRIVATE_KEY')?.replace(/\\n/g, '\n');
+    const apiKey = this.configService.get<string>('LIVEKIT_API_KEY');
+    const apiSecret = this.configService.get<string>('LIVEKIT_API_SECRET');
 
-    if (!projectId || !clientEmail || !privateKey) {
-      console.warn('Firebase Admin credentials missing. Auth verification will fail.');
+    if (!apiKey || !apiSecret) {
+      console.warn('LiveKit credentials missing. Token issuance will fail.');
       return;
     }
 
-    this.firebaseApp = admin.initializeApp({
-      credential: admin.credential.cert({ projectId, clientEmail, privateKey }),
-    }, 'session-service');
-  }
-
-  async issueSessionToken(sessionId: string, firebaseToken: string) {
-    try {
-      // 1. Verify Firebase ID Token
-      const decodedToken = await admin.auth(this.firebaseApp).verifyIdToken(firebaseToken);
-      const role = decodedToken.role || 'PARTICIPANT';
-
-      // 2. Rate Limit Check (Optional but recommended)
-      // TODO: Implement simple rate limiting before token issuance
-
-      // 3. Generate 32-byte Opaque Token
-      const opaqueToken = crypto.randomBytes(32).toString('hex');
-
-      // 4. Store Token Mapping (In-Memory Only)
-      // Notice: We store 'role' but NOT the 'uid'. The Session Engine only knows the role.
-      const expiresAt = Date.now() + 1000 * 60 * 60; // 1 hour expiry
-      this.tokenStore.set(opaqueToken, { sessionId, role, expiresAt });
-
-      // 5. Log activity without linking (Safety Engine requirement)
-      console.log(`[SessionService] Issued opaque token for session ${sessionId}. Identity linkage discarded.`);
-
-      return {
-        sessionToken: opaqueToken,
-        expiresIn: 3600,
-      };
-    } catch (error) {
-      console.error('Firebase token verification failed:', error);
-      throw new UnauthorizedException('Invalid authentication');
-    }
+    this.livekitService = new LiveKitTokenService({
+      apiKey,
+      apiSecret,
+      durationSeconds: 3600 * 2, // 2 hours
+    });
   }
 
   /**
-   * Used by the Session Engine (WebRTC/Socket) to validate a connection
+   * Issues a LiveKit token using an opaque session reference.
+   * This is the final step in the Hard Anonymity Bridge.
    */
-  validateToken(token: string) {
-    const sessionData = this.tokenStore.get(token);
-    
-    if (!sessionData) return null;
-    if (Date.now() > sessionData.expiresAt) {
-      this.tokenStore.delete(token);
-      return null;
+  async issueLiveKitToken(sessionRef: string) {
+    // 1. Verify that the sessionRef exists in our database
+    const session = await this.prisma.session.findUnique({
+      where: { sessionTokenRef: sessionRef },
+    });
+
+    if (!session) {
+      throw new Error('Invalid session reference');
     }
 
-    return sessionData;
+    // 2. Issue the LiveKit token
+    // We use the session.id (UUID) as the room identifier.
+    // The participant identity is randomized within the livekitService.
+    const tokenData = this.livekitService.issue(session.id);
+
+    console.log(`[SessionService] Issued LiveKit token for sessionRef ${sessionRef}. No user identity linkage.`);
+
+    return tokenData;
   }
 }

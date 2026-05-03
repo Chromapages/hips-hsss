@@ -1,24 +1,17 @@
-import { Controller, Post, Body, Headers, UnauthorizedException } from '@nestjs/common';
+import { Controller, Post, UseGuards, Req } from '@nestjs/common';
 import { SessionService } from './session.service.js';
+import { SessionGuard } from './session.guard.js';
 
 @Controller('sessions')
 export class SessionController {
   constructor(private sessionService: SessionService) {}
 
-  @Post('token')
-  async issueToken(
-    @Body('sessionId') sessionId: string,
-    @Headers('authorization') authHeader: string
-  ) {
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      throw new UnauthorizedException('Missing or invalid authorization header');
-    }
-
-    const firebaseToken = authHeader.split('Bearer ')[1];
-    if (!firebaseToken) {
-      throw new UnauthorizedException('Invalid token format');
-    }
-    
-    return this.sessionService.issueSessionToken(sessionId, firebaseToken);
+  @Post('livekit-token')
+  @UseGuards(SessionGuard)
+  async getLiveKitToken(@Req() req: any) {
+    const sessionRef = req['sessionRef'];
+    // The SessionGuard has already verified the token and extracted the sessionRef.
+    // We now issue a LiveKit token for this session reference.
+    return this.sessionService.issueLiveKitToken(sessionRef);
   }
 }

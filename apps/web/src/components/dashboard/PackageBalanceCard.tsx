@@ -1,46 +1,50 @@
 "use client";
 
-import { AlertTriangle } from "lucide-react";
-import { useEffect, useState } from "react";
-import { Skeleton } from "@/components/ui/skeleton";
+import Link from "next/link";
 
-export function PackageBalanceCard() {
-  const [ready, setReady] = useState(false);
-  const used = 3;
-  const total = 5;
-  const expiresAt = "2026-07-01";
-  const percent = Math.round((used / total) * 100);
+type PackageBalance = {
+  id: string;
+  service: string;
+  remaining: number;
+  total: number;
+};
 
-  useEffect(() => {
-    const timer = window.setTimeout(() => setReady(true), 250);
-    return () => window.clearTimeout(timer);
-  }, []);
-
-  if (!ready) {
-    return <Skeleton className="h-52 rounded-lg" />;
-  }
+export function PackageBalanceCard({ packages = [] }: { packages?: PackageBalance[] }) {
+  if (packages.length === 0) return null;
 
   return (
-    <article className="rounded-lg border border-white/10 bg-gray-950 p-6">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <p className="text-sm text-gray-400">Package balance</p>
-          <h2 className="mt-2 text-3xl font-bold">
-            {total - used} of {total} left
-          </h2>
+    <div className="space-y-4">
+      <h3 className="text-xl font-bold px-1">Active Packages</h3>
+      {packages.map((pkg) => {
+        const progress = pkg.total > 0 ? (pkg.remaining / pkg.total) * 100 : 0;
+
+        return (
+          <article key={pkg.id} className="rounded-xl border border-white/10 bg-indigo-500/5 p-6 backdrop-blur-sm">
+            <div className="flex items-center justify-between mb-4">
+              <h4 className="font-bold text-white">{pkg.service}</h4>
+              <div className="rounded-full bg-indigo-500/20 px-3 py-1 text-xs font-medium text-indigo-300">
+                {pkg.remaining} left
+              </div>
+            </div>
+            <div className="h-2 rounded-full bg-white/5">
+              <div
+                className="h-full rounded-full bg-indigo-500 transition-all duration-500"
+                style={{ width: `${progress}%` }}
+              />
+            </div>
+            <p className="mt-3 text-xs text-gray-500">{pkg.remaining} sessions remaining of {pkg.total} pack</p>
+          </article>
+        );
+      })}
+      <Link 
+        href="/services"
+        className="flex items-center justify-center gap-2 w-full py-4 rounded-xl border border-dashed border-white/20 text-zinc-500 hover:border-indigo-500/50 hover:text-indigo-400 transition-all group"
+      >
+        <span className="text-sm font-bold">Purchase More Sessions</span>
+        <div className="w-5 h-5 rounded-full bg-white/5 flex items-center justify-center group-hover:bg-indigo-500/20 transition-all">
+          <span className="text-lg">+</span>
         </div>
-        <span className="inline-flex items-center gap-2 rounded-full border border-amber-400/30 bg-amber-400/10 px-3 py-1 text-xs text-amber-200">
-          <AlertTriangle className="h-4 w-4" />
-          Expires soon
-        </span>
-      </div>
-      <progress
-        aria-label="Package usage"
-        className="mt-6 h-3 w-full overflow-hidden rounded-full [&::-webkit-progress-bar]:bg-white/10 [&::-webkit-progress-value]:bg-indigo-500"
-        max={100}
-        value={percent}
-      />
-      <p className="mt-3 text-sm text-gray-400">Expires {expiresAt}</p>
-    </article>
+      </Link>
+    </div>
   );
 }

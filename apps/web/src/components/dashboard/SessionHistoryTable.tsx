@@ -3,30 +3,31 @@
 import { CalendarX2 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { EmptyState } from "@/components/ui/empty-state";
-
-const rows = Array.from({ length: 10 }, (_, index) => ({
-  id: `anon-${(index + 1032).toString(16)}`,
-  service: index % 2 === 0 ? "Peer support" : "Support navigation",
-  date: `May ${10 + index}, 2026`,
-  status: index < 2 ? "UPCOMING" : index === 7 ? "CANCELLED" : "COMPLETED",
-  duration: index < 2 ? "45 min scheduled" : "45 min",
-}));
+import { format } from "date-fns";
 
 const badgeClass = {
   UPCOMING: "bg-indigo-500/15 text-indigo-200 border-indigo-500/30",
   COMPLETED: "bg-emerald-500/15 text-emerald-200 border-emerald-500/30",
   CANCELLED: "bg-gray-500/15 text-gray-300 border-gray-500/30",
+  SCHEDULED: "bg-indigo-500/15 text-indigo-200 border-indigo-500/30",
 } as const;
 
-export function SessionHistoryTable() {
+type SessionHistoryRow = {
+  id: string;
+  service: string;
+  date: string | null;
+  status?: keyof typeof badgeClass | string;
+};
+
+export function SessionHistoryTable({ sessions = [] }: { sessions?: SessionHistoryRow[] }) {
   const [page, setPage] = useState(0);
   const pageSize = 5;
   const visible = useMemo(
-    () => rows.slice(page * pageSize, page * pageSize + pageSize),
-    [page],
+    () => sessions.slice(page * pageSize, page * pageSize + pageSize),
+    [page, sessions],
   );
 
-  if (rows.length === 0) {
+  if (sessions.length === 0) {
     return (
       <EmptyState
         icon={CalendarX2}
@@ -55,22 +56,24 @@ export function SessionHistoryTable() {
             <tr className="border-t border-white/10" key={row.id}>
               <td className="px-4 py-4 font-mono text-gray-300">{row.id}</td>
               <td className="px-4 py-4 text-white">{row.service}</td>
-              <td className="px-4 py-4 text-gray-300">{row.date}</td>
+              <td className="px-4 py-4 text-gray-300">
+                {row.date ? format(new Date(row.date), 'MMM d, yyyy') : 'Pending'}
+              </td>
               <td className="px-4 py-4">
                 <span
-                  className={`rounded-full border px-2.5 py-1 text-xs ${badgeClass[row.status as keyof typeof badgeClass]}`}
+                  className={`rounded-full border px-2.5 py-1 text-xs ${badgeClass[row.status as keyof typeof badgeClass] || badgeClass.COMPLETED}`}
                 >
                   {row.status}
                 </span>
               </td>
-              <td className="px-4 py-4 text-gray-300">{row.duration}</td>
+              <td className="px-4 py-4 text-gray-300">60 min</td>
             </tr>
           ))}
         </tbody>
       </table>
       <div className="flex items-center justify-between border-t border-white/10 px-4 py-3 text-sm text-gray-400">
         <span>
-          Page {page + 1} of {Math.ceil(rows.length / pageSize)}
+          Page {page + 1} of {Math.ceil(sessions.length / pageSize)}
         </span>
         <div className="flex gap-2">
           <button
@@ -83,7 +86,7 @@ export function SessionHistoryTable() {
           </button>
           <button
             className="min-h-11 rounded-md border border-white/10 px-3 transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-50"
-            disabled={(page + 1) * pageSize >= rows.length}
+            disabled={(page + 1) * pageSize >= sessions.length}
             onClick={() => setPage((value) => value + 1)}
             type="button"
           >

@@ -1,6 +1,4 @@
-import { SessionExperience } from "@/components/SessionExperience";
-import { AvatarSelectorModal } from "@/components/session-ui/AvatarSelectorModal";
-import { VoiceControlsBar } from "@/components/session-ui/VoiceControlsBar";
+import SessionRoom from "@/components/session/SessionRoom";
 
 export default async function SessionPage({
   params,
@@ -8,11 +6,6 @@ export default async function SessionPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  return (
-    <>
-      <SessionExperience sessionId={id} />
-      <AvatarSelectorModal />
-      <VoiceControlsBar />
-    </>
-  );
+
+  return <SessionRoom sessionId={id} />;
 }

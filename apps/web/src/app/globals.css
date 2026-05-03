@@ -1,31 +1,25 @@
 @import "tailwindcss";
 
 :root {
-  --background: var(--color-neutral-50);
-  --foreground: var(--color-neutral-900);
-  --color-brand-primary: #2D5A8E;
-  --color-brand-secondary: #4A8FA8;
-  --color-brand-accent: #7BC4C4;
-  --color-brand-warm: #E8D5B7;
+  --background: #000000;
+  --foreground: #FFFFFF;
+  --color-brand-primary: #6366F1;
+  --color-brand-secondary: #9333EA;
+  --color-brand-accent: #10B981;
+  --color-brand-warm: #FBBF24;
   --color-brand-deep: #1A3A5C;
-  --color-neutral-50: #F9FAFB;
-  --color-neutral-100: #F3F4F6;
-  --color-neutral-200: #E5E7EB;
-  --color-neutral-400: #9CA3AF;
-  --color-neutral-600: #4B5563;
-  --color-neutral-900: #111827;
-  --color-success: #059669;
-  --color-warning: #D97706;
-  --color-error: #DC2626;
+  
+  /* Semantic */
+  --color-success: #10B981;
+  --color-warning: #FBBF24;
+  --color-error: #EF4444;
   --color-crisis: #7F1D1D;
-  --color-info: #2563EB;
-  --session-bg: #0D1B2A;
-  --session-floor: #1E2D3D;
-  --session-wall: #243447;
-  --session-ambient: #4A7FA5;
-  --session-avatar-ring: #7BC4C4;
-  --session-muted-overlay: rgb(0 0 0 / 45%);
-  --session-controls-bg: rgb(13 27 42 / 85%);
+  --color-info: #6366F1;
+
+  /* Glassmorphism */
+  --glass-bg: rgba(255, 255, 255, 0.03);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-blur: 16px;
 }
 
 @theme inline {

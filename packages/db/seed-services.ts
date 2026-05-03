@@ -29,7 +29,7 @@ export const seedServices: SeedService[] = [
   {
     slug: "care-navigation",
     name: "Care navigation",
-    category: "CARE_NAVIGATION",
+    category: "SUPPORT_NAVIGATION",
     priceCents: 5000,
     scholarshipMinCents: 0,
     scholarshipMaxCents: 5000,

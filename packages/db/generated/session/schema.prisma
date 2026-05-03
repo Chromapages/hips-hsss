@@ -1,0 +1,67 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/session"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("SESSION_DATABASE_URL")
+}
+
+enum LiveSessionStatus {
+  PENDING
+  ACTIVE
+  ENDED
+  EXPIRED
+}
+
+enum AuditEventType {
+  TOKEN_ISSUED
+  TOKEN_VALIDATED
+  ROOM_JOINED
+  ROOM_LEFT
+  SAFETY_FLAGGED
+  SAFETY_MITIGATION
+  SESSION_ENDED
+}
+
+model SessionRecord {
+  id                     String            @id @default(uuid()) @db.Uuid
+  sessionId              String            @unique
+  anonymousParticipantId String
+  status                 LiveSessionStatus @default(PENDING)
+  startsAt               DateTime
+  endsAt                 DateTime
+  createdAt              DateTime          @default(now())
+  updatedAt              DateTime          @updatedAt
+
+  @@index([anonymousParticipantId])
+  @@index([status])
+  @@index([startsAt])
+}
+
+model GroupSessionRecord {
+  id              String            @id @default(uuid()) @db.Uuid
+  roomId          String            @unique
+  moderatorAnonId String
+  status          LiveSessionStatus @default(PENDING)
+  startsAt        DateTime
+  endsAt          DateTime
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  @@index([moderatorAnonId])
+  @@index([status])
+}
+
+model AuditEvent {
+  id        String         @id @default(uuid()) @db.Uuid
+  eventType AuditEventType
+  subjectId String
+  metadata  Json
+  createdAt DateTime       @default(now())
+
+  @@index([eventType])
+  @@index([subjectId])
+  @@index([createdAt])
+}

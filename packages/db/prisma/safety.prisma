@@ -1,6 +1,6 @@
 generator client {
   provider = "prisma-client-js"
-  output   = "../node_modules/@prisma/client/safety"
+  output   = "../generated/safety"
 }
 
 datasource db {
@@ -17,6 +17,30 @@ model SafetyAlert {
   transcriptChunk  String?  @db.Text
   isResolved       Boolean  @default(false)
   createdAt        DateTime @default(now())
+  
+  mitigations      SafetyMitigation[]
+}
+
+model SafetyMitigation {
+  id        String   @id @default(uuid()) @db.Uuid
+  alertId   String   @db.Uuid
+  action    String   // WARNING, MUTE, KICK, ESCALATE
+  success   Boolean
+  metadata  Json?
+  createdAt DateTime @default(now())
+
+  alert     SafetyAlert @relation(fields: [alertId], references: [id])
+}
+
+model SafetyStrike {
+  id            String   @id @default(uuid()) @db.Uuid
+  sessionId     String
+  participantId String
+  count         Int      @default(1)
+  lastStrikeAt  DateTime @default(now())
+  createdAt     DateTime @default(now())
+
+  @@unique([sessionId, participantId])
 }
 
 model SafetyAuditLog {
