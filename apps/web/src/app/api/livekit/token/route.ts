@@ -41,7 +41,7 @@ export async function POST(req: NextRequest) {
 
     const body = await req.json().catch(() => ({}));
     const roomName = body.sessionId || 'general-sanctuary';
-    const anonymousIdentity = `anon-${crypto.randomUUID().split('-')[0]}`;
+    const anonymousIdentity = `anon-${crypto.randomUUID()}`;
     const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour from now
 
     console.log(`[LiveKitAPI] Issuing token for room: ${roomName}, identity: ${anonymousIdentity}`);

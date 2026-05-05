@@ -3,7 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { jwtVerify } from 'jose';
 
 @Injectable()
-export class SessionGuard implements CanActivate {
+export class ServiceAuthGuard implements CanActivate {
   private readonly secret: Uint8Array;
 
   constructor(private configService: ConfigService) {
@@ -19,20 +19,17 @@ export class SessionGuard implements CanActivate {
     const authHeader = request.headers.get('authorization');
 
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      throw new UnauthorizedException('Missing or invalid session token');
+      throw new UnauthorizedException('Missing or invalid service token');
     }
 
     const token = authHeader.split(' ')[1];
 
     try {
       const { payload } = await jwtVerify(token, this.secret);
-      
-      // Inject the session reference into the request for use in controllers
-      request['sessionRef'] = payload.ref;
-      
+      request['serviceRef'] = payload.ref;
       return true;
     } catch (err) {
-      throw new UnauthorizedException('Invalid or expired session token');
+      throw new UnauthorizedException('Invalid or expired service token');
     }
   }
 }

@@ -17,8 +17,9 @@ model SafetyAlert {
   transcriptChunk  String?  @db.Text
   isResolved       Boolean  @default(false)
   createdAt        DateTime @default(now())
-  
+
   mitigations      SafetyMitigation[]
+  escalations      EscalationQueue[]
 }
 
 model SafetyMitigation {
@@ -49,4 +50,22 @@ model SafetyAuditLog {
   actor     String
   metadata  Json
   createdAt DateTime @default(now())
+}
+
+// Persisted escalation queue - replaces in-memory queue
+model EscalationQueue {
+  id            String       @id @default(uuid()) @db.Uuid
+  sessionRef    String
+  level         String       // watch, urgent, crisis
+  source        String       // keyword, manual
+  summary       String
+  status        String       @default("open") // open, reviewing, resolved
+  reviewerHandle String?
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  alertId       String?      @db.Uuid
+  alert         SafetyAlert? @relation(fields: [alertId], references: [id])
+
+  @@index([status])
+  @@index([sessionRef])
 }

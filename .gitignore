@@ -38,6 +38,9 @@ yarn-error.log*
 .env.*
 !.env.example
 !.env.local.example
+# Explicitly exclude .env.local (contains real secrets)
+.env.local
+!.env.local.example
 
 # vercel
 .vercel
@@ -45,3 +48,12 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# macOS
+._*
+.DS_Store
+**/.DS_Store
+
+# Prisma Generated Clients
+packages/db/generated/
+**/generated/

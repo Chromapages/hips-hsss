@@ -1,4 +1,7 @@
 import { randomUUID } from "node:crypto";
+import { Injectable } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
+import { PrismaService } from "./prisma.service.js";
 import type {
   EscalationQueueItem,
   SafetyEvent,
@@ -17,12 +20,14 @@ const defaultRules: SafetyKeywordRule[] = [
   { term: "harm", level: "crisis" },
 ];
 
+@Injectable()
 export class SafetyEngine {
-  private readonly queue: EscalationQueueItem[] = [];
+  constructor(
+    private prisma: PrismaService,
+    private readonly rules = defaultRules
+  ) {}
 
-  constructor(private readonly rules = defaultRules) {}
-
-  scan(sessionRef: string, text: string, now = new Date()) {
+  async scan(sessionRef: string, text: string): Promise<EscalationQueueItem | null> {
     const match = this.rules.find((rule) =>
       text.toLowerCase().includes(rule.term.toLowerCase()),
     );
@@ -38,21 +43,21 @@ export class SafetyEngine {
         source: "keyword",
         summary: `Matched safety rule: ${match.term}`,
       },
-      now,
     );
   }
 
-  manualFlag(
+  async manualFlag(
     sessionRef: string,
     level: SafetyLevel,
     summary: string,
-    now = new Date(),
-  ) {
-    return this.addEvent({ sessionRef, level, source: "manual", summary }, now);
+  ): Promise<EscalationQueueItem> {
+    return this.addEvent({ sessionRef, level, source: "manual", summary });
   }
 
-  requestVaultAccess(request: VaultAccessRequest) {
-    const item = this.queue.find((entry) => entry.id === request.escalationId);
+  async requestVaultAccess(request: VaultAccessRequest): Promise<EscalationQueueItem> {
+    const item = await this.prisma.escalationQueue.findFirst({
+      where: { id: request.escalationId },
+    });
 
     if (!item || item.level !== "crisis") {
       throw new Error("Vault access requires a crisis escalation");
@@ -62,27 +67,41 @@ export class SafetyEngine {
       throw new Error("Vault access requires a clear justification");
     }
 
-    item.status = "reviewing";
-    item.reviewerHandle = request.reviewerHandle;
-    return item;
+    return this.prisma.escalationQueue.update({
+      where: { id: request.escalationId },
+      data: {
+        status: "reviewing",
+        reviewerHandle: request.reviewerHandle,
+      },
+    });
   }
 
-  listQueue() {
-    return this.queue.filter((entry) => entry.status !== "resolved");
+  async listQueue(): Promise<EscalationQueueItem[]> {
+    return this.prisma.escalationQueue.findMany({
+      where: { status: { not: "resolved" } },
+      orderBy: { createdAt: "desc" },
+    });
   }
 
-  private addEvent(
+  async resolveEscalation(id: string): Promise<void> {
+    await this.prisma.escalationQueue.update({
+      where: { id },
+      data: { status: "resolved" },
+    });
+  }
+
+  private async addEvent(
     input: Omit<SafetyEvent, "id" | "createdAt">,
-    createdAt: Date,
-  ) {
-    const event: EscalationQueueItem = {
-      ...input,
-      id: randomUUID(),
-      createdAt,
-      status: "open",
-    };
-
-    this.queue.push(event);
+  ): Promise<EscalationQueueItem> {
+    const event = await this.prisma.escalationQueue.create({
+      data: {
+        sessionRef: input.sessionRef,
+        level: input.level,
+        source: input.source,
+        summary: input.summary,
+        status: "open",
+      },
+    });
     return event;
   }
 }

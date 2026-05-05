@@ -1,14 +1,32 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { RoomServiceClient, DataPacket_Kind } from 'livekit-server-sdk';
-import { safetyPrisma, sessionPrisma } from '@/lib/prisma';
 
 const apiKey = process.env.LIVEKIT_API_KEY || 'devkey';
 const apiSecret = process.env.LIVEKIT_API_SECRET || 'secret';
 const host = process.env.LIVEKIT_URL || 'https://hips-hsss.livekit.cloud';
 
-// LiveKit server SDK needs an HTTP/HTTPS URL, not wss://
 const livekitHost = host.replace('wss://', 'https://');
 const roomService = new RoomServiceClient(livekitHost, apiKey, apiSecret);
+
+const SAFETY_SERVICE_URL = process.env.SAFETY_SERVICE_URL || 'http://localhost:3003';
+const SESSION_SERVICE_SECRET = process.env.SESSION_SERVICE_SECRET;
+
+async function callSafetyService(endpoint: string, method: string, body?: unknown) {
+  const response = await fetch(`${SAFETY_SERVICE_URL}${endpoint}`, {
+    method,
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${SESSION_SERVICE_SECRET}`,
+    },
+    body: body != null ? JSON.stringify(body) : null,
+  });
+
+  if (!response.ok) {
+    throw new Error(`Safety service error: ${response.status}`);
+  }
+
+  return response.json();
+}
 
 export async function POST(req: NextRequest) {
   try {
@@ -37,13 +55,12 @@ export async function POST(req: NextRequest) {
     }));
 
     try {
-      // Only send the signal to the offending participant to avoid confusing others
       await roomService.sendData(sessionId, signalData, DataPacket_Kind.RELIABLE, [offenderId]);
     } catch (err) {
       console.error('[SafetyMitigation] Failed to send targeted signal:', err);
     }
 
-    // 2. Automated Intervention Logic
+    // 2. Perform LiveKit action (kick/mute) - this is correctly here
     let success = true;
     let actionTaken = mitigationAction || 'SIGNAL_ONLY';
 
@@ -72,38 +89,21 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // 3. Record Mitigation in Safety DB
+    // 3. Record Mitigation via Safety Service API (not direct DB access)
     try {
-      await safetyPrisma.safetyMitigation.create({
-        data: {
-          alertId,
-          action: actionTaken,
-          success,
-          metadata: { offenderId }
-        }
+      await callSafetyService(`/safety/mitigations`, 'POST', {
+        alertId,
+        action: actionTaken,
+        success,
+        metadata: { offenderId }
       });
     } catch (err) {
-      console.error('[SafetyMitigation] Failed to record mitigation in safety DB:', err);
+      console.error('[SafetyMitigation] Failed to record mitigation via safety service:', err);
     }
 
-    // 4. Record Audit Event in Session DB
-    try {
-      await sessionPrisma.auditEvent.create({
-        data: {
-          eventType: 'SAFETY_MITIGATION',
-          subjectId: sessionId,
-          metadata: {
-            offenderId,
-            action: actionTaken,
-            category: assessment.category,
-            severity: assessment.severity,
-            success
-          }
-        }
-      });
-    } catch (err) {
-      console.error('[SafetyMitigation] Failed to record audit event in session DB:', err);
-    }
+    // 4. Record Audit Event (session DB) - TODO: add /session/audit endpoint to session-service
+    // Currently logs only since session-service doesn't expose an audit endpoint
+    console.log(`[SafetyMitigation] Audit: SAFETY_MITIGATION event for session ${sessionId}, offender ${offenderId}, action ${actionTaken}`);
 
     return NextResponse.json({ success });
   } catch (error) {

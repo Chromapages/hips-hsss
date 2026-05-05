@@ -60,8 +60,8 @@ export async function GET(req: NextRequest) {
 
     const payload = await adminAuth.verifyIdToken(token);
     const userId = payload.uid;
-    
-    // 1. Fetch User Profile
+
+    // Look up the user's internal anonymous ID (never expose Firebase UID)
     const userRef = db.collection('users').doc(userId);
     const userDoc = await userRef.get();
 
