@@ -1,0 +1,273 @@
+// =============================================================================
+// Commerce DB Schema — HIPS Platform
+// PostgreSQL on Railway · Prisma ORM
+// =============================================================================
+// All PII lives in the Identity Vault (separate DB). This schema contains NO raw
+// PII fields: no real name, no email (Firebase UID is the key), no IP address.
+// =============================================================================
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/commerce"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("COMMERCE_DATABASE_URL")
+}
+
+// ─── Enums ─────────────────────────────────────────────────────────────────────
+
+enum Role {
+  PARTICIPANT
+  LEADER
+  ORG_BUYER
+  FACILITATOR
+  ADMIN
+}
+
+enum ServiceCategory {
+  CARE_SESSION
+  COACHING
+  COHORT
+  WORKSHOP
+  RETREAT
+  DIGITAL
+  MEMBERSHIP
+}
+
+enum SessionStatus {
+  PENDING
+  CONFIRMED
+  COMPLETED
+  CANCELLED
+  NO_SHOW
+}
+
+enum ScholarshipStatus {
+  PENDING
+  APPROVED
+  DENIED
+  EXPIRED
+  WAITLISTED
+}
+
+enum DonationTier {
+  SPONSOR_SESSION   // $50 — sponsor a session for someone
+  RESTORE_SESSION  // $100 — restore a session
+  RESTORE_LEADER   // $500 — restore a leader
+  CUSTOM
+}
+
+enum InquiryStatus {
+  NEW
+  QUOTED
+  DEPOSIT_PAID
+  CONFIRMED
+  COMPLETED
+  CANCELLED
+}
+
+enum PackageStatus {
+  ACTIVE
+  EXPIRED
+  CONSUMED
+}
+
+// ─── Models ─────────────────────────────────────────────────────────────────────
+
+// User — references a Firebase UID; all identity data is in the Identity Vault
+model User {
+  id        String    @id @default(uuid())
+  firebaseUid   String    @unique // Firebase auth identifier
+  role      Role     @default(PARTICIPANT)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  // Soft-delete
+  sessions    Session[]
+  packages    Package[]
+  scholarships Scholarship[]
+  donations   Donation[]
+
+  @@index([firebaseUid])
+  @@index([role])
+  @@index([createdAt])
+}
+
+// Service catalog — all offered services with pricing
+model Service {
+  id             String         @id @default(uuid())
+  slug           String         @unique
+  name           String
+  description    String
+  category       ServiceCategory
+  standardPrice  Decimal        @db.Decimal(10, 2)
+  scholarshipMin Decimal       @default(0) @db.Decimal(10, 2)
+  scholarshipMax Decimal       @default(0) @db.Decimal(10, 2)
+  durationMins   Int?
+  maxSeats      Int?           // null = unlimited, e.g. 1:1 sessions
+  isActive       Boolean       @default(true)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  sessions   Session[]
+  packages   Package[]
+  scholarships Scholarship[]
+
+  @@index([slug])
+  @@index([category])
+  @@index([isActive])
+}
+
+// Individual booked session — linked to a real-money transaction
+model Session {
+  id               String        @id @default(uuid())
+  userId           String
+  serviceId        String
+  facilitatorId    String?       // Firebase UID of facilitator
+  scheduledAt      DateTime
+  status           SessionStatus @default(PENDING)
+  pricePaid        Decimal       @db.Decimal(10, 2)
+  isScholarship    Boolean       @default(false)
+  scholarshipCode String?       // discount code used at checkout
+  stripePaymentId String?
+  packageId       String?
+  sessionTokenRef  String?       // opaque reference to anon session token — NOT the token itself
+  cancelReason     String?
+  completedAt      DateTime?
+  confirmationEmailSent Boolean     @default(false)
+  balanceDueDate   DateTime?
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  user       User    @relation(fields: [userId], references: [id])
+  service    Service @relation(fields: [serviceId], references: [id])
+  package    Package? @relation(fields: [packageId], references: [id])
+
+  @@index([userId])
+  @@index([serviceId])
+  @@index([facilitatorId])
+  @@index([status])
+  @@index([scheduledAt])
+  @@index([stripePaymentId])
+}
+
+
+// Session credits bundle — purchased ahead of time
+model Package {
+  id              String       @id @default(uuid())
+  userId          String
+  serviceId       String       // which service type this package is for
+  totalSessions   Int
+  usedSessions    Int          @default(0)
+  pricePaid       Decimal      @db.Decimal(10, 2)
+  expiresAt       DateTime
+  stripePaymentId String?
+  status          PackageStatus @default(ACTIVE)
+  isScholarship   Boolean       @default(false)
+  discountCode    String?
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  user     User      @relation(fields: [userId], references: [id])
+  service  Service   @relation(fields: [serviceId], references: [id])
+  sessions Session[]
+
+  @@index([userId])
+  @@index([serviceId])
+  @@index([expiresAt])
+  @@index([status])
+}
+
+// Scholarship application — tracks the full approval → code issuance flow
+model Scholarship {
+  id              String            @id @default(uuid())
+  userId          String
+  serviceId       String
+  requestedAmount Decimal          @db.Decimal(10, 2)
+  approvedAmount  Decimal?          @db.Decimal(10, 2)
+  reason          String            // participant's stated need
+  status          ScholarshipStatus @default(PENDING)
+  discountCode    String?           @unique // issued on APPROVED
+  reviewedBy      String?          // Firebase UID of admin who reviewed
+  reviewedAt     DateTime?
+  reviewNote    String?
+  expiresAt     DateTime?
+  rejectionReason String?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  user    User     @relation(fields: [userId], references: [id])
+  service Service  @relation(fields: [serviceId], references: [id])
+
+  @@index([userId])
+  @@index([serviceId])
+  @@index([status])
+  @@index([discountCode])
+  @@index([createdAt])
+}
+
+// Donations — separate from service purchases; IRS-compliant receipts required
+model Donation {
+  id              String       @id @default(uuid())
+  userId          String?      // null = guest donation
+  donorVaultRef   String?      // reference to donor identity in the Identity Vault
+  amount          Decimal      @db.Decimal(10, 2)
+  tier            DonationTier
+  stripePaymentId String       @unique
+  receiptSent     Boolean      @default(false)
+  receiptSentAt   DateTime?
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  user User? @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([stripePaymentId])
+  @@index([tier])
+  @@index([createdAt])
+}
+
+// Organization intake form — separate from user accounts until booking confirmed
+model OrgInquiry {
+  id             String        @id @default(uuid())
+  orgName        String
+  // B2B intake — org representative email, not participant PII
+  contactEmail   String
+  contactName    String?
+  ein            String?
+  isNonprofit    Boolean      @default(false)
+  website        String?
+  eventType      String
+  preferredDate  DateTime?
+  headcount      Int?
+  message        String?
+  quoteAmount    Decimal?     @db.Decimal(10, 2)
+  status         InquiryStatus @default(NEW)
+  notes          String?      // internal admin notes
+  stripeLinkId  String?      // generated payment link reference
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  @@index([status])
+  @@index([contactEmail])
+  @@index([preferredDate])
+  @@index([createdAt])
+}
+
+// Stripe webhook event log — for idempotency and replay
+model StripeEvent {
+  id             String   @id @default(uuid())
+  stripeEventId  String   @unique
+  eventType      String
+  payload        Json
+  processed      Boolean  @default(false)
+  processedAt    DateTime?
+  createdAt      DateTime @default(now())
+
+  @@index([stripeEventId])
+  @@index([processed])
+  @@index([createdAt])
+}

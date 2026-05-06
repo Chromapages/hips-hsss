@@ -1,0 +1,26 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dir d:\\\\WORK\\\\hsss\\\\hips\\\\build /b)",
+      "Bash(pnpm init *)",
+      "Bash(pnpm dlx *)",
+      "Bash(pnpm install *)",
+      "Bash(pnpm build *)",
+      "Bash(pnpm list *)",
+      "Bash(pnpm typecheck *)",
+      "Bash(pnpm exec *)",
+      "Bash(pnpm --filter @hips/types --filter @hips/billing --filter @hips/email typecheck)",
+      "Bash(pnpm tsc *)",
+      "Bash(pnpm --filter @hips/web build)",
+      "Bash(npx tsc *)",
+      "Bash(pnpm --filter web build)",
+      "Bash(npx next *)",
+      "Bash(pnpm next *)",
+      "Bash(pnpm --filter web dev)",
+      "Bash(curl -s http://localhost:3000)",
+      "Bash(curl -s http://localhost:3001)",
+      "Bash(npx playwright *)",
+      "Bash(curl -s -F \"reqtype=fileupload\" -F \"fileToUpload=@C:/Users/ericb/AppData/Local/Temp/homepage_apple.png\" https://catbox.moe/user/api.php)"
+    ]
+  }
+}

@@ -1,0 +1,50 @@
+// This is your Prisma schema file,
+// learn more about it in our docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../node_modules/.prisma/client-vault"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("VAULT_DATABASE_URL")
+}
+
+// ============================================================
+// MODELS — Identity Vault (KMS-encrypted at rest)
+// ============================================================
+
+model IdentityRecord {
+  id                          String    @id @default(uuid())
+  // All PII fields stored as AES-256-GCM encrypted blobs (hex-encoded)
+  encryptedEmail              String?   @map("encrypted_email")
+  encryptedName               String?   @map("encrypted_name")
+  encryptedPhone              String?   @map("encrypted_phone")
+  encryptedIpAddress          String    @map("encrypted_ip_address")
+  encryptedDeviceFingerprint String    @map("encrypted_device_fingerprint")
+  ipExpiresAt                 DateTime  @map("ip_expires_at")
+  fingerprintExpiresAt        DateTime  @map("fingerprint_expires_at")
+  createdAt                   DateTime  @default(now())
+  updatedAt                   DateTime  @updatedAt
+
+  // Relations
+  accessLogs VaultAccessLog[]
+
+  @@index([id])
+}
+
+model VaultAccessLog {
+  id            String   @id @default(uuid())
+  requesterId   String   @map("requester_id")
+  vaultRecordId String   @map("vault_record_id")
+  justification String
+  accessedAt    DateTime @default(now()) @map("accessed_at")
+
+  // Relations
+  vaultRecord IdentityRecord @relation(fields: [vaultRecordId], references: [id])
+
+  @@index([vaultRecordId])
+  @@index([requesterId])
+  @@index([accessedAt])
+}

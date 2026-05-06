@@ -1,0 +1,137 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ─── Helper functions ───────────────────────────────────────────────────
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function hasRole(role) {
+      return isAuthenticated() && request.token.role == role;
+    }
+
+    function isAdminOrModerator() {
+      return isAuthenticated() && request.token.role in ['ADMIN', 'FACILITATOR'];
+    }
+
+    // Participants can only write their own documents
+    function isOwnParticipantDoc(anonId) {
+      return isAuthenticated() && request.auth.uid == anonId;
+    }
+
+    // ─── rooms collection ───────────────────────────────────────────────────
+    // Real-time LiveKit room state. Source of truth: PostgreSQL GroupSessionRecord.
+    // Firestore is a denormalized real-time mirror.
+
+    match /rooms/{roomId} {
+      // Anyone authenticated can read active rooms (LOBBY or LIVE)
+      // This lets participants see the room list before joining
+      allow read: if isAuthenticated()
+        && resource.data.status in ['LOBBY', 'LIVE'];
+
+      // Only the session service (Firebase custom claim SYSTEM or ADMIN/FACILITATOR)
+      // can create/update room documents
+      allow create: if isAuthenticated()
+        && request.token.role in ['SYSTEM', 'ADMIN', 'FACILITATOR'];
+
+      // Facilitators and admins can update room state (status transitions, crisis flags)
+      allow update: if isAdminOrModerator()
+        // Participants cannot modify room-level state
+        && (!('status' in request.resource.data)  // moderator-only fields
+            || request.resource.data.status == resource.data.status  // status changes validated server-side
+        );
+
+      // Rooms are deleted by the session service when a session ends
+      allow delete: if hasRole('SYSTEM') || hasRole('ADMIN');
+
+      // ─── rooms/{roomId}/participants subcollection ────────────────────────
+
+      match /participants/{anonId} {
+        // Any authenticated user can read the participant list
+        allow read: if isAuthenticated();
+
+        // A participant can only write their own presence document
+        allow write: if isOwnParticipantDoc(anonId)
+          // Only allow specific fields to be written by the client
+          && request.resource.data.keys().hasAll([
+            'displayName', 'role', 'audioEnabled', 'videoEnabled',
+            'handRaised', 'connectionQuality'
+          ])
+          && request.resource.data.role in ['moderator', 'participant', 'observer']
+          && request.resource.data.connectionQuality in ['excellent', 'good', 'poor', 'unknown']
+          && request.resource.data.displayName.size() <= 30  // prevent abuse
+          && request.resource.data.displayName.size() >= 1;
+
+        // Facilitators can update any participant doc (kick, mute, etc.)
+        allow update: if isAdminOrModerator();
+
+        // Facilitators can remove participants (mark leftAt)
+        allow delete: if isAdminOrModerator();
+      }
+    }
+
+    // ─── sessions/{sessionId}/flags subcollection ────────────────────────────
+    // Real-time safety flag events. Source of truth: PostgreSQL CrisisFlag.
+    // Safety Engine writes here; facilitators subscribe for real-time alerts.
+
+    match /sessions/{sessionId}/flags/{flagId} {
+      // Facilitators and admins can read flags for sessions they're part of
+      allow read: if isAdminOrModerator();
+
+      // Only the Safety Engine (SYSTEM role) can create flags
+      allow create: if hasRole('SYSTEM');
+
+      // Facilitators can resolve flags (set resolvedAt, resolvedBy)
+      // but cannot modify the original flag data
+      allow update: if isAdminOrModerator()
+        && resource.data.resolvedAt == null  // immutable once resolved
+        && request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['resolvedAt', 'resolvedBy', 'resolution']);  // only resolution fields
+
+      allow delete: if false;  // never delete audit flags
+    }
+
+    // ─── vaultAccessLogs collection ─────────────────────────────────────────
+    // Append-only audit mirror of PostgreSQL VaultAccessLog.
+    // Written by Cloud Functions after PostgreSQL write succeeds.
+
+    match /vaultAccessLogs/{logId} {
+      // Admins can read the access log feed
+      allow read: if hasRole('ADMIN');
+
+      // Only Cloud Functions / server-side writes (SYSTEM) can create
+      allow create: if hasRole('SYSTEM') || hasRole('ADMIN');
+
+      allow update: if false;   // immutable — never modify audit logs
+      allow delete: if false;    // never delete audit logs
+    }
+
+    // ─── sessions/{sessionId}/messages subcollection ────────────────────────
+    // Ephemeral chat messages. TTL: 24 hours (configured in Firestore TTL policy).
+    // No PII — only anon tokens and display names.
+
+    match /sessions/{sessionId}/messages/{msgId} {
+      // Participants in the session can read messages
+      // (sessionId claim is set by the session service on token minting)
+      allow read: if isAuthenticated()
+        && request.token.sessionId == sessionId;
+
+      // Participants can send messages (only their own, with content limits)
+      allow create: if isAuthenticated()
+        && request.auth.uid == resource.data.senderAnonId
+        && resource.data.content.size() <= 2000
+        && resource.data.content.size() >= 1
+        && resource.data.type in ['text', 'system', 'flag_alert'];
+
+      // Facilitators can soft-delete (set deletedAt)
+      allow update: if isAdminOrModerator()
+        && resource.data.deletedAt == null
+        && request.resource.data.keys().hasOnly(['deletedAt', 'deletedBy']);
+
+      allow delete: if false;  // enforce soft-delete only
+    }
+  }
+}

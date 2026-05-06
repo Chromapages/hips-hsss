@@ -1,0 +1,137 @@
+// =============================================================================
+// Session DB Schema — HIPS Platform
+// PostgreSQL on Railway · Physically separate from Commerce DB
+// =============================================================================
+// This DB contains NO PII: all actor IDs are anonymous session-derived tokens.
+// Real identity is in the Identity Vault (isolated VPC).
+// =============================================================================
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/session"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("SESSION_DATABASE_URL")
+}
+
+// ─── Enums ─────────────────────────────────────────────────────────────────────
+
+enum LiveSessionStatus {
+  ACTIVE
+  ENDED
+  CRISIS_FLAGGED
+  ABANDONED
+  RECONNECTING
+}
+
+enum GroupSessionStatus {
+  LOBBY
+  LIVE
+  ENDED
+  CANCELLED
+}
+
+// ─── Models ─────────────────────────────────────────────────────────────────────
+
+// Individual real-time voice session record
+// anonSessionToken: opaque token generated at session start — NOT linked to commerce User ID
+// facilitatorAnonId: anonymous facilitator token, not their Clerk ID
+model SessionRecord {
+  id                String            @id @default(uuid())
+  anonSessionToken  String            @unique // not stored in commerce DB
+  facilitatorAnonId String // anon facilitator ID
+  bookingRef        String? // HMAC of sessionId for non-reversible reference
+  serviceId         String? // which service was booked (cosmetic link)
+  startedAt         DateTime          @default(now())
+  endedAt           DateTime?
+  durationMins      Int?
+  status            LiveSessionStatus @default(ACTIVE)
+  flagCount         Int               @default(0)
+  notes             String? // facilitator notes — stored here, NOT in vault
+  summaryRef        String? // object storage key for AI summary (if opted in)
+  recordingRef      String? // object storage key if consent-based recording
+  createdAt         DateTime          @default(now())
+
+  @@index([anonSessionToken])
+  @@index([facilitatorAnonId])
+  @@index([status])
+  @@index([startedAt])
+}
+
+// Group session lobby + room management
+model GroupSessionRecord {
+  id               String             @id @default(uuid())
+  roomId           String             @unique // LiveKit room ID
+  roomName         String? // human-readable name
+  moderatorAnonId  String // anon moderator token
+  scheduledAt      DateTime
+  startedAt        DateTime?
+  endedAt          DateTime?
+  participantCount Int                @default(0)
+  maxParticipants  Int                @default(12)
+  status           GroupSessionStatus @default(LOBBY)
+  serviceId        String? // which service/cohort
+  createdAt        DateTime           @default(now())
+
+  @@index([roomId])
+  @@index([moderatorAnonId])
+  @@index([status])
+  @@index([scheduledAt])
+}
+
+// Audit event log — INSERT + SELECT only; no UPDATE or DELETE for app roles
+// Every significant action on the session layer is permanently recorded
+model AuditEvent {
+  id            String   @id @default(uuid())
+  eventType     String // SESSION_STARTED | SESSION_ENDED | CRISIS_FLAGGED | etc.
+  actorId       String // anon session token (hashed for non-sensitive entries)
+  targetId      String? // session ID or room ID
+  justification String? // REQUIRED for vault access events
+  ipRef         String? // hashed IP only — never raw; used for security review only
+  metadata      Json? // additional structured context
+  createdAt     DateTime @default(now())
+
+  @@index([eventType])
+  @@index([actorId])
+  @@index([targetId])
+  @@index([createdAt])
+  @@index([eventType, createdAt]) // compound for audit queries
+}
+
+// Crisis flag record — created when Safety Engine triggers crisis protocol
+model CrisisFlag {
+  id               String    @id @default(uuid())
+  sessionRecordId  String // link to SessionRecord
+  flagType         String // SOFT_ALERT | ESCALATION_REVIEW | CRISIS_PROTOCOL
+  triggeredBy      String // anon facilitator token who initiated
+  createdAt        DateTime  @default(now())
+  resolvedAt       DateTime?
+  resolvedBy       String? // Clerk user ID of admin who resolved
+  resolution       String? // required note on resolve
+  vaultAccessLogId String? // if crisis protocol was triggered, reference to vault log
+
+  @@index([sessionRecordId])
+  @@index([flagType])
+  @@index([createdAt])
+  @@index([resolvedAt])
+}
+
+// Facilitator availability windows — used by Cal.com or custom scheduling
+model FacilitatorAvailability {
+  id                String    @id @default(uuid())
+  facilitatorAnonId String
+  dayOfWeek         Int // 0 = Sunday, 6 = Saturday
+  startTime         String // "08:00" local time
+  endTime           String // "21:00" local time
+  timezone          String    @default("America/New_York")
+  isRecurring       Boolean   @default(true)
+  specificDate      DateTime? // null = recurring; specific date for one-off overrides
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  @@index([facilitatorAnonId])
+  @@index([dayOfWeek])
+  @@index([specificDate])
+}

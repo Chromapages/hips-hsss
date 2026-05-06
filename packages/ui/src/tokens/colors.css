@@ -1,0 +1,29 @@
+/* H.I.P.S. Design System — Color Tokens */
+
+:root {
+  /* Brand Colors */
+  --color-brand-primary: #2D5A8E;
+  --color-brand-secondary: #4A8FA8;
+  --color-brand-accent: #7BC4C4;
+  --color-brand-warm: #E8D5B7;
+  --color-brand-deep: #1A3A5C;
+
+  /* Semantic Colors */
+  --color-success: #059669;
+  --color-warning: #D97706;
+  --color-error: #DC2626;
+  --color-crisis: #7F1D1D;
+
+  /* Session Layer (scoped via [data-layer="session"]) */
+  --session-bg: #0D1B2A;
+  --session-controls-bg: rgba(13, 27, 42, 0.85);
+  --session-avatar-ring: #7BC4C4;
+
+  /* Neutrals */
+  --color-background: #F9FAFB;
+  --color-surface: #FFFFFF;
+  --color-border: #E5E7EB;
+  --color-text-primary: #111827;
+  --color-text-secondary: #6B7280;
+  --color-text-muted: #9CA3AF;
+}

@@ -1,0 +1,162 @@
+// H.I.P.S. Platform — Session DB Schema
+// Physically separated from Commerce DB; no shared DB user
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma-client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("SESSION_DATABASE_URL")
+}
+
+// Anonymous session token — never linked to commerce User ID
+model SessionRecord {
+  id              String           @id @default(uuid())
+  anonSessionToken String          @unique @map("anon_session_token")
+  sessionId       String           @map("session_id") // Commerce DB session reference (opaque)
+  roomId          String?          @map("room_id")
+  moderatorAnonId String?          @map("moderator_anon_id")
+
+  // Participant info (anonymous)
+  participantAnonHandle String?   @map("participant_anon_handle")
+  avatarStyle     String?          @map("avatar_style")
+  avatarColor     String?          @map("avatar_color")
+
+  // Status
+  status          LiveSessionStatus @default(LOBBY)
+  startedAt       DateTime?        @map("started_at")
+  endedAt         DateTime?        @map("ended_at")
+
+  // Consent
+  recordingConsent Boolean          @default(false) @map("recording_consent")
+
+  // Notes (facilitator-only, stored separately from identity)
+  facilitatorNotes String?        @map("facilitator_notes")
+  facilitatorAnonId String?        @map("facilitator_anon_id")
+
+  // Timestamps
+  createdAt       DateTime          @default(now()) @map("created_at")
+  updatedAt       DateTime          @updatedAt @map("updated_at")
+
+  // Relations
+  auditEvents     AuditEvent[]
+  groupSession    GroupSessionRecord?
+
+  @@index([status])
+  @@index([roomId])
+  @@map("session_record")
+}
+
+model GroupSessionRecord {
+  id              String           @id @default(uuid())
+  sessionRecordId String           @unique @map("session_record_id")
+  sessionRecord   SessionRecord    @relation(fields: [sessionRecordId], references: [id])
+
+  // Group metadata
+  groupLabel      String?          @map("group_label")
+  maxParticipants Int              @default(12) @map("max_participants")
+  currentParticipants Int          @default(0) @map("current_participants")
+
+  // Lobby state
+  lobbyActive     Boolean          @default(true) @map("lobby_active")
+  lobbyStartedAt  DateTime?        @map("lobby_started_at")
+
+  // Moderator controls
+  moderatorMutedAll Boolean        @default(false) @map("moderator_muted_all")
+
+  // Timestamps
+  createdAt       DateTime          @default(now()) @map("created_at")
+  updatedAt       DateTime          @updatedAt @map("updated_at")
+
+  @@map("group_session_record")
+}
+
+model AuditEvent {
+  id              String           @id @default(uuid())
+  sessionRecordId String?          @map("session_record_id")
+  sessionRecord   SessionRecord?   @relation(fields: [sessionRecordId], references: [id])
+
+  // Event classification
+  eventType       AuditEventType
+  severity        AuditSeverity    @default(INFO)
+
+  // Anonymous actor info
+  actorAnonId     String?          @map("actor_anon_id")
+  actorRole       String?          @map("actor_role") // facilitator | participant | system
+
+  // Event details (JSON for flexibility)
+  eventData       Json?            @map("event_data")
+
+  // Device fingerprint (hashed, not PII)
+  deviceFingerprintHash String?   @map("device_fingerprint_hash")
+
+  // IP address (hashed, expires after 30 days)
+  ipHash          String?          @map("ip_hash")
+
+  // Timestamp
+  createdAt       DateTime          @default(now()) @map("created_at")
+
+  @@index([sessionRecordId])
+  @@index([eventType])
+  @@index([severity])
+  @@index([createdAt])
+  @@map("audit_event")
+}
+
+enum LiveSessionStatus {
+  LOBBY
+  ACTIVE
+  ENDED
+  ABANDONED
+}
+
+enum AuditEventType {
+  // Session events
+  SESSION_CREATED
+  SESSION_JOINED
+  SESSION_LEFT
+  SESSION_ENDED
+  SESSION_ABANDONED
+  SESSION_AUTO_TEARDOWN
+
+  // Voice events
+  VOICE_CONNECTED
+  VOICE_DISCONNECTED
+  VOICE_MUTED
+  VOICE_UNMUTED
+  RECORDING_STARTED
+  RECORDING_STOPPED
+  RECORDING_CONSENT_GRANTED
+  RECORDING_CONSENT_REVOKED
+
+  // Group session events
+  LOBBY_JOINED
+  LOBBY_LEFT
+  LOBBY_STARTED
+  MODERATOR_MUTED_ALL
+  MODERATOR_UNMUTED_ALL
+  PARTICIPANT_REMOVED
+  PARTICIPANT_ADDED
+
+  // Safety events
+  FLAG_RAISED
+  FLAG_RESOLVED
+  CRISIS_TRIGGERED
+
+  // Moderator actions
+  MODERATOR_NOTES_UPDATED
+
+  // Auth events
+  TOKEN_ISSUED
+  TOKEN_VALIDATED
+  TOKEN_REFRESHED
+}
+
+enum AuditSeverity {
+  DEBUG
+  INFO
+  WARNING
+  CRITICAL
+}

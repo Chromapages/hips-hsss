@@ -1,0 +1,87 @@
+// Safety Engine — Prisma Schema
+// Physically separated from Commerce DB and Session DB
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma-client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("SAFETY_DATABASE_URL")
+}
+
+// ─── Escalation Record ────────────────────────────────────────────────────────
+
+model Escalation {
+  id             String           @id @default(uuid())
+  sessionId      String // Anon session ID — never linked to commerce User
+  flagType       FlagType
+  status         EscalationStatus @default(SOFT_ALERT)
+  severity       Int              @default(0) // 0–100, used for auto-sort
+  notes          String?
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  resolvedAt     DateTime?
+  resolvedBy     String? // Anon reviewer ID (from auth header)
+  resolutionNote String?
+
+  @@index([status, createdAt(sort: Desc)])
+  @@index([sessionId])
+}
+
+// ─── Crisis Event Log (immutable) ────────────────────────────────────────────
+
+model CrisisEvent {
+  id                   String   @id @default(uuid())
+  sessionId            String
+  requesterId          String // Anon ID of FACILITATOR or ADMIN who triggered
+  requesterRole        String // FACILITATOR | ADMIN
+  justification        String // Required, min 10 chars
+  vaultFieldsRetrieved String[] // e.g. ['emergencyContact', 'region', 'country']
+  localResource        String? // Local emergency number if region/country available
+  vaultAccessSucceeded Boolean  @default(true)
+  alertsDispatched     Boolean  @default(false)
+  alertChannelsFired   String[] // e.g. ['SMS_PRIMARY', 'SLACK']
+  createdAt            DateTime @default(now())
+
+  @@index([sessionId, createdAt])
+  @@index([requesterId])
+}
+
+// ─── Alert Log ────────────────────────────────────────────────────────────────
+
+model AlertLog {
+  id            String       @id @default(uuid())
+  escalationId  String? // FK to Escalation if tied to an escalation
+  crisisEventId String? // FK to CrisisEvent if tied to a crisis
+  channel       AlertChannel
+  recipient     String // Phone number or Slack channel
+  payload       Json // What was sent
+  status        String // SENT | FAILED | PENDING
+  sentAt        DateTime     @default(now())
+
+  @@index([crisisEventId])
+  @@index([escalationId])
+}
+
+// ─── Enums ───────────────────────────────────────────────────────────────────
+
+enum FlagType {
+  KEYWORD_MATCH
+  COUNSELOR_FLAG
+  REPEATED_DISTRESS
+}
+
+enum EscalationStatus {
+  SOFT_ALERT
+  ESCALATION_REVIEW
+  CRISIS_ACTIVE
+  RESOLVED
+}
+
+enum AlertChannel {
+  SMS_PRIMARY
+  SMS_BACKUP
+  SLACK
+}
