@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { Building2, Calendar, Users, Heart, CheckCircle2 } from 'lucide-react'
-import { Button, Card, CardContent } from '@hips/ui'
+import { Button, Card } from '@hips/ui'
 import { OrgInquirySchema } from '@hips/types'
 
 const EVENT_TYPE_LABELS: Record<string, string> = {
@@ -186,7 +186,7 @@ export default function OrganizationsPage() {
 
         {/* Form */}
         <Card>
-          <CardContent>
+          <Card.Content>
             <h2 className="text-2xl font-bold text-neutral-900 mb-1">Organizational Inquiry</h2>
             <p className="text-sm text-neutral-600 mb-8">Tell us about your organization and we'll be in touch.</p>
 
@@ -373,7 +373,7 @@ export default function OrganizationsPage() {
                 Submit Inquiry
               </Button>
             </form>
-          </CardContent>
+          </Card.Content>
         </Card>
       </div>
     </div>

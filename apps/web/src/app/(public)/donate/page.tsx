@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import { loadStripe } from '@stripe/stripe-js'
 import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js'
-import { Card, Button } from '@hips/ui'
+import { Card, Button, CardContent } from '@hips/ui'
 import { CheckoutDonationInput } from '@hips/types'
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? '')
@@ -226,7 +226,7 @@ export default function DonatePage() {
     }
   }, [selectedTier, selectedTierId, customDollarAmount, email])
 
-  useEffect(() => {
+  const handleCreatePaymentIntent = useCallback(() => {
     if (!selectedTier || selectedTierId === 'CUSTOM') {
       if (selectedTierId === 'CUSTOM' && customDollarAmount && email) {
         const dollarAmount = parseFloat(customDollarAmount)
@@ -240,7 +240,11 @@ export default function DonatePage() {
     if (selectedTierId && email) {
       createPaymentIntent()
     }
-  }, [selectedTierId])
+  }, [selectedTierId, customDollarAmount, email, selectedTier, createPaymentIntent])
+
+  useEffect(() => {
+    handleCreatePaymentIntent()
+  }, [handleCreatePaymentIntent])
 
   const handleCustomAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value.replace(/[^0-9.]/g, '')
@@ -351,7 +355,7 @@ export default function DonatePage() {
         )}
 
         <Card className="max-w-xl mx-auto mb-6">
-          <div className="p-6 space-y-6">
+          <Card.Content className="p-6 space-y-6">
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-neutral-700 mb-2">
                 Email address <span className="text-semantic-error">*</span>
@@ -399,7 +403,7 @@ export default function DonatePage() {
                 />
               </Elements>
             )}
-          </div>
+          </Card.Content>
         </Card>
 
         <div className="text-center">

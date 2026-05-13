@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { CheckCircle2, Clock, Users } from 'lucide-react'
-import { Badge, Button, Card, CardContent } from '@hips/ui'
+import { Badge, Button, Card } from '@hips/ui'
 
 const CATEGORY_LABELS: Record<string, string> = {
   PEER_SUPPORT: 'Peer Support',
@@ -83,10 +83,10 @@ export default function ServicesPage() {
     return (
       <div className="min-h-screen bg-neutral-50 flex items-center justify-center">
         <Card className="max-w-md w-full mx-4">
-          <CardContent className="text-center py-12">
+          <Card.Content className="text-center py-12">
             <p className="text-neutral-600 mb-4">{error}</p>
             <Button onClick={() => window.location.reload()}>Try Again</Button>
-          </CardContent>
+          </Card.Content>
         </Card>
       </div>
     )
@@ -113,7 +113,7 @@ export default function ServicesPage() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {categoryServices.map((service) => (
                 <Card key={service.id} className="flex flex-col">
-                  <CardContent className="flex flex-col flex-1 p-6">
+                  <Card.Content className="flex flex-col flex-1 p-6">
                     <div className="flex-1">
                       <h3 className="font-sans text-lg font-semibold text-neutral-900 mb-2">
                         {service.name}
@@ -142,7 +142,7 @@ export default function ServicesPage() {
                         </div>
                       )}
                       {service.scholarshipMin > 0 && (
-                        <div className="flex items-center gap-2 text-sm text-green-700">
+                        <div className="flex items-center gap-2 text-sm text-brand-primary">
                           <CheckCircle2 className="w-4 h-4" />
                           <span>Scholarships available</span>
                         </div>
@@ -154,7 +154,7 @@ export default function ServicesPage() {
                         Book Now
                       </Button>
                     </div>
-                  </CardContent>
+                  </Card.Content>
                 </Card>
               ))}
             </div>
@@ -163,9 +163,9 @@ export default function ServicesPage() {
 
         {services.length === 0 && (
           <Card>
-            <CardContent className="text-center py-16">
+            <Card.Content className="text-center py-16">
               <p className="text-neutral-600">No services available at this time.</p>
-            </CardContent>
+            </Card.Content>
           </Card>
         )}
       </div>
