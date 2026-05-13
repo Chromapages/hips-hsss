@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { ArrowLeft, Download, FileText, Lock } from 'lucide-react'
+import { EmptyState } from '@hips/ui'
 
 export const metadata: Metadata = {
   title: 'Downloads — H.I.P.S.',
@@ -75,19 +76,19 @@ export default function DownloadsPage() {
       </div>
 
       {MOCK_DOWNLOADS.length === 0 && (
-        <div className="text-center py-12 rounded-lg border border-neutral-200 bg-white">
-          <Lock className="h-12 w-12 text-neutral-200 mx-auto mb-4" aria-hidden="true" />
-          <h3 className="font-semibold text-neutral-900 mb-1">No downloads available</h3>
-          <p className="text-sm text-neutral-500 mb-4">
-            Purchased digital products will appear here.
-          </p>
-          <Link
-            href="/services"
-            className="inline-flex items-center gap-2 rounded-lg bg-brand-primary px-4 py-2 text-sm font-medium text-white hover:bg-brand-primary/90 transition-colors"
-          >
-            Browse Services
-          </Link>
-        </div>
+        <EmptyState
+          heading="No downloads available"
+          body="Purchased digital products will appear here."
+          icon={<Lock className="h-12 w-12" aria-hidden="true" />}
+          action={
+            <Link
+              href="/services"
+              className="inline-flex items-center gap-2 rounded-lg bg-brand-primary px-4 py-2 text-sm font-medium text-white hover:bg-brand-primary/90 transition-colors"
+            >
+              Browse Services
+            </Link>
+          }
+        />
       )}
     </div>
   )

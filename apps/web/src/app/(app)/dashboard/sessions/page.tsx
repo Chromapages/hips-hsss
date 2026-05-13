@@ -1,13 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import {
-  ArrowLeft,
-  Calendar,
-  CheckCircle2,
-  XCircle,
-  Clock,
-  Search,
-} from 'lucide-react'
+import { ArrowLeft, Calendar, CheckCircle2, XCircle, Clock, Search } from 'lucide-react'
+import { EmptyState } from '@hips/ui'
 
 export const metadata: Metadata = {
   title: 'Session History — H.I.P.S.',
@@ -150,19 +144,19 @@ export default function SessionHistoryPage() {
 
       {/* Empty state */}
       {MOCK_SESSIONS.length === 0 && (
-        <div className="text-center py-12">
-          <Calendar className="h-12 w-12 text-neutral-200 mx-auto mb-4" aria-hidden="true" />
-          <h3 className="font-semibold text-neutral-900 mb-1">No sessions yet</h3>
-          <p className="text-sm text-neutral-500 mb-4">
-            Your completed sessions will appear here.
-          </p>
-          <Link
-            href="/services"
-            className="inline-flex items-center gap-2 rounded-lg bg-brand-primary px-4 py-2 text-sm font-medium text-white hover:bg-brand-primary/90 transition-colors"
-          >
-            Book a Session
-          </Link>
-        </div>
+        <EmptyState
+          heading="No sessions yet"
+          body="Your completed sessions will appear here."
+          icon={<Calendar className="h-12 w-12" aria-hidden="true" />}
+          action={
+            <Link
+              href="/services"
+              className="inline-flex items-center gap-2 rounded-lg bg-brand-primary px-4 py-2 text-sm font-medium text-white hover:bg-brand-primary/90 transition-colors"
+            >
+              Book a Session
+            </Link>
+          }
+        />
       )}
     </div>
   )

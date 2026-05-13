@@ -14,6 +14,7 @@ import {
   Users,
 } from 'lucide-react'
 import { cn } from '@hips/ui'
+import { SkeletonText } from '@hips/ui'
 
 // Mock data — replace with API calls
 const MOCK_USER = {
@@ -41,12 +42,6 @@ const MOCK_USER = {
     cohortName: 'Leadership Track — Spring 2026',
     nextSession: '2026-05-15T10:00:00Z',
   },
-}
-
-function SkeletonLoader({ className }: { className?: string }) {
-  return (
-    <div className={cn('animate-pulse rounded bg-neutral-200', className)} />
-  )
 }
 
 function ExpiryWarning({ expiresAt }: { expiresAt: string }) {
@@ -138,8 +133,8 @@ export default function DashboardPage() {
 
           {loading ? (
             <div className="grid gap-4 md:grid-cols-2">
-              <SkeletonLoader className="h-32" />
-              <SkeletonLoader className="h-32" />
+              <SkeletonText lines={1} className="h-32" />
+              <SkeletonText lines={1} className="h-32" />
             </div>
           ) : MOCK_USER.packages.length === 0 ? (
             <div className="rounded-lg border border-neutral-200 bg-white p-6 text-center">
@@ -212,7 +207,7 @@ export default function DashboardPage() {
           </div>
 
           {loading ? (
-            <SkeletonLoader className="h-24" />
+            <SkeletonText lines={1} className="h-24" />
           ) : MOCK_USER.upcomingSessions.length === 0 ? (
             <div className="rounded-lg border border-neutral-200 bg-white p-6 text-center">
               <Calendar className="h-8 w-8 text-neutral-300 mx-auto mb-2" aria-hidden="true" />
