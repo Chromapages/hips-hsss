@@ -1,7 +1,7 @@
 'use client'
 import { useState } from 'react'
 import { Building2, ChevronLeft, ChevronRight, Mail, ExternalLink, DollarSign } from 'lucide-react'
-import { Badge, Button, Card, CardContent, EmptyState, SkeletonTableRow } from '@hips/ui'
+import { Badge, Button, Card, EmptyState, SkeletonTableRow } from '@hips/ui'
 
 const STATUS_BADGES: Record<string, 'default' | 'info' | 'warning' | 'success' | 'error'> = {
   NEW: 'info', QUOTED: 'warning', DEPOSIT_PAID: 'success', CONFIRMED: 'success', COMPLETED: 'success', CANCELLED: 'error'
@@ -23,9 +23,9 @@ export default function OrganizationsPage() {
       </div>
 
       <Card>
-        <CardContent className="p-0">
+        <Card.Content className="p-0">
           {loading ? (
-            <table className="w-full" role="table">
+            <table className="w-full">
               <thead><tr className="border-b border-neutral-200 bg-neutral-50">
                 <th className="px-4 py-3 text-left text-xs font-medium text-neutral-500 uppercase">Organization</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-neutral-500 uppercase">Contact</th>
@@ -39,7 +39,7 @@ export default function OrganizationsPage() {
           ) : inquiries.length === 0 ? (
             <EmptyState heading="No inquiries yet" body="Organization inquiries will appear here." />
           ) : (
-            <table className="w-full" role="table">
+            <table className="w-full">
               <thead><tr className="border-b border-neutral-200 bg-neutral-50">
                 <th className="px-4 py-3 text-left text-xs font-medium text-neutral-500 uppercase">Organization</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-neutral-500 uppercase">Contact</th>
@@ -78,7 +78,7 @@ export default function OrganizationsPage() {
               </tbody>
             </table>
           )}
-        </CardContent>
+        </Card.Content>
       </Card>
 
       {pagination.totalPages > 1 && (

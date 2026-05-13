@@ -1,7 +1,7 @@
 'use client'
 import { useState } from 'react'
 import { AlertOctagon, ChevronLeft, ChevronRight, ShieldAlert, CheckCircle, Clock } from 'lucide-react'
-import { Badge, Button, Card, CardContent, EmptyState, SkeletonTableRow } from '@hips/ui'
+import { Badge, Button, Card, EmptyState, SkeletonTableRow } from '@hips/ui'
 
 const SEVERITY_BADGES: Record<string, 'error' | 'warning' | 'info'> = {
   TIER_1: 'info',
@@ -48,9 +48,9 @@ export default function SafetyPage() {
       </div>
 
       <Card>
-        <CardContent className="p-0">
+        <Card.Content className="p-0">
           {loading ? (
-            <table className="w-full" role="table">
+            <table className="w-full">
               <thead><tr className="border-b border-neutral-200 bg-neutral-50">
                 <th className="px-4 py-3 text-left text-xs font-medium text-neutral-500 uppercase">Session</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-neutral-500 uppercase">Tier</th>
@@ -64,7 +64,7 @@ export default function SafetyPage() {
           ) : escalations.length === 0 ? (
             <EmptyState heading="Queue is clear" body="No active escalations." />
           ) : (
-            <table className="w-full" role="table">
+            <table className="w-full">
               <thead><tr className="border-b border-neutral-200 bg-neutral-50">
                 <th className="px-4 py-3 text-left text-xs font-medium text-neutral-500 uppercase">Session</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-neutral-500 uppercase">Tier</th>
@@ -99,7 +99,7 @@ export default function SafetyPage() {
               </tbody>
             </table>
           )}
-        </CardContent>
+        </Card.Content>
       </Card>
 
       {pagination.totalPages > 1 && (

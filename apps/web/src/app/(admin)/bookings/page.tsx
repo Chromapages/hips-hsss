@@ -1,7 +1,7 @@
 'use client'
 import { useState } from 'react'
 import { ChevronLeft, ChevronRight, Search } from 'lucide-react'
-import { Badge, Button, Card, CardContent, EmptyState, SkeletonTableRow } from '@hips/ui'
+import { Badge, Button, Card, EmptyState, SkeletonTableRow } from '@hips/ui'
 
 const STATUS_OPTIONS = ['ALL', 'PENDING', 'CONFIRMED', 'COMPLETED', 'CANCELLED', 'NO_SHOW']
 
@@ -42,9 +42,9 @@ export default function BookingsPage() {
       </div>
 
       <Card>
-        <CardContent className="p-0">
+        <Card.Content className="p-0">
           {loading ? (
-            <table className="w-full" role="table">
+            <table className="w-full">
               <thead><tr className="border-b border-neutral-200 bg-neutral-50">
                 <th className="px-4 py-3 text-left text-xs font-medium text-neutral-500 uppercase">Session</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-neutral-500 uppercase">User</th>
@@ -58,7 +58,7 @@ export default function BookingsPage() {
           ) : sessions.length === 0 ? (
             <EmptyState heading="No sessions yet" body="Book your first session to get started." />
           ) : (
-            <table className="w-full" role="table">
+            <table className="w-full">
               <thead><tr className="border-b border-neutral-200 bg-neutral-50">
                 <th className="px-4 py-3 text-left text-xs font-medium text-neutral-500 uppercase">Session</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-neutral-500 uppercase">User</th>
@@ -81,7 +81,7 @@ export default function BookingsPage() {
               </tbody>
             </table>
           )}
-        </CardContent>
+        </Card.Content>
       </Card>
 
       {pagination.totalPages > 1 && (

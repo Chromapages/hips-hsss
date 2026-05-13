@@ -1,7 +1,7 @@
 'use client'
 import { useState } from 'react'
 import { Users, Calendar, Clock, ChevronLeft, ChevronRight } from 'lucide-react'
-import { Badge, Button, Card, CardContent, EmptyState, SkeletonTableRow } from '@hips/ui'
+import { Badge, Button, Card, EmptyState, SkeletonTableRow } from '@hips/ui'
 
 export default function FacilitatorsPage() {
   const [page, setPage] = useState(1)
@@ -19,9 +19,9 @@ export default function FacilitatorsPage() {
       </div>
 
       <Card>
-        <CardContent className="p-0">
+        <Card.Content className="p-0">
           {loading ? (
-            <table className="w-full" role="table">
+            <table className="w-full">
               <thead><tr className="border-b border-neutral-200 bg-neutral-50">
                 <th className="px-4 py-3 text-left text-xs font-medium text-neutral-500 uppercase">Facilitator</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-neutral-500 uppercase">Sessions</th>
@@ -35,7 +35,7 @@ export default function FacilitatorsPage() {
           ) : facilitators.length === 0 ? (
             <EmptyState heading="No facilitators yet" body="Facilitator accounts will appear here once created." />
           ) : (
-            <table className="w-full" role="table">
+            <table className="w-full">
               <thead><tr className="border-b border-neutral-200 bg-neutral-50">
                 <th className="px-4 py-3 text-left text-xs font-medium text-neutral-500 uppercase">Facilitator</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-neutral-500 uppercase">Sessions</th>
@@ -71,7 +71,7 @@ export default function FacilitatorsPage() {
               </tbody>
             </table>
           )}
-        </CardContent>
+        </Card.Content>
       </Card>
 
       {pagination.totalPages > 1 && (
