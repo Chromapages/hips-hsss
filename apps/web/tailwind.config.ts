@@ -15,6 +15,19 @@ const config: Config = {
           warm: "var(--color-brand-warm)",
           deep: "var(--color-brand-deep)",
         },
+        neutral: {
+          50:  '#fafafa',
+          100: '#f5f5f5',
+          200: '#e5e7eb',   // --color-border
+          300: '#d1d5db',
+          400: '#9ca3af',   // --color-text-muted
+          500: '#6b7280',   // --color-text-secondary
+          600: '#4b5563',
+          700: '#374151',
+          800: '#1f2937',
+          900: '#111827',   // --color-text-primary
+          950: '#030712',
+        },
         semantic: {
           success: "var(--color-success)",
           warning: "var(--color-warning)",
@@ -36,6 +49,12 @@ const config: Config = {
           "surface-tile-1": "var(--apple-surface-tile-1)",
           "surface-tile-2": "var(--apple-surface-tile-2)",
           black: "var(--apple-surface-black)",
+          "divider-soft": "var(--apple-divider-soft)",
+          hairline: "var(--apple-hairline)",
+          "surface-pearl": "var(--apple-surface-pearl)",
+          "surface-tile-3": "var(--apple-surface-tile-3)",
+          "on-primary": "var(--apple-on-primary)",
+          "on-dark": "var(--apple-on-dark)",
         },
       },
       fontFamily: {
@@ -60,6 +79,15 @@ const config: Config = {
         // Apple rounded tokens
         pill: "9999px",
         full: "9999px",
+      },
+      keyframes: {
+        'slide-in': {
+          '0%': { transform: 'translateX(100%)', opacity: '0' },
+          '100%': { transform: 'translateX(0)', opacity: '1' },
+        },
+      },
+      animation: {
+        'slide-in': 'slide-in 0.3s ease-out',
       },
     },
   },

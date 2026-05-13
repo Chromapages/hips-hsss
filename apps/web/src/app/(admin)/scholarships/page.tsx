@@ -1,7 +1,7 @@
 'use client'
 import { useState } from 'react'
 import { Check, X, ChevronLeft, ChevronRight, AlertTriangle } from 'lucide-react'
-import { Badge, Button, Card, CardContent, EmptyState, SkeletonTableRow } from '@hips/ui'
+import { Badge, Button, Card, EmptyState, SkeletonTableRow } from '@hips/ui'
 
 const STATUS_TABS = ['PENDING', 'APPROVED', 'DENIED', 'WAITLISTED']
 
@@ -24,22 +24,22 @@ export default function ScholarshipsPage() {
 
       {/* Budget status card */}
       <div className="grid grid-cols-4 gap-4">
-        <Card><CardContent className="p-4">
+        <Card><Card.Content className="p-4">
           <p className="text-xs text-neutral-500 uppercase font-medium">Monthly Budget</p>
           <p className="text-2xl font-bold text-neutral-900 mt-1">${(budgetStatus.monthlyCapTotal / 100).toLocaleString()}</p>
-        </CardContent></Card>
-        <Card><CardContent className="p-4">
+        </Card.Content></Card>
+        <Card><Card.Content className="p-4">
           <p className="text-xs text-neutral-500 uppercase font-medium">Used</p>
           <p className="text-2xl font-bold text-warning mt-1">${(budgetStatus.monthlyCapUsed / 100).toLocaleString()}</p>
-        </CardContent></Card>
-        <Card><CardContent className="p-4">
+        </Card.Content></Card>
+        <Card><Card.Content className="p-4">
           <p className="text-xs text-neutral-500 uppercase font-medium">Remaining</p>
           <p className="text-2xl font-bold text-success mt-1">${(budgetStatus.monthlyCapRemaining / 100).toLocaleString()}</p>
-        </CardContent></Card>
-        <Card><CardContent className="p-4">
+        </Card.Content></Card>
+        <Card><Card.Content className="p-4">
           <p className="text-xs text-neutral-500 uppercase font-medium">Waitlisted</p>
           <p className="text-2xl font-bold text-neutral-900 mt-1">{budgetStatus.waitlistCount}</p>
-        </CardContent></Card>
+        </Card.Content></Card>
       </div>
 
       {/* Status tabs */}
@@ -53,9 +53,9 @@ export default function ScholarshipsPage() {
       </div>
 
       <Card>
-        <CardContent className="p-0">
+        <Card.Content className="p-0">
           {loading ? (
-            <table className="w-full" role="table">
+            <table className="w-full">
               <thead><tr className="border-b border-neutral-200 bg-neutral-50">
                 <th className="px-4 py-3 text-left text-xs font-medium text-neutral-500 uppercase">User</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-neutral-500 uppercase">Service</th>
@@ -69,7 +69,7 @@ export default function ScholarshipsPage() {
           ) : scholarships.length === 0 ? (
             <EmptyState heading={status === 'PENDING' ? 'All caught up' : 'No results'} body={status === 'PENDING' ? 'No pending scholarship applications.' : `No ${status.toLowerCase()} applications.`} />
           ) : (
-            <table className="w-full" role="table">
+            <table className="w-full">
               <thead><tr className="border-b border-neutral-200 bg-neutral-50">
                 <th className="px-4 py-3 text-left text-xs font-medium text-neutral-500 uppercase">User</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-neutral-500 uppercase">Service</th>
@@ -102,7 +102,7 @@ export default function ScholarshipsPage() {
               </tbody>
             </table>
           )}
-        </CardContent>
+        </Card.Content>
       </Card>
 
       {pagination.totalPages > 1 && (

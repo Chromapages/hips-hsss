@@ -1,4 +1,5 @@
 import * as React from 'react'
+import { forwardRef, type ButtonHTMLAttributes } from 'react'
 import { clsx, type ClassValue } from 'clsx'
 import { twMerge } from 'tailwind-merge'
 
@@ -8,13 +9,13 @@ export function cn(...inputs: ClassValue[]) {
 
 // ─── Button ──────────────────────────────────────────────────────────────────
 
-export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: 'primary' | 'secondary' | 'ghost' | 'destructive' | 'crisis'
   size?: 'sm' | 'md' | 'lg'
   loading?: boolean
 }
 
-export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(function Button({
+export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button({
   variant = 'primary',
   size = 'md',
   loading = false,
@@ -30,8 +31,8 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(function 
     primary: 'rounded-full bg-brand-primary text-white hover:bg-brand-primary/90', // Apple pill style
     secondary: 'rounded-full border border-brand-secondary text-brand-secondary hover:bg-brand-secondary/10', // Apple ghost pill
     ghost: 'rounded-full text-brand-primary hover:bg-brand-primary/5',
-    destructive: 'rounded-lg bg-semantic-error text-white hover:bg-semantic-error/90',
-    crisis: 'rounded-lg bg-semantic-crisis text-white ring-2 ring-semantic-crisis/50',
+    destructive: 'rounded-full bg-semantic-error text-white hover:bg-semantic-error/90',
+    crisis: 'rounded-full bg-semantic-crisis text-white ring-2 ring-semantic-crisis/50',
   }
 
   const sizes = {
@@ -57,6 +58,8 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(function 
     </button>
   )
 })
+
+Button.displayName = 'Button'
 
 // ─── Badge ────────────────────────────────────────────────────────────────────
 
