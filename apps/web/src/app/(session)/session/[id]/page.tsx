@@ -14,6 +14,8 @@ import { useAvatarConfig } from '@hooks/useAvatarConfig'
 type SessionStage = 'lobby' | 'active' | 'ended'
 
 type WSMessage =
+  | { type: 'AUTH_SUCCESS' }
+  | { type: 'AUTH_ERROR'; code?: string }
   | { type: 'PARTICIPANT_JOIN'; participant: Participant }
   | { type: 'PARTICIPANT_LEAVE'; participantId: string }
   | { type: 'PARTICIPANT_UPDATE'; participant: Partial<Participant> & { id: string } }
@@ -88,19 +90,25 @@ export default function SessionPage() {
     if (!token) return
 
     const wsUrl = `${process.env.NEXT_PUBLIC_WS_URL ?? 'wss://session.hips.org'}/ws`
-    const ws = new WebSocket(wsUrl, ['session-token', token])
+    const ws = new WebSocket(wsUrl)
     wsRef.current = ws
 
     ws.onopen = () => {
-      setWsConnected(true)
-      // Add local participant once connected
-      setParticipants([makeLocalParticipant(token, styleId, paletteId)])
+      ws.send(JSON.stringify({ type: 'AUTH', token }))
     }
 
     ws.onmessage = (event) => {
       try {
         const msg = JSON.parse(event.data as string) as WSMessage
         switch (msg.type) {
+          case 'AUTH_SUCCESS':
+            setWsConnected(true)
+            setParticipants([makeLocalParticipant(token, styleId, paletteId)])
+            break
+          case 'AUTH_ERROR':
+            setWsConnected(false)
+            ws.close()
+            break
           case 'PARTICIPANT_JOIN':
             setParticipants((prev) => {
               if (prev.some((p) => p.id === msg.participant.id)) return prev
@@ -189,7 +197,7 @@ export default function SessionPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-900 flex flex-col">
+    <div className="min-h-screen bg-[#0D1B2A] flex flex-col">
       {/* Lobby: avatar selection */}
       {stage === 'lobby' && (
         <div className="flex-1 flex items-center justify-center p-6">
@@ -203,7 +211,7 @@ export default function SessionPage() {
               disabled={false}
             />
             {locked && (
-              <p className="text-center text-sm text-slate-500 mt-4">
+              <p className="text-center text-sm text-neutral-500 mt-4">
                 Session starting automatically&hellip;
               </p>
             )}

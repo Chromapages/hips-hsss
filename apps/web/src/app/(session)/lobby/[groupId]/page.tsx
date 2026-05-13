@@ -159,28 +159,28 @@ export default function GroupLobbyPage() {
   ]
 
   return (
-    <div className="min-h-screen bg-slate-900 flex flex-col">
+    <div className="min-h-screen bg-[#0D1B2A] flex flex-col">
       {/* Header */}
-      <div className="px-6 py-4 border-b border-slate-800 flex items-center justify-between">
+      <div className="px-6 py-4 border-b border-neutral-800 flex items-center justify-between">
         <div>
           <h1 className="text-lg font-bold text-white">Group Session Lobby</h1>
-          <p className="text-sm text-slate-400 font-mono">{groupId}</p>
+          <p className="text-sm text-neutral-400 font-mono">{groupId}</p>
         </div>
         <div className="flex items-center gap-3">
-          <span className="text-sm text-slate-400">
+          <span className="text-sm text-neutral-400">
             {state.participants.length} / {state.maxParticipants} joined
           </span>
           {!state.isFacilitator && (
             <button
               onClick={handleCopyLink}
-              className="px-3 py-1.5 rounded-lg border border-slate-600 text-slate-300 text-sm hover:bg-slate-800 transition-colors"
+              className="px-3 py-1.5 rounded-lg border border-neutral-600 text-neutral-300 text-sm hover:bg-neutral-800 transition-colors"
             >
               {copied ? 'Copied!' : 'Copy Invite Link'}
             </button>
           )}
           <button
             onClick={handleLeave}
-            className="px-3 py-1.5 rounded-lg border border-slate-600 text-slate-400 text-sm hover:bg-slate-800 transition-colors"
+            className="px-3 py-1.5 rounded-lg border border-neutral-600 text-neutral-400 text-sm hover:bg-neutral-800 transition-colors"
           >
             Leave
           </button>
@@ -207,7 +207,7 @@ export default function GroupLobbyPage() {
             <>
               {/* Participant grid */}
               <div className="mb-6">
-                <h2 className="text-sm font-semibold text-slate-300 uppercase tracking-wider mb-4">
+                <h2 className="text-sm font-semibold text-neutral-300 uppercase tracking-wider mb-4">
                   Waiting Room ({state.participants.length})
                 </h2>
                 <div className="grid grid-cols-3 gap-4 sm:grid-cols-4 md:grid-cols-6">
@@ -216,7 +216,7 @@ export default function GroupLobbyPage() {
                     return (
                       <div
                         key={p.id}
-                        className="flex flex-col items-center gap-2 p-3 bg-slate-800/50 border border-slate-700 rounded-xl"
+                        className="flex flex-col items-center gap-2 p-3 bg-neutral-800/50 border border-neutral-700 rounded-xl"
                       >
                         {/* Avatar preview */}
                         <div className="relative">
@@ -232,7 +232,7 @@ export default function GroupLobbyPage() {
                             </div>
                           )}
                         </div>
-                        <span className="text-xs text-slate-300 text-center truncate max-w-full">
+                        <span className="text-xs text-neutral-300 text-center truncate max-w-full">
                           {p.displayName}
                         </span>
                       </div>
@@ -242,9 +242,9 @@ export default function GroupLobbyPage() {
                   {Array.from({ length: Math.max(0, state.maxParticipants - state.participants.length) }).map((_, i) => (
                     <div
                       key={`empty-${i}`}
-                      className="h-20 border-2 border-dashed border-slate-700 rounded-xl flex items-center justify-center"
+                      className="h-20 border-2 border-dashed border-neutral-700 rounded-xl flex items-center justify-center"
                     >
-                      <span className="text-xs text-slate-600">Empty</span>
+                      <span className="text-xs text-neutral-600">Empty</span>
                     </div>
                   ))}
                 </div>
@@ -254,7 +254,7 @@ export default function GroupLobbyPage() {
               {state.isFacilitator && (
                 <div className="flex flex-col items-center gap-4">
                   {timeLeft !== null && (
-                    <p className="text-sm text-slate-400">
+                    <p className="text-sm text-neutral-400">
                       Starting in <span className="font-mono text-yellow-400">{timeLeft}s</span>
                     </p>
                   )}
@@ -265,7 +265,7 @@ export default function GroupLobbyPage() {
                       'px-6 py-3 rounded-xl font-medium text-base transition-all',
                       state.participants.length >= 1
                         ? 'bg-brand-accent text-brand-deep hover:bg-brand-accent/90'
-                        : 'bg-slate-700 text-slate-500 cursor-not-allowed'
+                        : 'bg-neutral-700 text-neutral-500 cursor-not-allowed'
                     )}
                   >
                     {state.participants.length >= 1 ? 'Start Session' : 'Waiting for participants…'}
@@ -274,7 +274,7 @@ export default function GroupLobbyPage() {
               )}
 
               {!state.isFacilitator && (
-                <p className="text-center text-sm text-slate-500 mt-4">
+                <p className="text-center text-sm text-neutral-500 mt-4">
                   Your facilitator will start the session shortly…
                 </p>
               )}
