@@ -69,7 +69,6 @@ export async function PATCH(req: NextRequest) {
       data: {
         status: 'COMPLETED',
         completedAt,
-        notes: parsed.data.notes,
       },
     })
 

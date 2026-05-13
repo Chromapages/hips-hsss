@@ -10832,6 +10832,7 @@ export namespace Prisma {
 
   export type SessionWhereUniqueInput = Prisma.AtLeast<{
     id?: string
+    stripePaymentId?: string
     AND?: SessionWhereInput | SessionWhereInput[]
     OR?: SessionWhereInput[]
     NOT?: SessionWhereInput | SessionWhereInput[]
@@ -10843,7 +10844,6 @@ export namespace Prisma {
     pricePaid?: DecimalFilter<"Session"> | Decimal | DecimalJsLike | number | string
     isScholarship?: BoolFilter<"Session"> | boolean
     scholarshipCode?: StringNullableFilter<"Session"> | string | null
-    stripePaymentId?: StringNullableFilter<"Session"> | string | null
     packageId?: StringNullableFilter<"Session"> | string | null
     sessionTokenRef?: StringNullableFilter<"Session"> | string | null
     cancelReason?: StringNullableFilter<"Session"> | string | null
@@ -10855,7 +10855,7 @@ export namespace Prisma {
     user?: XOR<UserRelationFilter, UserWhereInput>
     service?: XOR<ServiceRelationFilter, ServiceWhereInput>
     package?: XOR<PackageNullableRelationFilter, PackageWhereInput> | null
-  }, "id">
+  }, "id" | "stripePaymentId">
 
   export type SessionOrderByWithAggregationInput = {
     id?: SortOrder
@@ -10950,6 +10950,7 @@ export namespace Prisma {
 
   export type PackageWhereUniqueInput = Prisma.AtLeast<{
     id?: string
+    stripePaymentId?: string
     AND?: PackageWhereInput | PackageWhereInput[]
     OR?: PackageWhereInput[]
     NOT?: PackageWhereInput | PackageWhereInput[]
@@ -10959,7 +10960,6 @@ export namespace Prisma {
     usedSessions?: IntFilter<"Package"> | number
     pricePaid?: DecimalFilter<"Package"> | Decimal | DecimalJsLike | number | string
     expiresAt?: DateTimeFilter<"Package"> | Date | string
-    stripePaymentId?: StringNullableFilter<"Package"> | string | null
     status?: EnumPackageStatusFilter<"Package"> | $Enums.PackageStatus
     isScholarship?: BoolFilter<"Package"> | boolean
     discountCode?: StringNullableFilter<"Package"> | string | null
@@ -10968,7 +10968,7 @@ export namespace Prisma {
     user?: XOR<UserRelationFilter, UserWhereInput>
     service?: XOR<ServiceRelationFilter, ServiceWhereInput>
     sessions?: SessionListRelationFilter
-  }, "id">
+  }, "id" | "stripePaymentId">
 
   export type PackageOrderByWithAggregationInput = {
     id?: SortOrder

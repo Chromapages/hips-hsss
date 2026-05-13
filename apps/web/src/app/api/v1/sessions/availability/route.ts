@@ -63,7 +63,7 @@ export async function GET(req: NextRequest) {
     const booked = await commerceDb.session.findMany({
       where: {
         serviceId,
-        status: { in: ['PENDING', 'CONFIRMED', 'ACTIVE'] },
+        status: { in: ['PENDING', 'CONFIRMED'] },
         scheduledAt: { gte: start, lte: end },
         ...(facilitatorId ? { facilitatorId } : {}),
       },

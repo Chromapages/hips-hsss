@@ -20,4 +20,4 @@ export function DisclaimerBanner({ className }: { className?: string }) {
   )
 }
 
-export const DISCLAIMER_FOR Checkout = DISCLAIMER_TEXT
+export const DISCLAIMER_FOR_CHECKOUT = DISCLAIMER_TEXT

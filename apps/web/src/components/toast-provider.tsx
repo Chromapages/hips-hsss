@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useContext, useCallback, useState } from 'react'
+import { createContext, useContext, useCallback, useState, useRef, useEffect } from 'react'
 import { X, CheckCircle, AlertTriangle, Info, XCircle } from 'lucide-react'
 import { cn } from '@hips/ui'
 
@@ -42,16 +42,45 @@ const VARIANT_STYLES: Record<ToastVariant, string> = {
 
 export function ToastProvider({ children }: { children: React.ReactNode }) {
   const [toasts, setToasts] = useState<Toast[]>([])
+  const timeoutIdsRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map())
+  const isMountedRef = useRef(true)
+
+  // Cleanup all timeouts on unmount
+  useEffect(() => {
+    isMountedRef.current = true
+    return () => {
+      isMountedRef.current = false
+      // Clear all pending timeouts
+      for (const timeoutId of timeoutIdsRef.current.values()) {
+        clearTimeout(timeoutId)
+      }
+      timeoutIdsRef.current.clear()
+    }
+  }, [])
+
+  const removeToast = useCallback((id: string) => {
+    // Clear the timeout if it exists
+    const timeoutId = timeoutIdsRef.current.get(id)
+    if (timeoutId !== undefined) {
+      clearTimeout(timeoutId)
+      timeoutIdsRef.current.delete(id)
+    }
+    // Only update state if still mounted
+    if (isMountedRef.current) {
+      setToasts(prev => prev.filter(t => t.id !== id))
+    }
+  }, [])
 
   const addToast = useCallback((message: string, variant: ToastVariant = 'info') => {
     const id = crypto.randomUUID()
     setToasts(prev => [...prev, { id, message, variant }])
-    setTimeout(() => removeToast(id), 5000)
-  }, [])
 
-  const removeToast = useCallback((id: string) => {
-    setToasts(prev => prev.filter(t => t.id !== id))
-  }, [])
+    // Store timeout ID so we can clear it if toast is dismissed early
+    const timeoutId = setTimeout(() => {
+      removeToast(id)
+    }, 5000)
+    timeoutIdsRef.current.set(id, timeoutId)
+  }, [removeToast])
 
   return (
     <ToastContext.Provider value={{ toasts, addToast, removeToast }}>

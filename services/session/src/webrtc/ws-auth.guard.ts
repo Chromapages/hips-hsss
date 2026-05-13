@@ -12,7 +12,14 @@ export class WsAuthGuard implements CanActivate {
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const client: Socket = context.switchToWs().getClient();
-    const token = client.handshake.auth.token || client.handshake.headers['x-session-token'];
+    const protocolHeader = client.handshake.headers['sec-websocket-protocol'];
+    const protocols = Array.isArray(protocolHeader)
+      ? protocolHeader.join(',').split(',')
+      : typeof protocolHeader === 'string'
+        ? protocolHeader.split(',')
+        : [];
+    const protocolToken = protocols.map((p) => p.trim()).find((p) => p && p !== 'session-token');
+    const token = client.handshake.auth.token || client.handshake.headers['x-session-token'] || protocolToken;
 
     if (!token) {
       return false;

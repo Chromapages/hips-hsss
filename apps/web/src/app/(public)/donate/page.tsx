@@ -8,9 +8,18 @@ import { CheckoutDonationInput } from '@hips/types'
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? '')
 
-const DONATION_TIERS = [
+type DonationTierId = CheckoutDonationInput['tier']
+
+const DONATION_TIERS: Array<{
+  id: DonationTierId
+  name: string
+  amount: number
+  displayAmount: string
+  description: string
+  icon: React.ReactNode
+}> = [
   {
-    id: 'sponsor_session',
+    id: 'SPONSOR_SESSION',
     name: 'Sponsor a Session',
     amount: 10000,
     displayAmount: '$100',
@@ -22,7 +31,7 @@ const DONATION_TIERS = [
     ),
   },
   {
-    id: 'restore_session',
+    id: 'RESTORE_SESSION',
     name: 'Restore a Session',
     amount: 25000,
     displayAmount: '$250',
@@ -34,7 +43,7 @@ const DONATION_TIERS = [
     ),
   },
   {
-    id: 'restore_leader',
+    id: 'RESTORE_LEADER',
     name: 'Restore a Leader',
     amount: 50000,
     displayAmount: '$500',
@@ -46,7 +55,7 @@ const DONATION_TIERS = [
     ),
   },
   {
-    id: 'custom',
+    id: 'CUSTOM',
     name: 'Custom Amount',
     amount: 0,
     displayAmount: 'Any',
@@ -147,7 +156,7 @@ function SuccessMessage({ amount }: { amount: number }) {
 }
 
 export default function DonatePage() {
-  const [selectedTierId, setSelectedTierId] = useState<string | null>(null)
+  const [selectedTierId, setSelectedTierId] = useState<DonationTierId | null>(null)
   const [customDollarAmount, setCustomDollarAmount] = useState('')
   const [email, setEmail] = useState('')
   const [isCreatingIntent, setIsCreatingIntent] = useState(false)
@@ -171,7 +180,7 @@ export default function DonatePage() {
   const createPaymentIntent = useCallback(async () => {
     if (!selectedTier) return
 
-    const isCustom = selectedTierId === 'custom'
+    const isCustom = selectedTierId === 'CUSTOM'
     const dollarAmount = isCustom ? parseFloat(customDollarAmount) : parseFloat(selectedTier.displayAmount.replace('$', ''))
     const amountInCents = Math.round(dollarAmount * 100)
 
@@ -218,8 +227,8 @@ export default function DonatePage() {
   }, [selectedTier, selectedTierId, customDollarAmount, email])
 
   useEffect(() => {
-    if (!selectedTier || selectedTierId === 'custom') {
-      if (selectedTierId === 'custom' && customDollarAmount && email) {
+    if (!selectedTier || selectedTierId === 'CUSTOM') {
+      if (selectedTierId === 'CUSTOM' && customDollarAmount && email) {
         const dollarAmount = parseFloat(customDollarAmount)
         if (!isNaN(dollarAmount) && dollarAmount > 0) {
           createPaymentIntent()
@@ -228,7 +237,7 @@ export default function DonatePage() {
       return
     }
 
-    if (selectedTierId && email && selectedTierId !== 'custom') {
+    if (selectedTierId && email) {
       createPaymentIntent()
     }
   }, [selectedTierId])
@@ -246,11 +255,11 @@ export default function DonatePage() {
     setEmail(e.target.value)
   }
 
-  const handleTierSelect = (tierId: string) => {
+  const handleTierSelect = (tierId: DonationTierId) => {
     setSelectedTierId(tierId)
     setClientSecret(null)
     setError(null)
-    if (tierId !== 'custom') {
+    if (tierId !== 'CUSTOM') {
       setCustomDollarAmount('')
     }
   }
@@ -320,7 +329,7 @@ export default function DonatePage() {
           })}
         </div>
 
-        {selectedTierId === 'custom' && (
+        {selectedTierId === 'CUSTOM' && (
           <div className="mb-6">
             <label htmlFor="custom-amount" className="block text-sm font-medium text-neutral-700 mb-2">
               Enter your donation amount
@@ -386,7 +395,7 @@ export default function DonatePage() {
                 <DonationForm
                   clientSecret={clientSecret}
                   amount={intentAmount}
-                  tier={selectedTier?.id ?? 'custom'}
+                  tier={selectedTier?.id ?? 'CUSTOM'}
                 />
               </Elements>
             )}

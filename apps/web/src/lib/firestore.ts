@@ -103,7 +103,7 @@ export function subscribeToParticipants(
     q = query(coll, where('leftAt', '==', null), orderBy('joinedAt', 'asc'))
   }
 
-  return onSnapshot(q, (snap: QuerySnapshot) => {
+  return onSnapshot(q as never, (snap: QuerySnapshot<DocumentData>) => {
     callback(snap.docs.map(docToParticipant))
   })
 }
@@ -114,7 +114,7 @@ export function subscribeToActiveRooms(
 ): Unsubscribe {
   const q = query(collection(db, 'rooms'), where('status', 'in', statuses))
 
-  return onSnapshot(q, (snap) => {
+  return onSnapshot(q as never, (snap: QuerySnapshot<DocumentData>) => {
     callback(snap.docs.map(docToRoom))
   })
 }

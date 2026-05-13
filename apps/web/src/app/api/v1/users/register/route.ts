@@ -1,17 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getAuthUser } from '@/lib/auth/get-auth-user'
+import { adminAuth } from '@/lib/firebase/admin'
+import { commerceDb } from '@/lib/commerce-db'
 import { z } from 'zod'
 
 const registerSchema = z.object({
-  uid: z.string().min(1),
   email: z.string().email().optional(),
   displayName: z.string().optional(),
   provider: z.enum(['email', 'google']).default('email'),
 })
 
 export async function POST(req: NextRequest) {
-  const authResult = await getAuthUser(req)
-  if (authResult instanceof Response) {
+  const authHeader = req.headers.get('authorization')
+  if (!authHeader?.startsWith('Bearer ')) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
+  let firebaseUid: string
+  try {
+    const decoded = await adminAuth.verifyIdToken(authHeader.slice(7))
+    firebaseUid = decoded.uid
+  } catch {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
@@ -21,20 +29,12 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Invalid request body' }, { status: 400 })
   }
 
-  const { uid, email, displayName, provider } = parsed.data
-
-  // Provision Commerce User record
   try {
-    // @ts-ignore — Prisma client injected via global
-    const { prisma } = await import('@/lib/prisma')
-    await prisma.user.upsert({
-      where: { firebaseUid: uid },
-      update: { displayName, provider },
+    await commerceDb.user.upsert({
+      where: { firebaseUid },
+      update: {},
       create: {
-        firebaseUid: uid,
-        displayName,
-        provider,
-        // email intentionally excluded — PII lives in Firebase Auth only
+        firebaseUid,
       },
     })
   } catch (err) {
@@ -42,5 +42,5 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Failed to provision user record' }, { status: 500 })
   }
 
-  return NextResponse.json({ success: true, uid }, { status: 201 })
+  return NextResponse.json({ success: true, uid: firebaseUid }, { status: 201 })
 }

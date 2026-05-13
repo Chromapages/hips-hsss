@@ -27,7 +27,7 @@ export class EscalationController {
     @Query() query: unknown,
     @Headers('x-safety-secret') secret: string,
   ) {
-    if (secret !== process.env.SAFETY_ENGINE_SECRET) {
+    if (!process.env.SAFETY_ENGINE_SECRET || secret !== process.env.SAFETY_ENGINE_SECRET) {
       throw new UnauthorizedException('Invalid safety engine secret')
     }
 
@@ -72,7 +72,7 @@ export class EscalationController {
     @Headers('x-safety-secret') secret: string,
     @Headers('x-requester-id') requesterId: string,
   ) {
-    if (secret !== process.env.SAFETY_ENGINE_SECRET) {
+    if (!process.env.SAFETY_ENGINE_SECRET || secret !== process.env.SAFETY_ENGINE_SECRET) {
       throw new UnauthorizedException('Invalid safety engine secret')
     }
 
@@ -100,7 +100,7 @@ export class EscalationController {
    */
   @Get(':id')
   async getById(@Param('id') id: string, @Headers('x-safety-secret') secret: string) {
-    if (secret !== process.env.SAFETY_ENGINE_SECRET) {
+    if (!process.env.SAFETY_ENGINE_SECRET || secret !== process.env.SAFETY_ENGINE_SECRET) {
       throw new UnauthorizedException('Invalid safety engine secret')
     }
 

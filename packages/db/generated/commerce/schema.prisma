@@ -132,7 +132,7 @@ model Session {
   pricePaid             Decimal       @db.Decimal(10, 2)
   isScholarship         Boolean       @default(false)
   scholarshipCode       String? // discount code used at checkout
-  stripePaymentId       String?
+  stripePaymentId       String?       @unique
   packageId             String?
   sessionTokenRef       String? // opaque reference to anon session token — NOT the token itself
   cancelReason          String?
@@ -151,7 +151,6 @@ model Session {
   @@index([facilitatorId])
   @@index([status])
   @@index([scheduledAt])
-  @@index([stripePaymentId])
 }
 
 // Session credits bundle — purchased ahead of time
@@ -163,7 +162,7 @@ model Package {
   usedSessions    Int           @default(0)
   pricePaid       Decimal       @db.Decimal(10, 2)
   expiresAt       DateTime
-  stripePaymentId String?
+  stripePaymentId String?       @unique
   status          PackageStatus @default(ACTIVE)
   isScholarship   Boolean       @default(false)
   discountCode    String?

@@ -1,14 +1,13 @@
 import {
-  Injectable,
-  NotFoundException,
   BadRequestException,
   ForbiddenException,
+  Injectable,
+  NotFoundException,
 } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import { SessionPrismaService } from '../common/prisma'
 import { JoinLobbyInput, ModeratorActionInput } from '../common/dto/session.dto'
 import { FirestoreService } from '../firestore/firestore.service'
-import { v4 as uuidv4 } from 'uuid'
 
 @Injectable()
 export class GroupService {
@@ -18,11 +17,9 @@ export class GroupService {
     private firestore: FirestoreService,
   ) {}
 
-  // ─── Join lobby ─────────────────────────────────────────────────────────────
-
   async joinLobby(
     groupId: string,
-    input: JoinLobbyInput,
+    _input: JoinLobbyInput,
     actorAnonId: string,
   ): Promise<{
     lobbyId: string
@@ -31,51 +28,42 @@ export class GroupService {
     isModerator: boolean
     participants: Array<{ anonId: string; anonHandle: string }>
   }> {
-    const groupSession = await this.prisma.groupSessionRecord.findUnique({
-      where: { id: groupId },
-    })
-
-    if (!groupSession) {
-      throw new NotFoundException('Group session not found')
-    }
-
-    if (groupSession.status !== 'LOBBY') {
+    const groupSession = await this.getGroupSession(groupId)
+    if (!groupSession.lobbyActive) {
       throw new BadRequestException('Lobby is not active')
     }
 
     const maxParticipants = this.configService.get<number>('LIVEKIT_MAX_PARTICIPANTS', 12)
     const activeParticipants = await this.firestore.getActiveParticipants(groupId)
-
     if (activeParticipants.length >= maxParticipants) {
       throw new BadRequestException('Lobby is at full capacity')
     }
 
-    // Ensure Firestore room document exists
+    const moderatorAnonId = groupSession.sessionRecord?.moderatorAnonId ?? ''
     const existingRoom = await this.firestore.getRoom(groupId)
     if (!existingRoom) {
       await this.firestore.createRoom({
         roomId: groupId,
         status: 'LOBBY',
-        moderatorAnonId: groupSession.moderatorAnonId,
-        scheduledAt: groupSession.scheduledAt,
+        moderatorAnonId,
+        scheduledAt: groupSession.lobbyStartedAt ?? groupSession.createdAt,
         startedAt: null,
         endedAt: null,
         maxParticipants,
         participantCount: activeParticipants.length,
         groupSessionRecordId: groupId,
-        serviceId: groupSession.serviceId ?? null,
+        serviceId: null,
         serviceName: null,
         crisisActive: false,
         crisisFlagId: null,
       })
     }
 
-    const isModerator = groupSession.moderatorAnonId === actorAnonId
-    const participantAnonId = uuidv4()
+    const participantAnonId = actorAnonId
     const participantCount = activeParticipants.length + 1
     const participantAnonHandle = `Participant #${participantCount}`
+    const isModerator = moderatorAnonId === actorAnonId
 
-    // Write participant to Firestore real-time presence
     await this.firestore.upsertParticipant(groupId, {
       anonId: participantAnonId,
       displayName: participantAnonHandle,
@@ -89,20 +77,13 @@ export class GroupService {
     })
 
     await this.firestore.incrementParticipantCount(groupId)
-
-    // Audit log → PostgreSQL (source of truth)
-    await this.prisma.auditEvent.create({
-      data: {
-        eventType: 'LOBBY_JOINED',
-        severity: 'INFO',
-        actorId: participantAnonId,
-        targetId: groupId,
-        metadata: { participantAnonHandle, isModerator, groupId },
-      },
+    await this.logEvent(groupSession.sessionRecordId, 'LOBBY_JOINED', participantAnonId, {
+      participantAnonHandle,
+      isModerator,
+      groupId,
     })
 
     const updatedParticipants = await this.firestore.getActiveParticipants(groupId)
-
     return {
       lobbyId: groupId,
       participantAnonId,
@@ -115,119 +96,59 @@ export class GroupService {
     }
   }
 
-  // ─── Leave lobby ────────────────────────────────────────────────────────────
-
-  async leaveLobby(
-    groupId: string,
-    participantAnonId: string,
-  ): Promise<{ left: boolean }> {
+  async leaveLobby(groupId: string, participantAnonId: string): Promise<{ left: boolean }> {
+    const groupSession = await this.getGroupSession(groupId)
     const activeParticipants = await this.firestore.getActiveParticipants(groupId)
     const participant = activeParticipants.find((p) => p.anonId === participantAnonId)
-
     if (!participant) {
       throw new NotFoundException('Participant not found in lobby')
     }
 
     await this.firestore.removeParticipant(groupId, participantAnonId)
     await this.firestore.decrementParticipantCount(groupId)
-
-    await this.prisma.auditEvent.create({
-      data: {
-        eventType: 'LOBBY_LEFT',
-        severity: 'INFO',
-        actorId: participantAnonId,
-        targetId: groupId,
-        metadata: { groupId },
-      },
-    })
+    await this.logEvent(groupSession.sessionRecordId, 'LOBBY_LEFT', participantAnonId, { groupId })
 
     return { left: true }
   }
 
-  // ─── Start lobby ────────────────────────────────────────────────────────────
+  async startLobby(groupId: string, moderatorAnonId: string): Promise<{ started: boolean; roomId: string }> {
+    const groupSession = await this.getGroupSession(groupId)
+    this.assertModerator(groupSession, moderatorAnonId)
 
-  async startLobby(
-    groupId: string,
-    moderatorAnonId: string,
-  ): Promise<{ started: boolean; roomId: string }> {
-    const groupSession = await this.prisma.groupSessionRecord.findUnique({
-      where: { id: groupId },
-    })
-
-    if (!groupSession) {
-      throw new NotFoundException('Group session not found')
-    }
-
-    if (groupSession.moderatorAnonId !== moderatorAnonId) {
-      throw new ForbiddenException('Only moderator can start the lobby')
-    }
-
-    // Update PostgreSQL
     await this.prisma.groupSessionRecord.update({
       where: { id: groupId },
-      data: { status: 'LIVE', startedAt: new Date() },
+      data: { lobbyActive: false, lobbyStartedAt: new Date() },
     })
 
-    // Update Firestore room status
     await this.firestore.updateRoom(groupId, {
       status: 'LIVE',
       startedAt: new Date(),
     })
 
-    await this.prisma.auditEvent.create({
-      data: {
-        eventType: 'LOBBY_STARTED',
-        severity: 'INFO',
-        actorId: moderatorAnonId,
-        targetId: groupId,
-        metadata: { groupId },
-      },
-    })
-
+    await this.logEvent(groupSession.sessionRecordId, 'LOBBY_STARTED', moderatorAnonId, { groupId })
     return { started: true, roomId: groupId }
   }
-
-  // ─── Moderator actions ──────────────────────────────────────────────────────
 
   async moderatorAction(
     groupId: string,
     moderatorAnonId: string,
     input: ModeratorActionInput,
   ): Promise<{ action: string; success: boolean }> {
-    const groupSession = await this.prisma.groupSessionRecord.findUnique({
-      where: { id: groupId },
-    })
-
-    if (!groupSession) {
-      throw new NotFoundException('Group session not found')
-    }
-
-    if (groupSession.moderatorAnonId !== moderatorAnonId) {
-      throw new ForbiddenException('Only moderator can perform this action')
-    }
+    const groupSession = await this.getGroupSession(groupId)
+    this.assertModerator(groupSession, moderatorAnonId)
 
     switch (input.action) {
       case 'mute':
-        await this.prisma.auditEvent.create({
-          data: {
-            eventType: 'MODERATOR_MUTED_ALL',
-            severity: 'INFO',
-            actorId: moderatorAnonId,
-            targetId: groupId,
-            metadata: { groupId, reason: input.reason },
-          },
+        await this.logEvent(groupSession.sessionRecordId, 'MODERATOR_MUTED_ALL', moderatorAnonId, {
+          groupId,
+          reason: input.reason,
         })
         return { action: 'mute_all', success: true }
 
       case 'unmute':
-        await this.prisma.auditEvent.create({
-          data: {
-            eventType: 'MODERATOR_UNMUTED_ALL',
-            severity: 'INFO',
-            actorId: moderatorAnonId,
-            targetId: groupId,
-            metadata: { groupId, reason: input.reason },
-          },
+        await this.logEvent(groupSession.sessionRecordId, 'MODERATOR_UNMUTED_ALL', moderatorAnonId, {
+          groupId,
+          reason: input.reason,
         })
         return { action: 'unmute_all', success: true }
 
@@ -237,34 +158,22 @@ export class GroupService {
         }
         await this.firestore.removeParticipant(groupId, input.targetAnonId)
         await this.firestore.decrementParticipantCount(groupId)
-
-        await this.prisma.auditEvent.create({
-          data: {
-            eventType: 'PARTICIPANT_REMOVED',
-            severity: 'WARNING',
-            actorId: moderatorAnonId,
-            targetId: groupId,
-            metadata: { groupId, removedAnonId: input.targetAnonId, reason: input.reason },
-          },
+        await this.logEvent(groupSession.sessionRecordId, 'PARTICIPANT_REMOVED', moderatorAnonId, {
+          groupId,
+          removedAnonId: input.targetAnonId,
+          reason: input.reason,
         })
         return { action: 'remove', success: true }
 
       case 'end':
         await this.prisma.groupSessionRecord.update({
           where: { id: groupId },
-          data: { status: 'ENDED', endedAt: new Date() },
+          data: { lobbyActive: false },
         })
-
         await this.firestore.endRoom(groupId)
-
-        await this.prisma.auditEvent.create({
-          data: {
-            eventType: 'SESSION_ENDED',
-            severity: 'INFO',
-            actorId: moderatorAnonId,
-            targetId: groupId,
-            metadata: { groupId, reason: 'moderator_ended' },
-          },
+        await this.logEvent(groupSession.sessionRecordId, 'SESSION_ENDED', moderatorAnonId, {
+          groupId,
+          reason: 'moderator_ended',
         })
         return { action: 'end_session', success: true }
 
@@ -273,24 +182,51 @@ export class GroupService {
     }
   }
 
-  // ─── Get lobby participants ──────────────────────────────────────────────────
-
   async getLobbyParticipants(groupId: string): Promise<
     Array<{ anonId: string; anonHandle: string; isModerator: boolean }>
   > {
-    const groupSession = await this.prisma.groupSessionRecord.findUnique({
-      where: { id: groupId },
-    })
-
-    if (!groupSession) {
-      throw new NotFoundException('Group session not found')
-    }
-
+    await this.getGroupSession(groupId)
     const activeParticipants = await this.firestore.getActiveParticipants(groupId)
     return activeParticipants.map((p) => ({
       anonId: p.anonId,
       anonHandle: p.displayName,
       isModerator: p.role === 'moderator',
     }))
+  }
+
+  private async getGroupSession(groupId: string) {
+    const groupSession = await this.prisma.groupSessionRecord.findUnique({
+      where: { id: groupId },
+      include: { sessionRecord: true },
+    })
+
+    if (!groupSession) {
+      throw new NotFoundException('Group session not found')
+    }
+
+    return groupSession
+  }
+
+  private assertModerator(groupSession: Awaited<ReturnType<GroupService['getGroupSession']>>, actorAnonId: string) {
+    if (groupSession.sessionRecord?.moderatorAnonId !== actorAnonId) {
+      throw new ForbiddenException('Only moderator can perform this action')
+    }
+  }
+
+  private async logEvent(
+    sessionRecordId: string,
+    eventType: string,
+    actorAnonId: string,
+    eventData: Record<string, unknown>,
+  ) {
+    await this.prisma.auditEvent.create({
+      data: {
+        sessionRecordId,
+        eventType: eventType as any,
+        severity: 'INFO',
+        actorAnonId,
+        eventData: eventData as any,
+      },
+    })
   }
 }

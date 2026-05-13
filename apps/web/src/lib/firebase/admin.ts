@@ -1,11 +1,14 @@
 import { initializeApp, getApps, applicationDefault } from 'firebase-admin/app'
-import { getAuth, verifyIdToken } from 'firebase-admin/auth'
+import { getAuth, type Auth } from 'firebase-admin/auth'
 import { getFirestore } from 'firebase-admin/firestore'
 import { getStorage } from 'firebase-admin/storage'
 
 import { cert } from 'firebase-admin/app'
+import type { App } from 'firebase-admin/app'
+import type { Firestore } from 'firebase-admin/firestore'
+import type { Storage } from 'firebase-admin/storage'
 
-function getAdminApp() {
+function getAdminApp(): App {
   if (getApps().length > 0) {
     return getApps()[0]!
   }
@@ -31,11 +34,30 @@ function getAdminApp() {
   return initializeApp(config)
 }
 
-export const adminApp = getAdminApp()
-export const adminAuth = getAuth(adminApp)
-export const adminDb = getFirestore(adminApp)
-export const adminStorage = getStorage(adminApp)
+export const adminApp = new Proxy({} as App, {
+  get(_target, prop) {
+    return getAdminApp()[prop as keyof App]
+  },
+})
+
+export const adminAuth = new Proxy({} as Auth, {
+  get(_target, prop) {
+    return getAuth(getAdminApp())[prop as keyof Auth]
+  },
+})
+
+export const adminDb = new Proxy({} as Firestore, {
+  get(_target, prop) {
+    return getFirestore(getAdminApp())[prop as keyof Firestore]
+  },
+})
+
+export const adminStorage = new Proxy({} as Storage, {
+  get(_target, prop) {
+    return getStorage(getAdminApp())[prop as keyof Storage]
+  },
+})
 
 export async function verifyFirebaseToken(idToken: string) {
-  return verifyIdToken(idToken)
+  return getAuth(getAdminApp()).verifyIdToken(idToken)
 }

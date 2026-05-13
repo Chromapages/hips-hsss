@@ -238,6 +238,7 @@ export const UserRoleSchema = {
 
 // Re-export from api.ts for convenience
 export type { ApiResponse } from './api'
+export type { CheckoutDonationInput } from './api'
 export { makeResponse, makeError, ErrorCodes } from './api'
 export {
   BookSessionSchema,
@@ -262,6 +263,16 @@ export {
 // Re-export crisis alert channels from copy-policy
 export type { CrisisAlertChannel } from './copy-policy'
 export { CRISIS_ALERT_CHANNELS } from './copy-policy'
+export const CRISIS_RESOURCES = {
+  national: {
+    label: '988 Suicide & Crisis Lifeline',
+    display: '988',
+  },
+  text: {
+    label: 'Crisis Text Line',
+    display: 'Text HOME to 741741',
+  },
+} as const
 
 // Re-export Firebase auth types
 export type { FirebaseUser, AuthState, SignInFn, SignUpFn, SignOutFn } from './auth'

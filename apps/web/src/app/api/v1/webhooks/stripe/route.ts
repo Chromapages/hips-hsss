@@ -39,14 +39,37 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Invalid signature' }, { status: 400 })
   }
 
-  // Return 200 immediately per Stripe best practice, then process async
-  const response = NextResponse.json({ received: true })
+  try {
+    const existing = await prisma.stripeEvent.findUnique({
+      where: { stripeEventId: event.id },
+    })
 
-  handleEvent(event).catch((err) => {
+    if (existing?.processed) {
+      return NextResponse.json({ received: true, duplicate: true })
+    }
+
+    if (!existing) {
+      await prisma.stripeEvent.create({
+        data: {
+          stripeEventId: event.id,
+          eventType: event.type,
+          payload: event as unknown as object,
+          processed: false,
+        },
+      })
+    }
+
+    await handleEvent(event)
+    await prisma.stripeEvent.update({
+      where: { stripeEventId: event.id },
+      data: { processed: true, processedAt: new Date() },
+    })
+
+    return NextResponse.json({ received: true })
+  } catch (err) {
     console.error('Webhook handler error:', err)
-  })
-
-  return response
+    return NextResponse.json({ error: 'Webhook processing failed' }, { status: 500 })
+  }
 }
 
 async function handleEvent(event: Stripe.Event): Promise<void> {
@@ -72,6 +95,7 @@ async function handlePaymentIntentSucceeded(pi: Stripe.PaymentIntent): Promise<v
 
   if (type === 'SERVICE_PURCHASE') {
     const sessionId = metadata.sessionId
+    if (!sessionId) return
 
     const existing = await prisma.session.findUnique({ where: { stripePaymentId: pi.id } })
     if (existing) return // Idempotency guard
@@ -81,15 +105,15 @@ async function handlePaymentIntentSucceeded(pi: Stripe.PaymentIntent): Promise<v
       data: {
         status: 'CONFIRMED',
         stripePaymentId: pi.id,
-        pricePaid: pi.amount,
+        pricePaid: pi.amount / 100,
         confirmationEmailSent: true,
       },
       include: { user: true, service: true },
     })
 
-    if (session) {
+    if (session && pi.receipt_email) {
       const email = bookingConfirmationEmail({
-        participantName: session.user.email?.split('@')[0] ?? 'Participant',
+        participantName: 'Participant',
         serviceName: session.service.name,
         scheduledAt: session.scheduledAt.toISOString(),
         facilitatorName: 'Your Facilitator',
@@ -98,11 +122,11 @@ async function handlePaymentIntentSucceeded(pi: Stripe.PaymentIntent): Promise<v
           : undefined,
       })
       await sendEmail({
-        to: session.user.email ?? '',
+        to: pi.receipt_email,
         subject: email.subject,
         html: email.html,
         text: email.text,
-      }).catch((err) => console.error('Failed to send booking confirmation:', err))
+      }).catch((err: unknown) => console.error('Failed to send booking confirmation:', err))
     }
   } else if (type === 'PACKAGE_PURCHASE') {
     const existing = await prisma.package.findUnique({ where: { stripePaymentId: pi.id } })
@@ -110,8 +134,9 @@ async function handlePaymentIntentSucceeded(pi: Stripe.PaymentIntent): Promise<v
 
     const serviceId = metadata.serviceId
     const userId = metadata.userId
+    if (!serviceId || !userId) return
     const totalSessions = metadata.totalSessions === '8' ? 8 : 4
-    const pricePaid = pi.amount
+    const pricePaid = pi.amount / 100
     const expiresAt = new Date()
     expiresAt.setDate(expiresAt.getDate() + 90)
 
@@ -128,22 +153,34 @@ async function handlePaymentIntentSucceeded(pi: Stripe.PaymentIntent): Promise<v
       },
     })
 
+    if (metadata.discountCode) {
+      await prisma.scholarship.updateMany({
+        where: {
+          discountCode: metadata.discountCode,
+          userId,
+          serviceId,
+          status: 'APPROVED',
+        },
+        data: { status: 'EXPIRED' },
+      })
+    }
+
     const service = await prisma.service.findUnique({ where: { id: serviceId } })
     const user = await prisma.user.findUnique({ where: { id: userId } })
-    if (service && user) {
+    if (service && user && pi.receipt_email) {
       const email = packagePurchaseEmail({
-        participantName: user.email?.split('@')[0] ?? 'Participant',
+        participantName: 'Participant',
         serviceName: service.name,
         totalSessions,
         pricePaid,
         expiresAt: expiresAt.toISOString(),
       })
       await sendEmail({
-        to: user.email ?? '',
+        to: pi.receipt_email,
         subject: email.subject,
         html: email.html,
         text: email.text,
-      }).catch((err) => console.error('Failed to send package email:', err))
+      }).catch((err: unknown) => console.error('Failed to send package email:', err))
     }
   } else if (type === 'DONATION') {
     const existing = await prisma.donation.findUnique({ where: { stripePaymentId: pi.id } })
@@ -156,9 +193,8 @@ async function handlePaymentIntentSucceeded(pi: Stripe.PaymentIntent): Promise<v
     const donation = await prisma.donation.create({
       data: {
         userId,
-        amount: pi.amount,
+        amount: pi.amount / 100,
         tier: tier as 'SPONSOR_SESSION' | 'RESTORE_SESSION' | 'RESTORE_LEADER' | 'CUSTOM',
-        email: emailAddr,
         stripePaymentId: pi.id,
         receiptSent: false,
       },
@@ -177,26 +213,22 @@ async function handlePaymentIntentSucceeded(pi: Stripe.PaymentIntent): Promise<v
       subject: receiptEmail.subject,
       html: receiptEmail.html,
       text: receiptEmail.text,
-    }).catch((err) => console.error('Failed to send donation receipt:', err))
+    }).catch((err: unknown) => console.error('Failed to send donation receipt:', err))
 
     await prisma.donation.update({
       where: { id: donation.id },
       data: { receiptSent: true },
-    }).catch((err) => console.error('Failed to update receiptSent flag:', err))
+    }).catch((err: unknown) => console.error('Failed to update receiptSent flag:', err))
   } else if (type === 'ORG_DEPOSIT') {
     const inquiryId = metadata.inquiryId
     if (!inquiryId) return
-
-    const balanceDueDate = new Date()
-    balanceDueDate.setDate(balanceDueDate.getDate() + 7)
 
     await prisma.orgInquiry.update({
       where: { id: inquiryId },
       data: {
         status: 'DEPOSIT_PAID',
-        balanceDueDate,
       },
-    }).catch((err) => console.error('Failed to update org inquiry status:', err))
+    }).catch((err: unknown) => console.error('Failed to update org inquiry status:', err))
   }
 }
 
@@ -207,14 +239,14 @@ async function handlePaymentIntentFailed(pi: Stripe.PaymentIntent): Promise<void
     const user = await prisma.user.findUnique({
       where: { firebaseUid: metadata.userId },
     }).catch(() => null)
-    if (!user?.email) return
+    if (!user || !pi.receipt_email) return
 
     await sendEmail({
-      to: user.email,
+      to: pi.receipt_email,
       subject: 'Payment Failed — H.I.P.S. Session',
       html: `<p>Your payment for session ${sessionId} failed. Please try again or contact support.`,
       text: `Your H.I.P.S. session payment failed. Session ID: ${sessionId}. Please retry.`,
-    }).catch((err) => console.error('Failed to send payment failure email:', err))
+    }).catch((err: unknown) => console.error('Failed to send payment failure email:', err))
   }
 }
 

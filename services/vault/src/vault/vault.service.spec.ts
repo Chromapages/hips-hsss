@@ -88,13 +88,13 @@ describe('VaultService', () => {
 
   describe('getRecord', () => {
     it('should throw if justification is less than 10 characters', async () => {
-      await expect(vaultService.getRecord('token_123', 'short')).rejects.toThrow(
+      await expect(vaultService.getRecord('token_123', 'short', 'req_123')).rejects.toThrow(
         'Justification required (min 10 characters)',
       )
     })
 
     it('should throw if justification is only whitespace', async () => {
-      await expect(vaultService.getRecord('token_123', '         ')).rejects.toThrow(
+      await expect(vaultService.getRecord('token_123', '         ', 'req_123')).rejects.toThrow(
         'Justification required (min 10 characters)',
       )
     })
@@ -103,12 +103,17 @@ describe('VaultService', () => {
       const token = 'vault_token_abc'
       const justification = 'Participant requesting their data export'
 
-      const result = await vaultService.getRecord(token, justification)
+      const result = await vaultService.getRecord(token, justification, 'req_123')
 
       expect(result.token).toBe(token)
       expect(result.accessed).toBe(true)
       expect(result.justification).toBe(justification)
       expect(result.accessedAt).toBeDefined()
+      expect(mockVaultRepository.logAccess).toHaveBeenCalledWith({
+        requesterId: 'req_123',
+        vaultRecordId: token,
+        justification,
+      })
     })
   })
 

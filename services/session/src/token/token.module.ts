@@ -10,12 +10,19 @@ import { SessionSecretGuard } from '../common/guards';
   imports: [
     JwtModule.registerAsync({
       inject: [ConfigService],
-      useFactory: (configService: ConfigService) => ({
-        secret: configService.get<string>('SESSION_SERVICE_SECRET', 'dev-secret-change-in-prod'),
-        signOptions: {
-          expiresIn: '4h', // Short-lived token for session access
-        },
-      }),
+      useFactory: (configService: ConfigService) => {
+        const secret = configService.get<string>('SESSION_SERVICE_SECRET');
+        if (!secret) {
+          throw new Error('SESSION_SERVICE_SECRET is required');
+        }
+
+        return {
+          secret,
+          signOptions: {
+            expiresIn: '4h', // Short-lived token for session access
+          },
+        };
+      },
     }),
   ],
   controllers: [TokenController],

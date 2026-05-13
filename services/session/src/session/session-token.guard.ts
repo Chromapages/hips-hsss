@@ -1,23 +1,38 @@
 import {
-  Injectable,
   CanActivate,
   ExecutionContext,
+  ForbiddenException,
+  Injectable,
   UnauthorizedException,
-} from "@nestjs/common";
+} from '@nestjs/common';
+import { TokenService } from '../token';
 
-/**
- * SessionTokenGuard — validates the anonymous session token
- * on all /session/v1/:id/* routes.
- */
 @Injectable()
 export class SessionTokenGuard implements CanActivate {
-  canActivate(context: ExecutionContext): boolean {
-    const request = context.switchToHttp().getRequest();
-    const token = request.headers["x-session-token"];
+  constructor(private readonly tokenService: TokenService) {}
 
-    if (!token || typeof token !== "string" || token.length < 16) {
-      throw new UnauthorizedException("Invalid session token");
+  async canActivate(context: ExecutionContext): Promise<boolean> {
+    const request = context.switchToHttp().getRequest();
+    const authHeader = request.headers.authorization;
+    const token =
+      request.headers['x-session-token'] ||
+      (typeof authHeader === 'string' ? authHeader.replace(/^Bearer\s+/i, '') : undefined);
+
+    if (!token || typeof token !== 'string' || token.length < 16) {
+      throw new UnauthorizedException('Invalid session token');
     }
+
+    const payload = await this.tokenService.validateSessionToken(token);
+    const routeSessionId = request.params?.id;
+    if (routeSessionId && payload.sessionRecordId !== routeSessionId && payload.roomId !== routeSessionId) {
+      throw new ForbiddenException('Cross-session access denied');
+    }
+
+    request.sessionToken = {
+      ...payload,
+      role: 'participant',
+    };
+
     return true;
   }
 }

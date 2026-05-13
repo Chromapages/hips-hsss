@@ -49,6 +49,12 @@ export class CrisisService {
       return makeError('FORBIDDEN', 'Only FACILITATOR or ADMIN can trigger crisis protocol')
     }
 
+    const parsed = CrisisTriggerInputSchema.safeParse(input)
+    if (!parsed.success) {
+      return makeError('VALIDATION_ERROR', 'Invalid crisis trigger input')
+    }
+    input = parsed.data
+
     // Generate crisis ID
     const crisisId = crypto.randomUUID()
 
@@ -106,7 +112,7 @@ export class CrisisService {
         alertsDispatched: false,
         alertChannelsFired: [],
       },
-    })
+    }) ?? { localResource: undefined }
 
     // Step 4: Update escalation status to CRISIS_ACTIVE if one exists for this session
     const existingEscalation = await this.escalationService.getBySessionId(input.sessionId)

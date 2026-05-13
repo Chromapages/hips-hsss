@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback, useRef } from 'react'
+import type { Unsubscribe } from 'firebase/firestore'
 import {
   subscribeToRoom,
   subscribeToParticipants,
@@ -137,12 +138,8 @@ export function useParticipantHeartbeat(
 
     // Fire once immediately
     import('@/lib/firestore').then(({ db }) => {
-      import {
-        doc,
-        update,
-        serverTimestamp,
-      } from 'firebase/firestore').then(({ serverTimestamp: ts }) => {
-        update(doc(db, 'rooms', roomId, 'participants', anonId), {
+      import('firebase/firestore').then(({ doc, updateDoc, serverTimestamp: ts }) => {
+        updateDoc(doc(db, 'rooms', roomId, 'participants', anonId), {
           lastSeenAt: ts(),
         }).catch(() => {
           // Participant doc may not exist yet — ignore
@@ -152,12 +149,8 @@ export function useParticipantHeartbeat(
 
     intervalRef.current = setInterval(() => {
       import('@/lib/firestore').then(({ db }) => {
-        import {
-          doc,
-          update,
-          serverTimestamp,
-        } from 'firebase/firestore').then(({ serverTimestamp: ts }) => {
-          update(doc(db, 'rooms', roomId, 'participants', anonId), {
+        import('firebase/firestore').then(({ doc, updateDoc, serverTimestamp: ts }) => {
+          updateDoc(doc(db, 'rooms', roomId, 'participants', anonId), {
             lastSeenAt: ts(),
           }).catch(() => {
             // Silently ignore — participant may have left

@@ -9,15 +9,22 @@ import {
   ErrorCodes,
 } from '@hips/types'
 import { getAuthUser } from '@/lib/auth'
+import { rateLimit, rateLimitKey, RATE_LIMITS } from '@/lib/middleware/rate-limit'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY ?? '', {
-  apiVersion: '2024-04-10',
+  apiVersion: '2023-10-16',
 })
 
 // POST /api/v1/checkout/session
 export async function POST(req: NextRequest) {
   const requestId = uuidv4()
+  const rl = rateLimit(rateLimitKey(req, 'checkout'), RATE_LIMITS.checkout)
+  if (rl !== 'ok') return rl
+
   try {
+    const authResult = await getAuthUser(req)
+    if (authResult instanceof Response) return authResult
+
     const body = await req.json()
     const parsed = CheckoutSessionSchema.safeParse(body)
     if (!parsed.success) {
@@ -45,7 +52,7 @@ export async function POST(req: NextRequest) {
     }
 
     // 2. Calculate amount
-    let amount = service.standardPrice
+    let amount = Math.round(Number(service.standardPrice) * 100)
     let appliedDiscount = 0
 
     if (discountCode) {
@@ -70,7 +77,13 @@ export async function POST(req: NextRequest) {
           { status: 400 }
         )
       }
-      appliedDiscount = scholarship.approvedAmount ?? 0
+      if (scholarship.userId !== authResult.userId) {
+        return NextResponse.json(
+          makeError(ErrorCodes.FORBIDDEN, 'Discount code does not belong to this account', requestId),
+          { status: 403 }
+        )
+      }
+      appliedDiscount = Math.round(Number(scholarship.approvedAmount ?? 0) * 100)
       amount = Math.max(0, amount - appliedDiscount)
     }
 
@@ -81,18 +94,22 @@ export async function POST(req: NextRequest) {
       amount = amount * 4
     }
 
-    // 3. Get authenticated user and create Stripe PaymentIntent
-    const authResult = await getAuthUser(req)
-    if (authResult instanceof Response) return authResult
+    const metadataType = packageTier === '4_SESSION' || packageTier === '8_SESSION'
+      ? 'PACKAGE_PURCHASE'
+      : 'SERVICE_PURCHASE'
+    const totalSessions = packageTier === '8_SESSION' ? '8' : packageTier === '4_SESSION' ? '4' : '1'
+
     const paymentIntent = await stripe.paymentIntents.create({
       amount,
       currency: 'usd',
       metadata: {
-        type: 'SERVICE_PURCHASE',
+        type: metadataType,
         serviceId,
-        userId: authResult.firebaseUid,
+        userId: authResult.userId,
+        firebaseUid: authResult.firebaseUid,
         discountCode: discountCode?.toUpperCase() ?? '',
         packageTier: packageTier ?? 'SINGLE',
+        totalSessions,
       },
     })
 

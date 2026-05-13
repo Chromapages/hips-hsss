@@ -6,7 +6,10 @@ export const runtime = 'nodejs'
 
 const publicPaths = [
   '/api/v1/auth/',
+  '/api/v1/checkout/donation',
+  '/api/v1/organizations',
   '/api/v1/public/',
+  '/api/v1/services',
   '/api/v1/webhooks/',
   '/_next/',
   '/favicon.ico',

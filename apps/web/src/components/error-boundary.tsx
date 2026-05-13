@@ -1,6 +1,6 @@
 'use client'
 
-import { ErrorBoundary as ReactErrorBoundary } from 'react-error-boundary'
+import React from 'react'
 import { AlertTriangle, RefreshCw } from 'lucide-react'
 
 function ErrorFallback({
@@ -16,16 +16,10 @@ function ErrorFallback({
       role="alert"
       aria-live="assertive"
     >
-      <AlertTriangle
-        className="h-12 w-12 text-warning mb-4"
-        aria-hidden="true"
-      />
-      <h2 className="text-xl font-semibold text-neutral-900 mb-2">
-        Something went wrong
-      </h2>
+      <AlertTriangle className="h-12 w-12 text-warning mb-4" aria-hidden="true" />
+      <h2 className="text-xl font-semibold text-neutral-900 mb-2">Something went wrong</h2>
       <p className="max-w-md text-neutral-500 mb-6">
-        We encountered an unexpected error. Your session is safe. Please try
-        again or refresh the page.
+        We encountered an unexpected error. Your session is safe. Please try again or refresh the page.
       </p>
       <button
         onClick={resetErrorBoundary}
@@ -41,10 +35,31 @@ function ErrorFallback({
   )
 }
 
+interface ErrorBoundaryState {
+  error: Error | null
+}
+
+class LocalErrorBoundary extends React.Component<{ children: React.ReactNode }, ErrorBoundaryState> {
+  state: ErrorBoundaryState = { error: null }
+
+  static getDerivedStateFromError(error: Error): ErrorBoundaryState {
+    return { error }
+  }
+
+  render() {
+    if (this.state.error) {
+      return (
+        <ErrorFallback
+          error={this.state.error}
+          resetErrorBoundary={() => this.setState({ error: null })}
+        />
+      )
+    }
+
+    return this.props.children
+  }
+}
+
 export function GlobalErrorBoundary({ children }: { children: React.ReactNode }) {
-  return (
-    <ReactErrorBoundary FallbackComponent={ErrorFallback}>
-      {children}
-    </ReactErrorBoundary>
-  )
+  return <LocalErrorBoundary>{children}</LocalErrorBoundary>
 }

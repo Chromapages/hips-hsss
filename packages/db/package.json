@@ -2,6 +2,22 @@
   "name": "@hips/db",
   "version": "0.0.1",
   "private": true,
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    },
+    "./generated/commerce": {
+      "types": "./generated/commerce/index.d.ts",
+      "default": "./generated/commerce/index.js"
+    },
+    "./generated/session": {
+      "types": "./generated/session/index.d.ts",
+      "default": "./generated/session/index.js"
+    }
+  },
   "scripts": {
     "dev": "prisma studio --schema=./prisma/commerce.prisma",
     "dev:session": "prisma studio --schema=./prisma/session.prisma",

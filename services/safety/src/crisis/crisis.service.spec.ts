@@ -62,7 +62,7 @@ describe('CrisisService', () => {
       })
 
       expect(result).toHaveProperty('error')
-      expect((result as any).error).toBe('FORBIDDEN')
+      expect((result as any).error.code).toBe('FORBIDDEN')
     })
 
     it('should reject justifications shorter than 10 characters', async () => {
@@ -74,7 +74,7 @@ describe('CrisisService', () => {
       })
 
       expect(result).toHaveProperty('error')
-      expect((result as any).error).toBe('FORBIDDEN')
+      expect((result as any).error.code).toBe('VALIDATION_ERROR')
     })
 
     it('should create a CrisisEvent record and dispatch alerts', async () => {

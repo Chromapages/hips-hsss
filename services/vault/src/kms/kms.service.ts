@@ -16,6 +16,9 @@ export class KmsService {
       region: process.env.AWS_REGION ?? "us-east-1",
     });
     this.keyId = process.env.AWS_VAULT_KMS_KEY_ID ?? "";
+    if (!this.keyId) {
+      throw new Error("AWS_VAULT_KMS_KEY_ID is required");
+    }
   }
 
   async encrypt(plaintext: string): Promise<string> {

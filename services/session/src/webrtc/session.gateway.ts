@@ -43,7 +43,7 @@ interface ModeratorActionPayload {
 @UsePipes(new ValidationPipe({ transform: true, whitelist: true }))
 export class SessionGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()
-  server: Server;
+  server!: Server;
 
   private readonly logger = new Logger(SessionGateway.name);
   private connectedParticipants: Map<string, {
@@ -61,7 +61,14 @@ export class SessionGateway implements OnGatewayConnection, OnGatewayDisconnect 
 
   async handleConnection(client: Socket) {
     try {
-      const token = client.handshake.auth.token || client.handshake.headers['x-session-token'];
+      const protocolHeader = client.handshake.headers['sec-websocket-protocol'];
+      const protocols = Array.isArray(protocolHeader)
+        ? protocolHeader.join(',').split(',')
+        : typeof protocolHeader === 'string'
+          ? protocolHeader.split(',')
+          : [];
+      const protocolToken = protocols.map((p) => p.trim()).find((p) => p && p !== 'session-token');
+      const token = client.handshake.auth.token || client.handshake.headers['x-session-token'] || protocolToken;
 
       if (!token) {
         this.logger.warn(`Client ${client.id} connected without token`);
@@ -103,7 +110,8 @@ export class SessionGateway implements OnGatewayConnection, OnGatewayDisconnect 
         timestamp: new Date().toISOString(),
       });
     } catch (error) {
-      this.logger.warn(`Client ${client.id} authentication failed: ${error.message}`);
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      this.logger.warn(`Client ${client.id} authentication failed: ${message}`);
       client.emit('error', { message: 'Invalid or expired session token' });
       client.disconnect();
     }
@@ -281,7 +289,7 @@ export class SessionGateway implements OnGatewayConnection, OnGatewayDisconnect 
     for (const socketId of room) {
       const participant = this.connectedParticipants.get(socketId);
       if (participant?.anonId === anonId) {
-        return this.server.sockets.sockets.get(socketId);
+        return this.server.sockets.sockets.get(socketId) ?? null;
       }
     }
     return null;

@@ -15,6 +15,9 @@ export class AdminGuard implements CanActivate {
 
   constructor() {
     this.adminApiSecret = process.env.SAFETY_ENGINE_SECRET ?? "";
+    if (!this.adminApiSecret) {
+      throw new Error("SAFETY_ENGINE_SECRET is required");
+    }
   }
 
   canActivate(context: ExecutionContext): boolean {
@@ -22,7 +25,7 @@ export class AdminGuard implements CanActivate {
     const apiSecret = request.headers["x-safety-engine-secret"];
     const requesterId = request.headers["x-requester-id"];
 
-    if (!apiSecret || apiSecret !== this.adminApiSecret) {
+    if (!apiSecret || apiSecret !== this.adminApiSecret || !requesterId) {
       throw new UnauthorizedException("Safety engine access denied");
     }
     return true;

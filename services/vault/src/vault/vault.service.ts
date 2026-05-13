@@ -21,7 +21,6 @@ export class VaultService {
   constructor(private readonly kms: KmsService, private readonly vaultRepository: VaultRepository) {}
 
   async createRecord(input: CreateRecordInput) {
-    // Encrypt all PII fields via KMS before storing
     const encrypted: Record<string, string> = {};
 
     if (input.email) encrypted.email = await this.kms.encrypt(input.email);
@@ -30,19 +29,16 @@ export class VaultService {
     encrypted.ipAddress = await this.kms.encrypt(input.ipAddress);
     encrypted.deviceFingerprint = await this.kms.encrypt(input.deviceFingerprint);
 
-    // 30 days from now for IP expiry
     const ipExpiresAt = new Date();
     ipExpiresAt.setDate(ipExpiresAt.getDate() + 30);
 
-    // 90 days from now for fingerprint expiry
     const fingerprintExpiresAt = new Date();
     fingerprintExpiresAt.setDate(fingerprintExpiresAt.getDate() + 90);
 
-    // Persist encrypted record to the Identity Vault DB
     const record = await this.vaultRepository.createRecord({
-      encryptedEmail: encrypted.email ?? '',
-      encryptedName: encrypted.name ?? '',
-      encryptedPhone: encrypted.phone ?? '',
+      encryptedEmail: encrypted.email ?? "",
+      encryptedName: encrypted.name ?? "",
+      encryptedPhone: encrypted.phone ?? "",
       encryptedIpAddress: encrypted.ipAddress,
       encryptedDeviceFingerprint: encrypted.deviceFingerprint,
       ipExpiresAt,
@@ -56,12 +52,8 @@ export class VaultService {
     };
   }
 
-  async getRecord(token: string, justification: string) {
-    if (!justification || justification.trim().length < 10) {
-      throw new Error("Justification required (min 10 characters)");
-    }
-    // Lookup and decrypt — the actual implementation would use
-    // VaultRepository (Prisma) here.
+  async getRecord(token: string, justification: string, requesterId: string) {
+    await this.requireJustifiedAccess(token, justification, requesterId);
     return {
       token,
       accessed: true,
@@ -70,9 +62,8 @@ export class VaultService {
     };
   }
 
-  async getEmergencyRecord(token: string, _justification: string) {
-    // Returns only crisis-specific fields for emergency responders
-    // In production: lookup and decrypt from VaultRepository
+  async getEmergencyRecord(token: string, justification: string, requesterId: string) {
+    await this.requireJustifiedAccess(token, justification, requesterId);
     return {
       token,
       emergencyContact: "REDACTED",
@@ -83,11 +74,7 @@ export class VaultService {
   }
 
   async logAccess(input: AccessLogInput) {
-    return {
-      id: crypto.randomUUID(),
-      ...input,
-      accessedAt: new Date().toISOString(),
-    };
+    return this.vaultRepository.logAccess(input);
   }
 
   async getAccessLog(input: { page: number; pageSize: number }) {
@@ -100,5 +87,19 @@ export class VaultService {
         totalPages: 0,
       },
     };
+  }
+
+  private async requireJustifiedAccess(token: string, justification: string, requesterId: string) {
+    if (!requesterId) {
+      throw new Error("Requester ID required");
+    }
+    if (!justification || justification.trim().length < 10) {
+      throw new Error("Justification required (min 10 characters)");
+    }
+    await this.vaultRepository.logAccess({
+      requesterId,
+      vaultRecordId: token,
+      justification,
+    });
   }
 }

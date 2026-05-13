@@ -22,3 +22,10 @@ const schema = z.object({
 export const config = schema.parse(process.env)
 
 export type Config = z.infer<typeof schema>
+
+export const SESSION_HOURS_START = config.SESSION_HOURS_START
+export const SESSION_HOURS_END = config.SESSION_HOURS_END
+export const SESSION_HOURS_TIMEZONE = config.SESSION_HOURS_TIMEZONE
+export const SCHOLARSHIP_MONTHLY_BUDGET_CAP = config.SCHOLARSHIP_MONTHLY_BUDGET_CAP
+export const CRISIS_ESCALATION_SLA_MINUTES = config.CRISIS_ESCALATION_SLA_MINUTES
+export const SIGNED_URL_EXPIRY_SECONDS = config.SIGNED_URL_EXPIRY_SECONDS

@@ -18,9 +18,20 @@ function formatPrice(cents: number) {
   return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(cents / 100)
 }
 
+interface ServiceCard {
+  id: string
+  name: string
+  description: string
+  category: string
+  standardPrice: number
+  durationMins?: number | null
+  maxSeats?: number | null
+  scholarshipMin: number
+}
+
 export default function ServicesPage() {
   const router = useRouter()
-  const [services, setServices] = useState<any[]>([])
+  const [services, setServices] = useState<ServiceCard[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -29,8 +40,8 @@ export default function ServicesPage() {
       try {
         const res = await fetch('/api/v1/services')
         if (!res.ok) throw new Error('Failed to load services')
-        const data = await res.json()
-        setServices(data.services)
+        const data = await res.json() as { data?: { services: ServiceCard[] } }
+        setServices(data.data?.services ?? [])
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Something went wrong')
       } finally {
@@ -40,12 +51,12 @@ export default function ServicesPage() {
     fetchServices()
   }, [])
 
-  const grouped = services.reduce((acc, service) => {
+  const grouped = services.reduce<Record<string, ServiceCard[]>>((acc, service) => {
     const cat = service.category || 'OTHER'
     if (!acc[cat]) acc[cat] = []
     acc[cat].push(service)
     return acc
-  }, {} as Record<string, any[]>)
+  }, {})
 
   if (loading) {
     return (

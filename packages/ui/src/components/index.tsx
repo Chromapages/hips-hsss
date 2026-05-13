@@ -1,3 +1,4 @@
+import * as React from 'react'
 import { clsx, type ClassValue } from 'clsx'
 import { twMerge } from 'tailwind-merge'
 
@@ -13,7 +14,7 @@ export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
   loading?: boolean
 }
 
-export function Button({
+export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(function Button({
   variant = 'primary',
   size = 'md',
   loading = false,
@@ -21,16 +22,16 @@ export function Button({
   className,
   children,
   ...props
-}: ButtonProps) {
+}: ButtonProps, ref) {
   const base =
-    'inline-flex items-center justify-center gap-2 rounded-lg font-medium transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-brand-primary/30 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed'
+    'inline-flex items-center justify-center gap-2 font-medium transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-brand-primary/30 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed'
 
   const variants = {
-    primary: 'bg-brand-primary text-white hover:bg-brand-primary/90',
-    secondary: 'border border-brand-secondary text-brand-secondary hover:bg-brand-secondary/10',
-    ghost: 'text-brand-primary hover:bg-brand-primary/5',
-    destructive: 'bg-semantic-error text-white hover:bg-semantic-error/90',
-    crisis: 'bg-semantic-crisis text-white ring-2 ring-semantic-crisis/50',
+    primary: 'rounded-full bg-brand-primary text-white hover:bg-brand-primary/90', // Apple pill style
+    secondary: 'rounded-full border border-brand-secondary text-brand-secondary hover:bg-brand-secondary/10', // Apple ghost pill
+    ghost: 'rounded-full text-brand-primary hover:bg-brand-primary/5',
+    destructive: 'rounded-lg bg-semantic-error text-white hover:bg-semantic-error/90',
+    crisis: 'rounded-lg bg-semantic-crisis text-white ring-2 ring-semantic-crisis/50',
   }
 
   const sizes = {
@@ -41,6 +42,7 @@ export function Button({
 
   return (
     <button
+      ref={ref}
       className={cn(base, variants[variant], sizes[size], className)}
       disabled={disabled || loading}
       {...props}
@@ -54,7 +56,7 @@ export function Button({
       {children}
     </button>
   )
-}
+})
 
 // ─── Badge ────────────────────────────────────────────────────────────────────
 
@@ -115,6 +117,32 @@ export namespace Card {
       </div>
     )
   }
+}
+
+export const CardContent = Card.Content
+
+export interface CardHeaderProps extends React.HTMLAttributes<HTMLDivElement> {
+  children: React.ReactNode
+}
+
+export function CardHeader({ className, children, ...props }: CardHeaderProps) {
+  return (
+    <div className={cn('border-b border-neutral-200 px-6 py-4', className)} {...props}>
+      {children}
+    </div>
+  )
+}
+
+export interface CardTitleProps extends React.HTMLAttributes<HTMLHeadingElement> {
+  children: React.ReactNode
+}
+
+export function CardTitle({ className, children, ...props }: CardTitleProps) {
+  return (
+    <h3 className={cn('text-lg font-semibold text-neutral-900', className)} {...props}>
+      {children}
+    </h3>
+  )
 }
 
 // ─── EmptyState ────────────────────────────────────────────────────────────────

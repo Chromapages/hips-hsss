@@ -32,7 +32,7 @@ export class CrisisController {
     @Headers('x-safety-engine-secret') secret: string,
   ) {
     // Authenticate via safety engine secret
-    if (secret !== process.env.SAFETY_ENGINE_SECRET) {
+    if (!process.env.SAFETY_ENGINE_SECRET || secret !== process.env.SAFETY_ENGINE_SECRET) {
       throw new UnauthorizedException('Invalid safety engine secret')
     }
 

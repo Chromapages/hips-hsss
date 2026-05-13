@@ -25,9 +25,11 @@ export class VaultController {
   @UseGuards(VaultAccessGuard)
   async getEmergencyRecord(
     @Param("token") token: string,
-    @Body() body: { justification: string },
+    @Body() body: { justification?: string },
+    @Headers("x-crisis-justification") crisisJustification: string,
+    @Headers("x-requester-id") requesterId: string,
   ) {
-    return this.vaultService.getEmergencyRecord(token, body.justification);
+    return this.vaultService.getEmergencyRecord(token, body.justification ?? crisisJustification, requesterId);
   }
 
   /**
@@ -65,8 +67,9 @@ export class VaultController {
   async getRecord(
     @Param("token") token: string,
     @Body() body: { justification: string },
+    @Headers("x-requester-id") requesterId: string,
   ) {
-    return this.vaultService.getRecord(token, body.justification);
+    return this.vaultService.getRecord(token, body.justification, requesterId);
   }
 
   /**

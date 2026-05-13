@@ -43,7 +43,7 @@ function KPICard({ label, value, icon: Icon, trend }: { label: string; value: st
   )
 }
 
-function BarChart({ data }: { data: typeof MOCK_BY_CATEGORY }) {
+function BarChart({ data }: { data: RevenueAPIResponse['byCategory'] }) {
   const maxRevenue = Math.max(...data.map(d => d.revenue), 1)
   return (
     <div className="space-y-3">
@@ -85,7 +85,7 @@ export default function RevenuePage() {
     try {
       const res = await fetch(`/api/v1/admin/revenue?startDate=${startDate}&endDate=${endDate}`)
       if (!res.ok) throw new Error('Failed to load revenue data')
-      const json = await res.json() as { data: RevenueAPIResponse; error: null }
+      const json = await res.json() as { data: RevenueAPIResponse; error: { message: string } | null }
       if (json.error) throw new Error(json.error.message)
       setData(json.data)
     } catch (err) {

@@ -7,14 +7,18 @@ import {
   makeError,
   ErrorCodes,
 } from '@hips/types'
+import { rateLimit, rateLimitKey, RATE_LIMITS } from '@/lib/middleware/rate-limit'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY ?? '', {
-  apiVersion: '2024-04-10',
+  apiVersion: '2023-10-16',
 })
 
 // POST /api/v1/checkout/donation
 export async function POST(req: NextRequest) {
   const requestId = uuidv4()
+  const rl = rateLimit(rateLimitKey(req, 'donation'), RATE_LIMITS.donation)
+  if (rl !== 'ok') return rl
+
   try {
     const body = await req.json()
     const parsed = CheckoutDonationSchema.safeParse(body)
@@ -25,7 +29,7 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    const { amount, tier, email, userId } = parsed.data
+    const { amount, tier, email } = parsed.data
 
     // Create Stripe PaymentIntent with metadata.type = "DONATION"
     const paymentIntent = await stripe.paymentIntents.create({
@@ -36,7 +40,7 @@ export async function POST(req: NextRequest) {
         type: 'DONATION',
         tier,
         email,
-        userId: userId ?? 'anonymous',
+        userId: 'anonymous',
       },
       description: `H.I.P.S. Donation — ${tier.replace('_', ' ')}`,
     })

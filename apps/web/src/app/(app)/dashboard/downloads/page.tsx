@@ -63,13 +63,13 @@ export default function DownloadsPage() {
                 </p>
               </div>
             </div>
-            <button
-              onClick={() => alert(`Downloading ${dl.name}...`)}
+            <a
+              href={`/api/v1/downloads/${dl.id}`}
               className="flex items-center gap-2 rounded-lg border border-brand-primary px-4 py-2 text-sm font-medium text-brand-primary hover:bg-brand-primary/5 transition-colors shrink-0"
             >
               <Download className="h-4 w-4" aria-hidden="true" />
               Download
-            </button>
+            </a>
           </article>
         ))}
       </div>

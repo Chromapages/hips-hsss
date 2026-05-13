@@ -11,11 +11,6 @@ export async function GET(
 
     const service = await commerceDb.service.findUnique({
       where: { id, isActive: true },
-      include: {
-        facilitator: {
-          select: { displayName: true },
-        },
-      },
     })
 
     if (!service) {
@@ -34,9 +29,7 @@ export async function GET(
       durationMins: service.durationMins,
       maxSeats: service.maxSeats,
       scholarshipMin: service.scholarshipMin,
-      facilitator: service.facilitator
-        ? { displayName: service.facilitator.displayName }
-        : null,
+      facilitator: null,
     }
 
     return NextResponse.json(makeResponse(response, crypto.randomUUID()))

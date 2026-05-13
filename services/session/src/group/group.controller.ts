@@ -19,7 +19,8 @@ import {
   JoinLobbyInput,
   ModeratorActionInput,
 } from '../common/dto/session.dto';
-import { SessionSecretGuard, SessionToken, SessionTokenPayload } from '../common/guards';
+import { SessionToken, SessionTokenPayload } from '../common/guards';
+import { SessionTokenGuard } from '../session/session-token.guard';
 
 @Controller('group/v1')
 @UsePipes(new ValidationPipe({ transform: true, whitelist: true }))
@@ -28,7 +29,7 @@ export class GroupController {
 
   @Post('lobby/:id/join')
   @HttpCode(HttpStatus.OK)
-  @UseGuards(SessionSecretGuard)
+  @UseGuards(SessionTokenGuard)
   async joinLobby(
     @Param('id', ParseUUIDPipe) groupId: string,
     @Body() input: JoinLobbyInput,
@@ -58,12 +59,12 @@ export class GroupController {
 
   @Post('lobby/:id/leave')
   @HttpCode(HttpStatus.OK)
-  @UseGuards(SessionSecretGuard)
+  @UseGuards(SessionTokenGuard)
   async leaveLobby(
     @Param('id', ParseUUIDPipe) groupId: string,
-    @Body() body: { participantAnonId: string },
+    @SessionToken() token: SessionTokenPayload,
   ): Promise<ApiResponse<{ left: boolean }>> {
-    const result = await this.groupService.leaveLobby(groupId, body.participantAnonId);
+    const result = await this.groupService.leaveLobby(groupId, token.anonSessionToken);
 
     return {
       data: result,
@@ -77,12 +78,12 @@ export class GroupController {
 
   @Post('lobby/:id/start')
   @HttpCode(HttpStatus.OK)
-  @UseGuards(SessionSecretGuard)
+  @UseGuards(SessionTokenGuard)
   async startLobby(
     @Param('id', ParseUUIDPipe) groupId: string,
-    @Body() body: { moderatorAnonId: string },
+    @SessionToken() token: SessionTokenPayload,
   ): Promise<ApiResponse<{ started: boolean; roomId: string }>> {
-    const result = await this.groupService.startLobby(groupId, body.moderatorAnonId);
+    const result = await this.groupService.startLobby(groupId, token.anonSessionToken);
 
     return {
       data: result,
@@ -96,7 +97,7 @@ export class GroupController {
 
   @Post('lobby/:id/moderator-action')
   @HttpCode(HttpStatus.OK)
-  @UseGuards(SessionSecretGuard)
+  @UseGuards(SessionTokenGuard)
   async moderatorAction(
     @Param('id', ParseUUIDPipe) groupId: string,
     @Body() input: ModeratorActionInput,
@@ -120,7 +121,7 @@ export class GroupController {
 
   @Get('lobby/:id/participants')
   @HttpCode(HttpStatus.OK)
-  @UseGuards(SessionSecretGuard)
+  @UseGuards(SessionTokenGuard)
   async getLobbyParticipants(
     @Param('id', ParseUUIDPipe) groupId: string,
   ): Promise<ApiResponse<Array<{ anonId: string; anonHandle: string; isModerator: boolean }>>> {

@@ -49,7 +49,13 @@ export class VaultStack extends cdk.Stack {
     this.vaultServiceRole.addToPolicy(
       new iam.PolicyStatement({
         actions: ["secretsmanager:GetSecretValue"],
-        resources: ["*"], // Scoped to specific secret ARNs in production
+        resources: [
+          cdk.Stack.of(this).formatArn({
+            service: "secretsmanager",
+            resource: "secret",
+            resourceName: "hips/vault/*",
+          }),
+        ],
       }),
     );
   }

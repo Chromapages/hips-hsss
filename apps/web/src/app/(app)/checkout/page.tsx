@@ -1,11 +1,11 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { Suspense, useState, useEffect, useCallback } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { loadStripe } from '@stripe/stripe-js'
 import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js'
-import { Card, Card.Content, Button } from '@hips/ui'
-import { useAuthUser } from '@/lib/auth'
+import { Card, Button } from '@hips/ui'
+import { authFetch } from '@/lib/api-client'
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? '')
 
@@ -30,6 +30,11 @@ interface CheckoutState {
   loadingService: boolean
   loadingSession: boolean
   error: string | null
+}
+
+type ApiResponse<T> = {
+  data: T | null
+  error: { message: string } | null
 }
 
 const TIER_OPTIONS: { value: PackageTier; label: string; multiplier: number }[] = [
@@ -87,11 +92,10 @@ function CheckoutForm() {
   )
 }
 
-export default function CheckoutPage() {
+function CheckoutPageContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const serviceId = searchParams.get('serviceId')
-  const authUser = useAuthUser()
 
   const [state, setState] = useState<CheckoutState>({
     service: null,
@@ -110,12 +114,12 @@ export default function CheckoutPage() {
     setState(s => ({ ...s, loadingService: true, error: null }))
     try {
       const res = await fetch(`/api/v1/services/${id}`)
-      const data = await res.json()
+      const data = await res.json() as ApiResponse<ServiceDetails>
       if (!res.ok) {
         setState(s => ({ ...s, error: data?.error?.message ?? 'Failed to load service', loadingService: false }))
         return
       }
-      setState(s => ({ ...s, service: data.result, loadingService: false }))
+      setState(s => ({ ...s, service: data.data, loadingService: false }))
     } catch {
       setState(s => ({ ...s, error: 'Failed to load service', loadingService: false }))
     }
@@ -125,7 +129,7 @@ export default function CheckoutPage() {
     if (!serviceId) return
     setState(s => ({ ...s, loadingSession: true, error: null, clientSecret: null }))
     try {
-      const res = await fetch('/api/v1/checkout/session', {
+      const res = await authFetch('/api/v1/checkout/session', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -134,7 +138,12 @@ export default function CheckoutPage() {
           packageTier: state.packageTier,
         }),
       })
-      const data = await res.json()
+      const data = await res.json() as ApiResponse<{
+        clientSecret: string
+        amount: number
+        currency: string
+        paymentIntentId: string
+      }>
       if (!res.ok) {
         setState(s => ({
           ...s,
@@ -145,10 +154,10 @@ export default function CheckoutPage() {
       }
       setState(s => ({
         ...s,
-        clientSecret: data.result.clientSecret,
-        amount: data.result.amount,
-        currency: data.result.currency,
-        paymentIntentId: data.result.paymentIntentId,
+        clientSecret: data.data?.clientSecret ?? null,
+        amount: data.data?.amount ?? 0,
+        currency: data.data?.currency ?? 'usd',
+        paymentIntentId: data.data?.paymentIntentId ?? null,
         loadingSession: false,
       }))
     } catch {
@@ -396,5 +405,17 @@ export default function CheckoutPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function CheckoutPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-brand-warm flex items-center justify-center">
+        <p className="text-neutral-600 text-sm">Loading checkout...</p>
+      </div>
+    }>
+      <CheckoutPageContent />
+    </Suspense>
   )
 }

@@ -6,6 +6,7 @@ import {
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { v4 as uuidv4 } from 'uuid';
+import { createHmac } from 'crypto';
 import { SessionPrismaService } from '../common/prisma';
 import {
   CreateSessionTokenInput,
@@ -22,6 +23,11 @@ export class TokenService {
   ) {}
 
   async createSessionToken(input: CreateSessionTokenInput): Promise<SessionTokenResponse> {
+    const bookingRefSecret = process.env.BOOKING_REF_SECRET;
+    if (!bookingRefSecret) {
+      throw new Error('BOOKING_REF_SECRET is required');
+    }
+
     // Laptop-only enforcement (5.13)
     if (input.deviceType !== 'desktop') {
       throw new ForbiddenException(
@@ -37,8 +43,7 @@ export class TokenService {
     const sessionRecord = await this.prisma.sessionRecord.create({
       data: {
         anonSessionToken,
-        bookingRef: crypto
-          .createHmac('sha256', process.env.BOOKING_REF_SECRET || 'dev-secret')
+        sessionId: createHmac('sha256', bookingRefSecret)
           .update(input.sessionId)
           .digest('hex').slice(0, 32),
         roomId,

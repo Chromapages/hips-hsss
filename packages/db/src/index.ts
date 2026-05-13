@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client'
+import { PrismaClient } from '../generated/commerce'
 
 const globalForPrisma = globalThis as unknown as {
   commercePrisma: PrismaClient | undefined

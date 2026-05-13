@@ -98,9 +98,9 @@ export function useSessionToken({
       setState((s) => ({ ...s, token, attemptCount: 0 }))
       updatePhase('connected')
 
-      // Establish WebSocket connection using the token
-      const wsUrl = `${process.env.NEXT_PUBLIC_WS_URL ?? 'wss://session.hips.org'}/ws/${token}`
-      const ws = new WebSocket(wsUrl)
+      // Keep credentials out of URL paths so proxy/APM logs cannot capture them.
+      const wsUrl = `${process.env.NEXT_PUBLIC_WS_URL ?? 'wss://session.hips.org'}/ws`
+      const ws = new WebSocket(wsUrl, ['session-token', token])
       wsRef.current = ws
 
       ws.onopen = () => {

@@ -39,7 +39,7 @@ export interface ParticipantDocument {
 @Injectable()
 export class FirestoreService implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(FirestoreService.name)
-  private db: Firestore
+  private db!: Firestore
 
   onModuleInit() {
     this.db = new Firestore({

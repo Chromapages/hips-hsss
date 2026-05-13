@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { v4 as uuidv4 } from 'uuid'
+import { randomBytes } from 'crypto'
 import { commerceDb } from '@/lib/commerce-db'
 import {
   ReviewScholarshipSchema,
@@ -9,10 +10,14 @@ import {
   UserRole,
 } from '@hips/types'
 import { requireRole } from '@/lib/auth'
+import { rateLimit, rateLimitKey, RATE_LIMITS } from '@/lib/middleware/rate-limit'
 
 // PATCH /api/v1/scholarships/:id
 export async function PATCH(req: NextRequest) {
   const requestId = uuidv4()
+  const rl = rateLimit(rateLimitKey(req, 'admin'), RATE_LIMITS.admin)
+  if (rl !== 'ok') return rl
+
   try {
     const url = new URL(req.url)
     const scholarshipId = url.pathname.split('/')[5] // /api/v1/scholarships/{id}
@@ -67,7 +72,7 @@ export async function PATCH(req: NextRequest) {
       ? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
       : null
     const discountCode = status === 'APPROVED'
-      ? `SCH-${uuidv4().slice(0, 8).toUpperCase()}`
+      ? `SCH-${randomBytes(16).toString('hex').toUpperCase()}`
       : null
 
     const updated = await commerceDb.scholarship.update({
@@ -78,7 +83,8 @@ export async function PATCH(req: NextRequest) {
         discountCode,
         expiresAt,
         reviewNote,
-        reviewedBy: callerId,
+        reviewedBy: authResult.firebaseUid,
+        reviewedAt: new Date(),
       },
     })
 

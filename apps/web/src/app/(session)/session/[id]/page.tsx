@@ -87,8 +87,8 @@ export default function SessionPage() {
   useEffect(() => {
     if (!token) return
 
-    const wsUrl = `${process.env.NEXT_PUBLIC_WS_URL ?? 'wss://session.hips.org'}/ws/${token}`
-    const ws = new WebSocket(wsUrl)
+    const wsUrl = `${process.env.NEXT_PUBLIC_WS_URL ?? 'wss://session.hips.org'}/ws`
+    const ws = new WebSocket(wsUrl, ['session-token', token])
     wsRef.current = ws
 
     ws.onopen = () => {

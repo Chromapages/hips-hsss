@@ -20,7 +20,15 @@
       "Bash(curl -s http://localhost:3000)",
       "Bash(curl -s http://localhost:3001)",
       "Bash(npx playwright *)",
-      "Bash(curl -s -F \"reqtype=fileupload\" -F \"fileToUpload=@C:/Users/ericb/AppData/Local/Temp/homepage_apple.png\" https://catbox.moe/user/api.php)"
+      "Bash(curl -s -F \"reqtype=fileupload\" -F \"fileToUpload=@C:/Users/ericb/AppData/Local/Temp/homepage_apple.png\" https://catbox.moe/user/api.php)",
+      "Bash(git checkout *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git remote *)",
+      "Bash(git branch *)",
+      "Bash(git push *)",
+      "Read(//d/WORK/**)",
+      "Read(//d//**)",
+      "Bash(git add *)"
     ]
   }
 }

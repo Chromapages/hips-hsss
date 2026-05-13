@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { v4 as uuidv4 } from 'uuid'
 import { commerceDb } from '@/lib/commerce-db'
-import { makeResponse, makeError, ErrorCodes, SessionStatus, UserRole } from '@hips/types'
+import { Prisma, SessionStatus } from '@hips/db/generated/commerce'
+import { makeResponse, makeError, ErrorCodes, UserRole } from '@hips/types'
 import { requireRole } from '@/lib/auth'
 
 export async function GET(req: NextRequest) {
@@ -18,7 +19,7 @@ export async function GET(req: NextRequest) {
     const endDate = searchParams.get('endDate')
     const skip = (page - 1) * limit
 
-    const where = {
+    const where: Prisma.SessionWhereInput = {
       ...(status && status !== 'ALL' ? { status: status as SessionStatus } : {}),
       ...(facilitatorId ? { facilitatorId } : {}),
       ...(startDate || endDate ? {

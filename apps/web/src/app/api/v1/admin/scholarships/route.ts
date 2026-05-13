@@ -17,14 +17,13 @@ export async function GET(req: NextRequest) {
     const now = new Date()
     const monthStart = new Date(now.getFullYear(), now.getMonth(), 1)
 
-    const [scholarships, total, budget] = await Promise.all([
+    const [scholarships, total] = await Promise.all([
       commerceDb.scholarship.findMany({
         where: { status },
         include: { user: { select: { firebaseUid: true } }, service: { select: { name: true } } },
         orderBy: { createdAt: 'desc' }, skip, take: limit,
       }),
       commerceDb.scholarship.count({ where: { status } }),
-      commerceDb.scholarshipBudget.findUnique({ where: { id: 'monthly_cap' } }),
     ])
 
     const monthlyUsed = await commerceDb.scholarship.aggregate({
@@ -32,7 +31,7 @@ export async function GET(req: NextRequest) {
       _sum: { approvedAmount: true },
     })
 
-    const monthlyCapTotal = budget?.monthlyCap ?? 50000
+    const monthlyCapTotal = 50000
     const monthlyCapUsed = Number(monthlyUsed._sum.approvedAmount ?? 0)
 
     return NextResponse.json(

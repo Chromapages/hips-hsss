@@ -1,19 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { v4 as uuidv4 } from 'uuid'
 import { commerceDb } from '@/lib/commerce-db'
-import {
-  BookSessionSchema,
-  makeResponse,
-  makeError,
-  ErrorCodes,
-} from '@hips/types'
-import { SESSION_HOURS_START, SESSION_HOURS_END, SCHOLARSHIP_MONTHLY_BUDGET_CAP } from '@/lib/config'
+import { BookSessionSchema, ErrorCodes, makeError, makeResponse } from '@hips/types'
+import { SESSION_HOURS_END, SESSION_HOURS_START } from '@/lib/config'
 import { getAuthUser } from '@/lib/auth'
+import { rateLimit, rateLimitKey, RATE_LIMITS } from '@/lib/middleware/rate-limit'
 
-// Session hours: Mon–Sat 8am–9pm ET
 function isWithinSessionHours(datetime: Date): boolean {
   const day = datetime.getDay()
-  if (day === 0) return false // Sunday blocked
+  if (day === 0) return false
   const hours = datetime.getHours()
   const start = parseInt(SESSION_HOURS_START.split(':')[0])
   const end = parseInt(SESSION_HOURS_END.split(':')[0])
@@ -22,7 +17,13 @@ function isWithinSessionHours(datetime: Date): boolean {
 
 export async function POST(req: NextRequest) {
   const requestId = uuidv4()
+  const rl = rateLimit(rateLimitKey(req, 'booking'), RATE_LIMITS.booking)
+  if (rl !== 'ok') return rl
+
   try {
+    const authResult = await getAuthUser(req)
+    if (authResult instanceof Response) return authResult
+
     const body = await req.json()
     const parsed = BookSessionSchema.safeParse(body)
     if (!parsed.success) {
@@ -31,25 +32,10 @@ export async function POST(req: NextRequest) {
         { status: 400 }
       )
     }
+
     const { serviceId, scheduledAt, facilitatorId, packageId, discountCode } = parsed.data
-
-    // 1. Validate service exists and is active
-    const service = await commerceDb.service.findUnique({ where: { id: serviceId } })
-    if (!service) {
-      return NextResponse.json(
-        makeError(ErrorCodes.SERVICE_NOT_FOUND, 'Service not found', requestId),
-        { status: 404 }
-      )
-    }
-    if (!service.isActive) {
-      return NextResponse.json(
-        makeError(ErrorCodes.SERVICE_INACTIVE, 'Service is not active', requestId),
-        { status: 422 }
-      )
-    }
-
-    // 2. Validate session hours
     const sessionDate = new Date(scheduledAt)
+
     if (!isWithinSessionHours(sessionDate)) {
       return NextResponse.json(
         makeError(ErrorCodes.SESSION_HOURS_BLOCKED, 'Session time outside allowed window', requestId),
@@ -57,112 +43,126 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // 3. Check slot availability (no existing CONFIRMED session at same time with same facilitator)
-    const existing = await commerceDb.session.findFirst({
-      where: {
-        serviceId,
-        facilitatorId: facilitatorId ?? null,
-        scheduledAt: sessionDate,
-        status: { in: ['PENDING', 'CONFIRMED', 'ACTIVE'] },
-      },
-    })
-    if (existing) {
-      return NextResponse.json(
-        makeError(ErrorCodes.SLOT_UNAVAILABLE, 'Requested slot is not available', requestId),
-        { status: 400 }
-      )
-    }
+    const result = await commerceDb.$transaction(async (tx) => {
+      const service = await tx.service.findUnique({ where: { id: serviceId } })
+      if (!service) {
+        return { error: makeError(ErrorCodes.SERVICE_NOT_FOUND, 'Service not found', requestId), status: 404 }
+      }
+      if (!service.isActive) {
+        return { error: makeError(ErrorCodes.SERVICE_INACTIVE, 'Service is not active', requestId), status: 422 }
+      }
 
-    // 4. Package validation (if packageId provided)
-    let pricePaid = service.standardPrice
-    if (packageId) {
-      const pkg = await commerceDb.package.findUnique({ where: { id: packageId } })
-      if (!pkg) {
-        return NextResponse.json(
-          makeError(ErrorCodes.PACKAGE_EXPIRED, 'Package not found', requestId),
-          { status: 400 }
-        )
-      }
-      if (pkg.status !== 'ACTIVE' || new Date(pkg.expiresAt) < new Date()) {
-        return NextResponse.json(
-          makeError(ErrorCodes.PACKAGE_EXPIRED, 'Package has expired', requestId),
-          { status: 400 }
-        )
-      }
-      if (pkg.usedSessions >= pkg.totalSessions) {
-        return NextResponse.json(
-          makeError(ErrorCodes.PACKAGE_EXHAUSTED, 'Package has no sessions remaining', requestId),
-          { status: 400 }
-        )
-      }
-      // Atomically increment usedSessions
-      await commerceDb.package.update({
-        where: { id: packageId },
-        data: { usedSessions: { increment: 1 } },
+      const existing = await tx.session.findFirst({
+        where: {
+          serviceId,
+          facilitatorId: facilitatorId ?? null,
+          scheduledAt: sessionDate,
+          status: { in: ['PENDING', 'CONFIRMED'] },
+        },
       })
-      pricePaid = 0 // Package covers the session
-    }
+      if (existing) {
+        return { error: makeError(ErrorCodes.SLOT_UNAVAILABLE, 'Requested slot is not available', requestId), status: 400 }
+      }
 
-    // 5. Discount code validation
-    let isScholarship = false
-    if (discountCode) {
-      const scholarship = await commerceDb.scholarship.findUnique({
-        where: { discountCode: discountCode.toUpperCase() },
+      let pricePaid = Number(service.standardPrice)
+      let isScholarship = false
+      let scholarshipCode: string | null = null
+
+      if (packageId) {
+        const pkg = await tx.package.findFirst({
+          where: {
+            id: packageId,
+            userId: authResult.userId,
+            serviceId,
+            status: 'ACTIVE',
+            expiresAt: { gte: new Date() },
+          },
+        })
+
+        if (!pkg) {
+          return { error: makeError(ErrorCodes.PACKAGE_EXPIRED, 'Package not found for this account and service', requestId), status: 400 }
+        }
+        if (pkg.usedSessions >= pkg.totalSessions) {
+          return { error: makeError(ErrorCodes.PACKAGE_EXHAUSTED, 'Package has no sessions remaining', requestId), status: 400 }
+        }
+
+        const consumed = await tx.package.updateMany({
+          where: {
+            id: pkg.id,
+            userId: authResult.userId,
+            serviceId,
+            usedSessions: pkg.usedSessions,
+            status: 'ACTIVE',
+          },
+          data: { usedSessions: { increment: 1 } },
+        })
+        if (consumed.count !== 1) {
+          return { error: makeError(ErrorCodes.PACKAGE_EXHAUSTED, 'Package was already used by another request', requestId), status: 409 }
+        }
+
+        pricePaid = 0
+      }
+
+      if (discountCode) {
+        const code = discountCode.toUpperCase()
+        const scholarship = await tx.scholarship.findUnique({ where: { discountCode: code } })
+        if (!scholarship || scholarship.status !== 'APPROVED') {
+          return { error: makeError(ErrorCodes.DISCOUNT_CODE_INVALID, 'Discount code is invalid or already used', requestId), status: 400 }
+        }
+        if (scholarship.userId !== authResult.userId) {
+          return { error: makeError(ErrorCodes.FORBIDDEN, 'Discount code does not belong to this account', requestId), status: 403 }
+        }
+        if (scholarship.expiresAt && scholarship.expiresAt < new Date()) {
+          return { error: makeError(ErrorCodes.DISCOUNT_CODE_INVALID, 'Discount code has expired', requestId), status: 400 }
+        }
+        if (scholarship.serviceId !== serviceId) {
+          return { error: makeError(ErrorCodes.DISCOUNT_CODE_WRONG_SERVICE, 'Discount code not valid for this service', requestId), status: 400 }
+        }
+
+        const redeemed = await tx.scholarship.updateMany({
+          where: { id: scholarship.id, status: 'APPROVED', userId: authResult.userId },
+          data: { status: 'EXPIRED' },
+        })
+        if (redeemed.count !== 1) {
+          return { error: makeError(ErrorCodes.DISCOUNT_CODE_INVALID, 'Discount code was already used', requestId), status: 409 }
+        }
+
+        pricePaid = Math.max(0, Number(service.standardPrice) - Number(scholarship.approvedAmount ?? 0))
+        isScholarship = true
+        scholarshipCode = code
+      }
+
+      const session = await tx.session.create({
+        data: {
+          userId: authResult.userId,
+          serviceId,
+          facilitatorId: facilitatorId ?? null,
+          packageId: packageId ?? null,
+          status: 'PENDING',
+          scheduledAt: sessionDate,
+          pricePaid,
+          isScholarship,
+          scholarshipCode,
+        },
       })
-      if (!scholarship || scholarship.status !== 'APPROVED') {
-        return NextResponse.json(
-          makeError(ErrorCodes.DISCOUNT_CODE_INVALID, 'Discount code is invalid or expired', requestId),
-          { status: 400 }
-        )
-      }
-      if (scholarship.expiresAt && new Date(scholarship.expiresAt) < new Date()) {
-        return NextResponse.json(
-          makeError(ErrorCodes.DISCOUNT_CODE_INVALID, 'Discount code has expired', requestId),
-          { status: 400 }
-        )
-      }
-      if (scholarship.serviceId !== serviceId) {
-        return NextResponse.json(
-          makeError(ErrorCodes.DISCOUNT_CODE_WRONG_SERVICE, 'Discount code not valid for this service', requestId),
-          { status: 400 }
-        )
-      }
-      pricePaid = Math.max(0, service.standardPrice - (scholarship.approvedAmount ?? 0))
-      isScholarship = true
-    }
 
-    // 6. Get authenticated user
-    const authResult = await getAuthUser(req)
-    if (authResult instanceof Response) return authResult
-    const { userId } = authResult
-
-    const session = await commerceDb.session.create({
-      data: {
-        userId,
-        serviceId,
-        facilitatorId: facilitatorId ?? null,
-        packageId: packageId ?? null,
-        status: 'PENDING',
-        scheduledAt: sessionDate,
-        pricePaid,
-        isScholarship,
-        discountCode: discountCode?.toUpperCase() ?? null,
-      },
+      return { session, status: 201 }
     })
 
-    // Booking confirmation email would be triggered via Resend
-    // await sendBookingConfirmationEmail(session)
+    if ('error' in result) {
+      return NextResponse.json(result.error, { status: result.status })
+    }
 
     return NextResponse.json(
       makeResponse(
         {
-          sessionId: session.id,
-          serviceId: session.serviceId,
-          scheduledAt: session.scheduledAt.toISOString(),
-          status: session.status,
-          pricePaid: session.pricePaid,
-          isScholarship: session.isScholarship,
-          packageId: session.packageId,
+          sessionId: result.session.id,
+          serviceId: result.session.serviceId,
+          scheduledAt: result.session.scheduledAt.toISOString(),
+          status: result.session.status,
+          pricePaid: result.session.pricePaid,
+          isScholarship: result.session.isScholarship,
+          packageId: result.session.packageId,
           confirmationEmailSent: false,
         },
         requestId

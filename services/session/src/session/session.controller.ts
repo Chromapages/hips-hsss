@@ -24,7 +24,8 @@ import {
   UpdateFacilitatorNotesInput,
   RecordingConsentInput,
 } from '../common/dto/session.dto';
-import { SessionSecretGuard, SessionToken, SessionTokenPayload } from '../common/guards';
+import { SessionToken, SessionTokenPayload } from '../common/guards';
+import { SessionTokenGuard } from './session-token.guard';
 
 @Controller('session/v1')
 @UsePipes(new ValidationPipe({ transform: true, whitelist: true }))
@@ -33,7 +34,7 @@ export class SessionController {
 
   @Post(':id/flag')
   @HttpCode(HttpStatus.OK)
-  @UseGuards(SessionSecretGuard)
+  @UseGuards(SessionTokenGuard)
   async flagSession(
     @Param('id', ParseUUIDPipe) sessionRecordId: string,
     @Body() input: FlagSessionInput,
@@ -58,7 +59,7 @@ export class SessionController {
 
   @Post(':id/end')
   @HttpCode(HttpStatus.OK)
-  @UseGuards(SessionSecretGuard)
+  @UseGuards(SessionTokenGuard)
   async endSession(
     @Param('id', ParseUUIDPipe) sessionRecordId: string,
     @Body() input: EndSessionInput,
@@ -83,7 +84,7 @@ export class SessionController {
 
   @Get(':id/notes')
   @HttpCode(HttpStatus.OK)
-  @UseGuards(SessionSecretGuard)
+  @UseGuards(SessionTokenGuard)
   async getNotes(
     @Param('id', ParseUUIDPipe) sessionRecordId: string,
   ): Promise<ApiResponse<{ notes: string | null }>> {
@@ -101,7 +102,7 @@ export class SessionController {
 
   @Patch(':id/notes')
   @HttpCode(HttpStatus.OK)
-  @UseGuards(SessionSecretGuard)
+  @UseGuards(SessionTokenGuard)
   async updateNotes(
     @Param('id', ParseUUIDPipe) sessionRecordId: string,
     @Body() input: UpdateFacilitatorNotesInput,
@@ -125,7 +126,7 @@ export class SessionController {
 
   @Post('recording-consent')
   @HttpCode(HttpStatus.OK)
-  @UseGuards(SessionSecretGuard)
+  @UseGuards(SessionTokenGuard)
   async updateRecordingConsent(
     @Body() input: RecordingConsentInput,
     @SessionToken() token: SessionTokenPayload,

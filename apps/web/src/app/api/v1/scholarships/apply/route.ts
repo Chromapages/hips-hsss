@@ -9,10 +9,14 @@ import {
 } from '@hips/types'
 import { getAuthUser } from '@/lib/auth'
 import { SCHOLARSHIP_MONTHLY_BUDGET_CAP } from '@/lib/config'
+import { rateLimit, rateLimitKey, RATE_LIMITS } from '@/lib/middleware/rate-limit'
 
 // POST /api/v1/scholarships/apply
 export async function POST(req: NextRequest) {
   const requestId = uuidv4()
+  const rl = rateLimit(rateLimitKey(req, 'scholarship'), RATE_LIMITS.scholarship)
+  if (rl !== 'ok') return rl
+
   try {
     const body = await req.json()
     const parsed = ApplyScholarshipSchema.safeParse(body)
@@ -35,15 +39,17 @@ export async function POST(req: NextRequest) {
     }
 
     // 2. Validate amount is within scholarship range
-    if (service.scholarshipMin !== null && requestedAmount < service.scholarshipMin) {
+    const scholarshipMin = Math.round(Number(service.scholarshipMin ?? 0) * 100)
+    const scholarshipMax = Math.round(Number(service.scholarshipMax ?? 0) * 100)
+    if (requestedAmount < scholarshipMin) {
       return NextResponse.json(
-        makeError(ErrorCodes.AMOUNT_OUT_OF_RANGE, `Requested amount below minimum (${service.scholarshipMin / 100})`, requestId),
+        makeError(ErrorCodes.AMOUNT_OUT_OF_RANGE, `Requested amount below minimum (${scholarshipMin / 100})`, requestId),
         { status: 400 }
       )
     }
-    if (service.scholarshipMax !== null && requestedAmount > service.scholarshipMax) {
+    if (scholarshipMax > 0 && requestedAmount > scholarshipMax) {
       return NextResponse.json(
-        makeError(ErrorCodes.AMOUNT_OUT_OF_RANGE, `Requested amount above maximum (${service.scholarshipMax / 100})`, requestId),
+        makeError(ErrorCodes.AMOUNT_OUT_OF_RANGE, `Requested amount above maximum (${scholarshipMax / 100})`, requestId),
         { status: 400 }
       )
     }
@@ -70,10 +76,7 @@ export async function POST(req: NextRequest) {
     // 5. Check monthly budget cap
     const now = new Date()
     const monthStart = new Date(now.getFullYear(), now.getMonth(), 1)
-    const budget = await commerceDb.scholarshipBudget.findUnique({
-      where: { id: 'monthly_cap' },
-    })
-    const monthlyCap = budget?.monthlyCap ?? SCHOLARSHIP_MONTHLY_BUDGET_CAP
+    const monthlyCap = SCHOLARSHIP_MONTHLY_BUDGET_CAP
     const monthlyUsed = await commerceDb.scholarship.aggregate({
       where: {
         status: 'APPROVED',
@@ -81,7 +84,7 @@ export async function POST(req: NextRequest) {
       },
       _sum: { approvedAmount: true },
     })
-    const totalUsed = (monthlyUsed._sum.approvedAmount ?? 0) + requestedAmount
+    const totalUsed = Math.round(Number(monthlyUsed._sum.approvedAmount ?? 0) * 100) + requestedAmount
     if (totalUsed > monthlyCap) {
       return NextResponse.json(
         makeError(ErrorCodes.SCHOLARSHIP_CAP_REACHED, 'Monthly scholarship budget exhausted', requestId),

@@ -5,6 +5,7 @@ import { AutoTeardownService } from './auto-teardown.service';
 import { TokenModule } from '../token';
 import { SessionPrismaService } from '../common/prisma';
 import { SessionSecretGuard } from '../common/guards';
+import { SessionTokenGuard } from './session-token.guard';
 
 @Module({
   imports: [TokenModule],
@@ -14,6 +15,7 @@ import { SessionSecretGuard } from '../common/guards';
     AutoTeardownService,
     SessionPrismaService,
     SessionSecretGuard,
+    SessionTokenGuard,
   ],
   exports: [SessionService],
 })
