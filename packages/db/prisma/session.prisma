@@ -108,14 +108,17 @@ model CrisisFlag {
   triggeredBy     String   // anon facilitator token who initiated
   createdAt       DateTime @default(now())
   resolvedAt      DateTime?
-  resolvedBy      String?  // Clerk user ID of admin who resolved
+  resolvedBy      String?  // admin user ID who resolved
   resolution      String?  // required note on resolve
-  vaultAccessLogId String? // if crisis protocol was triggered, reference to vault log
+  // Cross-database reference to Vault DB's VaultAccessLog.id
+  // NOT enforced at DB level — validated at application/service layer
+  vaultAccessLogId String?
 
   @@index([sessionRecordId])
   @@index([flagType])
   @@index([createdAt])
   @@index([resolvedAt])
+  @@index([vaultAccessLogId]) // Cross-DB lookup for audit queries
 }
 
 // Facilitator availability windows — used by Cal.com or custom scheduling

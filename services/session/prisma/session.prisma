@@ -44,6 +44,9 @@ model SessionRecord {
   auditEvents     AuditEvent[]
   groupSession    GroupSessionRecord?
 
+  @@index([sessionId])          // Cross-DB correlation for crisis escalation
+  @@index([moderatorAnonId])   // Facilitator lookup
+  @@index([participantAnonHandle]) // Participant lookup
   @@index([status])
   @@index([roomId])
   @@map("session_record")

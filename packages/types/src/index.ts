@@ -13,49 +13,54 @@ export enum UserRole {
 }
 
 export enum SessionStatus {
-  SCHEDULED = "SCHEDULED",
-  IN_PROGRESS = "IN_PROGRESS",
-  COMPLETED = "COMPLETED",
-  CANCELLED = "CANCELLED",
-  NO_SHOW = "NO_SHOW",
+  PENDING = "PENDING",      // Prisma commerce schema
+  CONFIRMED = "CONFIRMED",  // Prisma commerce schema
+  COMPLETED = "COMPLETED",  // Prisma commerce schema
+  CANCELLED = "CANCELLED",  // Prisma commerce schema
+  NO_SHOW = "NO_SHOW",      // Prisma commerce schema
 }
 
 export enum ServiceCategory {
-  PEER_SUPPORT = "PEER_SUPPORT",
-  COACHING = "COACHING",
-  LEADERSHIP = "LEADERSHIP",
-  ORGANIZATIONAL = "ORGANIZATIONAL",
-  RETREATS = "RETREATS",
-  CRISIS = "CRISIS",
+  CARE_SESSION = "CARE_SESSION",   // Prisma commerce schema
+  COACHING = "COACHING",           // Prisma commerce schema
+  COHORT = "COHORT",               // Prisma commerce schema
+  WORKSHOP = "WORKSHOP",           // Prisma commerce schema
+  RETREAT = "RETREAT",             // Prisma commerce schema
+  DIGITAL = "DIGITAL",             // Prisma commerce schema
+  MEMBERSHIP = "MEMBERSHIP",       // Prisma commerce schema
 }
 
 export enum ScholarshipStatus {
-  PENDING = "PENDING",
-  APPROVED = "APPROVED",
-  DENIED = "DENIED",
-  EXPIRED = "EXPIRED",
+  PENDING = "PENDING",      // Prisma commerce schema
+  APPROVED = "APPROVED",   // Prisma commerce schema
+  DENIED = "DENIED",       // Prisma commerce schema
+  EXPIRED = "EXPIRED",     // Prisma commerce schema
+  WAITLISTED = "WAITLISTED", // Prisma commerce schema
 }
 
 export enum InquiryStatus {
-  NEW = "NEW",
-  IN_REVIEW = "IN_REVIEW",
-  CONTACTED = "CONTACTED",
-  CONVERTED = "CONVERTED",
-  ARCHIVED = "ARCHIVED",
+  NEW = "NEW",             // Prisma commerce schema
+  QUOTED = "QUOTED",       // Prisma commerce schema
+  DEPOSIT_PAID = "DEPOSIT_PAID", // Prisma commerce schema
+  CONFIRMED = "CONFIRMED",  // Prisma commerce schema
+  COMPLETED = "COMPLETED",  // Prisma commerce schema
+  CANCELLED = "CANCELLED", // Prisma commerce schema
 }
 
 export enum DonationTier {
-  TIER_50 = "TIER_50",
-  TIER_100 = "TIER_100",
-  TIER_500 = "TIER_500",
-  CUSTOM = "CUSTOM",
+  SPONSOR_SESSION = "SPONSOR_SESSION",   // Prisma commerce schema - $50 sponsor
+  RESTORE_SESSION = "RESTORE_SESSION",  // Prisma commerce schema - $100 restore
+  RESTORE_LEADER = "RESTORE_LEADER",     // Prisma commerce schema - $500 leader
+  CUSTOM = "CUSTOM",                    // Prisma commerce schema
 }
 
 export enum LiveSessionStatus {
-  LOBBY = "LOBBY",
-  ACTIVE = "ACTIVE",
-  ENDED = "ENDED",
-  ABANDONED = "ABANDONED",
+  LOBBY = "LOBBY",           // services/session/prisma/session.prisma
+  ACTIVE = "ACTIVE",        // services/session/prisma/session.prisma
+  ENDED = "ENDED",          // services/session/prisma/session.prisma
+  ABANDONED = "ABANDONED",  // services/session/prisma/session.prisma
+  // Note: packages/db/prisma/session.prisma has additional statuses:
+  // CRISIS_FLAGGED, RECONNECTING — used by commerce session layer only
 }
 
 // ============================================================

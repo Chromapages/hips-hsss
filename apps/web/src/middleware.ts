@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { adminAuth } from '@/lib/firebase/admin'
+import { commerceDb } from '@/lib/commerce-db'
 
 export const runtime = 'nodejs'
 
@@ -16,8 +17,14 @@ const publicPaths = [
   '/health',
 ]
 
+const adminPaths = ['/admin']
+
 function isPublicPath(pathname: string): boolean {
   return publicPaths.some((p) => pathname.startsWith(p))
+}
+
+function isAdminPath(pathname: string): boolean {
+  return adminPaths.some((p) => pathname.startsWith(p))
 }
 
 export async function middleware(request: NextRequest) {
@@ -27,6 +34,47 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next()
   }
 
+  // Admin routes need server-side auth check
+  if (isAdminPath(pathname)) {
+    const authHeader = request.headers.get('authorization')
+    if (!authHeader?.startsWith('Bearer ')) {
+      // For admin pages, redirect to sign-in instead of returning 401 (better UX)
+      const signInUrl = new URL('/sign-in', request.url)
+      signInUrl.searchParams.set('redirect', pathname)
+      return NextResponse.redirect(signInUrl)
+    }
+
+    const idToken = authHeader.slice(7)
+
+    try {
+      const decoded = await adminAuth.verifyIdToken(idToken)
+
+      // Check if user has ADMIN role in database
+      const dbUser = await commerceDb.user.findUnique({
+        where: { firebaseUid: decoded.uid },
+        select: { role: true },
+      })
+
+      if (!dbUser || dbUser.role !== 'ADMIN') {
+        // Not an admin - redirect to home with error
+        const signInUrl = new URL('/sign-in', request.url)
+        signInUrl.searchParams.set('error', 'insufficient_permissions')
+        return NextResponse.redirect(signInUrl)
+      }
+
+      // User is admin - set headers and continue
+      const requestHeaders = new Headers(request.headers)
+      requestHeaders.set('x-firebase-uid', decoded.uid)
+      requestHeaders.set('x-firebase-email', decoded.email ?? '')
+      requestHeaders.set('x-user-role', dbUser.role)
+
+      return NextResponse.next({ request: { headers: requestHeaders } })
+    } catch {
+      return NextResponse.redirect(new URL('/sign-in?error=invalid_token', request.url))
+    }
+  }
+
+  // API routes - require auth token
   const authHeader = request.headers.get('authorization')
   if (!authHeader?.startsWith('Bearer ')) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -48,5 +96,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/api/v1/:path*'],
+  matcher: ['/admin/:path*', '/api/v1/:path*'],
 }

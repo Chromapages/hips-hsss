@@ -147,10 +147,13 @@ model Session {
   package    Package? @relation(fields: [packageId], references: [id])
 
   @@index([userId])
+  @@index([userId, status])       // Common query pattern: user's sessions filtered by status
   @@index([serviceId])
   @@index([facilitatorId])
   @@index([status])
   @@index([scheduledAt])
+  @@index([packageId])           // Package lookup for booking
+  @@index([sessionTokenRef])    // Cross-DB session reference
 }
 
 
