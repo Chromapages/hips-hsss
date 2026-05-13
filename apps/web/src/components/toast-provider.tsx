@@ -98,7 +98,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
             <div
               key={toast.id}
               className={cn(
-                'flex items-start gap-3 rounded-lg border p-4 shadow-lg backdrop-blur-sm',
+                'flex items-start gap-3 rounded-lg border p-4 shadow-lg backdrop-blur-sm animate-slide-in',
                 VARIANT_STYLES[toast.variant],
               )}
               role="alert"
