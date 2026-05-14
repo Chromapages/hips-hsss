@@ -15,15 +15,19 @@ concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  # Opt into Node.js 24 runner actions now — avoids the June 2026 forced cutover
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   ci:
     name: CI (Node.js ${{ matrix.node }})
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
 
     strategy:
       matrix:
-        node: ['20']
+        node: ['22']
         package:
           - '@hips/web'
           - '@hips/types'
@@ -35,7 +39,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Setup pnpm
-        uses: pnpm/action-setup@v3
+        uses: pnpm/action-setup@v4
         with:
           version: 9
 
@@ -47,6 +51,15 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+
+      # ─── Prisma generate ────────────────────────────────────────────────────
+      # The vault and session schemas output to paths that must exist before
+      # tsc runs. Neither path is committed to git, so we generate here.
+      - name: Generate Prisma clients
+        run: |
+          pnpm --filter @hips/db exec prisma generate --schema=./prisma/commerce.prisma
+          pnpm --filter @hips/vault exec prisma generate --schema=../../packages/db/prisma/vault.prisma
+          pnpm --filter @hips/session exec prisma generate --schema=./prisma/session.prisma
 
       - name: Typecheck (all packages)
         run: pnpm typecheck
@@ -82,29 +95,36 @@ jobs:
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
-      - uses: github/codeql-action/init@v3
+      - uses: github/codeql-action/init@v4
         with:
           languages: javascript-typescript
-      - uses: github/codeql-action/analyze@v3
+      - uses: github/codeql-action/analyze@v4
 
   session-services:
     name: CI - Session Services
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
     strategy:
       matrix:
         service: ['@hips/session', '@hips/vault', '@hips/safety']
 
     steps:
       - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v3
+      - uses: pnpm/action-setup@v4
         with:
           version: 9
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
           cache: 'pnpm'
       - run: pnpm install --frozen-lockfile
+
+      # Generate Prisma clients before typecheck
+      - name: Generate Prisma clients
+        run: |
+          pnpm --filter @hips/vault exec prisma generate --schema=../../packages/db/prisma/vault.prisma
+          pnpm --filter @hips/session exec prisma generate --schema=./prisma/session.prisma
+
       - run: pnpm typecheck
       - run: pnpm lint
       - run: pnpm test
@@ -122,18 +142,24 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Setup pnpm
-        uses: pnpm/action-setup@v3
+        uses: pnpm/action-setup@v4
         with:
           version: 9
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
           cache: 'pnpm'
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+
+      - name: Generate Prisma clients
+        run: |
+          pnpm --filter @hips/db exec prisma generate --schema=./prisma/commerce.prisma
+          pnpm --filter @hips/vault exec prisma generate --schema=../../packages/db/prisma/vault.prisma
+          pnpm --filter @hips/session exec prisma generate --schema=./prisma/session.prisma
 
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
@@ -151,17 +177,70 @@ jobs:
           FIREBASE_CLIENT_EMAIL: test@test.iam
           FIREBASE_PRIVATE_KEY: "test-key"
         run: |
-          # Start the app in background
           pnpm --filter @hips/web start &
           sleep 10
-          # Run Playwright tests
           npx playwright test
-          # Cleanup
           pkill -f "next start" || true
 
-  # ─── Build & push Docker images to ECR ────────────────────────────────────────
-  # Runs on every push to main (after CDK infra so ECR repos exist).
-  # Decoupled from e2e which only runs on PRs.
+  # ─── CDK infrastructure ─────────────────────────────────────────────────────
+  # Must run first on main pushes — creates ECR repos that image-push depends on.
+  cdk-deploy:
+    name: Deploy CDK Infrastructure (Staging)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    needs: [ci]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'pnpm'
+
+      - name: Install CDK dependencies
+        run: cd infra && pnpm install --frozen-lockfile
+
+      - name: Bootstrap CDK (idempotent — safe to run every time)
+        run: |
+          cd infra && pnpm exec cdk bootstrap \
+            aws://${{ secrets.AWS_ACCOUNT_ID }}/us-east-1 \
+            --context environment=staging
+        continue-on-error: false
+
+      - name: Synth CDK
+        env:
+          ENVIRONMENT: staging
+        run: cd infra && pnpm exec cdk synth --context environment=staging
+
+      - name: Deploy CDK
+        env:
+          ENVIRONMENT: staging
+        run: |
+          cd infra && pnpm exec cdk deploy --all \
+            --context environment=staging \
+            --require-approval never \
+            --verbose
+        continue-on-error: true
+
+  # ─── Build & push Docker images to ECR ──────────────────────────────────────
+  # Runs after CDK so ECR repos are guaranteed to exist.
+  # Decoupled from e2e — e2e only runs on PRs, not on main pushes.
   build-and-push-images:
     name: Build & Push Docker Images
     runs-on: ubuntu-latest
@@ -217,7 +296,7 @@ jobs:
           docker push $ECR_REGISTRY/hips-safety-service:$IMAGE_TAG
           docker push $ECR_REGISTRY/hips-safety-service:latest
 
-  # ─── Deploy staging ────────────────────────────────────────────────────────────
+  # ─── Deploy staging ──────────────────────────────────────────────────────────
   deploy-staging:
     name: Deploy to Staging
     runs-on: ubuntu-latest
@@ -237,14 +316,14 @@ jobs:
           aws-region: us-east-1
 
       - name: Setup pnpm
-        uses: pnpm/action-setup@v3
+        uses: pnpm/action-setup@v4
         with:
           version: 9
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
           cache: 'pnpm'
 
       - name: Install dependencies
@@ -254,7 +333,6 @@ jobs:
         env:
           IMAGE_TAG: ${{ github.sha }}
         run: |
-          # Update task definitions to the new image SHA, then force a new deployment
           aws ecs update-service \
             --cluster hips-platform-staging \
             --service vault-service \
@@ -279,57 +357,9 @@ jobs:
             --region us-east-1
 
       - name: Deploy web app
-        run: |
-          pnpm --filter @hips/web deploy:staging
+        run: pnpm --filter @hips/web deploy:staging
 
-  cdk-deploy:
-    name: Deploy CDK Infrastructure (Staging)
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-    needs: [ci]
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-east-1
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'pnpm'
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v3
-        with:
-          version: 9
-
-      - name: Install CDK dependencies
-        run: |
-          cd infra && pnpm install --frozen-lockfile
-
-      - name: Synth CDK
-        env:
-          ENVIRONMENT: staging
-          CDKDeploy: 'true'
-        run: |
-          cd infra && pnpm exec cdk synth --context environment=staging
-
-      - name: Deploy CDK
-        env:
-          ENVIRONMENT: staging
-          CDKDeploy: 'true'
-        run: |
-          cd infra && pnpm exec cdk deploy --context environment=staging --require-approval never --verbose
-        continue-on-error: true
-
+  # ─── Deploy production ───────────────────────────────────────────────────────
   deploy-production:
     name: Deploy to Production
     runs-on: ubuntu-latest
@@ -340,7 +370,6 @@ jobs:
       name: production
       url: https://hips.org
 
-    # Manual approval required before production deployment
     concurrency:
       group: production-deploy
       cancel-in-progress: false
@@ -365,9 +394,13 @@ jobs:
           IMAGE_TAG: ${{ github.sha }}
         run: |
           # Tag with SHA for immutable traceability — never overwrite staging images
-          docker tag $ECR_REGISTRY/hips-vault-service:$IMAGE_TAG $ECR_REGISTRY/hips-vault-service:prod-$IMAGE_TAG
-          docker tag $ECR_REGISTRY/hips-session-service:$IMAGE_TAG $ECR_REGISTRY/hips-session-service:prod-$IMAGE_TAG
-          docker tag $ECR_REGISTRY/hips-safety-service:$IMAGE_TAG $ECR_REGISTRY/hips-safety-service:prod-$IMAGE_TAG
+          docker pull $ECR_REGISTRY/hips-vault-service:$IMAGE_TAG
+          docker pull $ECR_REGISTRY/hips-session-service:$IMAGE_TAG
+          docker pull $ECR_REGISTRY/hips-safety-service:$IMAGE_TAG
+
+          docker tag $ECR_REGISTRY/hips-vault-service:$IMAGE_TAG    $ECR_REGISTRY/hips-vault-service:prod-$IMAGE_TAG
+          docker tag $ECR_REGISTRY/hips-session-service:$IMAGE_TAG  $ECR_REGISTRY/hips-session-service:prod-$IMAGE_TAG
+          docker tag $ECR_REGISTRY/hips-safety-service:$IMAGE_TAG   $ECR_REGISTRY/hips-safety-service:prod-$IMAGE_TAG
 
           docker push $ECR_REGISTRY/hips-vault-service:prod-$IMAGE_TAG
           docker push $ECR_REGISTRY/hips-session-service:prod-$IMAGE_TAG
@@ -378,13 +411,23 @@ jobs:
 
       - name: Deploy to production ECS
         env:
-          ENVIRONMENT: production
           IMAGE_TAG: ${{ github.sha }}
         run: |
-          aws ecs update-service --cluster hips-platform-production --service vault-service --force-new-deployment --region us-east-1
-          aws ecs update-service --cluster hips-platform-production --service session-service --force-new-deployment --region us-east-1
-          aws ecs update-service --cluster hips-platform-production --service safety-service --force-new-deployment --region us-east-1
+          aws ecs update-service \
+            --cluster hips-platform-production \
+            --service vault-service \
+            --force-new-deployment \
+            --region us-east-1
+          aws ecs update-service \
+            --cluster hips-platform-production \
+            --service session-service \
+            --force-new-deployment \
+            --region us-east-1
+          aws ecs update-service \
+            --cluster hips-platform-production \
+            --service safety-service \
+            --force-new-deployment \
+            --region us-east-1
 
       - name: Deploy web app to production
-        run: |
-          pnpm --filter @hips/web deploy:production
+        run: pnpm --filter @hips/web deploy:production
