@@ -6,7 +6,7 @@ export default function TermsPage() {
         <p className="mt-4 text-sm text-neutral-500">Last updated May 13, 2026</p>
         <div className="mt-8 space-y-6 text-base leading-8 text-neutral-700">
           <p>
-            H.I.P.S. provides peer support, education, coaching, and related services. It is not a replacement for emergency services or medical treatment.
+            H.I.P.S. provides peer support, education, coaching, and related services. It is not a replacement for emergency services or medical care.
           </p>
           <p>
             You agree to use the platform respectfully, protect session privacy, and avoid recording or sharing session content unless a feature explicitly permits it.

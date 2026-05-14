@@ -38,7 +38,7 @@ export function bookingConfirmationEmail(data: {
     ${data.sessionLink ? `<p>Join link: <a href="${data.sessionLink}">${data.sessionLink}</a></p>` : ''}
     <p>You'll receive a reminder 24 hours before your session.</p>
     <div class="disclaimer">
-      <strong>Disclaimer:</strong> H.I.P.S. offers peer support, coaching, and care navigation services. These services are not a substitute for licensed mental health treatment, medical care, or crisis intervention. If you are in crisis, please contact the 988 Suicide & Crisis Lifeline or your local emergency services.
+      <strong>Disclaimer:</strong> H.I.P.S. offers peer support, coaching, and care navigation services. These services are not a substitute for licensed medical care, professional support, or crisis intervention. If you are in crisis, please contact the 988 Suicide & Crisis Lifeline or your local emergency services.
     </div>
     <div class="footer">
       <p>Hiding in Plain Sight Foundation · 501(c)(3) Nonprofit</p>
@@ -56,7 +56,7 @@ Date & Time: ${data.scheduledAt}
 Facilitator: ${data.facilitatorName}
 ${data.sessionLink ? `Join: ${data.sessionLink}` : ''}
 
-Disclaimer: H.I.P.S. offers peer support, coaching, and care navigation services. These services are not a substitute for licensed mental health treatment, medical care, or crisis intervention. If you are in crisis, please contact 988 Suicide & Crisis Lifeline or your local emergency services.
+Disclaimer: H.I.P.S. offers peer support, coaching, and care navigation services. These services are not a substitute for licensed medical care, professional support, or crisis intervention. If you are in crisis, please contact 988 Suicide & Crisis Lifeline or your local emergency services.
 
 Hiding in Plain Sight Foundation · 501(c)(3) Nonprofit`
 
@@ -92,7 +92,7 @@ h1 { font-size: 24px; color: #1A3A5C; }
 <div class="code-box">${data.discountCode}</div>
 <p>This code expires on ${data.expiresAt}. Apply it at checkout to redeem your discount.</p>
 <div class="disclaimer">
-<strong>Disclaimer:</strong> H.I.P.S. offers peer support, coaching, and care navigation services. These services are not a substitute for licensed mental health treatment. If you are in crisis, please contact 988 Suicide & Crisis Lifeline.
+<strong>Disclaimer:</strong> H.I.P.S. offers peer support, coaching, and care navigation services. These services are not a substitute for licensed medical care or professional support. If you are in crisis, please contact 988 Suicide & Crisis Lifeline.
 </div>
 </div></body></html>`
   const text = `Scholarship Approved — H.I.P.S.
@@ -104,7 +104,7 @@ Amount: $${(data.approvedAmount / 100).toFixed(2)}
 Discount Code: ${data.discountCode}
 Expires: ${data.expiresAt}
 
-Disclaimer: H.I.P.S. offers peer support, coaching, and care navigation services. These services are not a substitute for licensed mental health treatment. If you are in crisis, contact 988.`
+Disclaimer: H.I.P.S. offers peer support, coaching, and care navigation services. These services are not a substitute for licensed medical care or professional support. If you are in crisis, contact 988.`
   return { subject, html, text }
 }
 
@@ -129,7 +129,7 @@ body { font-family: Inter, Arial, sans-serif; color: #1A3A5C; line-height: 1.6; 
 ${data.reason ? `<p>${data.reason}</p>` : ''}
 <p>You are welcome to apply again in the future. If you have questions, please reach out to our team.</p>
 <div class="disclaimer">
-<strong>Disclaimer:</strong> H.I.P.S. offers peer support, coaching, and care navigation services. These services are not a substitute for licensed mental health treatment. If you are in crisis, please contact 988 Suicide & Crisis Lifeline.
+<strong>Disclaimer:</strong> H.I.P.S. offers peer support, coaching, and care navigation services. These services are not a substitute for licensed medical care or professional support. If you are in crisis, please contact 988 Suicide & Crisis Lifeline.
 </div>
 </div></body></html>`
   const text = `Scholarship Application Update — H.I.P.S.
@@ -140,7 +140,7 @@ Thank you for applying for a scholarship for ${data.serviceName}. We are unable 
 
 You may reapply in the future. If you have questions, contact our team.
 
-Disclaimer: H.I.P.S. offers peer support, coaching, and care navigation services. Not a substitute for licensed mental health treatment. Crisis: 988.`
+Disclaimer: H.I.P.S. offers peer support, coaching, and care navigation services. Not a substitute for licensed medical care or professional support. Crisis: 988.`
   return { subject, html, text }
 }
 
@@ -223,7 +223,7 @@ body { font-family: Inter, Arial, sans-serif; color: #1A3A5C; line-height: 1.6; 
 <div class="detail-row"><span class="label">Expires:</span> ${data.expiresAt}</div>
 <p>Book sessions at your dashboard: <a href="${process.env.NEXT_PUBLIC_APP_URL}/dashboard">${process.env.NEXT_PUBLIC_APP_URL}/dashboard</a></p>
 <div class="disclaimer">
-<strong>Disclaimer:</strong> H.I.P.S. offers peer support, coaching, and care navigation. Not a substitute for licensed mental health treatment. Crisis: 988.
+<strong>Disclaimer:</strong> H.I.P.S. offers peer support, coaching, and care navigation. Not a substitute for licensed medical care or professional support. Crisis: 988.
 </div>
 </div></body></html>`
   const text = `Package Purchased — H.I.P.S.
@@ -237,7 +237,7 @@ Expires: ${data.expiresAt}
 
 Book sessions at: ${process.env.NEXT_PUBLIC_APP_URL}/dashboard
 
-Disclaimer: H.I.P.S. — Not licensed mental health treatment. Crisis: 988.`
+Disclaimer: H.I.P.S. — not a licensed medical service. Crisis: 988.`
   return { subject, html, text }
 }
 
@@ -268,7 +268,7 @@ body { font-family: Inter, Arial, sans-serif; color: #1A3A5C; line-height: 1.6; 
 <div class="detail-row"><span class="label">Facilitator:</span> ${data.facilitatorName}</div>
 ${data.sessionLink ? `<p>Join: <a href="${data.sessionLink}">${data.sessionLink}</a></p>` : ''}
 <div class="disclaimer">
-<strong>Disclaimer:</strong> H.I.P.S. — peer support, coaching, care navigation. Not licensed mental health treatment. Crisis: 988.
+<strong>Disclaimer:</strong> H.I.P.S. — peer support, coaching, care navigation. Not a licensed medical service. Crisis: 988.
 </div>
 </div></body></html>`
   const text = `Session Reminder — H.I.P.S.
@@ -310,7 +310,7 @@ body { font-family: Inter, Arial, sans-serif; color: #1A3A5C; line-height: 1.6; 
 <p>Book your remaining sessions now before they expire.</p>
 <a class="cta" href="${process.env.NEXT_PUBLIC_APP_URL}/dashboard">Book Sessions</a>
 <div class="disclaimer">
-<strong>Disclaimer:</strong> H.I.P.S. — not licensed mental health treatment. Crisis: 988.
+<strong>Disclaimer:</strong> H.I.P.S. — not a licensed medical service. Crisis: 988.
 </div>
 </div></body></html>`
   const text = `Package Expiring — H.I.P.S.

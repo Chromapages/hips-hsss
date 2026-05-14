@@ -230,7 +230,7 @@ export class SafetyService {
         {
           name: "SAMHSA National Helpline",
           url: "https://samhsa.gov/find-help/national-helpline",
-          description: "Free, confidential treatment referral and information service",
+          description: "Free, confidential referrals and information service",
         },
       ],
     };

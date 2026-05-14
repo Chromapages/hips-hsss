@@ -1,7 +1,7 @@
 import { cn } from '@hips/ui'
 
 const DISCLAIMER_TEXT =
-  'H.I.P.S. is a peer support platform — not a clinical service. We do not provide therapy, diagnosis, or treatment. Our support is designed to complement, not replace, professional care.'
+  'H.I.P.S. is a peer support platform, not licensed medical or crisis care. We do not assess, prescribe, or provide licensed care. Our support is designed to complement, not replace, professional care.'
 
 export function DisclaimerBanner({ className }: { className?: string }) {
   return (
