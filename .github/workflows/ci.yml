@@ -56,7 +56,7 @@ jobs:
       - name: Generate Prisma clients
         run: |
           pnpm --filter @hips/db exec prisma generate --schema=./prisma/commerce.prisma
-          pnpm --filter @hips/vault exec prisma generate --schema=../../packages/db/prisma/vault.prisma
+          pnpm --filter @hips/db exec prisma generate --schema=./prisma/vault.prisma
           pnpm --filter @hips/session exec prisma generate --schema=./prisma/session.prisma
 
       - name: Typecheck (all packages)
@@ -118,7 +118,7 @@ jobs:
       # Generate Prisma clients before typecheck
       - name: Generate Prisma clients
         run: |
-          pnpm --filter @hips/vault exec prisma generate --schema=../../packages/db/prisma/vault.prisma
+          pnpm --filter @hips/db exec prisma generate --schema=./prisma/vault.prisma
           pnpm --filter @hips/session exec prisma generate --schema=./prisma/session.prisma
 
       - run: pnpm typecheck
@@ -152,7 +152,7 @@ jobs:
       - name: Generate Prisma clients
         run: |
           pnpm --filter @hips/db exec prisma generate --schema=./prisma/commerce.prisma
-          pnpm --filter @hips/vault exec prisma generate --schema=../../packages/db/prisma/vault.prisma
+          pnpm --filter @hips/db exec prisma generate --schema=./prisma/vault.prisma
           pnpm --filter @hips/session exec prisma generate --schema=./prisma/session.prisma
 
       - name: Install Playwright browsers
