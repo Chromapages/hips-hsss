@@ -208,10 +208,14 @@ jobs:
       - name: Install CDK dependencies
         run: cd infra && pnpm install --frozen-lockfile
 
+      - name: Build CDK app
+        run: cd infra && pnpm build
+
       - name: Bootstrap CDK (idempotent — safe to run every time)
         run: |
+          ACCOUNT_ID="$(aws sts get-caller-identity --query Account --output text)"
           cd infra && pnpm exec cdk bootstrap \
-            aws://${{ secrets.AWS_ACCOUNT_ID }}/us-east-1 \
+            "aws://${ACCOUNT_ID}/us-east-1" \
             --context environment=staging
         continue-on-error: false
 
