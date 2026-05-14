@@ -1,5 +1,6 @@
 import * as cdk from "aws-cdk-lib";
 import { Construct } from "constructs";
+import * as ecr from "aws-cdk-lib/aws-ecr";
 import * as ecs from "aws-cdk-lib/aws-ecs";
 import * as ec2 from "aws-cdk-lib/aws-ec2";
 import * as iam from "aws-cdk-lib/aws-iam";
@@ -45,6 +46,35 @@ export class EcsStack extends cdk.Stack {
 
     const { vpcStack: vpc, vaultStack: vault, databaseStack } = props;
     this.addDependency(databaseStack);
+
+    // ─── ECR Repositories ──────────────────────────────────────────────────────
+    // Create repos here so they exist before the CI image-push step runs.
+    const vaultRepo = new ecr.Repository(this, "VaultRepo", {
+      repositoryName: "hips-vault-service",
+      removalPolicy: cdk.RemovalPolicy.RETAIN,
+      imageScanOnPush: true,
+      lifecycleRules: [
+        { maxImageCount: 10, description: "Keep last 10 images" },
+      ],
+    });
+
+    const sessionRepo = new ecr.Repository(this, "SessionRepo", {
+      repositoryName: "hips-session-service",
+      removalPolicy: cdk.RemovalPolicy.RETAIN,
+      imageScanOnPush: true,
+      lifecycleRules: [
+        { maxImageCount: 10, description: "Keep last 10 images" },
+      ],
+    });
+
+    const safetyRepo = new ecr.Repository(this, "SafetyRepo", {
+      repositoryName: "hips-safety-service",
+      removalPolicy: cdk.RemovalPolicy.RETAIN,
+      imageScanOnPush: true,
+      lifecycleRules: [
+        { maxImageCount: 10, description: "Keep last 10 images" },
+      ],
+    });
 
     const vaultDbSecret = secretsmanager.Secret.fromSecretNameV2(
       this,
@@ -113,13 +143,14 @@ export class EcsStack extends cdk.Stack {
         taskRole: vault.vaultServiceRole,
       },
     );
+    // Grant task execution role permission to pull from ECR
+    vaultRepo.grantPull(this.vaultTaskDefinition.obtainExecutionRole());
 
     const vaultContainer = this.vaultTaskDefinition.addContainer(
       "VaultContainer",
       {
-        image: ecs.ContainerImage.fromRegistry(
-          `hips/vault-service:${process.env.IMAGE_TAG || "latest"}`,
-        ),
+        // Use the ECR repo URI — resolves to the correct registry at deploy time
+        image: ecs.ContainerImage.fromEcrRepository(vaultRepo, process.env.IMAGE_TAG || "latest"),
         containerName: "vault-service",
         portMappings: [{ containerPort: 3001 }],
         logging: awsLogDriver("vault-service"),
@@ -208,13 +239,14 @@ export class EcsStack extends cdk.Stack {
         taskRole: sessionTaskRole,
       },
     );
+    // Grant task execution role permission to pull from ECR
+    sessionRepo.grantPull(this.sessionTaskDefinition.obtainExecutionRole());
 
     const sessionContainer = this.sessionTaskDefinition.addContainer(
       "SessionContainer",
       {
-        image: ecs.ContainerImage.fromRegistry(
-          `hips/session-service:${process.env.IMAGE_TAG || "latest"}`,
-        ),
+        // Use the ECR repo URI — resolves to the correct registry at deploy time
+        image: ecs.ContainerImage.fromEcrRepository(sessionRepo, process.env.IMAGE_TAG || "latest"),
         containerName: "session-service",
         portMappings: [{ containerPort: 3000 }],
         logging: awsLogDriver("session-service"),
@@ -283,13 +315,14 @@ export class EcsStack extends cdk.Stack {
         taskRole: safetyTaskRole,
       },
     );
+    // Grant task execution role permission to pull from ECR
+    safetyRepo.grantPull(this.safetyTaskDefinition.obtainExecutionRole());
 
     const safetyContainer = this.safetyTaskDefinition.addContainer(
       "SafetyContainer",
       {
-        image: ecs.ContainerImage.fromRegistry(
-          `hips/safety-service:${process.env.IMAGE_TAG || "latest"}`,
-        ),
+        // Use the ECR repo URI — resolves to the correct registry at deploy time
+        image: ecs.ContainerImage.fromEcrRepository(safetyRepo, process.env.IMAGE_TAG || "latest"),
         containerName: "safety-service",
         portMappings: [{ containerPort: 3002 }],
         logging: awsLogDriver("safety-service"),

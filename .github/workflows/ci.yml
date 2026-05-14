@@ -159,11 +159,14 @@ jobs:
           # Cleanup
           pkill -f "next start" || true
 
-  deploy-staging:
-    name: Deploy to Staging
+  # ─── Build & push Docker images to ECR ────────────────────────────────────────
+  # Runs on every push to main (after CDK infra so ECR repos exist).
+  # Decoupled from e2e which only runs on PRs.
+  build-and-push-images:
+    name: Build & Push Docker Images
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    needs: [e2e]
+    needs: [ci, cdk-deploy]
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
 
     steps:
@@ -178,30 +181,102 @@ jobs:
           aws-region: us-east-1
 
       - name: Login to ECR
+        id: ecr-login
         uses: aws-actions/amazon-ecr-login@v2
 
-      - name: Build and push Docker images
+      - name: Build and push vault-service
         env:
           ECR_REGISTRY: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com
           IMAGE_TAG: ${{ github.sha }}
         run: |
-          docker build -t $ECR_REGISTRY/hips-vault-service:$IMAGE_TAG ./services/vault
+          docker build -t $ECR_REGISTRY/hips-vault-service:$IMAGE_TAG \
+                       -t $ECR_REGISTRY/hips-vault-service:latest \
+                       ./services/vault
           docker push $ECR_REGISTRY/hips-vault-service:$IMAGE_TAG
+          docker push $ECR_REGISTRY/hips-vault-service:latest
 
-          docker build -t $ECR_REGISTRY/hips-session-service:$IMAGE_TAG ./services/session
-          docker push $ECR_REGISTRY/hips-session-service:$IMAGE_TAG
-
-          docker build -t $ECR_REGISTRY/hips-safety-service:$IMAGE_TAG ./services/safety
-          docker push $ECR_REGISTRY/hips-safety-service:$IMAGE_TAG
-
-      - name: Deploy to ECS (staging)
+      - name: Build and push session-service
         env:
-          ENVIRONMENT: staging
+          ECR_REGISTRY: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com
           IMAGE_TAG: ${{ github.sha }}
         run: |
-          aws ecs update-service --cluster hips-platform-staging --service vault-service --force-new-deployment --region us-east-1
-          aws ecs update-service --cluster hips-platform-staging --service session-service --force-new-deployment --region us-east-1
-          aws ecs update-service --cluster hips-platform-staging --service safety-service --force-new-deployment --region us-east-1
+          docker build -t $ECR_REGISTRY/hips-session-service:$IMAGE_TAG \
+                       -t $ECR_REGISTRY/hips-session-service:latest \
+                       ./services/session
+          docker push $ECR_REGISTRY/hips-session-service:$IMAGE_TAG
+          docker push $ECR_REGISTRY/hips-session-service:latest
+
+      - name: Build and push safety-service
+        env:
+          ECR_REGISTRY: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          docker build -t $ECR_REGISTRY/hips-safety-service:$IMAGE_TAG \
+                       -t $ECR_REGISTRY/hips-safety-service:latest \
+                       ./services/safety
+          docker push $ECR_REGISTRY/hips-safety-service:$IMAGE_TAG
+          docker push $ECR_REGISTRY/hips-safety-service:latest
+
+  # ─── Deploy staging ────────────────────────────────────────────────────────────
+  deploy-staging:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    needs: [build-and-push-images]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 9
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Force new ECS deployment (staging)
+        env:
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          # Update task definitions to the new image SHA, then force a new deployment
+          aws ecs update-service \
+            --cluster hips-platform-staging \
+            --service vault-service \
+            --force-new-deployment \
+            --region us-east-1
+          aws ecs update-service \
+            --cluster hips-platform-staging \
+            --service session-service \
+            --force-new-deployment \
+            --region us-east-1
+          aws ecs update-service \
+            --cluster hips-platform-staging \
+            --service safety-service \
+            --force-new-deployment \
+            --region us-east-1
+
+      - name: Wait for ECS services to stabilise
+        run: |
+          aws ecs wait services-stable \
+            --cluster hips-platform-staging \
+            --services vault-service session-service safety-service \
+            --region us-east-1
 
       - name: Deploy web app
         run: |
