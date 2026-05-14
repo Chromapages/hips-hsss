@@ -4,6 +4,9 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 
 type ConnectionPhase = 'connecting' | 'connected' | 'reconnecting' | 'failed' | 'ended'
+type AuthMessage =
+  | { type: 'AUTH_SUCCESS' }
+  | { type: 'AUTH_ERROR'; code?: string }
 
 interface SessionTokenState {
   token: string | null
@@ -96,16 +99,33 @@ export function useSessionToken({
       const token = data.token
 
       setState((s) => ({ ...s, token, attemptCount: 0 }))
-      updatePhase('connected')
 
       // Keep credentials out of URL paths so proxy/APM logs cannot capture them.
       const wsUrl = `${process.env.NEXT_PUBLIC_WS_URL ?? 'wss://session.hips.org'}/ws`
-      const ws = new WebSocket(wsUrl, ['session-token', token])
+      const ws = new WebSocket(wsUrl)
       wsRef.current = ws
 
       ws.onopen = () => {
-        updatePhase('connected')
-        setState((s) => ({ ...s, attemptCount: 0, countdown: 0 }))
+        ws.send(JSON.stringify({ type: 'AUTH', token }))
+      }
+
+      ws.onmessage = (event) => {
+        const message = JSON.parse(event.data as string) as AuthMessage
+        if (message.type === 'AUTH_SUCCESS') {
+          updatePhase('connected')
+          setState((s) => ({ ...s, attemptCount: 0, countdown: 0 }))
+          return
+        }
+
+        if (message.type === 'AUTH_ERROR') {
+          updatePhase('failed')
+          onError?.(message.code ?? 'TOKEN_AUTH_FAILED')
+          ws.close()
+        }
+      }
+
+      ws.onerror = () => {
+        // Let onclose handle reconnection logic
       }
 
       ws.onclose = () => {
@@ -121,10 +141,6 @@ export function useSessionToken({
           }
           return s
         })
-      }
-
-      ws.onerror = () => {
-        // Let onclose handle reconnection logic
       }
 
     } catch {

@@ -1,6 +1,6 @@
 'use client'
 
-import React, { createContext, useContext, useEffect, useState } from 'react'
+import React, { createContext, useContext, useEffect, useState, useRef, useCallback } from 'react'
 import {
   onAuthStateChanged,
   User,
@@ -31,40 +31,71 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<AppUser | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const mountedRef = useRef(true)
+  const provisioningRef = useRef<Set<Promise<unknown>>>(new Set())
 
   useEffect(() => {
-    const provisionUser = async (user: User) => {
-      const token = await user.getIdToken()
-      await fetch('/api/v1/users/register', {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email: user.email ?? undefined,
-          displayName: user.displayName ?? undefined,
-          provider: user.providerData[0]?.providerId === 'google.com' ? 'google' : 'email',
-        }),
-      })
+    mountedRef.current = true
+    return () => {
+      mountedRef.current = false
     }
+  }, [])
 
+  const provisionUser = useCallback(async (user: User) => {
+    const token = await user.getIdToken()
+    const sessionPromise = fetch('/api/v1/auth/session', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    })
+    const promise = fetch('/api/v1/users/register', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        email: user.email ?? undefined,
+        displayName: user.displayName ?? undefined,
+        provider: user.providerData[0]?.providerId === 'google.com' ? 'google' : 'email',
+      }),
+    }).catch((err) => {
+      console.error('User provisioning error:', err)
+      throw err
+    })
+    provisioningRef.current.add(promise)
+    provisioningRef.current.add(sessionPromise)
+    try {
+      await Promise.all([promise, sessionPromise])
+    } finally {
+      provisioningRef.current.delete(promise)
+      provisioningRef.current.delete(sessionPromise)
+    }
+  }, [])
+
+  useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
-        await provisionUser(user).catch((err) => {
-          console.error('User provisioning error:', err)
-        })
+        // Fire and forget, but track the promise
+        provisionUser(user)
       }
-      setUser(user)
-      setLoading(false)
+      if (mountedRef.current) {
+        setUser(user)
+        setLoading(false)
+      }
     }, (err) => {
       console.error('Auth state change error:', err)
-      setError(err.message)
-      setLoading(false)
+      if (mountedRef.current) {
+        setError(err.message)
+        setLoading(false)
+      }
     })
 
-    return () => unsubscribe()
-  }, [])
+    return () => {
+      unsubscribe()
+    }
+  }, [provisionUser])
 
   const signIn = async (email: string, password: string) => {
     try {
@@ -97,6 +128,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signOut = async () => {
     try {
+      await fetch('/api/v1/auth/session', { method: 'DELETE' }).catch(() => undefined)
       await firebaseSignOut(auth)
     } catch (err: any) {
       setError(err.message)

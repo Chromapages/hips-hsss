@@ -18,7 +18,7 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY ?? '', {
 // POST /api/v1/checkout/session
 export async function POST(req: NextRequest) {
   const requestId = uuidv4()
-  const rl = rateLimit(rateLimitKey(req, 'checkout'), RATE_LIMITS.checkout)
+  const rl = await rateLimit(rateLimitKey(req, 'checkout'), RATE_LIMITS.checkout)
   if (rl !== 'ok') return rl
 
   try {
@@ -34,7 +34,7 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    const { serviceId, discountCode, packageTier } = parsed.data
+    const { serviceId, sessionId, discountCode, packageTier } = parsed.data
 
     // 1. Validate service
     const service = await commerceDb.service.findUnique({ where: { id: serviceId } })
@@ -98,20 +98,30 @@ export async function POST(req: NextRequest) {
       ? 'PACKAGE_PURCHASE'
       : 'SERVICE_PURCHASE'
     const totalSessions = packageTier === '8_SESSION' ? '8' : packageTier === '4_SESSION' ? '4' : '1'
+    if (metadataType === 'SERVICE_PURCHASE' && !sessionId) {
+      return NextResponse.json(
+        makeError(ErrorCodes.VALIDATION_ERROR, 'Single-session checkout requires a booked session ID', requestId),
+        { status: 400 }
+      )
+    }
 
-    const paymentIntent = await stripe.paymentIntents.create({
-      amount,
-      currency: 'usd',
-      metadata: {
-        type: metadataType,
-        serviceId,
-        userId: authResult.userId,
-        firebaseUid: authResult.firebaseUid,
-        discountCode: discountCode?.toUpperCase() ?? '',
-        packageTier: packageTier ?? 'SINGLE',
-        totalSessions,
+    const paymentIntent = await stripe.paymentIntents.create(
+      {
+        amount,
+        currency: 'usd',
+        metadata: {
+          type: metadataType,
+          serviceId,
+          sessionId: sessionId ?? '',
+          userId: authResult.userId,
+          firebaseUid: authResult.firebaseUid,
+          discountCode: discountCode?.toUpperCase() ?? '',
+          packageTier: packageTier ?? 'SINGLE',
+          totalSessions,
+        },
       },
-    })
+      { timeout: 30000 }
+    )
 
     return NextResponse.json(
       makeResponse(

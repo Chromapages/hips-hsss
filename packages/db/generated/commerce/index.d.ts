@@ -10833,6 +10833,7 @@ export namespace Prisma {
   export type SessionWhereUniqueInput = Prisma.AtLeast<{
     id?: string
     stripePaymentId?: string
+    sessionTokenRef?: string
     AND?: SessionWhereInput | SessionWhereInput[]
     OR?: SessionWhereInput[]
     NOT?: SessionWhereInput | SessionWhereInput[]
@@ -10845,7 +10846,6 @@ export namespace Prisma {
     isScholarship?: BoolFilter<"Session"> | boolean
     scholarshipCode?: StringNullableFilter<"Session"> | string | null
     packageId?: StringNullableFilter<"Session"> | string | null
-    sessionTokenRef?: StringNullableFilter<"Session"> | string | null
     cancelReason?: StringNullableFilter<"Session"> | string | null
     completedAt?: DateTimeNullableFilter<"Session"> | Date | string | null
     confirmationEmailSent?: BoolFilter<"Session"> | boolean
@@ -10855,7 +10855,7 @@ export namespace Prisma {
     user?: XOR<UserRelationFilter, UserWhereInput>
     service?: XOR<ServiceRelationFilter, ServiceWhereInput>
     package?: XOR<PackageNullableRelationFilter, PackageWhereInput> | null
-  }, "id" | "stripePaymentId">
+  }, "id" | "stripePaymentId" | "sessionTokenRef">
 
   export type SessionOrderByWithAggregationInput = {
     id?: SortOrder

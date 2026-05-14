@@ -4,56 +4,86 @@ import * as rds from "aws-cdk-lib/aws-rds";
 import * as kms from "aws-cdk-lib/aws-kms";
 import * as ec2 from "aws-cdk-lib/aws-ec2";
 import { VpcStack } from "./vpc-stack";
+import { VaultStack } from "./vault-stack";
+
+export interface DatabaseStackProps extends cdk.StackProps {
+  vpcStack: VpcStack;
+  vaultStack: VaultStack;
+}
 
 export class DatabaseStack extends cdk.Stack {
   public readonly vaultDb: rds.DatabaseInstance;
   public readonly sessionDb: rds.DatabaseInstance;
+  public readonly sessionKmsKey: kms.Key;
 
   constructor(
     scope: Construct,
     id: string,
-    props: { vpcStack: VpcStack } & cdk.StackProps,
+    props: DatabaseStackProps,
   ) {
     super(scope, id, props);
 
-    const { vpcStack } = props;
+    const { vpcStack, vaultStack } = props;
 
-    // KMS key for vault DB encryption
-    const vaultKmsKey = new kms.Key(this, "VaultDbKey", {
-      description: "KMS key for Identity Vault PostgreSQL DB",
-      alias: "alias/hips-vault-prod",
-      enableKeyRotation: true,
-      removalPolicy: cdk.RemovalPolicy.RETAIN,
-    });
-
-    // Vault DB — isolated subnet, KMS encrypted, no public access
+    // Vault DB — isolated subnet, KMS encrypted with vault master key, no public access
+    // Uses the same KMS key as the vault service for unified key management
     this.vaultDb = new rds.DatabaseInstance(this, "VaultDb", {
-      engine: rds.DatabaseEngine.postgres({ version: rds.PostgresEngineVersion.VER_16 }),
+      engine: rds.DatabaseInstanceEngine.postgres({ version: rds.PostgresEngineVersion.VER_16 }),
       credentials: rds.Credentials.fromGeneratedSecret("vaultadmin"),
       vpc: vpcStack.vpc,
       vpcSubnets: {
         subnetGroupName: "IsolatedData",
       },
       securityGroups: [vpcStack.vaultSecurityGroup],
-      storageEncryptionKey: vaultKmsKey,
+      storageEncryptionKey: vaultStack.kmsKey,
       publiclyAccessible: false,
       allocatedStorage: 20,
-      multiAz: true,
-      backupRetention: cdk.Duration.days(30),
+      instanceType: ec2.InstanceType.of(ec2.InstanceClass.T3, ec2.InstanceSize.MICRO),
+      multiAz: false,
+      backupRetention: cdk.Duration.days(0),
+      deletionProtection: false,
+      removalPolicy: cdk.RemovalPolicy.RETAIN,
     });
 
-    // Session DB — separate instance, no KMS (no PII)
+    new cdk.CfnOutput(this, "VaultDbHostname", {
+      value: this.vaultDb.dbInstanceEndpointAddress,
+      exportName: "HIPS-VaultDbHostname",
+    });
+
+    // Session DB — isolated subnet, KMS encrypted for HIPAA compliance
+    this.sessionKmsKey = new kms.Key(this, "SessionDbKey", {
+      description: "KMS key for Session DB encryption",
+      alias: "alias/hips-session-prod",
+      enableKeyRotation: true,
+      removalPolicy: cdk.RemovalPolicy.RETAIN,
+    });
+
     this.sessionDb = new rds.DatabaseInstance(this, "SessionDb", {
-      engine: rds.DatabaseEngine.postgres({ version: rds.PostgresEngineVersion.VER_16 }),
+      engine: rds.DatabaseInstanceEngine.postgres({ version: rds.PostgresEngineVersion.VER_16 }),
       credentials: rds.Credentials.fromGeneratedSecret("sessionadmin"),
       vpc: vpcStack.vpc,
       vpcSubnets: {
         subnetGroupName: "PrivateApp",
       },
       securityGroups: [vpcStack.sessionSecurityGroup],
+      storageEncryptionKey: this.sessionKmsKey,
       publiclyAccessible: false,
       allocatedStorage: 20,
-      backupRetention: cdk.Duration.days(7),
+      instanceType: ec2.InstanceType.of(ec2.InstanceClass.T3, ec2.InstanceSize.MICRO),
+      multiAz: false,
+      backupRetention: cdk.Duration.days(0),
+      deletionProtection: false,
+      removalPolicy: cdk.RemovalPolicy.RETAIN,
+    });
+
+    new cdk.CfnOutput(this, "SessionDbHostname", {
+      value: this.sessionDb.dbInstanceEndpointAddress,
+      exportName: "HIPS-SessionDbHostname",
+    });
+
+    new cdk.CfnOutput(this, "SessionKmsKeyId", {
+      value: this.sessionKmsKey.keyId,
+      exportName: "HIPS-SessionKMSKeyId",
     });
   }
 }

@@ -11,13 +11,21 @@ async function bootstrap() {
     res.setHeader("Permissions-Policy", "camera=(), microphone=(), geolocation=()");
     next();
   });
-  app.enableCors({
-    origin: process.env.ALLOWED_ORIGINS?.split(",") ?? [
-      "http://localhost:3000",
-      "https://hips.foundation",
-    ],
-    credentials: true,
-  });
+  const allowedOrigins = (process.env.ALLOWED_ORIGINS || "")
+  .split(",")
+  .map((o) => o.trim())
+  .filter((o) => o.length > 0);
+
+app.enableCors({
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
+  credentials: true,
+});
   await app.listen(process.env.PORT ?? 3001);
 }
 bootstrap();

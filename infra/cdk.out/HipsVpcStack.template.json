@@ -1,0 +1,1396 @@
+{
+ "Resources": {
+  "HipsVpc27B4BD3E": {
+   "Type": "AWS::EC2::VPC",
+   "Properties": {
+    "CidrBlock": "10.0.0.0/16",
+    "EnableDnsHostnames": true,
+    "EnableDnsSupport": true,
+    "InstanceTenancy": "default",
+    "Tags": [
+     {
+      "Key": "Environment",
+      "Value": "development"
+     },
+     {
+      "Key": "HIPAA",
+      "Value": "true"
+     },
+     {
+      "Key": "Name",
+      "Value": "HipsVpcStack/HipsVpc"
+     },
+     {
+      "Key": "Project",
+      "Value": "HIPS"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "HipsVpcStack/HipsVpc/Resource"
+   }
+  },
+  "HipsVpcPublicSubnet1SubnetB1B3B839": {
+   "Type": "AWS::EC2::Subnet",
+   "Properties": {
+    "AvailabilityZone": "us-east-1a",
+    "CidrBlock": "10.0.0.0/24",
+    "MapPublicIpOnLaunch": true,
+    "Tags": [
+     {
+      "Key": "aws-cdk:subnet-name",
+      "Value": "Public"
+     },
+     {
+      "Key": "aws-cdk:subnet-type",
+      "Value": "Public"
+     },
+     {
+      "Key": "Environment",
+      "Value": "development"
+     },
+     {
+      "Key": "HIPAA",
+      "Value": "true"
+     },
+     {
+      "Key": "Name",
+      "Value": "HipsVpcStack/HipsVpc/PublicSubnet1"
+     },
+     {
+      "Key": "Project",
+      "Value": "HIPS"
+     }
+    ],
+    "VpcId": {
+     "Ref": "HipsVpc27B4BD3E"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "HipsVpcStack/HipsVpc/PublicSubnet1/Subnet"
+   }
+  },
+  "HipsVpcPublicSubnet1RouteTableEBF4039A": {
+   "Type": "AWS::EC2::RouteTable",
+   "Properties": {
+    "Tags": [
+     {
+      "Key": "Environment",
+      "Value": "development"
+     },
+     {
+      "Key": "HIPAA",
+      "Value": "true"
+     },
+     {
+      "Key": "Name",
+      "Value": "HipsVpcStack/HipsVpc/PublicSubnet1"
+     },
+     {
+      "Key": "Project",
+      "Value": "HIPS"
+     }
+    ],
+    "VpcId": {
+     "Ref": "HipsVpc27B4BD3E"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "HipsVpcStack/HipsVpc/PublicSubnet1/RouteTable"
+   }
+  },
+  "HipsVpcPublicSubnet1RouteTableAssociation4A7D0842": {
+   "Type": "AWS::EC2::SubnetRouteTableAssociation",
+   "Properties": {
+    "RouteTableId": {
+     "Ref": "HipsVpcPublicSubnet1RouteTableEBF4039A"
+    },
+    "SubnetId": {
+     "Ref": "HipsVpcPublicSubnet1SubnetB1B3B839"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "HipsVpcStack/HipsVpc/PublicSubnet1/RouteTableAssociation"
+   }
+  },
+  "HipsVpcPublicSubnet1DefaultRouteF52FE2F1": {
+   "Type": "AWS::EC2::Route",
+   "Properties": {
+    "DestinationCidrBlock": "0.0.0.0/0",
+    "GatewayId": {
+     "Ref": "HipsVpcIGW1C94821A"
+    },
+    "RouteTableId": {
+     "Ref": "HipsVpcPublicSubnet1RouteTableEBF4039A"
+    }
+   },
+   "DependsOn": [
+    "HipsVpcVPCGW7C87244E"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "HipsVpcStack/HipsVpc/PublicSubnet1/DefaultRoute"
+   }
+  },
+  "HipsVpcPublicSubnet1EIP83E21E05": {
+   "Type": "AWS::EC2::EIP",
+   "Properties": {
+    "Domain": "vpc",
+    "Tags": [
+     {
+      "Key": "Environment",
+      "Value": "development"
+     },
+     {
+      "Key": "HIPAA",
+      "Value": "true"
+     },
+     {
+      "Key": "Name",
+      "Value": "HipsVpcStack/HipsVpc/PublicSubnet1"
+     },
+     {
+      "Key": "Project",
+      "Value": "HIPS"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "HipsVpcStack/HipsVpc/PublicSubnet1/EIP"
+   }
+  },
+  "HipsVpcPublicSubnet1NATGateway81249D07": {
+   "Type": "AWS::EC2::NatGateway",
+   "Properties": {
+    "AllocationId": {
+     "Fn::GetAtt": [
+      "HipsVpcPublicSubnet1EIP83E21E05",
+      "AllocationId"
+     ]
+    },
+    "SubnetId": {
+     "Ref": "HipsVpcPublicSubnet1SubnetB1B3B839"
+    },
+    "Tags": [
+     {
+      "Key": "Environment",
+      "Value": "development"
+     },
+     {
+      "Key": "HIPAA",
+      "Value": "true"
+     },
+     {
+      "Key": "Name",
+      "Value": "HipsVpcStack/HipsVpc/PublicSubnet1"
+     },
+     {
+      "Key": "Project",
+      "Value": "HIPS"
+     }
+    ]
+   },
+   "DependsOn": [
+    "HipsVpcPublicSubnet1DefaultRouteF52FE2F1",
+    "HipsVpcPublicSubnet1RouteTableAssociation4A7D0842"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "HipsVpcStack/HipsVpc/PublicSubnet1/NATGateway"
+   }
+  },
+  "HipsVpcPublicSubnet2Subnet6E226507": {
+   "Type": "AWS::EC2::Subnet",
+   "Properties": {
+    "AvailabilityZone": "us-east-1b",
+    "CidrBlock": "10.0.1.0/24",
+    "MapPublicIpOnLaunch": true,
+    "Tags": [
+     {
+      "Key": "aws-cdk:subnet-name",
+      "Value": "Public"
+     },
+     {
+      "Key": "aws-cdk:subnet-type",
+      "Value": "Public"
+     },
+     {
+      "Key": "Environment",
+      "Value": "development"
+     },
+     {
+      "Key": "HIPAA",
+      "Value": "true"
+     },
+     {
+      "Key": "Name",
+      "Value": "HipsVpcStack/HipsVpc/PublicSubnet2"
+     },
+     {
+      "Key": "Project",
+      "Value": "HIPS"
+     }
+    ],
+    "VpcId": {
+     "Ref": "HipsVpc27B4BD3E"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "HipsVpcStack/HipsVpc/PublicSubnet2/Subnet"
+   }
+  },
+  "HipsVpcPublicSubnet2RouteTableEE740BA7": {
+   "Type": "AWS::EC2::RouteTable",
+   "Properties": {
+    "Tags": [
+     {
+      "Key": "Environment",
+      "Value": "development"
+     },
+     {
+      "Key": "HIPAA",
+      "Value": "true"
+     },
+     {
+      "Key": "Name",
+      "Value": "HipsVpcStack/HipsVpc/PublicSubnet2"
+     },
+     {
+      "Key": "Project",
+      "Value": "HIPS"
+     }
+    ],
+    "VpcId": {
+     "Ref": "HipsVpc27B4BD3E"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "HipsVpcStack/HipsVpc/PublicSubnet2/RouteTable"
+   }
+  },
+  "HipsVpcPublicSubnet2RouteTableAssociationDD22EF72": {
+   "Type": "AWS::EC2::SubnetRouteTableAssociation",
+   "Properties": {
+    "RouteTableId": {
+     "Ref": "HipsVpcPublicSubnet2RouteTableEE740BA7"
+    },
+    "SubnetId": {
+     "Ref": "HipsVpcPublicSubnet2Subnet6E226507"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "HipsVpcStack/HipsVpc/PublicSubnet2/RouteTableAssociation"
+   }
+  },
+  "HipsVpcPublicSubnet2DefaultRoute1BC67FD1": {
+   "Type": "AWS::EC2::Route",
+   "Properties": {
+    "DestinationCidrBlock": "0.0.0.0/0",
+    "GatewayId": {
+     "Ref": "HipsVpcIGW1C94821A"
+    },
+    "RouteTableId": {
+     "Ref": "HipsVpcPublicSubnet2RouteTableEE740BA7"
+    }
+   },
+   "DependsOn": [
+    "HipsVpcVPCGW7C87244E"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "HipsVpcStack/HipsVpc/PublicSubnet2/DefaultRoute"
+   }
+  },
+  "HipsVpcPublicSubnet3Subnet67888DA2": {
+   "Type": "AWS::EC2::Subnet",
+   "Properties": {
+    "AvailabilityZone": "us-east-1c",
+    "CidrBlock": "10.0.2.0/24",
+    "MapPublicIpOnLaunch": true,
+    "Tags": [
+     {
+      "Key": "aws-cdk:subnet-name",
+      "Value": "Public"
+     },
+     {
+      "Key": "aws-cdk:subnet-type",
+      "Value": "Public"
+     },
+     {
+      "Key": "Environment",
+      "Value": "development"
+     },
+     {
+      "Key": "HIPAA",
+      "Value": "true"
+     },
+     {
+      "Key": "Name",
+      "Value": "HipsVpcStack/HipsVpc/PublicSubnet3"
+     },
+     {
+      "Key": "Project",
+      "Value": "HIPS"
+     }
+    ],
+    "VpcId": {
+     "Ref": "HipsVpc27B4BD3E"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "HipsVpcStack/HipsVpc/PublicSubnet3/Subnet"
+   }
+  },
+  "HipsVpcPublicSubnet3RouteTableBD25017C": {
+   "Type": "AWS::EC2::RouteTable",
+   "Properties": {
+    "Tags": [
+     {
+      "Key": "Environment",
+      "Value": "development"
+     },
+     {
+      "Key": "HIPAA",
+      "Value": "true"
+     },
+     {
+      "Key": "Name",
+      "Value": "HipsVpcStack/HipsVpc/PublicSubnet3"
+     },
+     {
+      "Key": "Project",
+      "Value": "HIPS"
+     }
+    ],
+    "VpcId": {
+     "Ref": "HipsVpc27B4BD3E"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "HipsVpcStack/HipsVpc/PublicSubnet3/RouteTable"
+   }
+  },
+  "HipsVpcPublicSubnet3RouteTableAssociation74478297": {
+   "Type": "AWS::EC2::SubnetRouteTableAssociation",
+   "Properties": {
+    "RouteTableId": {
+     "Ref": "HipsVpcPublicSubnet3RouteTableBD25017C"
+    },
+    "SubnetId": {
+     "Ref": "HipsVpcPublicSubnet3Subnet67888DA2"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "HipsVpcStack/HipsVpc/PublicSubnet3/RouteTableAssociation"
+   }
+  },
+  "HipsVpcPublicSubnet3DefaultRoute268898BC": {
+   "Type": "AWS::EC2::Route",
+   "Properties": {
+    "DestinationCidrBlock": "0.0.0.0/0",
+    "GatewayId": {
+     "Ref": "HipsVpcIGW1C94821A"
+    },
+    "RouteTableId": {
+     "Ref": "HipsVpcPublicSubnet3RouteTableBD25017C"
+    }
+   },
+   "DependsOn": [
+    "HipsVpcVPCGW7C87244E"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "HipsVpcStack/HipsVpc/PublicSubnet3/DefaultRoute"
+   }
+  },
+  "HipsVpcPrivateAppSubnet1SubnetF8A9AD18": {
+   "Type": "AWS::EC2::Subnet",
+   "Properties": {
+    "AvailabilityZone": "us-east-1a",
+    "CidrBlock": "10.0.3.0/24",
+    "MapPublicIpOnLaunch": false,
+    "Tags": [
+     {
+      "Key": "aws-cdk:subnet-name",
+      "Value": "PrivateApp"
+     },
+     {
+      "Key": "aws-cdk:subnet-type",
+      "Value": "Private"
+     },
+     {
+      "Key": "Environment",
+      "Value": "development"
+     },
+     {
+      "Key": "HIPAA",
+      "Value": "true"
+     },
+     {
+      "Key": "Name",
+      "Value": "HipsVpcStack/HipsVpc/PrivateAppSubnet1"
+     },
+     {
+      "Key": "Project",
+      "Value": "HIPS"
+     }
+    ],
+    "VpcId": {
+     "Ref": "HipsVpc27B4BD3E"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "HipsVpcStack/HipsVpc/PrivateAppSubnet1/Subnet"
+   }
+  },
+  "HipsVpcPrivateAppSubnet1RouteTableCACEE39A": {
+   "Type": "AWS::EC2::RouteTable",
+   "Properties": {
+    "Tags": [
+     {
+      "Key": "Environment",
+      "Value": "development"
+     },
+     {
+      "Key": "HIPAA",
+      "Value": "true"
+     },
+     {
+      "Key": "Name",
+      "Value": "HipsVpcStack/HipsVpc/PrivateAppSubnet1"
+     },
+     {
+      "Key": "Project",
+      "Value": "HIPS"
+     }
+    ],
+    "VpcId": {
+     "Ref": "HipsVpc27B4BD3E"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "HipsVpcStack/HipsVpc/PrivateAppSubnet1/RouteTable"
+   }
+  },
+  "HipsVpcPrivateAppSubnet1RouteTableAssociationBEB421CF": {
+   "Type": "AWS::EC2::SubnetRouteTableAssociation",
+   "Properties": {
+    "RouteTableId": {
+     "Ref": "HipsVpcPrivateAppSubnet1RouteTableCACEE39A"
+    },
+    "SubnetId": {
+     "Ref": "HipsVpcPrivateAppSubnet1SubnetF8A9AD18"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "HipsVpcStack/HipsVpc/PrivateAppSubnet1/RouteTableAssociation"
+   }
+  },
+  "HipsVpcPrivateAppSubnet1DefaultRoute377475A2": {
+   "Type": "AWS::EC2::Route",
+   "Properties": {
+    "DestinationCidrBlock": "0.0.0.0/0",
+    "NatGatewayId": {
+     "Ref": "HipsVpcPublicSubnet1NATGateway81249D07"
+    },
+    "RouteTableId": {
+     "Ref": "HipsVpcPrivateAppSubnet1RouteTableCACEE39A"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "HipsVpcStack/HipsVpc/PrivateAppSubnet1/DefaultRoute"
+   }
+  },
+  "HipsVpcPrivateAppSubnet2SubnetFD675120": {
+   "Type": "AWS::EC2::Subnet",
+   "Properties": {
+    "AvailabilityZone": "us-east-1b",
+    "CidrBlock": "10.0.4.0/24",
+    "MapPublicIpOnLaunch": false,
+    "Tags": [
+     {
+      "Key": "aws-cdk:subnet-name",
+      "Value": "PrivateApp"
+     },
+     {
+      "Key": "aws-cdk:subnet-type",
+      "Value": "Private"
+     },
+     {
+      "Key": "Environment",
+      "Value": "development"
+     },
+     {
+      "Key": "HIPAA",
+      "Value": "true"
+     },
+     {
+      "Key": "Name",
+      "Value": "HipsVpcStack/HipsVpc/PrivateAppSubnet2"
+     },
+     {
+      "Key": "Project",
+      "Value": "HIPS"
+     }
+    ],
+    "VpcId": {
+     "Ref": "HipsVpc27B4BD3E"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "HipsVpcStack/HipsVpc/PrivateAppSubnet2/Subnet"
+   }
+  },
+  "HipsVpcPrivateAppSubnet2RouteTable6D63881C": {
+   "Type": "AWS::EC2::RouteTable",
+   "Properties": {
+    "Tags": [
+     {
+      "Key": "Environment",
+      "Value": "development"
+     },
+     {
+      "Key": "HIPAA",
+      "Value": "true"
+     },
+     {
+      "Key": "Name",
+      "Value": "HipsVpcStack/HipsVpc/PrivateAppSubnet2"
+     },
+     {
+      "Key": "Project",
+      "Value": "HIPS"
+     }
+    ],
+    "VpcId": {
+     "Ref": "HipsVpc27B4BD3E"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "HipsVpcStack/HipsVpc/PrivateAppSubnet2/RouteTable"
+   }
+  },
+  "HipsVpcPrivateAppSubnet2RouteTableAssociationED707D12": {
+   "Type": "AWS::EC2::SubnetRouteTableAssociation",
+   "Properties": {
+    "RouteTableId": {
+     "Ref": "HipsVpcPrivateAppSubnet2RouteTable6D63881C"
+    },
+    "SubnetId": {
+     "Ref": "HipsVpcPrivateAppSubnet2SubnetFD675120"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "HipsVpcStack/HipsVpc/PrivateAppSubnet2/RouteTableAssociation"
+   }
+  },
+  "HipsVpcPrivateAppSubnet2DefaultRouteE1AD3468": {
+   "Type": "AWS::EC2::Route",
+   "Properties": {
+    "DestinationCidrBlock": "0.0.0.0/0",
+    "NatGatewayId": {
+     "Ref": "HipsVpcPublicSubnet1NATGateway81249D07"
+    },
+    "RouteTableId": {
+     "Ref": "HipsVpcPrivateAppSubnet2RouteTable6D63881C"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "HipsVpcStack/HipsVpc/PrivateAppSubnet2/DefaultRoute"
+   }
+  },
+  "HipsVpcPrivateAppSubnet3Subnet86D528E7": {
+   "Type": "AWS::EC2::Subnet",
+   "Properties": {
+    "AvailabilityZone": "us-east-1c",
+    "CidrBlock": "10.0.5.0/24",
+    "MapPublicIpOnLaunch": false,
+    "Tags": [
+     {
+      "Key": "aws-cdk:subnet-name",
+      "Value": "PrivateApp"
+     },
+     {
+      "Key": "aws-cdk:subnet-type",
+      "Value": "Private"
+     },
+     {
+      "Key": "Environment",
+      "Value": "development"
+     },
+     {
+      "Key": "HIPAA",
+      "Value": "true"
+     },
+     {
+      "Key": "Name",
+      "Value": "HipsVpcStack/HipsVpc/PrivateAppSubnet3"
+     },
+     {
+      "Key": "Project",
+      "Value": "HIPS"
+     }
+    ],
+    "VpcId": {
+     "Ref": "HipsVpc27B4BD3E"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "HipsVpcStack/HipsVpc/PrivateAppSubnet3/Subnet"
+   }
+  },
+  "HipsVpcPrivateAppSubnet3RouteTable93DEE1CA": {
+   "Type": "AWS::EC2::RouteTable",
+   "Properties": {
+    "Tags": [
+     {
+      "Key": "Environment",
+      "Value": "development"
+     },
+     {
+      "Key": "HIPAA",
+      "Value": "true"
+     },
+     {
+      "Key": "Name",
+      "Value": "HipsVpcStack/HipsVpc/PrivateAppSubnet3"
+     },
+     {
+      "Key": "Project",
+      "Value": "HIPS"
+     }
+    ],
+    "VpcId": {
+     "Ref": "HipsVpc27B4BD3E"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "HipsVpcStack/HipsVpc/PrivateAppSubnet3/RouteTable"
+   }
+  },
+  "HipsVpcPrivateAppSubnet3RouteTableAssociation0F720A00": {
+   "Type": "AWS::EC2::SubnetRouteTableAssociation",
+   "Properties": {
+    "RouteTableId": {
+     "Ref": "HipsVpcPrivateAppSubnet3RouteTable93DEE1CA"
+    },
+    "SubnetId": {
+     "Ref": "HipsVpcPrivateAppSubnet3Subnet86D528E7"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "HipsVpcStack/HipsVpc/PrivateAppSubnet3/RouteTableAssociation"
+   }
+  },
+  "HipsVpcPrivateAppSubnet3DefaultRoute2E04F518": {
+   "Type": "AWS::EC2::Route",
+   "Properties": {
+    "DestinationCidrBlock": "0.0.0.0/0",
+    "NatGatewayId": {
+     "Ref": "HipsVpcPublicSubnet1NATGateway81249D07"
+    },
+    "RouteTableId": {
+     "Ref": "HipsVpcPrivateAppSubnet3RouteTable93DEE1CA"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "HipsVpcStack/HipsVpc/PrivateAppSubnet3/DefaultRoute"
+   }
+  },
+  "HipsVpcIsolatedDataSubnet1SubnetDD4261D0": {
+   "Type": "AWS::EC2::Subnet",
+   "Properties": {
+    "AvailabilityZone": "us-east-1a",
+    "CidrBlock": "10.0.6.0/24",
+    "MapPublicIpOnLaunch": false,
+    "Tags": [
+     {
+      "Key": "aws-cdk:subnet-name",
+      "Value": "IsolatedData"
+     },
+     {
+      "Key": "aws-cdk:subnet-type",
+      "Value": "Isolated"
+     },
+     {
+      "Key": "Environment",
+      "Value": "development"
+     },
+     {
+      "Key": "HIPAA",
+      "Value": "true"
+     },
+     {
+      "Key": "Name",
+      "Value": "HipsVpcStack/HipsVpc/IsolatedDataSubnet1"
+     },
+     {
+      "Key": "Project",
+      "Value": "HIPS"
+     }
+    ],
+    "VpcId": {
+     "Ref": "HipsVpc27B4BD3E"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "HipsVpcStack/HipsVpc/IsolatedDataSubnet1/Subnet"
+   }
+  },
+  "HipsVpcIsolatedDataSubnet1RouteTable1D4E105C": {
+   "Type": "AWS::EC2::RouteTable",
+   "Properties": {
+    "Tags": [
+     {
+      "Key": "Environment",
+      "Value": "development"
+     },
+     {
+      "Key": "HIPAA",
+      "Value": "true"
+     },
+     {
+      "Key": "Name",
+      "Value": "HipsVpcStack/HipsVpc/IsolatedDataSubnet1"
+     },
+     {
+      "Key": "Project",
+      "Value": "HIPS"
+     }
+    ],
+    "VpcId": {
+     "Ref": "HipsVpc27B4BD3E"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "HipsVpcStack/HipsVpc/IsolatedDataSubnet1/RouteTable"
+   }
+  },
+  "HipsVpcIsolatedDataSubnet1RouteTableAssociation7CC17009": {
+   "Type": "AWS::EC2::SubnetRouteTableAssociation",
+   "Properties": {
+    "RouteTableId": {
+     "Ref": "HipsVpcIsolatedDataSubnet1RouteTable1D4E105C"
+    },
+    "SubnetId": {
+     "Ref": "HipsVpcIsolatedDataSubnet1SubnetDD4261D0"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "HipsVpcStack/HipsVpc/IsolatedDataSubnet1/RouteTableAssociation"
+   }
+  },
+  "HipsVpcIsolatedDataSubnet2SubnetD25B1430": {
+   "Type": "AWS::EC2::Subnet",
+   "Properties": {
+    "AvailabilityZone": "us-east-1b",
+    "CidrBlock": "10.0.7.0/24",
+    "MapPublicIpOnLaunch": false,
+    "Tags": [
+     {
+      "Key": "aws-cdk:subnet-name",
+      "Value": "IsolatedData"
+     },
+     {
+      "Key": "aws-cdk:subnet-type",
+      "Value": "Isolated"
+     },
+     {
+      "Key": "Environment",
+      "Value": "development"
+     },
+     {
+      "Key": "HIPAA",
+      "Value": "true"
+     },
+     {
+      "Key": "Name",
+      "Value": "HipsVpcStack/HipsVpc/IsolatedDataSubnet2"
+     },
+     {
+      "Key": "Project",
+      "Value": "HIPS"
+     }
+    ],
+    "VpcId": {
+     "Ref": "HipsVpc27B4BD3E"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "HipsVpcStack/HipsVpc/IsolatedDataSubnet2/Subnet"
+   }
+  },
+  "HipsVpcIsolatedDataSubnet2RouteTable7F77B3C6": {
+   "Type": "AWS::EC2::RouteTable",
+   "Properties": {
+    "Tags": [
+     {
+      "Key": "Environment",
+      "Value": "development"
+     },
+     {
+      "Key": "HIPAA",
+      "Value": "true"
+     },
+     {
+      "Key": "Name",
+      "Value": "HipsVpcStack/HipsVpc/IsolatedDataSubnet2"
+     },
+     {
+      "Key": "Project",
+      "Value": "HIPS"
+     }
+    ],
+    "VpcId": {
+     "Ref": "HipsVpc27B4BD3E"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "HipsVpcStack/HipsVpc/IsolatedDataSubnet2/RouteTable"
+   }
+  },
+  "HipsVpcIsolatedDataSubnet2RouteTableAssociation7658C97E": {
+   "Type": "AWS::EC2::SubnetRouteTableAssociation",
+   "Properties": {
+    "RouteTableId": {
+     "Ref": "HipsVpcIsolatedDataSubnet2RouteTable7F77B3C6"
+    },
+    "SubnetId": {
+     "Ref": "HipsVpcIsolatedDataSubnet2SubnetD25B1430"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "HipsVpcStack/HipsVpc/IsolatedDataSubnet2/RouteTableAssociation"
+   }
+  },
+  "HipsVpcIsolatedDataSubnet3SubnetEABCA1B2": {
+   "Type": "AWS::EC2::Subnet",
+   "Properties": {
+    "AvailabilityZone": "us-east-1c",
+    "CidrBlock": "10.0.8.0/24",
+    "MapPublicIpOnLaunch": false,
+    "Tags": [
+     {
+      "Key": "aws-cdk:subnet-name",
+      "Value": "IsolatedData"
+     },
+     {
+      "Key": "aws-cdk:subnet-type",
+      "Value": "Isolated"
+     },
+     {
+      "Key": "Environment",
+      "Value": "development"
+     },
+     {
+      "Key": "HIPAA",
+      "Value": "true"
+     },
+     {
+      "Key": "Name",
+      "Value": "HipsVpcStack/HipsVpc/IsolatedDataSubnet3"
+     },
+     {
+      "Key": "Project",
+      "Value": "HIPS"
+     }
+    ],
+    "VpcId": {
+     "Ref": "HipsVpc27B4BD3E"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "HipsVpcStack/HipsVpc/IsolatedDataSubnet3/Subnet"
+   }
+  },
+  "HipsVpcIsolatedDataSubnet3RouteTableBEB97891": {
+   "Type": "AWS::EC2::RouteTable",
+   "Properties": {
+    "Tags": [
+     {
+      "Key": "Environment",
+      "Value": "development"
+     },
+     {
+      "Key": "HIPAA",
+      "Value": "true"
+     },
+     {
+      "Key": "Name",
+      "Value": "HipsVpcStack/HipsVpc/IsolatedDataSubnet3"
+     },
+     {
+      "Key": "Project",
+      "Value": "HIPS"
+     }
+    ],
+    "VpcId": {
+     "Ref": "HipsVpc27B4BD3E"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "HipsVpcStack/HipsVpc/IsolatedDataSubnet3/RouteTable"
+   }
+  },
+  "HipsVpcIsolatedDataSubnet3RouteTableAssociation857F7612": {
+   "Type": "AWS::EC2::SubnetRouteTableAssociation",
+   "Properties": {
+    "RouteTableId": {
+     "Ref": "HipsVpcIsolatedDataSubnet3RouteTableBEB97891"
+    },
+    "SubnetId": {
+     "Ref": "HipsVpcIsolatedDataSubnet3SubnetEABCA1B2"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "HipsVpcStack/HipsVpc/IsolatedDataSubnet3/RouteTableAssociation"
+   }
+  },
+  "HipsVpcIGW1C94821A": {
+   "Type": "AWS::EC2::InternetGateway",
+   "Properties": {
+    "Tags": [
+     {
+      "Key": "Environment",
+      "Value": "development"
+     },
+     {
+      "Key": "HIPAA",
+      "Value": "true"
+     },
+     {
+      "Key": "Name",
+      "Value": "HipsVpcStack/HipsVpc"
+     },
+     {
+      "Key": "Project",
+      "Value": "HIPS"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "HipsVpcStack/HipsVpc/IGW"
+   }
+  },
+  "HipsVpcVPCGW7C87244E": {
+   "Type": "AWS::EC2::VPCGatewayAttachment",
+   "Properties": {
+    "InternetGatewayId": {
+     "Ref": "HipsVpcIGW1C94821A"
+    },
+    "VpcId": {
+     "Ref": "HipsVpc27B4BD3E"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "HipsVpcStack/HipsVpc/VPCGW"
+   }
+  },
+  "SessionSecurityGroup6C5EC642": {
+   "Type": "AWS::EC2::SecurityGroup",
+   "Properties": {
+    "GroupDescription": "Session service — session DB only",
+    "SecurityGroupEgress": [
+     {
+      "CidrIp": "0.0.0.0/0",
+      "Description": "Allow all outbound traffic by default",
+      "IpProtocol": "-1"
+     }
+    ],
+    "Tags": [
+     {
+      "Key": "Environment",
+      "Value": "development"
+     },
+     {
+      "Key": "HIPAA",
+      "Value": "true"
+     },
+     {
+      "Key": "Project",
+      "Value": "HIPS"
+     }
+    ],
+    "VpcId": {
+     "Ref": "HipsVpc27B4BD3E"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "HipsVpcStack/SessionSecurityGroup/Resource"
+   }
+  },
+  "SessionSecurityGroupfromHipsVpcStackSessionSecurityGroupDD9667F7543287801E74": {
+   "Type": "AWS::EC2::SecurityGroupIngress",
+   "Properties": {
+    "Description": "Session service access to Session DB",
+    "FromPort": 5432,
+    "GroupId": {
+     "Fn::GetAtt": [
+      "SessionSecurityGroup6C5EC642",
+      "GroupId"
+     ]
+    },
+    "IpProtocol": "tcp",
+    "SourceSecurityGroupId": {
+     "Fn::GetAtt": [
+      "SessionSecurityGroup6C5EC642",
+      "GroupId"
+     ]
+    },
+    "ToPort": 5432
+   },
+   "Metadata": {
+    "aws:cdk:path": "HipsVpcStack/SessionSecurityGroup/from HipsVpcStackSessionSecurityGroupDD9667F7:5432"
+   }
+  },
+  "SessionSecurityGroupfromHipsVpcStackSafetySecurityGroup245934EE5432E715E6B2": {
+   "Type": "AWS::EC2::SecurityGroupIngress",
+   "Properties": {
+    "Description": "Safety service read access to Session DB",
+    "FromPort": 5432,
+    "GroupId": {
+     "Fn::GetAtt": [
+      "SessionSecurityGroup6C5EC642",
+      "GroupId"
+     ]
+    },
+    "IpProtocol": "tcp",
+    "SourceSecurityGroupId": {
+     "Fn::GetAtt": [
+      "SafetySecurityGroup9876E761",
+      "GroupId"
+     ]
+    },
+    "ToPort": 5432
+   },
+   "Metadata": {
+    "aws:cdk:path": "HipsVpcStack/SessionSecurityGroup/from HipsVpcStackSafetySecurityGroup245934EE:5432"
+   }
+  },
+  "SessionServiceSecurityGroup4A78FF84": {
+   "Type": "AWS::EC2::SecurityGroup",
+   "Properties": {
+    "GroupDescription": "Security group for session ECS tasks",
+    "SecurityGroupEgress": [
+     {
+      "CidrIp": "0.0.0.0/0",
+      "Description": "Allow all outbound traffic by default",
+      "IpProtocol": "-1"
+     }
+    ],
+    "Tags": [
+     {
+      "Key": "Environment",
+      "Value": "development"
+     },
+     {
+      "Key": "HIPAA",
+      "Value": "true"
+     },
+     {
+      "Key": "Project",
+      "Value": "HIPS"
+     }
+    ],
+    "VpcId": {
+     "Ref": "HipsVpc27B4BD3E"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "HipsVpcStack/SessionServiceSecurityGroup/Resource"
+   }
+  },
+  "VaultSecurityGroup523B5229": {
+   "Type": "AWS::EC2::SecurityGroup",
+   "Properties": {
+    "GroupDescription": "Vault service — vault DB only",
+    "Tags": [
+     {
+      "Key": "Environment",
+      "Value": "development"
+     },
+     {
+      "Key": "HIPAA",
+      "Value": "true"
+     },
+     {
+      "Key": "Project",
+      "Value": "HIPS"
+     }
+    ],
+    "VpcId": {
+     "Ref": "HipsVpc27B4BD3E"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "HipsVpcStack/VaultSecurityGroup/Resource"
+   }
+  },
+  "VaultSecurityGroupfromHipsVpcStackVaultServiceSecurityGroup738BA90E54323516EB15": {
+   "Type": "AWS::EC2::SecurityGroupIngress",
+   "Properties": {
+    "Description": "Vault service ECS tasks access to Vault DB",
+    "FromPort": 5432,
+    "GroupId": {
+     "Fn::GetAtt": [
+      "VaultSecurityGroup523B5229",
+      "GroupId"
+     ]
+    },
+    "IpProtocol": "tcp",
+    "SourceSecurityGroupId": {
+     "Fn::GetAtt": [
+      "VaultServiceSecurityGroup9CE125DB",
+      "GroupId"
+     ]
+    },
+    "ToPort": 5432
+   },
+   "Metadata": {
+    "aws:cdk:path": "HipsVpcStack/VaultSecurityGroup/from HipsVpcStackVaultServiceSecurityGroup738BA90E:5432"
+   }
+  },
+  "VaultSecurityGrouptoHipsVpcStackVaultServiceSecurityGroup738BA90E54328154355E": {
+   "Type": "AWS::EC2::SecurityGroupEgress",
+   "Properties": {
+    "Description": "Vault service to Vault DB",
+    "DestinationSecurityGroupId": {
+     "Fn::GetAtt": [
+      "VaultServiceSecurityGroup9CE125DB",
+      "GroupId"
+     ]
+    },
+    "FromPort": 5432,
+    "GroupId": {
+     "Fn::GetAtt": [
+      "VaultSecurityGroup523B5229",
+      "GroupId"
+     ]
+    },
+    "IpProtocol": "tcp",
+    "ToPort": 5432
+   },
+   "Metadata": {
+    "aws:cdk:path": "HipsVpcStack/VaultSecurityGroup/to HipsVpcStackVaultServiceSecurityGroup738BA90E:5432"
+   }
+  },
+  "VaultServiceSecurityGroup9CE125DB": {
+   "Type": "AWS::EC2::SecurityGroup",
+   "Properties": {
+    "GroupDescription": "Security group for vault ECS tasks",
+    "SecurityGroupEgress": [
+     {
+      "CidrIp": "0.0.0.0/0",
+      "Description": "Allow all outbound traffic by default",
+      "IpProtocol": "-1"
+     }
+    ],
+    "Tags": [
+     {
+      "Key": "Environment",
+      "Value": "development"
+     },
+     {
+      "Key": "HIPAA",
+      "Value": "true"
+     },
+     {
+      "Key": "Project",
+      "Value": "HIPS"
+     }
+    ],
+    "VpcId": {
+     "Ref": "HipsVpc27B4BD3E"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "HipsVpcStack/VaultServiceSecurityGroup/Resource"
+   }
+  },
+  "SafetySecurityGroup9876E761": {
+   "Type": "AWS::EC2::SecurityGroup",
+   "Properties": {
+    "GroupDescription": "Safety service — session DB read only",
+    "SecurityGroupEgress": [
+     {
+      "CidrIp": "0.0.0.0/0",
+      "Description": "Allow all outbound traffic by default",
+      "IpProtocol": "-1"
+     }
+    ],
+    "Tags": [
+     {
+      "Key": "Environment",
+      "Value": "development"
+     },
+     {
+      "Key": "HIPAA",
+      "Value": "true"
+     },
+     {
+      "Key": "Project",
+      "Value": "HIPS"
+     }
+    ],
+    "VpcId": {
+     "Ref": "HipsVpc27B4BD3E"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "HipsVpcStack/SafetySecurityGroup/Resource"
+   }
+  },
+  "CDKMetadata": {
+   "Type": "AWS::CDK::Metadata",
+   "Properties": {
+    "Analytics": "v2:deflate64:H4sIAAAAAAAA/32OQWrDQAxFz5L9eIrd9gAhhOBNauySbZEVtVXizJiRFBNC7l7slHhR6Op/PT7iFb54ffb5AgbJcH/MOm79tVHAo4NBPggLf9316FafYVetXGVtx9hYG0hHNrc6mtI7tB3NfGZLkYgMyjE8xmNZl9UYW9ANKA1wcVXiMyjNj8uglAI9BneT32upCvh9oqCuIbTEetmkaP3k8C8ow1cikT98PeGbq0miJZws30x705sLcU/+IE/n4sXnuc8XB2HOkgXlE/n6nj876RTyUgEAAA=="
+   },
+   "Metadata": {
+    "aws:cdk:path": "HipsVpcStack/CDKMetadata/Default"
+   }
+  }
+ },
+ "Outputs": {
+  "SessionServiceSecurityGroupId": {
+   "Value": {
+    "Fn::GetAtt": [
+     "SessionServiceSecurityGroup4A78FF84",
+     "GroupId"
+    ]
+   },
+   "Export": {
+    "Name": "HIPS-SessionServiceSecurityGroup"
+   }
+  },
+  "VaultServiceSecurityGroupId": {
+   "Value": {
+    "Fn::GetAtt": [
+     "VaultServiceSecurityGroup9CE125DB",
+     "GroupId"
+    ]
+   },
+   "Export": {
+    "Name": "HIPS-VaultServiceSecurityGroup"
+   }
+  },
+  "ExportsOutputRefHipsVpcIsolatedDataSubnet1SubnetDD4261D0E9C88E9D": {
+   "Value": {
+    "Ref": "HipsVpcIsolatedDataSubnet1SubnetDD4261D0"
+   },
+   "Export": {
+    "Name": "HipsVpcStack:ExportsOutputRefHipsVpcIsolatedDataSubnet1SubnetDD4261D0E9C88E9D"
+   }
+  },
+  "ExportsOutputRefHipsVpcIsolatedDataSubnet2SubnetD25B14306DAE4CD3": {
+   "Value": {
+    "Ref": "HipsVpcIsolatedDataSubnet2SubnetD25B1430"
+   },
+   "Export": {
+    "Name": "HipsVpcStack:ExportsOutputRefHipsVpcIsolatedDataSubnet2SubnetD25B14306DAE4CD3"
+   }
+  },
+  "ExportsOutputRefHipsVpcIsolatedDataSubnet3SubnetEABCA1B2400523FE": {
+   "Value": {
+    "Ref": "HipsVpcIsolatedDataSubnet3SubnetEABCA1B2"
+   },
+   "Export": {
+    "Name": "HipsVpcStack:ExportsOutputRefHipsVpcIsolatedDataSubnet3SubnetEABCA1B2400523FE"
+   }
+  },
+  "ExportsOutputFnGetAttVaultSecurityGroup523B5229GroupId58C0FF99": {
+   "Value": {
+    "Fn::GetAtt": [
+     "VaultSecurityGroup523B5229",
+     "GroupId"
+    ]
+   },
+   "Export": {
+    "Name": "HipsVpcStack:ExportsOutputFnGetAttVaultSecurityGroup523B5229GroupId58C0FF99"
+   }
+  },
+  "ExportsOutputRefHipsVpcPrivateAppSubnet1SubnetF8A9AD18078713A0": {
+   "Value": {
+    "Ref": "HipsVpcPrivateAppSubnet1SubnetF8A9AD18"
+   },
+   "Export": {
+    "Name": "HipsVpcStack:ExportsOutputRefHipsVpcPrivateAppSubnet1SubnetF8A9AD18078713A0"
+   }
+  },
+  "ExportsOutputRefHipsVpcPrivateAppSubnet2SubnetFD675120650EC947": {
+   "Value": {
+    "Ref": "HipsVpcPrivateAppSubnet2SubnetFD675120"
+   },
+   "Export": {
+    "Name": "HipsVpcStack:ExportsOutputRefHipsVpcPrivateAppSubnet2SubnetFD675120650EC947"
+   }
+  },
+  "ExportsOutputRefHipsVpcPrivateAppSubnet3Subnet86D528E754885160": {
+   "Value": {
+    "Ref": "HipsVpcPrivateAppSubnet3Subnet86D528E7"
+   },
+   "Export": {
+    "Name": "HipsVpcStack:ExportsOutputRefHipsVpcPrivateAppSubnet3Subnet86D528E754885160"
+   }
+  },
+  "ExportsOutputFnGetAttSessionSecurityGroup6C5EC642GroupId13F29D0A": {
+   "Value": {
+    "Fn::GetAtt": [
+     "SessionSecurityGroup6C5EC642",
+     "GroupId"
+    ]
+   },
+   "Export": {
+    "Name": "HipsVpcStack:ExportsOutputFnGetAttSessionSecurityGroup6C5EC642GroupId13F29D0A"
+   }
+  },
+  "ExportsOutputRefHipsVpc27B4BD3EE2F0C24D": {
+   "Value": {
+    "Ref": "HipsVpc27B4BD3E"
+   },
+   "Export": {
+    "Name": "HipsVpcStack:ExportsOutputRefHipsVpc27B4BD3EE2F0C24D"
+   }
+  },
+  "ExportsOutputFnGetAttSafetySecurityGroup9876E761GroupIdB24E2730": {
+   "Value": {
+    "Fn::GetAtt": [
+     "SafetySecurityGroup9876E761",
+     "GroupId"
+    ]
+   },
+   "Export": {
+    "Name": "HipsVpcStack:ExportsOutputFnGetAttSafetySecurityGroup9876E761GroupIdB24E2730"
+   }
+  }
+ },
+ "Parameters": {
+  "BootstrapVersion": {
+   "Type": "AWS::SSM::Parameter::Value<String>",
+   "Default": "/cdk-bootstrap/hnb659fds/version",
+   "Description": "Version of the CDK Bootstrap resources in this environment, automatically retrieved from SSM Parameter Store. [cdk:skip]"
+  }
+ },
+ "Rules": {
+  "CheckBootstrapVersion": {
+   "Assertions": [
+    {
+     "Assert": {
+      "Fn::Not": [
+       {
+        "Fn::Contains": [
+         [
+          "1",
+          "2",
+          "3",
+          "4",
+          "5"
+         ],
+         {
+          "Ref": "BootstrapVersion"
+         }
+        ]
+       }
+      ]
+     },
+     "AssertDescription": "CDK bootstrap stack version 6 required. Please run 'cdk bootstrap' with a recent version of the CDK CLI."
+    }
+   ]
+  }
+ }
+}

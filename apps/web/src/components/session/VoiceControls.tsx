@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useCallback } from 'react'
 import { cn } from '@hips/ui'
 
 interface VoiceControlsProps {
@@ -26,19 +26,86 @@ export function VoiceControls({
 }: VoiceControlsProps) {
   const [showGestures, setShowGestures] = useState(false)
   const [showFlagConfirm, setShowFlagConfirm] = useState(false)
-  const [connectionQuality, setConnectionQuality] = useState<'good' | 'fair' | 'poor'>('good')
+  const [gestureFocusedIndex, setGestureFocusedIndex] = useState(0)
+  const gestureListRef = useRef<HTMLUListElement>(null)
+  const gestureButtonRef = useRef<HTMLButtonElement>(null)
+  const connectionQualityRef = useRef<'good' | 'fair' | 'poor'>('good')
 
-  // Simulate connection quality monitoring
+  // Keyboard handler for gesture dropdown
+  const handleGestureKeyDown = useCallback((e: React.KeyboardEvent) => {
+    if (!showGestures) return
+
+    switch (e.key) {
+      case 'Escape':
+        e.preventDefault()
+        setShowGestures(false)
+        gestureButtonRef.current?.focus()
+        break
+      case 'ArrowDown':
+        e.preventDefault()
+        setGestureFocusedIndex((prev) => (prev + 1) % GESTURES.length)
+        break
+      case 'ArrowUp':
+        e.preventDefault()
+        setGestureFocusedIndex((prev) => (prev - 1 + GESTURES.length) % GESTURES.length)
+        break
+      case 'Enter':
+      case ' ':
+        e.preventDefault()
+        onGesture?.(GESTURES[gestureFocusedIndex])
+        setShowGestures(false)
+        break
+      case 'Home':
+        e.preventDefault()
+        setGestureFocusedIndex(0)
+        break
+      case 'End':
+        e.preventDefault()
+        setGestureFocusedIndex(GESTURES.length - 1)
+        break
+    }
+  }, [showGestures, gestureFocusedIndex, onGesture])
+
+  // Focus gesture item when index changes
+  useEffect(() => {
+    if (showGestures && gestureListRef.current) {
+      const items = gestureListRef.current.querySelectorAll('button')
+      items[gestureFocusedIndex]?.focus()
+    }
+  }, [showGestures, gestureFocusedIndex])
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (showGestures && gestureListRef.current && !gestureListRef.current.contains(e.target as Node)) {
+        setShowGestures(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [showGestures])
+
+  // Flag confirm dialog keyboard handler
+  const handleFlagDialogKeyDown = useCallback((e: React.KeyboardEvent) => {
+    if (!showFlagConfirm) return
+    if (e.key === 'Escape') {
+      e.preventDefault()
+      setShowFlagConfirm(false)
+    }
+  }, [showFlagConfirm])
+
+  // Simulate connection quality monitoring using ref to avoid re-renders
   useEffect(() => {
     const interval = setInterval(() => {
       const rand = Math.random()
-      if (rand > 0.9) setConnectionQuality('poor')
-      else if (rand > 0.7) setConnectionQuality('fair')
-      else setConnectionQuality('good')
+      const newQuality: 'good' | 'fair' | 'poor' = rand > 0.9 ? 'poor' : rand > 0.7 ? 'fair' : 'good'
+      connectionQualityRef.current = newQuality
     }, 5000)
     return () => clearInterval(interval)
   }, [])
 
+  // Derive quality display from ref (no state updates on every tick)
+  const connectionQuality = connectionQualityRef.current
   const qualityColor = {
     good: 'text-green-400',
     fair: 'text-yellow-400',
@@ -52,10 +119,13 @@ export function VoiceControls({
   }[connectionQuality]
 
   return (
-    <div className="flex items-center justify-between w-full px-4 py-3 bg-session-controls-bg backdrop-blur-md rounded-2xl border border-slate-700">
+    <div
+      className="flex items-center justify-between w-full px-4 py-3 bg-session-controls-bg backdrop-blur-md rounded-2xl border border-slate-700"
+      onKeyDown={handleFlagDialogKeyDown}
+    >
       {/* Left: connection quality */}
       <div className="flex items-center gap-2">
-        <div className="flex gap-0.5">
+        <div className="flex gap-0.5" aria-label={`Connection quality: ${qualityLabel}`}>
           {[1, 2, 3].map((bar) => (
             <div
               key={bar}
@@ -76,7 +146,7 @@ export function VoiceControls({
       </div>
 
       {/* Center: main controls */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-3" role="toolbar" aria-label="Session controls">
         {/* Mute toggle */}
         <button
           onClick={onMuteToggle}
@@ -88,7 +158,7 @@ export function VoiceControls({
               : 'bg-slate-800 border-slate-600 text-slate-200 hover:bg-slate-700',
             disabled && 'opacity-40 cursor-not-allowed'
           )}
-          aria-label={muted ? 'Unmute microphone' : 'Mute microphone'}
+          aria-label={muted ? 'Unmute microphone (M)' : 'Mute microphone (M)'}
           aria-pressed={muted}
         >
           {muted ? (
@@ -145,7 +215,9 @@ export function VoiceControls({
         {/* Gesture dropdown */}
         <div className="relative">
           <button
+            ref={gestureButtonRef}
             onClick={() => setShowGestures((v) => !v)}
+            onKeyDown={handleGestureKeyDown}
             className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-slate-600 text-slate-300 text-sm hover:bg-slate-800 transition-colors"
             aria-haspopup="listbox"
             aria-expanded={showGestures}
@@ -157,18 +229,28 @@ export function VoiceControls({
           </button>
           {showGestures && (
             <ul
+              ref={gestureListRef}
               className="absolute bottom-full mb-2 right-0 w-40 bg-slate-900 border border-slate-700 rounded-lg shadow-xl z-50"
               role="listbox"
+              aria-label="Select a gesture"
             >
-              {GESTURES.map((g) => (
+              {GESTURES.map((g, idx) => (
                 <li key={g}>
                   <button
                     onClick={() => {
                       onGesture?.(g)
                       setShowGestures(false)
                     }}
-                    className="w-full text-left px-3 py-2 text-sm text-slate-300 hover:bg-slate-800 first:rounded-t-lg last:rounded-b-lg"
+                    onMouseEnter={() => setGestureFocusedIndex(idx)}
+                    className={cn(
+                      'w-full text-left px-3 py-2 text-sm transition-colors first:rounded-t-lg last:rounded-b-lg',
+                      gestureFocusedIndex === idx
+                        ? 'bg-slate-700 text-white'
+                        : 'text-slate-300 hover:bg-slate-800'
+                    )}
                     role="option"
+                    aria-selected={gestureFocusedIndex === idx}
+                    tabIndex={gestureFocusedIndex === idx ? 0 : -1}
                   >
                     {g}
                   </button>
@@ -180,9 +262,14 @@ export function VoiceControls({
 
         {/* Flag confirm dialog */}
         {showFlagConfirm && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/60"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="flag-dialog-title"
+          >
             <div className="bg-slate-900 border border-slate-700 rounded-xl p-6 max-w-sm w-full mx-4 shadow-2xl">
-              <h3 className="text-lg font-bold text-white mb-2">Flag a Concern</h3>
+              <h3 id="flag-dialog-title" className="text-lg font-bold text-white mb-2">Flag a Concern</h3>
               <p className="text-sm text-slate-400 mb-4">
                 This will alert the facilitator. Use this only if something concerning is happening in the session.
               </p>

@@ -159,6 +159,7 @@ export type ReviewScholarshipInput = z.infer<typeof ReviewScholarshipSchema>
 
 export const CheckoutSessionSchema = z.object({
   serviceId: z.string().uuid(),
+  sessionId: z.string().uuid().optional(),
   discountCode: z.string().max(50).optional(),
   packageTier: z.enum(['4_SESSION', '8_SESSION']).optional(),
 })

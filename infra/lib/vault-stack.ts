@@ -46,17 +46,30 @@ export class VaultStack extends cdk.Stack {
       }),
     );
 
-    this.vaultServiceRole.addToPolicy(
-      new iam.PolicyStatement({
-        actions: ["secretsmanager:GetSecretValue"],
-        resources: [
-          cdk.Stack.of(this).formatArn({
-            service: "secretsmanager",
-            resource: "secret",
-            resourceName: "hips/vault/*",
-          }),
-        ],
-      }),
-    );
+    // Explicit list of secrets needed by vault service — least privilege
+    const vaultSecrets = [
+      "hips/vault/db",
+      "hips/vault/internal-api-key",
+    ];
+    vaultSecrets.forEach((secretName) => {
+      this.vaultServiceRole.addToPolicy(
+        new iam.PolicyStatement({
+          actions: ["secretsmanager:GetSecretValue"],
+          resources: [
+            cdk.Stack.of(this).formatArn({
+              service: "secretsmanager",
+              resource: "secret",
+              resourceName: secretName,
+            }),
+          ],
+        }),
+      );
+    });
+
+    // Export KMS key ID for monitoring stack
+    new cdk.CfnOutput(this, "VaultKMSKeyId", {
+      value: this.kmsKey.keyId,
+      exportName: "HIPS-VaultKMSKeyId",
+    });
   }
 }

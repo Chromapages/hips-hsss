@@ -1,0 +1,167 @@
+{
+  "/HipsVaultStack": [
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "<anonymous> (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\bin\\hips.js:49:20)",
+        "...node internals..."
+      ]
+    },
+    {
+      "type": "aws:cdk:stack-tags",
+      "data": [
+        {
+          "key": "Environment",
+          "value": "development"
+        },
+        {
+          "key": "HIPAA",
+          "value": "true"
+        },
+        {
+          "key": "Project",
+          "value": "HIPS"
+        }
+      ]
+    }
+  ],
+  "/HipsVaultStack/VaultKMSKeyId": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "VaultKMSKeyId"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "new VaultStack (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\lib\\vault-stack.js:78:9)",
+        "<anonymous> (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\bin\\hips.js:49:20)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/HipsVaultStack/BootstrapVersion": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "BootstrapVersion"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "....pnpm, node internals...",
+        "(no user code in 9007199254740991 frames, use --stack-trace-limit to capture more)"
+      ]
+    }
+  ],
+  "/HipsVaultStack/CheckBootstrapVersion": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "CheckBootstrapVersion"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "....pnpm, node internals...",
+        "(no user code in 9007199254740991 frames, use --stack-trace-limit to capture more)"
+      ]
+    }
+  ],
+  "/HipsVaultStack/VaultMasterKey/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "VaultMasterKey8A03803E"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new Key2 in .pnpm...",
+        "new VaultStack (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\lib\\vault-stack.js:46:23)",
+        "<anonymous> (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\bin\\hips.js:49:20)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/HipsVaultStack/VaultServiceRole/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "VaultServiceRole99292B53"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new Role2 in .pnpm...",
+        "new VaultStack (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\lib\\vault-stack.js:55:33)",
+        "<anonymous> (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\bin\\hips.js:49:20)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/HipsVaultStack/CDKMetadata/Default": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "CDKMetadata"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "....pnpm, node internals...",
+        "(no user code in 9007199254740991 frames, use --stack-trace-limit to capture more)"
+      ]
+    }
+  ],
+  "/HipsVaultStack/Exports/Output{\"Fn::GetAtt\":[\"VaultMasterKey8A03803E\",\"Arn\"]}": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "ExportsOutputFnGetAttVaultMasterKey8A03803EArnB39EF92B"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "....pnpm, node internals...",
+        "(no user code in 9007199254740991 frames, use --stack-trace-limit to capture more)"
+      ]
+    }
+  ],
+  "/HipsVaultStack/Exports/Output{\"Fn::GetAtt\":[\"VaultServiceRole99292B53\",\"Arn\"]}": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "ExportsOutputFnGetAttVaultServiceRole99292B53ArnA381B4E6"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "....pnpm, node internals...",
+        "(no user code in 9007199254740991 frames, use --stack-trace-limit to capture more)"
+      ]
+    }
+  ],
+  "/HipsVaultStack/VaultMasterKey/Alias/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "VaultMasterKeyAlias3E0AA98F"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new Key2 in .pnpm...",
+        "new VaultStack (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\lib\\vault-stack.js:46:23)",
+        "<anonymous> (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\bin\\hips.js:49:20)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/HipsVaultStack/VaultServiceRole/DefaultPolicy/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "VaultServiceRoleDefaultPolicy6025DD0A"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...WrappedClass.<anonymous> in .pnpm...",
+        "new VaultStack (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\lib\\vault-stack.js:59:31)",
+        "<anonymous> (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\bin\\hips.js:49:20)",
+        "...node internals..."
+      ]
+    }
+  ]
+}

@@ -1,0 +1,1589 @@
+{
+ "Resources": {
+  "HipsCluster854A50F9": {
+   "Type": "AWS::ECS::Cluster",
+   "Properties": {
+    "ClusterName": "hips-platform-staging",
+    "Tags": [
+     {
+      "Key": "Environment",
+      "Value": "staging"
+     },
+     {
+      "Key": "HIPAA",
+      "Value": "true"
+     },
+     {
+      "Key": "Project",
+      "Value": "HIPS"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "HipsEcsStack-staging/HipsCluster/Resource"
+   }
+  },
+  "HipsClusterDefaultServiceDiscoveryNamespaceD312969B": {
+   "Type": "AWS::ServiceDiscovery::PrivateDnsNamespace",
+   "Properties": {
+    "Name": "hips.internal",
+    "Tags": [
+     {
+      "Key": "Environment",
+      "Value": "staging"
+     },
+     {
+      "Key": "HIPAA",
+      "Value": "true"
+     },
+     {
+      "Key": "Project",
+      "Value": "HIPS"
+     }
+    ],
+    "Vpc": {
+     "Fn::ImportValue": "HipsVpcStack-staging:ExportsOutputRefHipsVpc27B4BD3EE2F0C24D"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "HipsEcsStack-staging/HipsCluster/DefaultServiceDiscoveryNamespace/Resource"
+   }
+  },
+  "VaultTaskDef7F3B9DA5": {
+   "Type": "AWS::ECS::TaskDefinition",
+   "Properties": {
+    "ContainerDefinitions": [
+     {
+      "Environment": [
+       {
+        "Name": "NODE_ENV",
+        "Value": "production"
+       },
+       {
+        "Name": "VAULT_DATABASE_URL",
+        "Value": {
+         "Fn::Join": [
+          "",
+          [
+           "postgresql://vaultadmin@",
+           {
+            "Fn::ImportValue": "HIPS-VaultDbHostname"
+           },
+           ":5432/hips_vault"
+          ]
+         ]
+        }
+       },
+       {
+        "Name": "VAULT_INTERNAL_SECRET",
+        "Value": "missing-required-env-var"
+       },
+       {
+        "Name": "AWS_REGION",
+        "Value": "us-east-1"
+       }
+      ],
+      "Essential": true,
+      "HealthCheck": {
+       "Command": [
+        "CMD-SHELL",
+        "curl -f http://localhost:3001/healthz || exit 1"
+       ],
+       "Interval": 30,
+       "Retries": 3,
+       "StartPeriod": 60,
+       "Timeout": 5
+      },
+      "Image": "hips/vault-service:latest",
+      "LogConfiguration": {
+       "LogDriver": "awslogs",
+       "Options": {
+        "awslogs-group": {
+         "Ref": "VaultTaskDefVaultContainerLogGroup187998A6"
+        },
+        "awslogs-stream-prefix": "vault-service",
+        "awslogs-region": "us-east-1"
+       }
+      },
+      "Name": "vault-service",
+      "PortMappings": [
+       {
+        "ContainerPort": 3001,
+        "Protocol": "tcp"
+       }
+      ],
+      "Secrets": [
+       {
+        "Name": "VAULT_DB_PASSWORD",
+        "ValueFrom": {
+         "Fn::Join": [
+          "",
+          [
+           "arn:",
+           {
+            "Ref": "AWS::Partition"
+           },
+           ":secretsmanager:us-east-1:522814696950:secret:hips/vault/db:password::"
+          ]
+         ]
+        }
+       }
+      ]
+     }
+    ],
+    "Cpu": "256",
+    "ExecutionRoleArn": {
+     "Fn::GetAtt": [
+      "VaultTaskDefExecutionRole541713A3",
+      "Arn"
+     ]
+    },
+    "Family": "HipsEcsStackstagingVaultTaskDefCB924259",
+    "Memory": "512",
+    "NetworkMode": "awsvpc",
+    "RequiresCompatibilities": [
+     "FARGATE"
+    ],
+    "Tags": [
+     {
+      "Key": "Environment",
+      "Value": "staging"
+     },
+     {
+      "Key": "HIPAA",
+      "Value": "true"
+     },
+     {
+      "Key": "Project",
+      "Value": "HIPS"
+     }
+    ],
+    "TaskRoleArn": {
+     "Fn::ImportValue": "HipsVaultStack-staging:ExportsOutputFnGetAttVaultServiceRole99292B53ArnA381B4E6"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "HipsEcsStack-staging/VaultTaskDef/Resource"
+   }
+  },
+  "VaultTaskDefVaultContainerLogGroup187998A6": {
+   "Type": "AWS::Logs::LogGroup",
+   "Properties": {
+    "RetentionInDays": 30,
+    "Tags": [
+     {
+      "Key": "Environment",
+      "Value": "staging"
+     },
+     {
+      "Key": "HIPAA",
+      "Value": "true"
+     },
+     {
+      "Key": "Project",
+      "Value": "HIPS"
+     }
+    ]
+   },
+   "UpdateReplacePolicy": "Retain",
+   "DeletionPolicy": "Retain",
+   "Metadata": {
+    "aws:cdk:path": "HipsEcsStack-staging/VaultTaskDef/VaultContainer/LogGroup/Resource"
+   }
+  },
+  "VaultTaskDefExecutionRole541713A3": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "ecs-tasks.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "Tags": [
+     {
+      "Key": "Environment",
+      "Value": "staging"
+     },
+     {
+      "Key": "HIPAA",
+      "Value": "true"
+     },
+     {
+      "Key": "Project",
+      "Value": "HIPS"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "HipsEcsStack-staging/VaultTaskDef/ExecutionRole/Resource"
+   }
+  },
+  "VaultTaskDefExecutionRoleDefaultPolicyF5B55D88": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": [
+        "logs:CreateLogStream",
+        "logs:PutLogEvents"
+       ],
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::GetAtt": [
+         "VaultTaskDefVaultContainerLogGroup187998A6",
+         "Arn"
+        ]
+       }
+      },
+      {
+       "Action": [
+        "secretsmanager:GetSecretValue",
+        "secretsmanager:DescribeSecret"
+       ],
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::Join": [
+         "",
+         [
+          "arn:",
+          {
+           "Ref": "AWS::Partition"
+          },
+          ":secretsmanager:us-east-1:522814696950:secret:hips/vault/db-??????"
+         ]
+        ]
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "VaultTaskDefExecutionRoleDefaultPolicyF5B55D88",
+    "Roles": [
+     {
+      "Ref": "VaultTaskDefExecutionRole541713A3"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "HipsEcsStack-staging/VaultTaskDef/ExecutionRole/DefaultPolicy/Resource"
+   }
+  },
+  "VaultService5D8EC353": {
+   "Type": "AWS::ECS::Service",
+   "Properties": {
+    "Cluster": {
+     "Ref": "HipsCluster854A50F9"
+    },
+    "DeploymentConfiguration": {
+     "Alarms": {
+      "AlarmNames": [],
+      "Enable": false,
+      "Rollback": false
+     },
+     "MaximumPercent": 200,
+     "MinimumHealthyPercent": 50
+    },
+    "DesiredCount": 2,
+    "EnableECSManagedTags": false,
+    "HealthCheckGracePeriodSeconds": 30,
+    "LaunchType": "FARGATE",
+    "LoadBalancers": [
+     {
+      "ContainerName": "vault-service",
+      "ContainerPort": 3001,
+      "TargetGroupArn": {
+       "Fn::ImportValue": "HIPS-VaultTargetGroupArn"
+      }
+     }
+    ],
+    "NetworkConfiguration": {
+     "AwsvpcConfiguration": {
+      "AssignPublicIp": "DISABLED",
+      "SecurityGroups": [
+       {
+        "Fn::ImportValue": "HipsVpcStack-staging:ExportsOutputFnGetAttVaultSecurityGroup523B5229GroupId58C0FF99"
+       }
+      ],
+      "Subnets": [
+       {
+        "Fn::ImportValue": "HipsVpcStack-staging:ExportsOutputRefHipsVpcPrivateAppSubnet1SubnetF8A9AD18078713A0"
+       },
+       {
+        "Fn::ImportValue": "HipsVpcStack-staging:ExportsOutputRefHipsVpcPrivateAppSubnet2SubnetFD675120650EC947"
+       },
+       {
+        "Fn::ImportValue": "HipsVpcStack-staging:ExportsOutputRefHipsVpcPrivateAppSubnet3Subnet86D528E754885160"
+       }
+      ]
+     }
+    },
+    "ServiceName": "vault-service",
+    "ServiceRegistries": [
+     {
+      "RegistryArn": {
+       "Fn::GetAtt": [
+        "VaultServiceCloudmapService4FCDC401",
+        "Arn"
+       ]
+      }
+     }
+    ],
+    "Tags": [
+     {
+      "Key": "Environment",
+      "Value": "staging"
+     },
+     {
+      "Key": "HIPAA",
+      "Value": "true"
+     },
+     {
+      "Key": "Project",
+      "Value": "HIPS"
+     }
+    ],
+    "TaskDefinition": {
+     "Ref": "VaultTaskDef7F3B9DA5"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "HipsEcsStack-staging/VaultService/Service"
+   }
+  },
+  "VaultServiceCloudmapService4FCDC401": {
+   "Type": "AWS::ServiceDiscovery::Service",
+   "Properties": {
+    "DnsConfig": {
+     "DnsRecords": [
+      {
+       "TTL": 60,
+       "Type": "A"
+      }
+     ],
+     "NamespaceId": {
+      "Fn::GetAtt": [
+       "HipsClusterDefaultServiceDiscoveryNamespaceD312969B",
+       "Id"
+      ]
+     },
+     "RoutingPolicy": "MULTIVALUE"
+    },
+    "HealthCheckCustomConfig": {
+     "FailureThreshold": 2
+    },
+    "Name": "vault-service",
+    "NamespaceId": {
+     "Fn::GetAtt": [
+      "HipsClusterDefaultServiceDiscoveryNamespaceD312969B",
+      "Id"
+     ]
+    },
+    "Tags": [
+     {
+      "Key": "Environment",
+      "Value": "staging"
+     },
+     {
+      "Key": "HIPAA",
+      "Value": "true"
+     },
+     {
+      "Key": "Project",
+      "Value": "HIPS"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "HipsEcsStack-staging/VaultService/CloudmapService/Resource"
+   }
+  },
+  "VaultServiceTaskCountTarget6020FD6A": {
+   "Type": "AWS::ApplicationAutoScaling::ScalableTarget",
+   "Properties": {
+    "MaxCapacity": 5,
+    "MinCapacity": 2,
+    "ResourceId": {
+     "Fn::Join": [
+      "",
+      [
+       "service/",
+       {
+        "Ref": "HipsCluster854A50F9"
+       },
+       "/",
+       {
+        "Fn::GetAtt": [
+         "VaultService5D8EC353",
+         "Name"
+        ]
+       }
+      ]
+     ]
+    },
+    "RoleARN": {
+     "Fn::Join": [
+      "",
+      [
+       "arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":iam::522814696950:role/aws-service-role/ecs.application-autoscaling.amazonaws.com/AWSServiceRoleForApplicationAutoScaling_ECSService"
+      ]
+     ]
+    },
+    "ScalableDimension": "ecs:service:DesiredCount",
+    "ServiceNamespace": "ecs"
+   },
+   "Metadata": {
+    "aws:cdk:path": "HipsEcsStack-staging/VaultService/TaskCount/Target/Resource"
+   }
+  },
+  "VaultServiceTaskCountTargetVaultCpuScaling3155182B": {
+   "Type": "AWS::ApplicationAutoScaling::ScalingPolicy",
+   "Properties": {
+    "PolicyName": "HipsEcsStackstagingVaultServiceTaskCountTargetVaultCpuScalingA9A820AF",
+    "PolicyType": "TargetTrackingScaling",
+    "ScalingTargetId": {
+     "Ref": "VaultServiceTaskCountTarget6020FD6A"
+    },
+    "TargetTrackingScalingPolicyConfiguration": {
+     "PredefinedMetricSpecification": {
+      "PredefinedMetricType": "ECSServiceAverageCPUUtilization"
+     },
+     "TargetValue": 70
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "HipsEcsStack-staging/VaultService/TaskCount/Target/VaultCpuScaling/Resource"
+   }
+  },
+  "SessionTaskRole9021DA3B": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "ecs-tasks.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "Description": "ECS task role for session service",
+    "Tags": [
+     {
+      "Key": "Environment",
+      "Value": "staging"
+     },
+     {
+      "Key": "HIPAA",
+      "Value": "true"
+     },
+     {
+      "Key": "Project",
+      "Value": "HIPS"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "HipsEcsStack-staging/SessionTaskRole/Resource"
+   }
+  },
+  "SessionTaskRoleDefaultPolicy769D62EA": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": "secretsmanager:GetSecretValue",
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::Join": [
+         "",
+         [
+          "arn:",
+          {
+           "Ref": "AWS::Partition"
+          },
+          ":secretsmanager:us-east-1:522814696950:secret:hips/session/db"
+         ]
+        ]
+       }
+      },
+      {
+       "Action": "secretsmanager:GetSecretValue",
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::Join": [
+         "",
+         [
+          "arn:",
+          {
+           "Ref": "AWS::Partition"
+          },
+          ":secretsmanager:us-east-1:522814696950:secret/hips/vault/*"
+         ]
+        ]
+       }
+      },
+      {
+       "Action": [
+        "kms:Encrypt",
+        "kms:Decrypt",
+        "kms:GenerateDataKey"
+       ],
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::ImportValue": "HipsDatabaseStack-staging:ExportsOutputFnGetAttSessionDbKeyEA562358ArnBF98BCA2"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "SessionTaskRoleDefaultPolicy769D62EA",
+    "Roles": [
+     {
+      "Ref": "SessionTaskRole9021DA3B"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "HipsEcsStack-staging/SessionTaskRole/DefaultPolicy/Resource"
+   }
+  },
+  "SessionTaskDef2621F4BC": {
+   "Type": "AWS::ECS::TaskDefinition",
+   "Properties": {
+    "ContainerDefinitions": [
+     {
+      "Environment": [
+       {
+        "Name": "NODE_ENV",
+        "Value": "production"
+       },
+       {
+        "Name": "SESSION_DATABASE_URL",
+        "Value": {
+         "Fn::Join": [
+          "",
+          [
+           "postgresql://sessionadmin@",
+           {
+            "Fn::ImportValue": "HIPS-SessionDbHostname"
+           },
+           ":5432/hips_session"
+          ]
+         ]
+        }
+       },
+       {
+        "Name": "VAULT_API_URL",
+        "Value": "https://vault.hips.internal"
+       },
+       {
+        "Name": "VAULT_API_SECRET",
+        "Value": ""
+       },
+       {
+        "Name": "SAFETY_ENGINE_URL",
+        "Value": "http://safety.hips.internal:3002"
+       },
+       {
+        "Name": "SAFETY_ENGINE_SECRET",
+        "Value": ""
+       }
+      ],
+      "Essential": true,
+      "HealthCheck": {
+       "Command": [
+        "CMD-SHELL",
+        "curl -f http://localhost:3000/health || exit 1"
+       ],
+       "Interval": 30,
+       "Retries": 3,
+       "StartPeriod": 60,
+       "Timeout": 5
+      },
+      "Image": "hips/session-service:latest",
+      "LogConfiguration": {
+       "LogDriver": "awslogs",
+       "Options": {
+        "awslogs-group": {
+         "Ref": "SessionTaskDefSessionContainerLogGroupD7C516DF"
+        },
+        "awslogs-stream-prefix": "session-service",
+        "awslogs-region": "us-east-1"
+       }
+      },
+      "Name": "session-service",
+      "PortMappings": [
+       {
+        "ContainerPort": 3000,
+        "Protocol": "tcp"
+       }
+      ],
+      "Secrets": [
+       {
+        "Name": "SESSION_DB_PASSWORD",
+        "ValueFrom": {
+         "Fn::Join": [
+          "",
+          [
+           "arn:",
+           {
+            "Ref": "AWS::Partition"
+           },
+           ":secretsmanager:us-east-1:522814696950:secret:hips/session/db:password::"
+          ]
+         ]
+        }
+       }
+      ]
+     }
+    ],
+    "Cpu": "256",
+    "ExecutionRoleArn": {
+     "Fn::GetAtt": [
+      "SessionTaskDefExecutionRoleB74E92CE",
+      "Arn"
+     ]
+    },
+    "Family": "HipsEcsStackstagingSessionTaskDefED3009A7",
+    "Memory": "512",
+    "NetworkMode": "awsvpc",
+    "RequiresCompatibilities": [
+     "FARGATE"
+    ],
+    "Tags": [
+     {
+      "Key": "Environment",
+      "Value": "staging"
+     },
+     {
+      "Key": "HIPAA",
+      "Value": "true"
+     },
+     {
+      "Key": "Project",
+      "Value": "HIPS"
+     }
+    ],
+    "TaskRoleArn": {
+     "Fn::GetAtt": [
+      "SessionTaskRole9021DA3B",
+      "Arn"
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "HipsEcsStack-staging/SessionTaskDef/Resource"
+   }
+  },
+  "SessionTaskDefSessionContainerLogGroupD7C516DF": {
+   "Type": "AWS::Logs::LogGroup",
+   "Properties": {
+    "RetentionInDays": 30,
+    "Tags": [
+     {
+      "Key": "Environment",
+      "Value": "staging"
+     },
+     {
+      "Key": "HIPAA",
+      "Value": "true"
+     },
+     {
+      "Key": "Project",
+      "Value": "HIPS"
+     }
+    ]
+   },
+   "UpdateReplacePolicy": "Retain",
+   "DeletionPolicy": "Retain",
+   "Metadata": {
+    "aws:cdk:path": "HipsEcsStack-staging/SessionTaskDef/SessionContainer/LogGroup/Resource"
+   }
+  },
+  "SessionTaskDefExecutionRoleB74E92CE": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "ecs-tasks.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "Tags": [
+     {
+      "Key": "Environment",
+      "Value": "staging"
+     },
+     {
+      "Key": "HIPAA",
+      "Value": "true"
+     },
+     {
+      "Key": "Project",
+      "Value": "HIPS"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "HipsEcsStack-staging/SessionTaskDef/ExecutionRole/Resource"
+   }
+  },
+  "SessionTaskDefExecutionRoleDefaultPolicy600969EE": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": [
+        "logs:CreateLogStream",
+        "logs:PutLogEvents"
+       ],
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::GetAtt": [
+         "SessionTaskDefSessionContainerLogGroupD7C516DF",
+         "Arn"
+        ]
+       }
+      },
+      {
+       "Action": [
+        "secretsmanager:GetSecretValue",
+        "secretsmanager:DescribeSecret"
+       ],
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::Join": [
+         "",
+         [
+          "arn:",
+          {
+           "Ref": "AWS::Partition"
+          },
+          ":secretsmanager:us-east-1:522814696950:secret:hips/session/db-??????"
+         ]
+        ]
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "SessionTaskDefExecutionRoleDefaultPolicy600969EE",
+    "Roles": [
+     {
+      "Ref": "SessionTaskDefExecutionRoleB74E92CE"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "HipsEcsStack-staging/SessionTaskDef/ExecutionRole/DefaultPolicy/Resource"
+   }
+  },
+  "SessionServiceF5C19D32": {
+   "Type": "AWS::ECS::Service",
+   "Properties": {
+    "Cluster": {
+     "Ref": "HipsCluster854A50F9"
+    },
+    "DeploymentConfiguration": {
+     "Alarms": {
+      "AlarmNames": [],
+      "Enable": false,
+      "Rollback": false
+     },
+     "MaximumPercent": 200,
+     "MinimumHealthyPercent": 50
+    },
+    "DesiredCount": 2,
+    "EnableECSManagedTags": false,
+    "HealthCheckGracePeriodSeconds": 30,
+    "LaunchType": "FARGATE",
+    "LoadBalancers": [
+     {
+      "ContainerName": "session-service",
+      "ContainerPort": 3000,
+      "TargetGroupArn": {
+       "Fn::ImportValue": "HIPS-SessionTargetGroupArn"
+      }
+     }
+    ],
+    "NetworkConfiguration": {
+     "AwsvpcConfiguration": {
+      "AssignPublicIp": "DISABLED",
+      "SecurityGroups": [
+       {
+        "Fn::ImportValue": "HipsVpcStack-staging:ExportsOutputFnGetAttSessionSecurityGroup6C5EC642GroupId13F29D0A"
+       }
+      ],
+      "Subnets": [
+       {
+        "Fn::ImportValue": "HipsVpcStack-staging:ExportsOutputRefHipsVpcPrivateAppSubnet1SubnetF8A9AD18078713A0"
+       },
+       {
+        "Fn::ImportValue": "HipsVpcStack-staging:ExportsOutputRefHipsVpcPrivateAppSubnet2SubnetFD675120650EC947"
+       },
+       {
+        "Fn::ImportValue": "HipsVpcStack-staging:ExportsOutputRefHipsVpcPrivateAppSubnet3Subnet86D528E754885160"
+       }
+      ]
+     }
+    },
+    "ServiceName": "session-service",
+    "ServiceRegistries": [
+     {
+      "RegistryArn": {
+       "Fn::GetAtt": [
+        "SessionServiceCloudmapServiceE468A355",
+        "Arn"
+       ]
+      }
+     }
+    ],
+    "Tags": [
+     {
+      "Key": "Environment",
+      "Value": "staging"
+     },
+     {
+      "Key": "HIPAA",
+      "Value": "true"
+     },
+     {
+      "Key": "Project",
+      "Value": "HIPS"
+     }
+    ],
+    "TaskDefinition": {
+     "Ref": "SessionTaskDef2621F4BC"
+    }
+   },
+   "DependsOn": [
+    "SessionTaskRoleDefaultPolicy769D62EA",
+    "SessionTaskRole9021DA3B"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "HipsEcsStack-staging/SessionService/Service"
+   }
+  },
+  "SessionServiceCloudmapServiceE468A355": {
+   "Type": "AWS::ServiceDiscovery::Service",
+   "Properties": {
+    "DnsConfig": {
+     "DnsRecords": [
+      {
+       "TTL": 60,
+       "Type": "A"
+      }
+     ],
+     "NamespaceId": {
+      "Fn::GetAtt": [
+       "HipsClusterDefaultServiceDiscoveryNamespaceD312969B",
+       "Id"
+      ]
+     },
+     "RoutingPolicy": "MULTIVALUE"
+    },
+    "HealthCheckCustomConfig": {
+     "FailureThreshold": 2
+    },
+    "Name": "session-service",
+    "NamespaceId": {
+     "Fn::GetAtt": [
+      "HipsClusterDefaultServiceDiscoveryNamespaceD312969B",
+      "Id"
+     ]
+    },
+    "Tags": [
+     {
+      "Key": "Environment",
+      "Value": "staging"
+     },
+     {
+      "Key": "HIPAA",
+      "Value": "true"
+     },
+     {
+      "Key": "Project",
+      "Value": "HIPS"
+     }
+    ]
+   },
+   "DependsOn": [
+    "SessionTaskRoleDefaultPolicy769D62EA",
+    "SessionTaskRole9021DA3B"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "HipsEcsStack-staging/SessionService/CloudmapService/Resource"
+   }
+  },
+  "SessionServiceTaskCountTargetDEFB8921": {
+   "Type": "AWS::ApplicationAutoScaling::ScalableTarget",
+   "Properties": {
+    "MaxCapacity": 10,
+    "MinCapacity": 2,
+    "ResourceId": {
+     "Fn::Join": [
+      "",
+      [
+       "service/",
+       {
+        "Ref": "HipsCluster854A50F9"
+       },
+       "/",
+       {
+        "Fn::GetAtt": [
+         "SessionServiceF5C19D32",
+         "Name"
+        ]
+       }
+      ]
+     ]
+    },
+    "RoleARN": {
+     "Fn::Join": [
+      "",
+      [
+       "arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":iam::522814696950:role/aws-service-role/ecs.application-autoscaling.amazonaws.com/AWSServiceRoleForApplicationAutoScaling_ECSService"
+      ]
+     ]
+    },
+    "ScalableDimension": "ecs:service:DesiredCount",
+    "ServiceNamespace": "ecs"
+   },
+   "DependsOn": [
+    "SessionTaskRoleDefaultPolicy769D62EA",
+    "SessionTaskRole9021DA3B"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "HipsEcsStack-staging/SessionService/TaskCount/Target/Resource"
+   }
+  },
+  "SessionServiceTaskCountTargetSessionCpuScaling0D2F4A3B": {
+   "Type": "AWS::ApplicationAutoScaling::ScalingPolicy",
+   "Properties": {
+    "PolicyName": "HipsEcsStackstagingSessionServiceTaskCountTargetSessionCpuScalingF9CEFB1C",
+    "PolicyType": "TargetTrackingScaling",
+    "ScalingTargetId": {
+     "Ref": "SessionServiceTaskCountTargetDEFB8921"
+    },
+    "TargetTrackingScalingPolicyConfiguration": {
+     "PredefinedMetricSpecification": {
+      "PredefinedMetricType": "ECSServiceAverageCPUUtilization"
+     },
+     "TargetValue": 70
+    }
+   },
+   "DependsOn": [
+    "SessionTaskRoleDefaultPolicy769D62EA",
+    "SessionTaskRole9021DA3B"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "HipsEcsStack-staging/SessionService/TaskCount/Target/SessionCpuScaling/Resource"
+   }
+  },
+  "SessionServiceTaskCountTargetSessionMemoryScaling96ACEE80": {
+   "Type": "AWS::ApplicationAutoScaling::ScalingPolicy",
+   "Properties": {
+    "PolicyName": "HipsEcsStackstagingSessionServiceTaskCountTargetSessionMemoryScaling7E6B028D",
+    "PolicyType": "TargetTrackingScaling",
+    "ScalingTargetId": {
+     "Ref": "SessionServiceTaskCountTargetDEFB8921"
+    },
+    "TargetTrackingScalingPolicyConfiguration": {
+     "PredefinedMetricSpecification": {
+      "PredefinedMetricType": "ECSServiceAverageMemoryUtilization"
+     },
+     "TargetValue": 80
+    }
+   },
+   "DependsOn": [
+    "SessionTaskRoleDefaultPolicy769D62EA",
+    "SessionTaskRole9021DA3B"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "HipsEcsStack-staging/SessionService/TaskCount/Target/SessionMemoryScaling/Resource"
+   }
+  },
+  "SafetyTaskRole4FDF3A34": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "ecs-tasks.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "Description": "ECS task role for safety service",
+    "Tags": [
+     {
+      "Key": "Environment",
+      "Value": "staging"
+     },
+     {
+      "Key": "HIPAA",
+      "Value": "true"
+     },
+     {
+      "Key": "Project",
+      "Value": "HIPS"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "HipsEcsStack-staging/SafetyTaskRole/Resource"
+   }
+  },
+  "SafetyTaskRoleDefaultPolicy5B4342CE": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": "secretsmanager:GetSecretValue",
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::Join": [
+         "",
+         [
+          "arn:",
+          {
+           "Ref": "AWS::Partition"
+          },
+          ":secretsmanager:us-east-1:522814696950:secret:hips/safety/db"
+         ]
+        ]
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "SafetyTaskRoleDefaultPolicy5B4342CE",
+    "Roles": [
+     {
+      "Ref": "SafetyTaskRole4FDF3A34"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "HipsEcsStack-staging/SafetyTaskRole/DefaultPolicy/Resource"
+   }
+  },
+  "SafetyTaskDef64F66D63": {
+   "Type": "AWS::ECS::TaskDefinition",
+   "Properties": {
+    "ContainerDefinitions": [
+     {
+      "Environment": [
+       {
+        "Name": "NODE_ENV",
+        "Value": "production"
+       },
+       {
+        "Name": "SESSION_DATABASE_URL",
+        "Value": {
+         "Fn::Join": [
+          "",
+          [
+           "postgresql://sessionadmin@",
+           {
+            "Fn::ImportValue": "HIPS-SessionDbHostname"
+           },
+           ":5432/hips_session"
+          ]
+         ]
+        }
+       },
+       {
+        "Name": "SAFETY_ENGINE_SECRET",
+        "Value": ""
+       }
+      ],
+      "Essential": true,
+      "HealthCheck": {
+       "Command": [
+        "CMD-SHELL",
+        "curl -f http://localhost:3002/health || exit 1"
+       ],
+       "Interval": 30,
+       "Retries": 3,
+       "StartPeriod": 60,
+       "Timeout": 5
+      },
+      "Image": "hips/safety-service:latest",
+      "LogConfiguration": {
+       "LogDriver": "awslogs",
+       "Options": {
+        "awslogs-group": {
+         "Ref": "SafetyTaskDefSafetyContainerLogGroup41100D0A"
+        },
+        "awslogs-stream-prefix": "safety-service",
+        "awslogs-region": "us-east-1"
+       }
+      },
+      "Name": "safety-service",
+      "PortMappings": [
+       {
+        "ContainerPort": 3002,
+        "Protocol": "tcp"
+       }
+      ],
+      "Secrets": [
+       {
+        "Name": "SESSION_DB_PASSWORD",
+        "ValueFrom": {
+         "Fn::Join": [
+          "",
+          [
+           "arn:",
+           {
+            "Ref": "AWS::Partition"
+           },
+           ":secretsmanager:us-east-1:522814696950:secret:hips/safety/db:password::"
+          ]
+         ]
+        }
+       }
+      ]
+     }
+    ],
+    "Cpu": "256",
+    "ExecutionRoleArn": {
+     "Fn::GetAtt": [
+      "SafetyTaskDefExecutionRole4C757D64",
+      "Arn"
+     ]
+    },
+    "Family": "HipsEcsStackstagingSafetyTaskDefEE3CD41D",
+    "Memory": "512",
+    "NetworkMode": "awsvpc",
+    "RequiresCompatibilities": [
+     "FARGATE"
+    ],
+    "Tags": [
+     {
+      "Key": "Environment",
+      "Value": "staging"
+     },
+     {
+      "Key": "HIPAA",
+      "Value": "true"
+     },
+     {
+      "Key": "Project",
+      "Value": "HIPS"
+     }
+    ],
+    "TaskRoleArn": {
+     "Fn::GetAtt": [
+      "SafetyTaskRole4FDF3A34",
+      "Arn"
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "HipsEcsStack-staging/SafetyTaskDef/Resource"
+   }
+  },
+  "SafetyTaskDefSafetyContainerLogGroup41100D0A": {
+   "Type": "AWS::Logs::LogGroup",
+   "Properties": {
+    "RetentionInDays": 30,
+    "Tags": [
+     {
+      "Key": "Environment",
+      "Value": "staging"
+     },
+     {
+      "Key": "HIPAA",
+      "Value": "true"
+     },
+     {
+      "Key": "Project",
+      "Value": "HIPS"
+     }
+    ]
+   },
+   "UpdateReplacePolicy": "Retain",
+   "DeletionPolicy": "Retain",
+   "Metadata": {
+    "aws:cdk:path": "HipsEcsStack-staging/SafetyTaskDef/SafetyContainer/LogGroup/Resource"
+   }
+  },
+  "SafetyTaskDefExecutionRole4C757D64": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "ecs-tasks.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "Tags": [
+     {
+      "Key": "Environment",
+      "Value": "staging"
+     },
+     {
+      "Key": "HIPAA",
+      "Value": "true"
+     },
+     {
+      "Key": "Project",
+      "Value": "HIPS"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "HipsEcsStack-staging/SafetyTaskDef/ExecutionRole/Resource"
+   }
+  },
+  "SafetyTaskDefExecutionRoleDefaultPolicyB21B9918": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": [
+        "logs:CreateLogStream",
+        "logs:PutLogEvents"
+       ],
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::GetAtt": [
+         "SafetyTaskDefSafetyContainerLogGroup41100D0A",
+         "Arn"
+        ]
+       }
+      },
+      {
+       "Action": [
+        "secretsmanager:GetSecretValue",
+        "secretsmanager:DescribeSecret"
+       ],
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::Join": [
+         "",
+         [
+          "arn:",
+          {
+           "Ref": "AWS::Partition"
+          },
+          ":secretsmanager:us-east-1:522814696950:secret:hips/safety/db-??????"
+         ]
+        ]
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "SafetyTaskDefExecutionRoleDefaultPolicyB21B9918",
+    "Roles": [
+     {
+      "Ref": "SafetyTaskDefExecutionRole4C757D64"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "HipsEcsStack-staging/SafetyTaskDef/ExecutionRole/DefaultPolicy/Resource"
+   }
+  },
+  "SafetyService72142BD0": {
+   "Type": "AWS::ECS::Service",
+   "Properties": {
+    "Cluster": {
+     "Ref": "HipsCluster854A50F9"
+    },
+    "DeploymentConfiguration": {
+     "Alarms": {
+      "AlarmNames": [],
+      "Enable": false,
+      "Rollback": false
+     },
+     "MaximumPercent": 200,
+     "MinimumHealthyPercent": 50
+    },
+    "DesiredCount": 1,
+    "EnableECSManagedTags": false,
+    "HealthCheckGracePeriodSeconds": 30,
+    "LaunchType": "FARGATE",
+    "LoadBalancers": [
+     {
+      "ContainerName": "safety-service",
+      "ContainerPort": 3002,
+      "TargetGroupArn": {
+       "Fn::ImportValue": "HIPS-SafetyTargetGroupArn"
+      }
+     }
+    ],
+    "NetworkConfiguration": {
+     "AwsvpcConfiguration": {
+      "AssignPublicIp": "DISABLED",
+      "SecurityGroups": [
+       {
+        "Fn::ImportValue": "HipsVpcStack-staging:ExportsOutputFnGetAttSafetySecurityGroup9876E761GroupIdB24E2730"
+       }
+      ],
+      "Subnets": [
+       {
+        "Fn::ImportValue": "HipsVpcStack-staging:ExportsOutputRefHipsVpcPrivateAppSubnet1SubnetF8A9AD18078713A0"
+       },
+       {
+        "Fn::ImportValue": "HipsVpcStack-staging:ExportsOutputRefHipsVpcPrivateAppSubnet2SubnetFD675120650EC947"
+       },
+       {
+        "Fn::ImportValue": "HipsVpcStack-staging:ExportsOutputRefHipsVpcPrivateAppSubnet3Subnet86D528E754885160"
+       }
+      ]
+     }
+    },
+    "ServiceName": "safety-service",
+    "ServiceRegistries": [
+     {
+      "RegistryArn": {
+       "Fn::GetAtt": [
+        "SafetyServiceCloudmapService16F5D610",
+        "Arn"
+       ]
+      }
+     }
+    ],
+    "Tags": [
+     {
+      "Key": "Environment",
+      "Value": "staging"
+     },
+     {
+      "Key": "HIPAA",
+      "Value": "true"
+     },
+     {
+      "Key": "Project",
+      "Value": "HIPS"
+     }
+    ],
+    "TaskDefinition": {
+     "Ref": "SafetyTaskDef64F66D63"
+    }
+   },
+   "DependsOn": [
+    "SafetyTaskRoleDefaultPolicy5B4342CE",
+    "SafetyTaskRole4FDF3A34"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "HipsEcsStack-staging/SafetyService/Service"
+   }
+  },
+  "SafetyServiceCloudmapService16F5D610": {
+   "Type": "AWS::ServiceDiscovery::Service",
+   "Properties": {
+    "DnsConfig": {
+     "DnsRecords": [
+      {
+       "TTL": 60,
+       "Type": "A"
+      }
+     ],
+     "NamespaceId": {
+      "Fn::GetAtt": [
+       "HipsClusterDefaultServiceDiscoveryNamespaceD312969B",
+       "Id"
+      ]
+     },
+     "RoutingPolicy": "MULTIVALUE"
+    },
+    "HealthCheckCustomConfig": {
+     "FailureThreshold": 2
+    },
+    "Name": "safety-service",
+    "NamespaceId": {
+     "Fn::GetAtt": [
+      "HipsClusterDefaultServiceDiscoveryNamespaceD312969B",
+      "Id"
+     ]
+    },
+    "Tags": [
+     {
+      "Key": "Environment",
+      "Value": "staging"
+     },
+     {
+      "Key": "HIPAA",
+      "Value": "true"
+     },
+     {
+      "Key": "Project",
+      "Value": "HIPS"
+     }
+    ]
+   },
+   "DependsOn": [
+    "SafetyTaskRoleDefaultPolicy5B4342CE",
+    "SafetyTaskRole4FDF3A34"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "HipsEcsStack-staging/SafetyService/CloudmapService/Resource"
+   }
+  },
+  "SafetyServiceTaskCountTargetF18E6600": {
+   "Type": "AWS::ApplicationAutoScaling::ScalableTarget",
+   "Properties": {
+    "MaxCapacity": 5,
+    "MinCapacity": 1,
+    "ResourceId": {
+     "Fn::Join": [
+      "",
+      [
+       "service/",
+       {
+        "Ref": "HipsCluster854A50F9"
+       },
+       "/",
+       {
+        "Fn::GetAtt": [
+         "SafetyService72142BD0",
+         "Name"
+        ]
+       }
+      ]
+     ]
+    },
+    "RoleARN": {
+     "Fn::Join": [
+      "",
+      [
+       "arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":iam::522814696950:role/aws-service-role/ecs.application-autoscaling.amazonaws.com/AWSServiceRoleForApplicationAutoScaling_ECSService"
+      ]
+     ]
+    },
+    "ScalableDimension": "ecs:service:DesiredCount",
+    "ServiceNamespace": "ecs"
+   },
+   "DependsOn": [
+    "SafetyTaskRoleDefaultPolicy5B4342CE",
+    "SafetyTaskRole4FDF3A34"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "HipsEcsStack-staging/SafetyService/TaskCount/Target/Resource"
+   }
+  },
+  "SafetyServiceTaskCountTargetSafetyCpuScalingF65DF099": {
+   "Type": "AWS::ApplicationAutoScaling::ScalingPolicy",
+   "Properties": {
+    "PolicyName": "HipsEcsStackstagingSafetyServiceTaskCountTargetSafetyCpuScaling1117D46E",
+    "PolicyType": "TargetTrackingScaling",
+    "ScalingTargetId": {
+     "Ref": "SafetyServiceTaskCountTargetF18E6600"
+    },
+    "TargetTrackingScalingPolicyConfiguration": {
+     "PredefinedMetricSpecification": {
+      "PredefinedMetricType": "ECSServiceAverageCPUUtilization"
+     },
+     "TargetValue": 70
+    }
+   },
+   "DependsOn": [
+    "SafetyTaskRoleDefaultPolicy5B4342CE",
+    "SafetyTaskRole4FDF3A34"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "HipsEcsStack-staging/SafetyService/TaskCount/Target/SafetyCpuScaling/Resource"
+   }
+  },
+  "CDKMetadata": {
+   "Type": "AWS::CDK::Metadata",
+   "Properties": {
+    "Analytics": "v2:deflate64:H4sIAAAAAAAA/22PwW7DIBBEvyV3TGW3/QJH7aWKIjv3akM2aGMMFosdRYh/r4xrpWl7mtFbZnapZPX6LMsNXLlQp64wdJSxDaA60SC70SsUcOXPiIplrM3IAb2oz3a1b+A1BDwAd1s8k6VAzs4PfhNnA5BF/4N9Z1v0EymcQ6ttFRg4mlxbu9GGJHgZnYiVm9DfZNx7miDg1vIOeuQBlo7/8N8VSRinWcYPp9+9G4d5tPokCHoZG2dyIuveGVK33J9dEjAMhhTMP4ExOFZgyGoZ77d7jSGvfCSLHDyojqxul9y9/wGklIR1J5QXfpqqF1mWstxcmKjwow3Uo2wW/QKIHJvSyQEAAA=="
+   },
+   "Metadata": {
+    "aws:cdk:path": "HipsEcsStack-staging/CDKMetadata/Default"
+   }
+  }
+ },
+ "Outputs": {
+  "ExportsOutputRefHipsCluster854A50F9029B4888": {
+   "Value": {
+    "Ref": "HipsCluster854A50F9"
+   },
+   "Export": {
+    "Name": "HipsEcsStack-staging:ExportsOutputRefHipsCluster854A50F9029B4888"
+   }
+  }
+ },
+ "Parameters": {
+  "BootstrapVersion": {
+   "Type": "AWS::SSM::Parameter::Value<String>",
+   "Default": "/cdk-bootstrap/hnb659fds/version",
+   "Description": "Version of the CDK Bootstrap resources in this environment, automatically retrieved from SSM Parameter Store. [cdk:skip]"
+  }
+ },
+ "Rules": {
+  "CheckBootstrapVersion": {
+   "Assertions": [
+    {
+     "Assert": {
+      "Fn::Not": [
+       {
+        "Fn::Contains": [
+         [
+          "1",
+          "2",
+          "3",
+          "4",
+          "5"
+         ],
+         {
+          "Ref": "BootstrapVersion"
+         }
+        ]
+       }
+      ]
+     },
+     "AssertDescription": "CDK bootstrap stack version 6 required. Please run 'cdk bootstrap' with a recent version of the CDK CLI."
+    }
+   ]
+  }
+ }
+}

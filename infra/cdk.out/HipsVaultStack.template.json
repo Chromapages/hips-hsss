@@ -1,0 +1,241 @@
+{
+ "Resources": {
+  "VaultMasterKey8A03803E": {
+   "Type": "AWS::KMS::Key",
+   "Properties": {
+    "Description": "H.I.P.S. Vault master encryption key — all PII",
+    "EnableKeyRotation": true,
+    "KeyPolicy": {
+     "Statement": [
+      {
+       "Action": "kms:*",
+       "Effect": "Allow",
+       "Principal": {
+        "AWS": {
+         "Fn::Join": [
+          "",
+          [
+           "arn:",
+           {
+            "Ref": "AWS::Partition"
+           },
+           ":iam::522814696950:root"
+          ]
+         ]
+        }
+       },
+       "Resource": "*"
+      },
+      {
+       "Action": [
+        "kms:Decrypt",
+        "kms:Encrypt",
+        "kms:ReEncrypt*",
+        "kms:GenerateDataKey*"
+       ],
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "ecs-tasks.amazonaws.com"
+       },
+       "Resource": "*"
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "Tags": [
+     {
+      "Key": "Environment",
+      "Value": "development"
+     },
+     {
+      "Key": "HIPAA",
+      "Value": "true"
+     },
+     {
+      "Key": "Project",
+      "Value": "HIPS"
+     }
+    ]
+   },
+   "UpdateReplacePolicy": "Retain",
+   "DeletionPolicy": "Retain",
+   "Metadata": {
+    "aws:cdk:path": "HipsVaultStack/VaultMasterKey/Resource"
+   }
+  },
+  "VaultMasterKeyAlias3E0AA98F": {
+   "Type": "AWS::KMS::Alias",
+   "Properties": {
+    "AliasName": "alias/hips-vault-master",
+    "TargetKeyId": {
+     "Fn::GetAtt": [
+      "VaultMasterKey8A03803E",
+      "Arn"
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "HipsVaultStack/VaultMasterKey/Alias/Resource"
+   }
+  },
+  "VaultServiceRole99292B53": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "ecs-tasks.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "Description": "ECS task role for vault service",
+    "Tags": [
+     {
+      "Key": "Environment",
+      "Value": "development"
+     },
+     {
+      "Key": "HIPAA",
+      "Value": "true"
+     },
+     {
+      "Key": "Project",
+      "Value": "HIPS"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "HipsVaultStack/VaultServiceRole/Resource"
+   }
+  },
+  "VaultServiceRoleDefaultPolicy6025DD0A": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": [
+        "kms:Encrypt",
+        "kms:Decrypt",
+        "kms:GenerateDataKey"
+       ],
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::GetAtt": [
+         "VaultMasterKey8A03803E",
+         "Arn"
+        ]
+       }
+      },
+      {
+       "Action": "secretsmanager:GetSecretValue",
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::Join": [
+         "",
+         [
+          "arn:",
+          {
+           "Ref": "AWS::Partition"
+          },
+          ":secretsmanager:us-east-1:522814696950:secret/hips/vault/*"
+         ]
+        ]
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "VaultServiceRoleDefaultPolicy6025DD0A",
+    "Roles": [
+     {
+      "Ref": "VaultServiceRole99292B53"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "HipsVaultStack/VaultServiceRole/DefaultPolicy/Resource"
+   }
+  },
+  "CDKMetadata": {
+   "Type": "AWS::CDK::Metadata",
+   "Properties": {
+    "Analytics": "v2:deflate64:H4sIAAAAAAAA/yWKSw7CIBRF19I5PAPqAoxDB5q6gAYpJq/8jA/aGMLeDXR0zj25EuT5CGJQG3E9W+7wBeWZlLZMbTQV6wnKzfzY9R0aLg4VtdGlMlQeyhidaa3zER3q/t+t1ub3nD45VRbibGChwypPIASIYSFE/s0hoTcw7vwDgNmyUpUAAAA="
+   },
+   "Metadata": {
+    "aws:cdk:path": "HipsVaultStack/CDKMetadata/Default"
+   }
+  }
+ },
+ "Outputs": {
+  "VaultKMSKeyId": {
+   "Value": {
+    "Ref": "VaultMasterKey8A03803E"
+   },
+   "Export": {
+    "Name": "HIPS-VaultKMSKeyId"
+   }
+  },
+  "ExportsOutputFnGetAttVaultMasterKey8A03803EArnB39EF92B": {
+   "Value": {
+    "Fn::GetAtt": [
+     "VaultMasterKey8A03803E",
+     "Arn"
+    ]
+   },
+   "Export": {
+    "Name": "HipsVaultStack:ExportsOutputFnGetAttVaultMasterKey8A03803EArnB39EF92B"
+   }
+  },
+  "ExportsOutputFnGetAttVaultServiceRole99292B53ArnA381B4E6": {
+   "Value": {
+    "Fn::GetAtt": [
+     "VaultServiceRole99292B53",
+     "Arn"
+    ]
+   },
+   "Export": {
+    "Name": "HipsVaultStack:ExportsOutputFnGetAttVaultServiceRole99292B53ArnA381B4E6"
+   }
+  }
+ },
+ "Parameters": {
+  "BootstrapVersion": {
+   "Type": "AWS::SSM::Parameter::Value<String>",
+   "Default": "/cdk-bootstrap/hnb659fds/version",
+   "Description": "Version of the CDK Bootstrap resources in this environment, automatically retrieved from SSM Parameter Store. [cdk:skip]"
+  }
+ },
+ "Rules": {
+  "CheckBootstrapVersion": {
+   "Assertions": [
+    {
+     "Assert": {
+      "Fn::Not": [
+       {
+        "Fn::Contains": [
+         [
+          "1",
+          "2",
+          "3",
+          "4",
+          "5"
+         ],
+         {
+          "Ref": "BootstrapVersion"
+         }
+        ]
+       }
+      ]
+     },
+     "AssertDescription": "CDK bootstrap stack version 6 required. Please run 'cdk bootstrap' with a recent version of the CDK CLI."
+    }
+   ]
+  }
+ }
+}

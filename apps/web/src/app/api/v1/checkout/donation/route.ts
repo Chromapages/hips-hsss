@@ -16,7 +16,7 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY ?? '', {
 // POST /api/v1/checkout/donation
 export async function POST(req: NextRequest) {
   const requestId = uuidv4()
-  const rl = rateLimit(rateLimitKey(req, 'donation'), RATE_LIMITS.donation)
+  const rl = await rateLimit(rateLimitKey(req, 'donation'), RATE_LIMITS.donation)
   if (rl !== 'ok') return rl
 
   try {
@@ -32,18 +32,21 @@ export async function POST(req: NextRequest) {
     const { amount, tier, email } = parsed.data
 
     // Create Stripe PaymentIntent with metadata.type = "DONATION"
-    const paymentIntent = await stripe.paymentIntents.create({
-      amount,
-      currency: 'usd',
-      receipt_email: email,
-      metadata: {
-        type: 'DONATION',
-        tier,
-        email,
-        userId: 'anonymous',
+    const paymentIntent = await stripe.paymentIntents.create(
+      {
+        amount,
+        currency: 'usd',
+        receipt_email: email,
+        metadata: {
+          type: 'DONATION',
+          tier,
+          email,
+          userId: 'anonymous',
+        },
+        description: `H.I.P.S. Donation — ${tier.replace('_', ' ')}`,
       },
-      description: `H.I.P.S. Donation — ${tier.replace('_', ' ')}`,
-    })
+      { timeout: 30000 }
+    )
 
     return NextResponse.json(
       makeResponse(

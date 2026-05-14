@@ -1,0 +1,21 @@
+{
+  "version": "53.0.0",
+  "files": {
+    "688040eed8c3ad24d8238866f0e1a385c9941491d07acbb1c7b1256a35e58ed8": {
+      "displayName": "HipsVpcStack Template",
+      "source": {
+        "path": "HipsVpcStack.template.json",
+        "packaging": "file"
+      },
+      "destinations": {
+        "522814696950-us-east-1-71c781a9": {
+          "bucketName": "cdk-hnb659fds-assets-522814696950-us-east-1",
+          "objectKey": "688040eed8c3ad24d8238866f0e1a385c9941491d07acbb1c7b1256a35e58ed8.json",
+          "region": "us-east-1",
+          "assumeRoleArn": "arn:${AWS::Partition}:iam::522814696950:role/cdk-hnb659fds-file-publishing-role-522814696950-us-east-1"
+        }
+      }
+    }
+  },
+  "dockerImages": {}
+}

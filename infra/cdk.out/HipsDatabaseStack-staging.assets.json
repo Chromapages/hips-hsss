@@ -1,0 +1,21 @@
+{
+  "version": "53.0.0",
+  "files": {
+    "2c1c88ae3cceb980dc154895d57004ed26531eac0400f1baecc687583b5b513e": {
+      "displayName": "HipsDatabaseStack-staging Template",
+      "source": {
+        "path": "HipsDatabaseStack-staging.template.json",
+        "packaging": "file"
+      },
+      "destinations": {
+        "522814696950-us-east-1-5d17461a": {
+          "bucketName": "cdk-hnb659fds-assets-522814696950-us-east-1",
+          "objectKey": "2c1c88ae3cceb980dc154895d57004ed26531eac0400f1baecc687583b5b513e.json",
+          "region": "us-east-1",
+          "assumeRoleArn": "arn:${AWS::Partition}:iam::522814696950:role/cdk-hnb659fds-file-publishing-role-522814696950-us-east-1"
+        }
+      }
+    }
+  },
+  "dockerImages": {}
+}

@@ -10,11 +10,15 @@ import {
 } from '@hips/types'
 import { requireRole } from '@/lib/auth'
 
+interface RouteParams {
+  params: Promise<{ id: string }>
+}
+
 // PATCH /api/v1/sessions/:id/complete
-export async function PATCH(req: NextRequest) {
+export async function PATCH(req: NextRequest, { params }: RouteParams) {
   const requestId = uuidv4()
+  const { id: sessionId } = await params
   try {
-    const sessionId = req.url.split('/')[6] // /api/v1/sessions/{id}/complete
     if (!sessionId) {
       return NextResponse.json(
         makeError(ErrorCodes.SESSION_NOT_FOUND, 'Session ID is required', requestId),

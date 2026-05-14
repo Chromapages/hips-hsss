@@ -34,6 +34,12 @@ export async function GET(req: NextRequest) {
     const monthlyCapTotal = 50000
     const monthlyCapUsed = Number(monthlyUsed._sum.approvedAmount ?? 0)
 
+    const [pendingCount, approvedCount, waitlistCount] = await Promise.all([
+      commerceDb.scholarship.count({ where: { status: 'PENDING' } }),
+      commerceDb.scholarship.count({ where: { status: 'APPROVED' } }),
+      commerceDb.scholarship.count({ where: { status: 'WAITLISTED' } }),
+    ])
+
     return NextResponse.json(
       makeResponse({
         scholarships: scholarships.map(s => ({
@@ -46,7 +52,7 @@ export async function GET(req: NextRequest) {
         budgetStatus: {
           monthlyCapTotal, monthlyCapUsed,
           monthlyCapRemaining: Math.max(0, monthlyCapTotal - monthlyCapUsed),
-          waitlistCount: await commerceDb.scholarship.count({ where: { status: 'WAITLISTED' } }),
+          pendingCount, approvedCount, waitlistCount,
         },
         pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
       }, requestId),

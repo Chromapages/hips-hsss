@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useRef, useEffect } from 'react'
 import { Canvas } from '@react-three/fiber'
 import { cn } from '@hips/ui'
 
@@ -53,6 +53,8 @@ export function AvatarSelector({
   const [selectedStyleId, setSelectedStyleId] = useState<number | null>(currentStyleId ?? null)
   const [selectedPaletteId, setSelectedPaletteId] = useState<number>(currentPaletteId ?? 0)
   const [step, setStep] = useState<'style' | 'color'>('style')
+  const [focusedStyleIndex, setFocusedStyleIndex] = useState(0)
+  const styleGridRef = useRef<HTMLDivElement>(null)
 
   const handleStyleConfirm = useCallback(() => {
     if (selectedStyleId !== null) setStep('color')
@@ -67,6 +69,61 @@ export function AvatarSelector({
 
   const activeStyle = AVATAR_STYLES.find((s) => s.id === selectedStyleId) ?? AVATAR_STYLES[0]
   const activePalette = COLOR_PALETTES[selectedPaletteId] ?? COLOR_PALETTES[0]
+
+  // Keyboard navigation for avatar style grid (6 columns)
+  const handleStyleGridKeyDown = useCallback((e: React.KeyboardEvent, currentIndex: number) => {
+    const cols = 6
+    const total = AVATAR_STYLES.length
+    let newIndex = currentIndex
+
+    switch (e.key) {
+      case 'ArrowRight':
+        e.preventDefault()
+        newIndex = currentIndex < total - 1 ? currentIndex + 1 : 0
+        break
+      case 'ArrowLeft':
+        e.preventDefault()
+        newIndex = currentIndex > 0 ? currentIndex - 1 : total - 1
+        break
+      case 'ArrowDown':
+        e.preventDefault()
+        newIndex = currentIndex + cols < total ? currentIndex + cols : currentIndex
+        break
+      case 'ArrowUp':
+        e.preventDefault()
+        newIndex = currentIndex - cols >= 0 ? currentIndex - cols : currentIndex
+        break
+      case 'Home':
+        e.preventDefault()
+        newIndex = 0
+        break
+      case 'End':
+        e.preventDefault()
+        newIndex = total - 1
+        break
+      case 'Enter':
+      case ' ':
+        e.preventDefault()
+        if (!locked && !disabled) {
+          setSelectedStyleId(AVATAR_STYLES[currentIndex].id)
+        }
+        break
+      default:
+        return
+    }
+
+    if (newIndex !== currentIndex) {
+      setFocusedStyleIndex(newIndex)
+    }
+  }, [locked, disabled])
+
+  // Focus avatar button when focusedStyleIndex changes
+  useEffect(() => {
+    if (step === 'style' && styleGridRef.current) {
+      const buttons = styleGridRef.current.querySelectorAll('button')
+      buttons[focusedStyleIndex]?.focus()
+    }
+  }, [step, focusedStyleIndex])
 
   return (
     <div className="flex flex-col items-center gap-6">
@@ -104,21 +161,30 @@ export function AvatarSelector({
 
       {step === 'style' && (
         <>
-          <div className="grid grid-cols-6 gap-3 max-w-md">
-            {AVATAR_STYLES.map((style) => (
+          <div
+            ref={styleGridRef}
+            className="grid grid-cols-6 gap-3 max-w-md"
+            role="grid"
+            aria-label="Avatar style selection"
+          >
+            {AVATAR_STYLES.map((style, idx) => (
               <button
                 key={style.id}
                 onClick={() => !locked && setSelectedStyleId(style.id)}
+                onKeyDown={(e) => handleStyleGridKeyDown(e, idx)}
+                onFocus={() => setFocusedStyleIndex(idx)}
                 disabled={disabled || locked}
                 className={cn(
                   'flex flex-col items-center gap-1.5 p-2 rounded-lg border-2 transition-all duration-200',
                   selectedStyleId === style.id
                     ? 'border-brand-accent bg-slate-800 scale-105'
                     : 'border-slate-700 bg-slate-900 hover:border-slate-500',
-                  (disabled || locked) && 'opacity-40 cursor-not-allowed'
+                  (disabled || locked) && 'opacity-40 cursor-not-allowed',
+                  focusedStyleIndex === idx && 'ring-2 ring-brand-accent ring-offset-2 ring-offset-slate-900'
                 )}
                 aria-label={`Select ${style.label}`}
                 aria-pressed={selectedStyleId === style.id}
+                tabIndex={focusedStyleIndex === idx ? 0 : -1}
               >
                 <div className="h-8 w-8 rounded-full" style={{ background: style.primaryColor }} />
                 <span className="text-xs text-slate-300 leading-tight text-center">{style.label}</span>

@@ -9,7 +9,7 @@ import { authFetch } from '@/lib/api-client'
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? '')
 
-type PackageTier = 'SINGLE' | '4_SESSION' | '8_SESSION'
+type PackageTier = '4_SESSION' | '8_SESSION'
 
 interface ServiceDetails {
   id: string
@@ -38,7 +38,6 @@ type ApiResponse<T> = {
 }
 
 const TIER_OPTIONS: { value: PackageTier; label: string; multiplier: number }[] = [
-  { value: 'SINGLE', label: 'Single Session', multiplier: 1 },
   { value: '4_SESSION', label: '4-Session Package', multiplier: 4 },
   { value: '8_SESSION', label: '8-Session Package', multiplier: 8 },
 ]
@@ -99,7 +98,7 @@ function CheckoutPageContent() {
 
   const [state, setState] = useState<CheckoutState>({
     service: null,
-    packageTier: 'SINGLE',
+    packageTier: '4_SESSION',
     discountCode: '',
     clientSecret: null,
     amount: 0,

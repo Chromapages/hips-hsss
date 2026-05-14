@@ -15,9 +15,9 @@
     "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md,yml}\"",
     "audit": "pnpm audit --audit-level=high",
     "db:migrate:commerce": "pnpm --filter @hips/db exec prisma migrate dev --schema=./prisma/commerce.prisma",
-    "db:migrate:session": "pnpm --filter @hips/db exec prisma migrate dev --schema=./prisma/session.prisma",
+    "db:migrate:session": "pnpm --filter @hips/session migrate:session",
     "db:studio:commerce": "pnpm --filter @hips/db exec prisma studio --schema=./prisma/commerce.prisma",
-    "db:studio:session": "pnpm --filter @hips/db exec prisma studio --schema=./prisma/session.prisma",
+    "db:studio:session": "pnpm --filter @hips/session studio",
     "db:seed": "pnpm --filter @hips/db exec ts-node prisma/seed.ts",
     "copycheck": "node scripts/copycheck.js"
   },

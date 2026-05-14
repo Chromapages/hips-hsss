@@ -181,12 +181,14 @@ export function SignUpForm() {
               type="text"
               autoComplete="name"
               placeholder="Alex Rivera"
+              aria-describedby={errors.displayName ? "displayName-error" : undefined}
+              aria-invalid={errors.displayName ? "true" : undefined}
               className="w-full rounded-lg border border-neutral-300 bg-white pl-10 pr-4 py-2.5 text-sm text-neutral-900 placeholder:text-neutral-400 focus:border-brand-primary focus:outline-none focus:ring-2 focus:ring-brand-primary/20 disabled:opacity-50"
               {...register('displayName')}
             />
           </div>
           {errors.displayName && (
-            <p className="text-xs text-semantic-error" role="alert">{errors.displayName.message}</p>
+            <p id="displayName-error" className="text-xs text-semantic-error" role="alert">{errors.displayName.message}</p>
           )}
         </div>
 
@@ -202,12 +204,14 @@ export function SignUpForm() {
               type="email"
               autoComplete="email"
               placeholder="you@example.com"
+              aria-describedby={errors.email ? "email-error" : undefined}
+              aria-invalid={errors.email ? "true" : undefined}
               className="w-full rounded-lg border border-neutral-300 bg-white pl-10 pr-4 py-2.5 text-sm text-neutral-900 placeholder:text-neutral-400 focus:border-brand-primary focus:outline-none focus:ring-2 focus:ring-brand-primary/20 disabled:opacity-50"
               {...register('email')}
             />
           </div>
           {errors.email && (
-            <p className="text-xs text-semantic-error" role="alert">{errors.email.message}</p>
+            <p id="email-error" className="text-xs text-semantic-error" role="alert">{errors.email.message}</p>
           )}
         </div>
 
@@ -223,6 +227,8 @@ export function SignUpForm() {
               type={showPassword ? 'text' : 'password'}
               autoComplete="new-password"
               placeholder="••••••••"
+              aria-describedby={errors.password ? "password-error" : undefined}
+              aria-invalid={errors.password ? "true" : undefined}
               className="w-full rounded-lg border border-neutral-300 bg-white pl-10 pr-10 py-2.5 text-sm text-neutral-900 placeholder:text-neutral-400 focus:border-brand-primary focus:outline-none focus:ring-2 focus:ring-brand-primary/20 disabled:opacity-50"
               {...register('password')}
             />
@@ -239,7 +245,7 @@ export function SignUpForm() {
           </div>
           {passwordValue && <PasswordStrengthIndicator password={passwordValue} />}
           {errors.password && (
-            <p className="text-xs text-semantic-error" role="alert">{errors.password.message}</p>
+            <p id="password-error" className="text-xs text-semantic-error" role="alert">{errors.password.message}</p>
           )}
         </div>
 
@@ -255,12 +261,14 @@ export function SignUpForm() {
               type={showPassword ? 'text' : 'password'}
               autoComplete="new-password"
               placeholder="••••••••"
+              aria-describedby={errors.confirmPassword ? "confirmPassword-error" : undefined}
+              aria-invalid={errors.confirmPassword ? "true" : undefined}
               className="w-full rounded-lg border border-neutral-300 bg-white pl-10 pr-4 py-2.5 text-sm text-neutral-900 placeholder:text-neutral-400 focus:border-brand-primary focus:outline-none focus:ring-2 focus:ring-brand-primary/20 disabled:opacity-50"
               {...register('confirmPassword')}
             />
           </div>
           {errors.confirmPassword && (
-            <p className="text-xs text-semantic-error" role="alert">{errors.confirmPassword.message}</p>
+            <p id="confirmPassword-error" className="text-xs text-semantic-error" role="alert">{errors.confirmPassword.message}</p>
           )}
         </div>
 

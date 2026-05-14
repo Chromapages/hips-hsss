@@ -1,7 +1,7 @@
 import { Controller, Get } from "@nestjs/common";
 import { VaultRepository } from "./vault.repository";
 
-@Controller("healthz")
+@Controller("health")
 export class VaultHealthController {
   constructor(private readonly vaultRepository: VaultRepository) {}
 

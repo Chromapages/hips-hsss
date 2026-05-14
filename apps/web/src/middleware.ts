@@ -18,6 +18,7 @@ const publicPaths = [
 ]
 
 const adminPaths = ['/admin']
+const sessionCookieName = '__session'
 
 function isPublicPath(pathname: string): boolean {
   return publicPaths.some((p) => pathname.startsWith(p))
@@ -36,18 +37,13 @@ export async function middleware(request: NextRequest) {
 
   // Admin routes need server-side auth check
   if (isAdminPath(pathname)) {
-    const authHeader = request.headers.get('authorization')
-    if (!authHeader?.startsWith('Bearer ')) {
-      // For admin pages, redirect to sign-in instead of returning 401 (better UX)
-      const signInUrl = new URL('/sign-in', request.url)
-      signInUrl.searchParams.set('redirect', pathname)
-      return NextResponse.redirect(signInUrl)
+    const sessionCookie = request.cookies.get(sessionCookieName)?.value
+    if (!sessionCookie) {
+      return new NextResponse(null, { status: 404 })
     }
 
-    const idToken = authHeader.slice(7)
-
     try {
-      const decoded = await adminAuth.verifyIdToken(idToken)
+      const decoded = await adminAuth.verifySessionCookie(sessionCookie, true)
 
       // Check if user has ADMIN role in database
       const dbUser = await commerceDb.user.findUnique({
@@ -56,10 +52,7 @@ export async function middleware(request: NextRequest) {
       })
 
       if (!dbUser || dbUser.role !== 'ADMIN') {
-        // Not an admin - redirect to home with error
-        const signInUrl = new URL('/sign-in', request.url)
-        signInUrl.searchParams.set('error', 'insufficient_permissions')
-        return NextResponse.redirect(signInUrl)
+        return new NextResponse(null, { status: 404 })
       }
 
       // User is admin - set headers and continue
@@ -70,7 +63,7 @@ export async function middleware(request: NextRequest) {
 
       return NextResponse.next({ request: { headers: requestHeaders } })
     } catch {
-      return NextResponse.redirect(new URL('/sign-in?error=invalid_token', request.url))
+      return new NextResponse(null, { status: 404 })
     }
   }
 

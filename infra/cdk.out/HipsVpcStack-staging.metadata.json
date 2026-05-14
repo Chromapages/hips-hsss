@@ -1,0 +1,1314 @@
+{
+  "/HipsVpcStack-staging": [
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "<anonymous> (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\bin\\hips.js:50:18)",
+        "...node internals..."
+      ]
+    },
+    {
+      "type": "aws:cdk:stack-tags",
+      "data": [
+        {
+          "key": "Environment",
+          "value": "staging"
+        },
+        {
+          "key": "HIPAA",
+          "value": "true"
+        },
+        {
+          "key": "Project",
+          "value": "HIPS"
+        }
+      ]
+    }
+  ],
+  "/HipsVpcStack-staging/SessionServiceSecurityGroupId": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "SessionServiceSecurityGroupId"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "new VpcStack (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\lib\\vpc-stack.js:190:9)",
+        "<anonymous> (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\bin\\hips.js:50:18)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/HipsVpcStack-staging/VaultServiceSecurityGroupId": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "VaultServiceSecurityGroupId"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "new VpcStack (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\lib\\vpc-stack.js:194:9)",
+        "<anonymous> (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\bin\\hips.js:50:18)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/HipsVpcStack-staging/AlbDnsName": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "AlbDnsName"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "new VpcStack (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\lib\\vpc-stack.js:199:9)",
+        "<anonymous> (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\bin\\hips.js:50:18)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/HipsVpcStack-staging/AlbArn": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "AlbArn"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "new VpcStack (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\lib\\vpc-stack.js:203:9)",
+        "<anonymous> (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\bin\\hips.js:50:18)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/HipsVpcStack-staging/VaultTargetGroupArn": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "VaultTargetGroupArn"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "new VpcStack (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\lib\\vpc-stack.js:207:9)",
+        "<anonymous> (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\bin\\hips.js:50:18)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/HipsVpcStack-staging/SessionTargetGroupArn": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "SessionTargetGroupArn"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "new VpcStack (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\lib\\vpc-stack.js:211:9)",
+        "<anonymous> (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\bin\\hips.js:50:18)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/HipsVpcStack-staging/SafetyTargetGroupArn": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "SafetyTargetGroupArn"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "new VpcStack (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\lib\\vpc-stack.js:215:9)",
+        "<anonymous> (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\bin\\hips.js:50:18)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/HipsVpcStack-staging/AlbSecurityGroupId": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "AlbSecurityGroupId"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "new VpcStack (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\lib\\vpc-stack.js:219:9)",
+        "<anonymous> (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\bin\\hips.js:50:18)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/HipsVpcStack-staging/BootstrapVersion": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "BootstrapVersion"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "....pnpm, node internals...",
+        "(no user code in 9007199254740991 frames, use --stack-trace-limit to capture more)"
+      ]
+    }
+  ],
+  "/HipsVpcStack-staging/CheckBootstrapVersion": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "CheckBootstrapVersion"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "....pnpm, node internals...",
+        "(no user code in 9007199254740991 frames, use --stack-trace-limit to capture more)"
+      ]
+    }
+  ],
+  "/HipsVpcStack-staging/HipsVpc/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "HipsVpc27B4BD3E"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new Vpc2 in .pnpm...",
+        "new VpcStack (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\lib\\vpc-stack.js:53:20)",
+        "<anonymous> (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\bin\\hips.js:50:18)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/HipsVpcStack-staging/HipsVpc/IGW": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "HipsVpcIGW1C94821A"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new Vpc2 in .pnpm...",
+        "new VpcStack (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\lib\\vpc-stack.js:53:20)",
+        "<anonymous> (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\bin\\hips.js:50:18)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/HipsVpcStack-staging/HipsVpc/VPCGW": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "HipsVpcVPCGW7C87244E"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new Vpc2 in .pnpm...",
+        "new VpcStack (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\lib\\vpc-stack.js:53:20)",
+        "<anonymous> (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\bin\\hips.js:50:18)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/HipsVpcStack-staging/VpcFlowLogRole/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "VpcFlowLogRoleF66FA0B2"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new Role2 in .pnpm...",
+        "new VpcStack (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\lib\\vpc-stack.js:75:29)",
+        "<anonymous> (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\bin\\hips.js:50:18)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/HipsVpcStack-staging/VpcFlowLogGroup/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "VpcFlowLogGroup86559C69"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new LogGroup2 in .pnpm...",
+        "new VpcStack (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\lib\\vpc-stack.js:80:66)",
+        "<anonymous> (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\bin\\hips.js:50:18)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/HipsVpcStack-staging/VpcFlowLog/FlowLog": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "VpcFlowLogF72230C7"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new FlowLog2 in .pnpm...",
+        "new VpcStack (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\lib\\vpc-stack.js:78:9)",
+        "<anonymous> (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\bin\\hips.js:50:18)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/HipsVpcStack-staging/SessionSecurityGroup/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "SessionSecurityGroup6C5EC642"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new SecurityGroup2 in .pnpm...",
+        "new VpcStack (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\lib\\vpc-stack.js:85:37)",
+        "<anonymous> (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\bin\\hips.js:50:18)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/HipsVpcStack-staging/SessionSecurityGroup/from HipsVpcStackstagingSessionServiceSecurityGroup1313D61D:5432": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "SessionSecurityGroupfromHipsVpcStackstagingSessionServiceSecurityGroup1313D61D54324D519A94"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...WrappedClass.<anonymous> in .pnpm...",
+        "new VpcStack (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\lib\\vpc-stack.js:112:35)",
+        "<anonymous> (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\bin\\hips.js:50:18)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/HipsVpcStack-staging/SessionSecurityGroup/from HipsVpcStackstagingSafetySecurityGroupF9D39A01:5432": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "SessionSecurityGroupfromHipsVpcStackstagingSafetySecurityGroupF9D39A0154324DBA023F"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...WrappedClass.<anonymous> in .pnpm...",
+        "new VpcStack (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\lib\\vpc-stack.js:114:35)",
+        "<anonymous> (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\bin\\hips.js:50:18)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/HipsVpcStack-staging/SessionServiceSecurityGroup/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "SessionServiceSecurityGroup4A78FF84"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new SecurityGroup2 in .pnpm...",
+        "new VpcStack (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\lib\\vpc-stack.js:87:44)",
+        "<anonymous> (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\bin\\hips.js:50:18)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/HipsVpcStack-staging/SessionServiceSecurityGroup/from HipsVpcStackstagingAlbSecurityGroup7A49BE68:3000": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "SessionServiceSecurityGroupfromHipsVpcStackstagingAlbSecurityGroup7A49BE68300068A60BD8"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...WrappedClass.<anonymous> in .pnpm...",
+        "new VpcStack (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\lib\\vpc-stack.js:117:42)",
+        "<anonymous> (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\bin\\hips.js:50:18)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/HipsVpcStack-staging/VaultSecurityGroup/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "VaultSecurityGroup523B5229"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new SecurityGroup2 in .pnpm...",
+        "new VpcStack (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\lib\\vpc-stack.js:88:35)",
+        "<anonymous> (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\bin\\hips.js:50:18)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/HipsVpcStack-staging/VaultSecurityGroup/from HipsVpcStackstagingVaultServiceSecurityGroup07D3A444:5432": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "VaultSecurityGroupfromHipsVpcStackstagingVaultServiceSecurityGroup07D3A44454327230F847"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...WrappedClass.<anonymous> in .pnpm...",
+        "new VpcStack (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\lib\\vpc-stack.js:108:33)",
+        "<anonymous> (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\bin\\hips.js:50:18)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/HipsVpcStack-staging/VaultSecurityGroup/to HipsVpcStackstagingVaultServiceSecurityGroup07D3A444:5432": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "VaultSecurityGrouptoHipsVpcStackstagingVaultServiceSecurityGroup07D3A444543259A6B527"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...WrappedClass.<anonymous> in .pnpm...",
+        "new VpcStack (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\lib\\vpc-stack.js:110:33)",
+        "<anonymous> (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\bin\\hips.js:50:18)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/HipsVpcStack-staging/VaultServiceSecurityGroup/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "VaultServiceSecurityGroup9CE125DB"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new SecurityGroup2 in .pnpm...",
+        "new VpcStack (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\lib\\vpc-stack.js:94:42)",
+        "<anonymous> (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\bin\\hips.js:50:18)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/HipsVpcStack-staging/VaultServiceSecurityGroup/from HipsVpcStackstagingAlbSecurityGroup7A49BE68:3001": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "VaultServiceSecurityGroupfromHipsVpcStackstagingAlbSecurityGroup7A49BE68300196F4C5CF"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...WrappedClass.<anonymous> in .pnpm...",
+        "new VpcStack (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\lib\\vpc-stack.js:116:40)",
+        "<anonymous> (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\bin\\hips.js:50:18)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/HipsVpcStack-staging/SafetySecurityGroup/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "SafetySecurityGroup9876E761"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new SecurityGroup2 in .pnpm...",
+        "new VpcStack (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\lib\\vpc-stack.js:95:36)",
+        "<anonymous> (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\bin\\hips.js:50:18)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/HipsVpcStack-staging/SafetySecurityGroup/from HipsVpcStackstagingAlbSecurityGroup7A49BE68:3002": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "SafetySecurityGroupfromHipsVpcStackstagingAlbSecurityGroup7A49BE6830026BD2F5AD"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...WrappedClass.<anonymous> in .pnpm...",
+        "new VpcStack (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\lib\\vpc-stack.js:118:34)",
+        "<anonymous> (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\bin\\hips.js:50:18)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/HipsVpcStack-staging/AlbSecurityGroup/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "AlbSecurityGroup86A59E99"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new SecurityGroup2 in .pnpm...",
+        "new VpcStack (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\lib\\vpc-stack.js:100:33)",
+        "<anonymous> (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\bin\\hips.js:50:18)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/HipsVpcStack-staging/HipsAlb/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "HipsAlbD3972786"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new ApplicationLoadBalancer2 in .pnpm...",
+        "new VpcStack (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\lib\\vpc-stack.js:120:21)",
+        "<anonymous> (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\bin\\hips.js:50:18)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/HipsVpcStack-staging/VaultTargetGroup/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "VaultTargetGroupBFA5DCE9"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new ApplicationTargetGroup2 in .pnpm...",
+        "new VpcStack (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\lib\\vpc-stack.js:134:34)",
+        "<anonymous> (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\bin\\hips.js:50:18)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/HipsVpcStack-staging/SessionTargetGroup/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "SessionTargetGroup95DBA1D0"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new ApplicationTargetGroup2 in .pnpm...",
+        "new VpcStack (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\lib\\vpc-stack.js:146:36)",
+        "<anonymous> (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\bin\\hips.js:50:18)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/HipsVpcStack-staging/SafetyTargetGroup/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "SafetyTargetGroup1BEB682E"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new ApplicationTargetGroup2 in .pnpm...",
+        "new VpcStack (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\lib\\vpc-stack.js:158:35)",
+        "<anonymous> (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\bin\\hips.js:50:18)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/HipsVpcStack-staging/CDKMetadata/Default": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "CDKMetadata"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "....pnpm, node internals...",
+        "(no user code in 9007199254740991 frames, use --stack-trace-limit to capture more)"
+      ]
+    }
+  ],
+  "/HipsVpcStack-staging/Exports/Output{\"Ref\":\"HipsVpcIsolatedDataSubnet1SubnetDD4261D0\"}": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "ExportsOutputRefHipsVpcIsolatedDataSubnet1SubnetDD4261D0E9C88E9D"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "....pnpm, node internals...",
+        "(no user code in 9007199254740991 frames, use --stack-trace-limit to capture more)"
+      ]
+    }
+  ],
+  "/HipsVpcStack-staging/Exports/Output{\"Ref\":\"HipsVpcIsolatedDataSubnet2SubnetD25B1430\"}": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "ExportsOutputRefHipsVpcIsolatedDataSubnet2SubnetD25B14306DAE4CD3"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "....pnpm, node internals...",
+        "(no user code in 9007199254740991 frames, use --stack-trace-limit to capture more)"
+      ]
+    }
+  ],
+  "/HipsVpcStack-staging/Exports/Output{\"Ref\":\"HipsVpcIsolatedDataSubnet3SubnetEABCA1B2\"}": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "ExportsOutputRefHipsVpcIsolatedDataSubnet3SubnetEABCA1B2400523FE"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "....pnpm, node internals...",
+        "(no user code in 9007199254740991 frames, use --stack-trace-limit to capture more)"
+      ]
+    }
+  ],
+  "/HipsVpcStack-staging/Exports/Output{\"Fn::GetAtt\":[\"VaultSecurityGroup523B5229\",\"GroupId\"]}": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "ExportsOutputFnGetAttVaultSecurityGroup523B5229GroupId58C0FF99"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "....pnpm, node internals...",
+        "(no user code in 9007199254740991 frames, use --stack-trace-limit to capture more)"
+      ]
+    }
+  ],
+  "/HipsVpcStack-staging/Exports/Output{\"Ref\":\"HipsVpcPrivateAppSubnet1SubnetF8A9AD18\"}": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "ExportsOutputRefHipsVpcPrivateAppSubnet1SubnetF8A9AD18078713A0"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "....pnpm, node internals...",
+        "(no user code in 9007199254740991 frames, use --stack-trace-limit to capture more)"
+      ]
+    }
+  ],
+  "/HipsVpcStack-staging/Exports/Output{\"Ref\":\"HipsVpcPrivateAppSubnet2SubnetFD675120\"}": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "ExportsOutputRefHipsVpcPrivateAppSubnet2SubnetFD675120650EC947"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "....pnpm, node internals...",
+        "(no user code in 9007199254740991 frames, use --stack-trace-limit to capture more)"
+      ]
+    }
+  ],
+  "/HipsVpcStack-staging/Exports/Output{\"Ref\":\"HipsVpcPrivateAppSubnet3Subnet86D528E7\"}": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "ExportsOutputRefHipsVpcPrivateAppSubnet3Subnet86D528E754885160"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "....pnpm, node internals...",
+        "(no user code in 9007199254740991 frames, use --stack-trace-limit to capture more)"
+      ]
+    }
+  ],
+  "/HipsVpcStack-staging/Exports/Output{\"Fn::GetAtt\":[\"SessionSecurityGroup6C5EC642\",\"GroupId\"]}": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "ExportsOutputFnGetAttSessionSecurityGroup6C5EC642GroupId13F29D0A"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "....pnpm, node internals...",
+        "(no user code in 9007199254740991 frames, use --stack-trace-limit to capture more)"
+      ]
+    }
+  ],
+  "/HipsVpcStack-staging/Exports/Output{\"Ref\":\"HipsVpc27B4BD3E\"}": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "ExportsOutputRefHipsVpc27B4BD3EE2F0C24D"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "....pnpm, node internals...",
+        "(no user code in 9007199254740991 frames, use --stack-trace-limit to capture more)"
+      ]
+    }
+  ],
+  "/HipsVpcStack-staging/Exports/Output{\"Fn::GetAtt\":[\"SafetySecurityGroup9876E761\",\"GroupId\"]}": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "ExportsOutputFnGetAttSafetySecurityGroup9876E761GroupIdB24E2730"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "....pnpm, node internals...",
+        "(no user code in 9007199254740991 frames, use --stack-trace-limit to capture more)"
+      ]
+    }
+  ],
+  "/HipsVpcStack-staging/HipsVpc/PublicSubnet1/Subnet": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "HipsVpcPublicSubnet1SubnetB1B3B839"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...D:\\WORK\\hsss\\hips\\build\\node_modules\\.pnpm\\aws-cdk-lib@2.253.1_constructs@10.6.0\\node_modules\\aws-cdk-lib\\aws-ec2\\lib\\vpc.js:1:257 in .pnpm...",
+        "Array.forEach (:)",
+        "...new Vpc2 in .pnpm...",
+        "new VpcStack (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\lib\\vpc-stack.js:53:20)",
+        "<anonymous> (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\bin\\hips.js:50:18)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/HipsVpcStack-staging/HipsVpc/PublicSubnet1/RouteTable": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "HipsVpcPublicSubnet1RouteTableEBF4039A"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...D:\\WORK\\hsss\\hips\\build\\node_modules\\.pnpm\\aws-cdk-lib@2.253.1_constructs@10.6.0\\node_modules\\aws-cdk-lib\\aws-ec2\\lib\\vpc.js:1:257 in .pnpm...",
+        "Array.forEach (:)",
+        "...new Vpc2 in .pnpm...",
+        "new VpcStack (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\lib\\vpc-stack.js:53:20)",
+        "<anonymous> (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\bin\\hips.js:50:18)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/HipsVpcStack-staging/HipsVpc/PublicSubnet1/RouteTableAssociation": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "HipsVpcPublicSubnet1RouteTableAssociation4A7D0842"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...D:\\WORK\\hsss\\hips\\build\\node_modules\\.pnpm\\aws-cdk-lib@2.253.1_constructs@10.6.0\\node_modules\\aws-cdk-lib\\aws-ec2\\lib\\vpc.js:1:257 in .pnpm...",
+        "Array.forEach (:)",
+        "...new Vpc2 in .pnpm...",
+        "new VpcStack (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\lib\\vpc-stack.js:53:20)",
+        "<anonymous> (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\bin\\hips.js:50:18)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/HipsVpcStack-staging/HipsVpc/PublicSubnet1/DefaultRoute": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "HipsVpcPublicSubnet1DefaultRouteF52FE2F1"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...D:\\WORK\\hsss\\hips\\build\\node_modules\\.pnpm\\aws-cdk-lib@2.253.1_constructs@10.6.0\\node_modules\\aws-cdk-lib\\aws-ec2\\lib\\vpc.js:1:197 in .pnpm...",
+        "Array.forEach (:)",
+        "...new Vpc2 in .pnpm...",
+        "new VpcStack (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\lib\\vpc-stack.js:53:20)",
+        "<anonymous> (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\bin\\hips.js:50:18)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/HipsVpcStack-staging/HipsVpc/PublicSubnet1/EIP": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "HipsVpcPublicSubnet1EIP83E21E05"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new Vpc2 in .pnpm...",
+        "new VpcStack (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\lib\\vpc-stack.js:53:20)",
+        "<anonymous> (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\bin\\hips.js:50:18)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/HipsVpcStack-staging/HipsVpc/PublicSubnet1/NATGateway": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "HipsVpcPublicSubnet1NATGateway81249D07"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new Vpc2 in .pnpm...",
+        "new VpcStack (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\lib\\vpc-stack.js:53:20)",
+        "<anonymous> (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\bin\\hips.js:50:18)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/HipsVpcStack-staging/HipsVpc/PublicSubnet2/Subnet": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "HipsVpcPublicSubnet2Subnet6E226507"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...D:\\WORK\\hsss\\hips\\build\\node_modules\\.pnpm\\aws-cdk-lib@2.253.1_constructs@10.6.0\\node_modules\\aws-cdk-lib\\aws-ec2\\lib\\vpc.js:1:257 in .pnpm...",
+        "Array.forEach (:)",
+        "...new Vpc2 in .pnpm...",
+        "new VpcStack (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\lib\\vpc-stack.js:53:20)",
+        "<anonymous> (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\bin\\hips.js:50:18)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/HipsVpcStack-staging/HipsVpc/PublicSubnet2/RouteTable": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "HipsVpcPublicSubnet2RouteTableEE740BA7"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...D:\\WORK\\hsss\\hips\\build\\node_modules\\.pnpm\\aws-cdk-lib@2.253.1_constructs@10.6.0\\node_modules\\aws-cdk-lib\\aws-ec2\\lib\\vpc.js:1:257 in .pnpm...",
+        "Array.forEach (:)",
+        "...new Vpc2 in .pnpm...",
+        "new VpcStack (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\lib\\vpc-stack.js:53:20)",
+        "<anonymous> (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\bin\\hips.js:50:18)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/HipsVpcStack-staging/HipsVpc/PublicSubnet2/RouteTableAssociation": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "HipsVpcPublicSubnet2RouteTableAssociationDD22EF72"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...D:\\WORK\\hsss\\hips\\build\\node_modules\\.pnpm\\aws-cdk-lib@2.253.1_constructs@10.6.0\\node_modules\\aws-cdk-lib\\aws-ec2\\lib\\vpc.js:1:257 in .pnpm...",
+        "Array.forEach (:)",
+        "...new Vpc2 in .pnpm...",
+        "new VpcStack (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\lib\\vpc-stack.js:53:20)",
+        "<anonymous> (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\bin\\hips.js:50:18)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/HipsVpcStack-staging/HipsVpc/PublicSubnet2/DefaultRoute": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "HipsVpcPublicSubnet2DefaultRoute1BC67FD1"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...D:\\WORK\\hsss\\hips\\build\\node_modules\\.pnpm\\aws-cdk-lib@2.253.1_constructs@10.6.0\\node_modules\\aws-cdk-lib\\aws-ec2\\lib\\vpc.js:1:197 in .pnpm...",
+        "Array.forEach (:)",
+        "...new Vpc2 in .pnpm...",
+        "new VpcStack (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\lib\\vpc-stack.js:53:20)",
+        "<anonymous> (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\bin\\hips.js:50:18)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/HipsVpcStack-staging/HipsVpc/PublicSubnet3/Subnet": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "HipsVpcPublicSubnet3Subnet67888DA2"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...D:\\WORK\\hsss\\hips\\build\\node_modules\\.pnpm\\aws-cdk-lib@2.253.1_constructs@10.6.0\\node_modules\\aws-cdk-lib\\aws-ec2\\lib\\vpc.js:1:257 in .pnpm...",
+        "Array.forEach (:)",
+        "...new Vpc2 in .pnpm...",
+        "new VpcStack (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\lib\\vpc-stack.js:53:20)",
+        "<anonymous> (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\bin\\hips.js:50:18)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/HipsVpcStack-staging/HipsVpc/PublicSubnet3/RouteTable": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "HipsVpcPublicSubnet3RouteTableBD25017C"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...D:\\WORK\\hsss\\hips\\build\\node_modules\\.pnpm\\aws-cdk-lib@2.253.1_constructs@10.6.0\\node_modules\\aws-cdk-lib\\aws-ec2\\lib\\vpc.js:1:257 in .pnpm...",
+        "Array.forEach (:)",
+        "...new Vpc2 in .pnpm...",
+        "new VpcStack (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\lib\\vpc-stack.js:53:20)",
+        "<anonymous> (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\bin\\hips.js:50:18)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/HipsVpcStack-staging/HipsVpc/PublicSubnet3/RouteTableAssociation": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "HipsVpcPublicSubnet3RouteTableAssociation74478297"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...D:\\WORK\\hsss\\hips\\build\\node_modules\\.pnpm\\aws-cdk-lib@2.253.1_constructs@10.6.0\\node_modules\\aws-cdk-lib\\aws-ec2\\lib\\vpc.js:1:257 in .pnpm...",
+        "Array.forEach (:)",
+        "...new Vpc2 in .pnpm...",
+        "new VpcStack (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\lib\\vpc-stack.js:53:20)",
+        "<anonymous> (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\bin\\hips.js:50:18)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/HipsVpcStack-staging/HipsVpc/PublicSubnet3/DefaultRoute": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "HipsVpcPublicSubnet3DefaultRoute268898BC"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...D:\\WORK\\hsss\\hips\\build\\node_modules\\.pnpm\\aws-cdk-lib@2.253.1_constructs@10.6.0\\node_modules\\aws-cdk-lib\\aws-ec2\\lib\\vpc.js:1:197 in .pnpm...",
+        "Array.forEach (:)",
+        "...new Vpc2 in .pnpm...",
+        "new VpcStack (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\lib\\vpc-stack.js:53:20)",
+        "<anonymous> (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\bin\\hips.js:50:18)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/HipsVpcStack-staging/HipsVpc/PrivateAppSubnet1/Subnet": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "HipsVpcPrivateAppSubnet1SubnetF8A9AD18"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...D:\\WORK\\hsss\\hips\\build\\node_modules\\.pnpm\\aws-cdk-lib@2.253.1_constructs@10.6.0\\node_modules\\aws-cdk-lib\\aws-ec2\\lib\\vpc.js:1:260 in .pnpm...",
+        "Array.forEach (:)",
+        "...new Vpc2 in .pnpm...",
+        "new VpcStack (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\lib\\vpc-stack.js:53:20)",
+        "<anonymous> (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\bin\\hips.js:50:18)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/HipsVpcStack-staging/HipsVpc/PrivateAppSubnet1/RouteTable": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "HipsVpcPrivateAppSubnet1RouteTableCACEE39A"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...D:\\WORK\\hsss\\hips\\build\\node_modules\\.pnpm\\aws-cdk-lib@2.253.1_constructs@10.6.0\\node_modules\\aws-cdk-lib\\aws-ec2\\lib\\vpc.js:1:260 in .pnpm...",
+        "Array.forEach (:)",
+        "...new Vpc2 in .pnpm...",
+        "new VpcStack (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\lib\\vpc-stack.js:53:20)",
+        "<anonymous> (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\bin\\hips.js:50:18)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/HipsVpcStack-staging/HipsVpc/PrivateAppSubnet1/RouteTableAssociation": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "HipsVpcPrivateAppSubnet1RouteTableAssociationBEB421CF"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...D:\\WORK\\hsss\\hips\\build\\node_modules\\.pnpm\\aws-cdk-lib@2.253.1_constructs@10.6.0\\node_modules\\aws-cdk-lib\\aws-ec2\\lib\\vpc.js:1:260 in .pnpm...",
+        "Array.forEach (:)",
+        "...new Vpc2 in .pnpm...",
+        "new VpcStack (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\lib\\vpc-stack.js:53:20)",
+        "<anonymous> (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\bin\\hips.js:50:18)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/HipsVpcStack-staging/HipsVpc/PrivateAppSubnet1/DefaultRoute": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "HipsVpcPrivateAppSubnet1DefaultRoute377475A2"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new Vpc2 in .pnpm...",
+        "new VpcStack (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\lib\\vpc-stack.js:53:20)",
+        "<anonymous> (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\bin\\hips.js:50:18)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/HipsVpcStack-staging/HipsVpc/PrivateAppSubnet2/Subnet": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "HipsVpcPrivateAppSubnet2SubnetFD675120"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...D:\\WORK\\hsss\\hips\\build\\node_modules\\.pnpm\\aws-cdk-lib@2.253.1_constructs@10.6.0\\node_modules\\aws-cdk-lib\\aws-ec2\\lib\\vpc.js:1:260 in .pnpm...",
+        "Array.forEach (:)",
+        "...new Vpc2 in .pnpm...",
+        "new VpcStack (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\lib\\vpc-stack.js:53:20)",
+        "<anonymous> (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\bin\\hips.js:50:18)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/HipsVpcStack-staging/HipsVpc/PrivateAppSubnet2/RouteTable": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "HipsVpcPrivateAppSubnet2RouteTable6D63881C"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...D:\\WORK\\hsss\\hips\\build\\node_modules\\.pnpm\\aws-cdk-lib@2.253.1_constructs@10.6.0\\node_modules\\aws-cdk-lib\\aws-ec2\\lib\\vpc.js:1:260 in .pnpm...",
+        "Array.forEach (:)",
+        "...new Vpc2 in .pnpm...",
+        "new VpcStack (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\lib\\vpc-stack.js:53:20)",
+        "<anonymous> (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\bin\\hips.js:50:18)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/HipsVpcStack-staging/HipsVpc/PrivateAppSubnet2/RouteTableAssociation": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "HipsVpcPrivateAppSubnet2RouteTableAssociationED707D12"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...D:\\WORK\\hsss\\hips\\build\\node_modules\\.pnpm\\aws-cdk-lib@2.253.1_constructs@10.6.0\\node_modules\\aws-cdk-lib\\aws-ec2\\lib\\vpc.js:1:260 in .pnpm...",
+        "Array.forEach (:)",
+        "...new Vpc2 in .pnpm...",
+        "new VpcStack (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\lib\\vpc-stack.js:53:20)",
+        "<anonymous> (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\bin\\hips.js:50:18)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/HipsVpcStack-staging/HipsVpc/PrivateAppSubnet2/DefaultRoute": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "HipsVpcPrivateAppSubnet2DefaultRouteE1AD3468"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new Vpc2 in .pnpm...",
+        "new VpcStack (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\lib\\vpc-stack.js:53:20)",
+        "<anonymous> (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\bin\\hips.js:50:18)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/HipsVpcStack-staging/HipsVpc/PrivateAppSubnet3/Subnet": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "HipsVpcPrivateAppSubnet3Subnet86D528E7"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...D:\\WORK\\hsss\\hips\\build\\node_modules\\.pnpm\\aws-cdk-lib@2.253.1_constructs@10.6.0\\node_modules\\aws-cdk-lib\\aws-ec2\\lib\\vpc.js:1:260 in .pnpm...",
+        "Array.forEach (:)",
+        "...new Vpc2 in .pnpm...",
+        "new VpcStack (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\lib\\vpc-stack.js:53:20)",
+        "<anonymous> (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\bin\\hips.js:50:18)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/HipsVpcStack-staging/HipsVpc/PrivateAppSubnet3/RouteTable": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "HipsVpcPrivateAppSubnet3RouteTable93DEE1CA"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...D:\\WORK\\hsss\\hips\\build\\node_modules\\.pnpm\\aws-cdk-lib@2.253.1_constructs@10.6.0\\node_modules\\aws-cdk-lib\\aws-ec2\\lib\\vpc.js:1:260 in .pnpm...",
+        "Array.forEach (:)",
+        "...new Vpc2 in .pnpm...",
+        "new VpcStack (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\lib\\vpc-stack.js:53:20)",
+        "<anonymous> (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\bin\\hips.js:50:18)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/HipsVpcStack-staging/HipsVpc/PrivateAppSubnet3/RouteTableAssociation": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "HipsVpcPrivateAppSubnet3RouteTableAssociation0F720A00"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...D:\\WORK\\hsss\\hips\\build\\node_modules\\.pnpm\\aws-cdk-lib@2.253.1_constructs@10.6.0\\node_modules\\aws-cdk-lib\\aws-ec2\\lib\\vpc.js:1:260 in .pnpm...",
+        "Array.forEach (:)",
+        "...new Vpc2 in .pnpm...",
+        "new VpcStack (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\lib\\vpc-stack.js:53:20)",
+        "<anonymous> (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\bin\\hips.js:50:18)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/HipsVpcStack-staging/HipsVpc/PrivateAppSubnet3/DefaultRoute": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "HipsVpcPrivateAppSubnet3DefaultRoute2E04F518"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new Vpc2 in .pnpm...",
+        "new VpcStack (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\lib\\vpc-stack.js:53:20)",
+        "<anonymous> (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\bin\\hips.js:50:18)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/HipsVpcStack-staging/HipsVpc/IsolatedDataSubnet1/Subnet": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "HipsVpcIsolatedDataSubnet1SubnetDD4261D0"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...D:\\WORK\\hsss\\hips\\build\\node_modules\\.pnpm\\aws-cdk-lib@2.253.1_constructs@10.6.0\\node_modules\\aws-cdk-lib\\aws-ec2\\lib\\vpc.js:1:262 in .pnpm...",
+        "Array.forEach (:)",
+        "...new Vpc2 in .pnpm...",
+        "new VpcStack (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\lib\\vpc-stack.js:53:20)",
+        "<anonymous> (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\bin\\hips.js:50:18)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/HipsVpcStack-staging/HipsVpc/IsolatedDataSubnet1/RouteTable": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "HipsVpcIsolatedDataSubnet1RouteTable1D4E105C"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...D:\\WORK\\hsss\\hips\\build\\node_modules\\.pnpm\\aws-cdk-lib@2.253.1_constructs@10.6.0\\node_modules\\aws-cdk-lib\\aws-ec2\\lib\\vpc.js:1:262 in .pnpm...",
+        "Array.forEach (:)",
+        "...new Vpc2 in .pnpm...",
+        "new VpcStack (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\lib\\vpc-stack.js:53:20)",
+        "<anonymous> (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\bin\\hips.js:50:18)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/HipsVpcStack-staging/HipsVpc/IsolatedDataSubnet1/RouteTableAssociation": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "HipsVpcIsolatedDataSubnet1RouteTableAssociation7CC17009"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...D:\\WORK\\hsss\\hips\\build\\node_modules\\.pnpm\\aws-cdk-lib@2.253.1_constructs@10.6.0\\node_modules\\aws-cdk-lib\\aws-ec2\\lib\\vpc.js:1:262 in .pnpm...",
+        "Array.forEach (:)",
+        "...new Vpc2 in .pnpm...",
+        "new VpcStack (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\lib\\vpc-stack.js:53:20)",
+        "<anonymous> (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\bin\\hips.js:50:18)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/HipsVpcStack-staging/HipsVpc/IsolatedDataSubnet2/Subnet": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "HipsVpcIsolatedDataSubnet2SubnetD25B1430"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...D:\\WORK\\hsss\\hips\\build\\node_modules\\.pnpm\\aws-cdk-lib@2.253.1_constructs@10.6.0\\node_modules\\aws-cdk-lib\\aws-ec2\\lib\\vpc.js:1:262 in .pnpm...",
+        "Array.forEach (:)",
+        "...new Vpc2 in .pnpm...",
+        "new VpcStack (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\lib\\vpc-stack.js:53:20)",
+        "<anonymous> (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\bin\\hips.js:50:18)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/HipsVpcStack-staging/HipsVpc/IsolatedDataSubnet2/RouteTable": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "HipsVpcIsolatedDataSubnet2RouteTable7F77B3C6"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...D:\\WORK\\hsss\\hips\\build\\node_modules\\.pnpm\\aws-cdk-lib@2.253.1_constructs@10.6.0\\node_modules\\aws-cdk-lib\\aws-ec2\\lib\\vpc.js:1:262 in .pnpm...",
+        "Array.forEach (:)",
+        "...new Vpc2 in .pnpm...",
+        "new VpcStack (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\lib\\vpc-stack.js:53:20)",
+        "<anonymous> (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\bin\\hips.js:50:18)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/HipsVpcStack-staging/HipsVpc/IsolatedDataSubnet2/RouteTableAssociation": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "HipsVpcIsolatedDataSubnet2RouteTableAssociation7658C97E"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...D:\\WORK\\hsss\\hips\\build\\node_modules\\.pnpm\\aws-cdk-lib@2.253.1_constructs@10.6.0\\node_modules\\aws-cdk-lib\\aws-ec2\\lib\\vpc.js:1:262 in .pnpm...",
+        "Array.forEach (:)",
+        "...new Vpc2 in .pnpm...",
+        "new VpcStack (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\lib\\vpc-stack.js:53:20)",
+        "<anonymous> (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\bin\\hips.js:50:18)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/HipsVpcStack-staging/HipsVpc/IsolatedDataSubnet3/Subnet": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "HipsVpcIsolatedDataSubnet3SubnetEABCA1B2"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...D:\\WORK\\hsss\\hips\\build\\node_modules\\.pnpm\\aws-cdk-lib@2.253.1_constructs@10.6.0\\node_modules\\aws-cdk-lib\\aws-ec2\\lib\\vpc.js:1:262 in .pnpm...",
+        "Array.forEach (:)",
+        "...new Vpc2 in .pnpm...",
+        "new VpcStack (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\lib\\vpc-stack.js:53:20)",
+        "<anonymous> (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\bin\\hips.js:50:18)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/HipsVpcStack-staging/HipsVpc/IsolatedDataSubnet3/RouteTable": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "HipsVpcIsolatedDataSubnet3RouteTableBEB97891"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...D:\\WORK\\hsss\\hips\\build\\node_modules\\.pnpm\\aws-cdk-lib@2.253.1_constructs@10.6.0\\node_modules\\aws-cdk-lib\\aws-ec2\\lib\\vpc.js:1:262 in .pnpm...",
+        "Array.forEach (:)",
+        "...new Vpc2 in .pnpm...",
+        "new VpcStack (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\lib\\vpc-stack.js:53:20)",
+        "<anonymous> (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\bin\\hips.js:50:18)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/HipsVpcStack-staging/HipsVpc/IsolatedDataSubnet3/RouteTableAssociation": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "HipsVpcIsolatedDataSubnet3RouteTableAssociation857F7612"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...D:\\WORK\\hsss\\hips\\build\\node_modules\\.pnpm\\aws-cdk-lib@2.253.1_constructs@10.6.0\\node_modules\\aws-cdk-lib\\aws-ec2\\lib\\vpc.js:1:262 in .pnpm...",
+        "Array.forEach (:)",
+        "...new Vpc2 in .pnpm...",
+        "new VpcStack (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\lib\\vpc-stack.js:53:20)",
+        "<anonymous> (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\bin\\hips.js:50:18)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/HipsVpcStack-staging/VpcFlowLogRole/DefaultPolicy/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "VpcFlowLogRoleDefaultPolicy0C9618DE"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new FlowLog2 in .pnpm...",
+        "new VpcStack (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\lib\\vpc-stack.js:78:9)",
+        "<anonymous> (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\bin\\hips.js:50:18)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/HipsVpcStack-staging/HipsAlb/HttpListener/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "HipsAlbHttpListener811C8C12"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...WrappedClass.<anonymous> in .pnpm...",
+        "new VpcStack (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\lib\\vpc-stack.js:129:34)",
+        "<anonymous> (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\bin\\hips.js:50:18)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/HipsVpcStack-staging/HipsAlb/HttpListener/VaultTargetGroupRule/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "HipsAlbHttpListenerVaultTargetGroupRule5D461639"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...WrappedClass.<anonymous> in .pnpm...",
+        "new VpcStack (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\lib\\vpc-stack.js:170:22)",
+        "<anonymous> (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\bin\\hips.js:50:18)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/HipsVpcStack-staging/HipsAlb/HttpListener/SessionTargetGroupRule/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "HipsAlbHttpListenerSessionTargetGroupRuleD6643A26"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...WrappedClass.<anonymous> in .pnpm...",
+        "new VpcStack (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\lib\\vpc-stack.js:175:22)",
+        "<anonymous> (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\bin\\hips.js:50:18)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/HipsVpcStack-staging/HipsAlb/HttpListener/SafetyTargetGroupRule/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "HipsAlbHttpListenerSafetyTargetGroupRule7412A756"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...WrappedClass.<anonymous> in .pnpm...",
+        "new VpcStack (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\lib\\vpc-stack.js:180:22)",
+        "<anonymous> (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\bin\\hips.js:50:18)",
+        "...node internals..."
+      ]
+    }
+  ]
+}

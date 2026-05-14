@@ -1,0 +1,257 @@
+{
+  "/HipsDatabaseStack": [
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "<anonymous> (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\bin\\hips.js:53:23)",
+        "...node internals..."
+      ]
+    },
+    {
+      "type": "aws:cdk:stack-tags",
+      "data": [
+        {
+          "key": "Environment",
+          "value": "development"
+        },
+        {
+          "key": "HIPAA",
+          "value": "true"
+        },
+        {
+          "key": "Project",
+          "value": "HIPS"
+        }
+      ]
+    }
+  ],
+  "/HipsDatabaseStack/SessionKmsKeyId": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "SessionKmsKeyId"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "new DatabaseStack (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\lib\\database-stack.js:83:9)",
+        "<anonymous> (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\bin\\hips.js:53:23)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/HipsDatabaseStack/BootstrapVersion": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "BootstrapVersion"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "....pnpm, node internals...",
+        "(no user code in 9007199254740991 frames, use --stack-trace-limit to capture more)"
+      ]
+    }
+  ],
+  "/HipsDatabaseStack/CheckBootstrapVersion": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "CheckBootstrapVersion"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "....pnpm, node internals...",
+        "(no user code in 9007199254740991 frames, use --stack-trace-limit to capture more)"
+      ]
+    }
+  ],
+  "/HipsDatabaseStack/VaultDb/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "VaultDbD1BEAB0A"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new DatabaseInstance2 in .pnpm...",
+        "new DatabaseStack (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\lib\\database-stack.js:49:24)",
+        "<anonymous> (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\bin\\hips.js:53:23)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/HipsDatabaseStack/SessionDbKey/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "SessionDbKeyEA562358"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new Key2 in .pnpm...",
+        "new DatabaseStack (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\lib\\database-stack.js:64:30)",
+        "<anonymous> (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\bin\\hips.js:53:23)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/HipsDatabaseStack/SessionDb/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "SessionDb1797FEDD"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new DatabaseInstance2 in .pnpm...",
+        "new DatabaseStack (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\lib\\database-stack.js:70:26)",
+        "<anonymous> (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\bin\\hips.js:53:23)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/HipsDatabaseStack/CDKMetadata/Default": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "CDKMetadata"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "....pnpm, node internals...",
+        "(no user code in 9007199254740991 frames, use --stack-trace-limit to capture more)"
+      ]
+    }
+  ],
+  "/HipsDatabaseStack/Exports/Output{\"Fn::GetAtt\":[\"SessionDbKeyEA562358\",\"Arn\"]}": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "ExportsOutputFnGetAttSessionDbKeyEA562358ArnBF98BCA2"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "....pnpm, node internals...",
+        "(no user code in 9007199254740991 frames, use --stack-trace-limit to capture more)"
+      ]
+    }
+  ],
+  "/HipsDatabaseStack/Exports/Output{\"Ref\":\"SessionDbKeyEA562358\"}": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "ExportsOutputRefSessionDbKeyEA562358D4E45D1D"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "....pnpm, node internals...",
+        "(no user code in 9007199254740991 frames, use --stack-trace-limit to capture more)"
+      ]
+    }
+  ],
+  "/HipsDatabaseStack/VaultDb/SubnetGroup/Default": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "VaultDbSubnetGroup4DDB5CF6"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new DatabaseInstance2 in .pnpm...",
+        "new DatabaseStack (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\lib\\database-stack.js:49:24)",
+        "<anonymous> (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\bin\\hips.js:53:23)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/HipsDatabaseStack/VaultDb/Secret/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "HipsDatabaseStackVaultDbSecret12D8EA613fdaad7efa858a3daf9490cf0a702aeb"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new DatabaseInstance2 in .pnpm...",
+        "new DatabaseStack (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\lib\\database-stack.js:49:24)",
+        "<anonymous> (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\bin\\hips.js:53:23)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/HipsDatabaseStack/SessionDbKey/Alias/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "SessionDbKeyAlias12DE30BF"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new Key2 in .pnpm...",
+        "new DatabaseStack (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\lib\\database-stack.js:64:30)",
+        "<anonymous> (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\bin\\hips.js:53:23)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/HipsDatabaseStack/SessionDb/SubnetGroup/Default": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "SessionDbSubnetGroupA5CFA2A5"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new DatabaseInstance2 in .pnpm...",
+        "new DatabaseStack (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\lib\\database-stack.js:70:26)",
+        "<anonymous> (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\bin\\hips.js:53:23)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/HipsDatabaseStack/SessionDb/Secret/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "HipsDatabaseStackSessionDbSecret3E2312E03fdaad7efa858a3daf9490cf0a702aeb"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new DatabaseInstance2 in .pnpm...",
+        "new DatabaseStack (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\lib\\database-stack.js:70:26)",
+        "<anonymous> (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\bin\\hips.js:53:23)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/HipsDatabaseStack/VaultDb/Secret/Attachment/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "VaultDbSecretAttachmentCA3FBEEC"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new DatabaseInstance2 in .pnpm...",
+        "new DatabaseStack (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\lib\\database-stack.js:49:24)",
+        "<anonymous> (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\bin\\hips.js:53:23)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/HipsDatabaseStack/SessionDb/Secret/Attachment/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "SessionDbSecretAttachmentE38F5228"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new DatabaseInstance2 in .pnpm...",
+        "new DatabaseStack (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\lib\\database-stack.js:70:26)",
+        "<anonymous> (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\bin\\hips.js:53:23)",
+        "...node internals..."
+      ]
+    }
+  ]
+}

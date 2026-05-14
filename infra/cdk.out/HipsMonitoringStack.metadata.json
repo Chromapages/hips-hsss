@@ -1,0 +1,156 @@
+{
+  "/HipsMonitoringStack": [
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "<anonymous> (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\bin\\hips.js:64:1)",
+        "...node internals..."
+      ]
+    },
+    {
+      "type": "aws:cdk:stack-tags",
+      "data": [
+        {
+          "key": "Environment",
+          "value": "development"
+        },
+        {
+          "key": "HIPAA",
+          "value": "true"
+        },
+        {
+          "key": "Project",
+          "value": "HIPS"
+        }
+      ]
+    }
+  ],
+  "/HipsMonitoringStack/AlertTopicArn": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "AlertTopicArn"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "new MonitoringStack (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\lib\\monitoring-stack.js:174:9)",
+        "<anonymous> (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\bin\\hips.js:64:1)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/HipsMonitoringStack/BootstrapVersion": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "BootstrapVersion"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "....pnpm, node internals...",
+        "(no user code in 9007199254740991 frames, use --stack-trace-limit to capture more)"
+      ]
+    }
+  ],
+  "/HipsMonitoringStack/CheckBootstrapVersion": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "CheckBootstrapVersion"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "....pnpm, node internals...",
+        "(no user code in 9007199254740991 frames, use --stack-trace-limit to capture more)"
+      ]
+    }
+  ],
+  "/HipsMonitoringStack/HipsAlertTopic/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "HipsAlertTopic7BEA4376"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new Topic2 in .pnpm...",
+        "new MonitoringStack (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\lib\\monitoring-stack.js:47:27)",
+        "<anonymous> (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\bin\\hips.js:64:1)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/HipsMonitoringStack/VaultAccessSpikeAlarm/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "VaultAccessSpikeAlarm5FF536CC"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new Alarm2 in .pnpm...",
+        "new MonitoringStack (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\lib\\monitoring-stack.js:78:34)",
+        "<anonymous> (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\bin\\hips.js:64:1)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/HipsMonitoringStack/VaultAuthFailureAlarm/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "VaultAuthFailureAlarm05F09BDA"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new Alarm2 in .pnpm...",
+        "new MonitoringStack (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\lib\\monitoring-stack.js:89:32)",
+        "<anonymous> (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\bin\\hips.js:64:1)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/HipsMonitoringStack/KmsDecryptSpikeAlarm/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "KmsDecryptSpikeAlarmAD226F86"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new Alarm2 in .pnpm...",
+        "new MonitoringStack (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\lib\\monitoring-stack.js:109:33)",
+        "<anonymous> (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\bin\\hips.js:64:1)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/HipsMonitoringStack/HipsDashboard/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "HipsDashboardAD2D1B7E"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new Dashboard2 in .pnpm...",
+        "new MonitoringStack (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\lib\\monitoring-stack.js:118:27)",
+        "<anonymous> (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\bin\\hips.js:64:1)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/HipsMonitoringStack/CDKMetadata/Default": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "CDKMetadata"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "....pnpm, node internals...",
+        "(no user code in 9007199254740991 frames, use --stack-trace-limit to capture more)"
+      ]
+    }
+  ]
+}

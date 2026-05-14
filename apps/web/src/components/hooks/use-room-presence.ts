@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import type { Unsubscribe } from 'firebase/firestore'
 import {
   subscribeToRoom,
@@ -99,6 +99,9 @@ export function useActiveRooms(
 
   const unsubRef = useRef<Unsubscribe | null>(null)
 
+  const statusKey = useMemo(() => statuses.join(','), [statuses])
+  const stableStatuses = useMemo(() => statusKey.split(',') as RoomStatus[], [statusKey])
+
   useEffect(() => {
     let isMounted = true
 
@@ -108,14 +111,14 @@ export function useActiveRooms(
         setRooms(r)
         setLoading(false)
       },
-      statuses,
+      stableStatuses,
     )
 
     return () => {
       isMounted = false
       unsubRef.current?.()
     }
-  }, [statuses.join(',')]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [stableStatuses])
 
   return { rooms, loading }
 }

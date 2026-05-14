@@ -109,3 +109,207 @@ jobs:
       - run: pnpm lint
       - run: pnpm test
       - run: pnpm audit --audit-level=high
+
+  e2e:
+    name: E2E Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: [ci]
+    if: github.event_name == 'pull_request'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 9
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Build web app
+        run: pnpm --filter @hips/web build
+
+      - name: Run E2E tests
+        env:
+          NEXT_PUBLIC_APP_URL: http://localhost:3000
+          DATABASE_URL: postgresql://test:test@localhost:5432/hips_test
+          SESSION_DATABASE_URL: postgresql://test:test@localhost:5432/hips_session_test
+          VAULT_DATABASE_URL: postgresql://test:test@localhost:5432/hips_vault_test
+          FIREBASE_PROJECT_ID: test-project
+          FIREBASE_CLIENT_EMAIL: test@test.iam
+          FIREBASE_PRIVATE_KEY: "test-key"
+        run: |
+          # Start the app in background
+          pnpm --filter @hips/web start &
+          sleep 10
+          # Run Playwright tests
+          npx playwright test
+          # Cleanup
+          pkill -f "next start" || true
+
+  deploy-staging:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    needs: [e2e]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Login to ECR
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build and push Docker images
+        env:
+          ECR_REGISTRY: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          docker build -t $ECR_REGISTRY/hips-vault-service:$IMAGE_TAG ./services/vault
+          docker push $ECR_REGISTRY/hips-vault-service:$IMAGE_TAG
+
+          docker build -t $ECR_REGISTRY/hips-session-service:$IMAGE_TAG ./services/session
+          docker push $ECR_REGISTRY/hips-session-service:$IMAGE_TAG
+
+          docker build -t $ECR_REGISTRY/hips-safety-service:$IMAGE_TAG ./services/safety
+          docker push $ECR_REGISTRY/hips-safety-service:$IMAGE_TAG
+
+      - name: Deploy to ECS (staging)
+        env:
+          ENVIRONMENT: staging
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          aws ecs update-service --cluster hips-platform-staging --service vault-service --force-new-deployment --region us-east-1
+          aws ecs update-service --cluster hips-platform-staging --service session-service --force-new-deployment --region us-east-1
+          aws ecs update-service --cluster hips-platform-staging --service safety-service --force-new-deployment --region us-east-1
+
+      - name: Deploy web app
+        run: |
+          pnpm --filter @hips/web deploy:staging
+
+  cdk-deploy:
+    name: Deploy CDK Infrastructure (Staging)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    needs: [ci]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 9
+
+      - name: Install CDK dependencies
+        run: |
+          cd infra && pnpm install --frozen-lockfile
+
+      - name: Synth CDK
+        env:
+          ENVIRONMENT: staging
+          CDKDeploy: 'true'
+        run: |
+          cd infra && pnpm exec cdk synth --context environment=staging
+
+      - name: Deploy CDK
+        env:
+          ENVIRONMENT: staging
+          CDKDeploy: 'true'
+        run: |
+          cd infra && pnpm exec cdk deploy --context environment=staging --require-approval never --verbose
+        continue-on-error: true
+
+  deploy-production:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    needs: [deploy-staging]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    environment:
+      name: production
+      url: https://hips.org
+
+    # Manual approval required before production deployment
+    concurrency:
+      group: production-deploy
+      cancel-in-progress: false
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Login to ECR
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Tag images for production (immutable — use git SHA)
+        env:
+          ECR_REGISTRY: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          # Tag with SHA for immutable traceability — never overwrite staging images
+          docker tag $ECR_REGISTRY/hips-vault-service:$IMAGE_TAG $ECR_REGISTRY/hips-vault-service:prod-$IMAGE_TAG
+          docker tag $ECR_REGISTRY/hips-session-service:$IMAGE_TAG $ECR_REGISTRY/hips-session-service:prod-$IMAGE_TAG
+          docker tag $ECR_REGISTRY/hips-safety-service:$IMAGE_TAG $ECR_REGISTRY/hips-safety-service:prod-$IMAGE_TAG
+
+          docker push $ECR_REGISTRY/hips-vault-service:prod-$IMAGE_TAG
+          docker push $ECR_REGISTRY/hips-session-service:prod-$IMAGE_TAG
+          docker push $ECR_REGISTRY/hips-safety-service:prod-$IMAGE_TAG
+
+      - name: Wait for staging deployment verification
+        run: sleep 60
+
+      - name: Deploy to production ECS
+        env:
+          ENVIRONMENT: production
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          aws ecs update-service --cluster hips-platform-production --service vault-service --force-new-deployment --region us-east-1
+          aws ecs update-service --cluster hips-platform-production --service session-service --force-new-deployment --region us-east-1
+          aws ecs update-service --cluster hips-platform-production --service safety-service --force-new-deployment --region us-east-1
+
+      - name: Deploy web app to production
+        run: |
+          pnpm --filter @hips/web deploy:production

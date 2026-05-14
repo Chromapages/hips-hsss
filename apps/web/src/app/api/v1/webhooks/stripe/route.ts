@@ -53,17 +53,23 @@ export async function POST(req: NextRequest) {
         data: {
           stripeEventId: event.id,
           eventType: event.type,
-          payload: event as unknown as object,
+          payload: JSON.parse(rawBody),
           processed: false,
         },
       })
     }
 
-    await handleEvent(event)
-    await prisma.stripeEvent.update({
-      where: { stripeEventId: event.id },
-      data: { processed: true, processedAt: new Date() },
-    })
+    try {
+      await handleEvent(event)
+      await prisma.stripeEvent.update({
+        where: { stripeEventId: event.id },
+        data: { processed: true, processedAt: new Date() },
+      })
+    } catch (err) {
+      // Log but don't mark as processed — allows retry
+      console.error('Webhook handling failed:', err)
+      throw err // Re-throw to return 500
+    }
 
     return NextResponse.json({ received: true })
   } catch (err) {
@@ -108,7 +114,7 @@ async function handlePaymentIntentSucceeded(pi: Stripe.PaymentIntent): Promise<v
         pricePaid: pi.amount / 100,
         confirmationEmailSent: true,
       },
-      include: { user: true, service: true },
+      include: { service: true },
     })
 
     if (session && pi.receipt_email) {
@@ -151,6 +157,7 @@ async function handlePaymentIntentSucceeded(pi: Stripe.PaymentIntent): Promise<v
         isScholarship: metadata.isScholarship === 'true',
         discountCode: metadata.discountCode ?? null,
       },
+      include: { service: true },
     })
 
     if (metadata.discountCode) {
@@ -165,12 +172,10 @@ async function handlePaymentIntentSucceeded(pi: Stripe.PaymentIntent): Promise<v
       })
     }
 
-    const service = await prisma.service.findUnique({ where: { id: serviceId } })
-    const user = await prisma.user.findUnique({ where: { id: userId } })
-    if (service && user && pi.receipt_email) {
+    if (pkg.service && pi.receipt_email) {
       const email = packagePurchaseEmail({
         participantName: 'Participant',
-        serviceName: service.name,
+        serviceName: pkg.service.name,
         totalSessions,
         pricePaid,
         expiresAt: expiresAt.toISOString(),

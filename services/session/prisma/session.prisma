@@ -11,7 +11,9 @@ datasource db {
   url      = env("SESSION_DATABASE_URL")
 }
 
-// Anonymous session token — never linked to commerce User ID
+// Session Record — Session Service layer
+// This model tracks real-time session state (LOBBY, ACTIVE, ENDED).
+// Booking/payment sessions live in the commerce schema; real-time state lives here.
 model SessionRecord {
   id              String           @id @default(uuid())
   anonSessionToken String          @unique @map("anon_session_token")
@@ -55,7 +57,7 @@ model SessionRecord {
 model GroupSessionRecord {
   id              String           @id @default(uuid())
   sessionRecordId String           @unique @map("session_record_id")
-  sessionRecord   SessionRecord    @relation(fields: [sessionRecordId], references: [id])
+  sessionRecord   SessionRecord    @relation(fields: [sessionRecordId], references: [id], onDelete: Cascade)
 
   // Group metadata
   groupLabel      String?          @map("group_label")
@@ -78,8 +80,8 @@ model GroupSessionRecord {
 
 model AuditEvent {
   id              String           @id @default(uuid())
-  sessionRecordId String?          @map("session_record_id")
-  sessionRecord   SessionRecord?   @relation(fields: [sessionRecordId], references: [id])
+  sessionRecordId String           @map("session_record_id")
+  sessionRecord   SessionRecord    @relation(fields: [sessionRecordId], references: [id], onDelete: Cascade)
 
   // Event classification
   eventType       AuditEventType

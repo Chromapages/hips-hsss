@@ -1,8 +1,7 @@
 'use client'
 
-import { useEffect, useRef, useCallback } from 'react'
+import { useEffect, useRef } from 'react'
 import { CRISIS_RESOURCES } from '@hips/types'
-import { cn } from '@hips/ui'
 
 interface CrisisOverlayProps {
   open: boolean
@@ -19,25 +18,51 @@ interface CrisisOverlayProps {
  * On CRISIS_ACTIVE: shows limited vault-accessible emergency info (region/country from vault).
  */
 export function CrisisOverlay({ open, onClose, level, facilitatorName, sessionId }: CrisisOverlayProps) {
-  const overlayRef = useRef<HTMLDivElement>(null)
+  const panelRef = useRef<HTMLDivElement>(null)
   const firstFocusRef = useRef<HTMLButtonElement>(null)
 
-  // Focus trap
+  // Focus trap and body scroll lock
   useEffect(() => {
     if (!open) return
     const previouslyFocused = document.activeElement as HTMLElement
-    firstFocusRef.current?.focus()
-    return () => previouslyFocused?.focus?.()
-  }, [open])
+    const previousOverflow = document.body.style.overflow
 
-  // Block escape on CRISIS_ACTIVE
-  useEffect(() => {
-    if (!open || level !== 'CRISIS_ACTIVE') return
+    document.body.style.overflow = 'hidden'
+    ;(firstFocusRef.current ?? panelRef.current)?.focus()
+
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') e.preventDefault()
+      if (level === 'CRISIS_ACTIVE' && e.key === 'Escape') {
+        e.preventDefault()
+      }
+
+      if (e.key !== 'Tab' || !panelRef.current) return
+
+      const focusable = panelRef.current.querySelectorAll<HTMLElement>(
+        'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])',
+      )
+      if (focusable.length === 0) {
+        e.preventDefault()
+        panelRef.current.focus()
+        return
+      }
+
+      const first = focusable[0]
+      const last = focusable[focusable.length - 1]
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault()
+        last.focus()
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault()
+        first.focus()
+      }
     }
+
     document.addEventListener('keydown', handleKeyDown)
-    return () => document.removeEventListener('keydown', handleKeyDown)
+      return () => {
+      document.body.style.overflow = previousOverflow
+      document.removeEventListener('keydown', handleKeyDown)
+      previouslyFocused?.focus()
+    }
   }, [open, level])
 
   if (!open) return null
@@ -46,20 +71,21 @@ export function CrisisOverlay({ open, onClose, level, facilitatorName, sessionId
 
   return (
     <div
-      ref={overlayRef}
       className="fixed inset-0 z-[100] flex items-center justify-center"
       role="dialog"
       aria-modal="true"
       aria-labelledby="crisis-title"
       aria-describedby="crisis-desc"
-      // Prevent background scrolling
-      style={{ top: `${window.scrollY}px` }}
     >
       {/* Backdrop */}
       <div className="absolute inset-0 bg-crisis/95 backdrop-blur-sm" aria-hidden="true" />
 
       {/* Panel */}
-      <div className="relative z-10 max-w-lg w-full mx-4 bg-white rounded-2xl shadow-[0_25px_50px_-12px_rgba(127,29,29,0.4)] border border-red-900 overflow-hidden">
+      <div
+        ref={panelRef}
+        tabIndex={-1}
+        className="relative z-10 max-w-lg w-full mx-4 bg-white rounded-2xl shadow-[0_25px_50px_-12px_rgba(127,29,29,0.4)] border border-red-900 overflow-hidden focus:outline-none"
+      >
         {/* Header */}
         <div className="bg-crisis px-6 py-5">
           <div className="flex items-center gap-3">
@@ -149,6 +175,9 @@ export function CrisisOverlay({ open, onClose, level, facilitatorName, sessionId
               Your facilitator {facilitatorName ? `(${facilitatorName})` : ''} has been notified and will stay with you
               or follow up immediately. You are not in trouble. This is a resource and support moment.
             </p>
+          )}
+          {isCrisis && (
+            <p className="text-xs text-neutral-400">Session reference: {sessionId.slice(0, 8)}</p>
           )}
         </div>
 

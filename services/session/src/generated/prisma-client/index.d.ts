@@ -3407,7 +3407,7 @@ export namespace Prisma {
 
   export type AuditEventGroupByOutputType = {
     id: string
-    sessionRecordId: string | null
+    sessionRecordId: string
     eventType: $Enums.AuditEventType
     severity: $Enums.AuditSeverity
     actorAnonId: string | null
@@ -3446,7 +3446,7 @@ export namespace Prisma {
     deviceFingerprintHash?: boolean
     ipHash?: boolean
     createdAt?: boolean
-    sessionRecord?: boolean | AuditEvent$sessionRecordArgs<ExtArgs>
+    sessionRecord?: boolean | SessionRecordDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["auditEvent"]>
 
   export type AuditEventSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
@@ -3460,7 +3460,7 @@ export namespace Prisma {
     deviceFingerprintHash?: boolean
     ipHash?: boolean
     createdAt?: boolean
-    sessionRecord?: boolean | AuditEvent$sessionRecordArgs<ExtArgs>
+    sessionRecord?: boolean | SessionRecordDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["auditEvent"]>
 
   export type AuditEventSelectScalar = {
@@ -3477,20 +3477,20 @@ export namespace Prisma {
   }
 
   export type AuditEventInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    sessionRecord?: boolean | AuditEvent$sessionRecordArgs<ExtArgs>
+    sessionRecord?: boolean | SessionRecordDefaultArgs<ExtArgs>
   }
   export type AuditEventIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    sessionRecord?: boolean | AuditEvent$sessionRecordArgs<ExtArgs>
+    sessionRecord?: boolean | SessionRecordDefaultArgs<ExtArgs>
   }
 
   export type $AuditEventPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "AuditEvent"
     objects: {
-      sessionRecord: Prisma.$SessionRecordPayload<ExtArgs> | null
+      sessionRecord: Prisma.$SessionRecordPayload<ExtArgs>
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
-      sessionRecordId: string | null
+      sessionRecordId: string
       eventType: $Enums.AuditEventType
       severity: $Enums.AuditSeverity
       actorAnonId: string | null
@@ -3863,7 +3863,7 @@ export namespace Prisma {
    */
   export interface Prisma__AuditEventClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: "PrismaPromise"
-    sessionRecord<T extends AuditEvent$sessionRecordArgs<ExtArgs> = {}>(args?: Subset<T, AuditEvent$sessionRecordArgs<ExtArgs>>): Prisma__SessionRecordClient<$Result.GetResult<Prisma.$SessionRecordPayload<ExtArgs>, T, "findUniqueOrThrow"> | null, null, ExtArgs>
+    sessionRecord<T extends SessionRecordDefaultArgs<ExtArgs> = {}>(args?: Subset<T, SessionRecordDefaultArgs<ExtArgs>>): Prisma__SessionRecordClient<$Result.GetResult<Prisma.$SessionRecordPayload<ExtArgs>, T, "findUniqueOrThrow"> | Null, Null, ExtArgs>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -4218,21 +4218,6 @@ export namespace Prisma {
      * Filter which AuditEvents to delete
      */
     where?: AuditEventWhereInput
-  }
-
-  /**
-   * AuditEvent.sessionRecord
-   */
-  export type AuditEvent$sessionRecordArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the SessionRecord
-     */
-    select?: SessionRecordSelect<ExtArgs> | null
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: SessionRecordInclude<ExtArgs> | null
-    where?: SessionRecordWhereInput
   }
 
   /**
@@ -4679,7 +4664,7 @@ export namespace Prisma {
     OR?: AuditEventWhereInput[]
     NOT?: AuditEventWhereInput | AuditEventWhereInput[]
     id?: StringFilter<"AuditEvent"> | string
-    sessionRecordId?: StringNullableFilter<"AuditEvent"> | string | null
+    sessionRecordId?: StringFilter<"AuditEvent"> | string
     eventType?: EnumAuditEventTypeFilter<"AuditEvent"> | $Enums.AuditEventType
     severity?: EnumAuditSeverityFilter<"AuditEvent"> | $Enums.AuditSeverity
     actorAnonId?: StringNullableFilter<"AuditEvent"> | string | null
@@ -4688,12 +4673,12 @@ export namespace Prisma {
     deviceFingerprintHash?: StringNullableFilter<"AuditEvent"> | string | null
     ipHash?: StringNullableFilter<"AuditEvent"> | string | null
     createdAt?: DateTimeFilter<"AuditEvent"> | Date | string
-    sessionRecord?: XOR<SessionRecordNullableRelationFilter, SessionRecordWhereInput> | null
+    sessionRecord?: XOR<SessionRecordRelationFilter, SessionRecordWhereInput>
   }
 
   export type AuditEventOrderByWithRelationInput = {
     id?: SortOrder
-    sessionRecordId?: SortOrderInput | SortOrder
+    sessionRecordId?: SortOrder
     eventType?: SortOrder
     severity?: SortOrder
     actorAnonId?: SortOrderInput | SortOrder
@@ -4710,7 +4695,7 @@ export namespace Prisma {
     AND?: AuditEventWhereInput | AuditEventWhereInput[]
     OR?: AuditEventWhereInput[]
     NOT?: AuditEventWhereInput | AuditEventWhereInput[]
-    sessionRecordId?: StringNullableFilter<"AuditEvent"> | string | null
+    sessionRecordId?: StringFilter<"AuditEvent"> | string
     eventType?: EnumAuditEventTypeFilter<"AuditEvent"> | $Enums.AuditEventType
     severity?: EnumAuditSeverityFilter<"AuditEvent"> | $Enums.AuditSeverity
     actorAnonId?: StringNullableFilter<"AuditEvent"> | string | null
@@ -4719,12 +4704,12 @@ export namespace Prisma {
     deviceFingerprintHash?: StringNullableFilter<"AuditEvent"> | string | null
     ipHash?: StringNullableFilter<"AuditEvent"> | string | null
     createdAt?: DateTimeFilter<"AuditEvent"> | Date | string
-    sessionRecord?: XOR<SessionRecordNullableRelationFilter, SessionRecordWhereInput> | null
+    sessionRecord?: XOR<SessionRecordRelationFilter, SessionRecordWhereInput>
   }, "id">
 
   export type AuditEventOrderByWithAggregationInput = {
     id?: SortOrder
-    sessionRecordId?: SortOrderInput | SortOrder
+    sessionRecordId?: SortOrder
     eventType?: SortOrder
     severity?: SortOrder
     actorAnonId?: SortOrderInput | SortOrder
@@ -4743,7 +4728,7 @@ export namespace Prisma {
     OR?: AuditEventScalarWhereWithAggregatesInput[]
     NOT?: AuditEventScalarWhereWithAggregatesInput | AuditEventScalarWhereWithAggregatesInput[]
     id?: StringWithAggregatesFilter<"AuditEvent"> | string
-    sessionRecordId?: StringNullableWithAggregatesFilter<"AuditEvent"> | string | null
+    sessionRecordId?: StringWithAggregatesFilter<"AuditEvent"> | string
     eventType?: EnumAuditEventTypeWithAggregatesFilter<"AuditEvent"> | $Enums.AuditEventType
     severity?: EnumAuditSeverityWithAggregatesFilter<"AuditEvent"> | $Enums.AuditSeverity
     actorAnonId?: StringNullableWithAggregatesFilter<"AuditEvent"> | string | null
@@ -4995,12 +4980,12 @@ export namespace Prisma {
     deviceFingerprintHash?: string | null
     ipHash?: string | null
     createdAt?: Date | string
-    sessionRecord?: SessionRecordCreateNestedOneWithoutAuditEventsInput
+    sessionRecord: SessionRecordCreateNestedOneWithoutAuditEventsInput
   }
 
   export type AuditEventUncheckedCreateInput = {
     id?: string
-    sessionRecordId?: string | null
+    sessionRecordId: string
     eventType: $Enums.AuditEventType
     severity?: $Enums.AuditSeverity
     actorAnonId?: string | null
@@ -5021,12 +5006,12 @@ export namespace Prisma {
     deviceFingerprintHash?: NullableStringFieldUpdateOperationsInput | string | null
     ipHash?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    sessionRecord?: SessionRecordUpdateOneWithoutAuditEventsNestedInput
+    sessionRecord?: SessionRecordUpdateOneRequiredWithoutAuditEventsNestedInput
   }
 
   export type AuditEventUncheckedUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
-    sessionRecordId?: NullableStringFieldUpdateOperationsInput | string | null
+    sessionRecordId?: StringFieldUpdateOperationsInput | string
     eventType?: EnumAuditEventTypeFieldUpdateOperationsInput | $Enums.AuditEventType
     severity?: EnumAuditSeverityFieldUpdateOperationsInput | $Enums.AuditSeverity
     actorAnonId?: NullableStringFieldUpdateOperationsInput | string | null
@@ -5039,7 +5024,7 @@ export namespace Prisma {
 
   export type AuditEventCreateManyInput = {
     id?: string
-    sessionRecordId?: string | null
+    sessionRecordId: string
     eventType: $Enums.AuditEventType
     severity?: $Enums.AuditSeverity
     actorAnonId?: string | null
@@ -5064,7 +5049,7 @@ export namespace Prisma {
 
   export type AuditEventUncheckedUpdateManyInput = {
     id?: StringFieldUpdateOperationsInput | string
-    sessionRecordId?: NullableStringFieldUpdateOperationsInput | string | null
+    sessionRecordId?: StringFieldUpdateOperationsInput | string
     eventType?: EnumAuditEventTypeFieldUpdateOperationsInput | $Enums.AuditEventType
     severity?: EnumAuditSeverityFieldUpdateOperationsInput | $Enums.AuditSeverity
     actorAnonId?: NullableStringFieldUpdateOperationsInput | string | null
@@ -5415,11 +5400,6 @@ export namespace Prisma {
     not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
   }
 
-  export type SessionRecordNullableRelationFilter = {
-    is?: SessionRecordWhereInput | null
-    isNot?: SessionRecordWhereInput | null
-  }
-
   export type AuditEventCountOrderByAggregateInput = {
     id?: SortOrder
     sessionRecordId?: SortOrder
@@ -5636,12 +5616,10 @@ export namespace Prisma {
     set?: $Enums.AuditSeverity
   }
 
-  export type SessionRecordUpdateOneWithoutAuditEventsNestedInput = {
+  export type SessionRecordUpdateOneRequiredWithoutAuditEventsNestedInput = {
     create?: XOR<SessionRecordCreateWithoutAuditEventsInput, SessionRecordUncheckedCreateWithoutAuditEventsInput>
     connectOrCreate?: SessionRecordCreateOrConnectWithoutAuditEventsInput
     upsert?: SessionRecordUpsertWithoutAuditEventsInput
-    disconnect?: SessionRecordWhereInput | boolean
-    delete?: SessionRecordWhereInput | boolean
     connect?: SessionRecordWhereUniqueInput
     update?: XOR<XOR<SessionRecordUpdateToOneWithWhereWithoutAuditEventsInput, SessionRecordUpdateWithoutAuditEventsInput>, SessionRecordUncheckedUpdateWithoutAuditEventsInput>
   }
@@ -5977,7 +5955,7 @@ export namespace Prisma {
     OR?: AuditEventScalarWhereInput[]
     NOT?: AuditEventScalarWhereInput | AuditEventScalarWhereInput[]
     id?: StringFilter<"AuditEvent"> | string
-    sessionRecordId?: StringNullableFilter<"AuditEvent"> | string | null
+    sessionRecordId?: StringFilter<"AuditEvent"> | string
     eventType?: EnumAuditEventTypeFilter<"AuditEvent"> | $Enums.AuditEventType
     severity?: EnumAuditSeverityFilter<"AuditEvent"> | $Enums.AuditSeverity
     actorAnonId?: StringNullableFilter<"AuditEvent"> | string | null

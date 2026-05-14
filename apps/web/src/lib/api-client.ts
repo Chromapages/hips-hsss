@@ -8,13 +8,31 @@
  */
 
 import { getAuth } from '@/lib/firebase/client'
+import { onAuthStateChanged } from 'firebase/auth'
+
+/**
+ * Safely gets a valid ID token, waiting for Firebase auth to initialize
+ * if currentUser is not yet available.
+ */
+export async function getValidIdToken(): Promise<string | null> {
+  const auth = getAuth()
+  if (auth.currentUser) {
+    return auth.currentUser.getIdToken()
+  }
+  // Wait for auth state to be determined
+  return new Promise((resolve) => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      unsubscribe()
+      resolve(user ? await user.getIdToken() : null)
+    })
+  })
+}
 
 export async function authFetch(
   input: RequestInfo,
   init: RequestInit = {}
 ): Promise<Response> {
-  const user = getAuth().currentUser
-  const token = user ? await user.getIdToken() : null
+  const token = await getValidIdToken()
 
   const headers = new Headers(init.headers)
   if (token) {
@@ -38,9 +56,9 @@ export async function authFetchWithRefresh(
   input: RequestInfo,
   init: RequestInit = {}
 ): Promise<Response> {
-  const user = getAuth().currentUser
-  if (user) {
-    await user.getIdToken(true) // force refresh
+  const auth = getAuth()
+  if (auth.currentUser) {
+    await auth.currentUser.getIdToken(true) // force refresh
   }
   return authFetch(input, init)
 }

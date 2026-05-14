@@ -12,15 +12,18 @@ import {
 import { requireRole } from '@/lib/auth'
 import { rateLimit, rateLimitKey, RATE_LIMITS } from '@/lib/middleware/rate-limit'
 
+interface RouteParams {
+  params: Promise<{ id: string }>
+}
+
 // PATCH /api/v1/scholarships/:id
-export async function PATCH(req: NextRequest) {
+export async function PATCH(req: NextRequest, { params }: RouteParams) {
   const requestId = uuidv4()
-  const rl = rateLimit(rateLimitKey(req, 'admin'), RATE_LIMITS.admin)
+  const { id: scholarshipId } = await params
+  const rl = await rateLimit(rateLimitKey(req, 'admin'), RATE_LIMITS.admin)
   if (rl !== 'ok') return rl
 
   try {
-    const url = new URL(req.url)
-    const scholarshipId = url.pathname.split('/')[5] // /api/v1/scholarships/{id}
     if (!scholarshipId) {
       return NextResponse.json(
         makeError(ErrorCodes.SCHOLARSHIP_NOT_FOUND, 'Scholarship ID is required', requestId),

@@ -9,7 +9,7 @@ import { orgInquiryReceivedEmail } from '@hips/email/templates'
 export async function POST(req: NextRequest) {
   const requestId = uuidv4()
 
-  const rl = rateLimit(rateLimitKey(req, 'orgInquiry'), RATE_LIMITS.orgInquiry)
+  const rl = await rateLimit(rateLimitKey(req, 'orgInquiry'), RATE_LIMITS.orgInquiry)
   if (rl !== 'ok') return rl
 
   try {

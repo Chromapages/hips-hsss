@@ -42,7 +42,7 @@ model VaultAccessLog {
   accessedAt    DateTime @default(now()) @map("accessed_at")
 
   // Relations
-  vaultRecord IdentityRecord @relation(fields: [vaultRecordId], references: [id])
+  vaultRecord IdentityRecord @relation(fields: [vaultRecordId], references: [id], onDelete: Cascade)
 
   @@index([vaultRecordId])
   @@index([requesterId])

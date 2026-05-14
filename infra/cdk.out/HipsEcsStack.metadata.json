@@ -1,0 +1,638 @@
+{
+  "/HipsEcsStack": [
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "<anonymous> (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\bin\\hips.js:58:18)",
+        "...node internals..."
+      ]
+    },
+    {
+      "type": "aws:cdk:stack-tags",
+      "data": [
+        {
+          "key": "Environment",
+          "value": "development"
+        },
+        {
+          "key": "HIPAA",
+          "value": "true"
+        },
+        {
+          "key": "Project",
+          "value": "HIPS"
+        }
+      ]
+    }
+  ],
+  "/HipsEcsStack/VaultService": [
+    {
+      "type": "aws:cdk:warning",
+      "data": "Enable the 'circuitBreaker' property to trigger a quicker deployment failure if tasks are failing to come start (without this setting deployments may take up to 3 hours to fail). [ack: @aws-cdk/aws-ecs:shouldUseCircuitBreaker]",
+      "trace": [
+        "Annotations.addMessage (D:\\WORK\\hsss\\hips\\build\\node_modules\\.pnpm\\aws-cdk-lib@2.253.1_constructs@10.6.0\\node_modules\\aws-cdk-lib\\core\\lib\\annotations.js:1:2399)",
+        "Annotations.addWarningV2 (D:\\WORK\\hsss\\hips\\build\\node_modules\\.pnpm\\aws-cdk-lib@2.253.1_constructs@10.6.0\\node_modules\\aws-cdk-lib\\core\\lib\\annotations.js:1:1087)",
+        "new BaseService2 (D:\\WORK\\hsss\\hips\\build\\node_modules\\.pnpm\\aws-cdk-lib@2.253.1_constructs@10.6.0\\node_modules\\aws-cdk-lib\\aws-ecs\\lib\\base\\base-service.js:1:13431)",
+        "new BaseService2 (D:\\WORK\\hsss\\hips\\build\\node_modules\\.pnpm\\aws-cdk-lib@2.253.1_constructs@10.6.0\\node_modules\\aws-cdk-lib\\core\\lib\\no-box-stack-traces.js:1:345)",
+        "new FargateService2 (D:\\WORK\\hsss\\hips\\build\\node_modules\\.pnpm\\aws-cdk-lib@2.253.1_constructs@10.6.0\\node_modules\\aws-cdk-lib\\aws-ecs\\lib\\fargate\\fargate-service.js:1:6805)",
+        "new FargateService2 (D:\\WORK\\hsss\\hips\\build\\node_modules\\.pnpm\\aws-cdk-lib@2.253.1_constructs@10.6.0\\node_modules\\aws-cdk-lib\\core\\lib\\prop-injectable.js:1:855)",
+        "new EcsStack (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\lib\\ecs-stack.js:98:29)",
+        "Object.<anonymous> (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\bin\\hips.js:58:18)",
+        "Module._compile (node:internal/modules/cjs/loader:1761:14)",
+        "Object..js (node:internal/modules/cjs/loader:1893:10)",
+        "Module.load (node:internal/modules/cjs/loader:1481:32)",
+        "Module._load (node:internal/modules/cjs/loader:1300:12)",
+        "TracingChannel.traceSync (node:diagnostics_channel:328:14)",
+        "wrapModuleLoad (node:internal/modules/cjs/loader:245:24)",
+        "Module.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:154:5)",
+        "node:internal/main/run_main_module:33:47"
+      ]
+    },
+    {
+      "type": "aws:cdk:warning",
+      "data": "minHealthyPercent has not been configured so the default value of 50% is used. The number of running tasks will decrease below the desired count during deployments etc. See https://github.com/aws/aws-cdk/issues/31705 [ack: @aws-cdk/aws-ecs:minHealthyPercent]",
+      "trace": [
+        "Annotations.addMessage (D:\\WORK\\hsss\\hips\\build\\node_modules\\.pnpm\\aws-cdk-lib@2.253.1_constructs@10.6.0\\node_modules\\aws-cdk-lib\\core\\lib\\annotations.js:1:2399)",
+        "Annotations.addWarningV2 (D:\\WORK\\hsss\\hips\\build\\node_modules\\.pnpm\\aws-cdk-lib@2.253.1_constructs@10.6.0\\node_modules\\aws-cdk-lib\\core\\lib\\annotations.js:1:1087)",
+        "new BaseService2 (D:\\WORK\\hsss\\hips\\build\\node_modules\\.pnpm\\aws-cdk-lib@2.253.1_constructs@10.6.0\\node_modules\\aws-cdk-lib\\aws-ecs\\lib\\base\\base-service.js:1:14346)",
+        "new BaseService2 (D:\\WORK\\hsss\\hips\\build\\node_modules\\.pnpm\\aws-cdk-lib@2.253.1_constructs@10.6.0\\node_modules\\aws-cdk-lib\\core\\lib\\no-box-stack-traces.js:1:345)",
+        "new FargateService2 (D:\\WORK\\hsss\\hips\\build\\node_modules\\.pnpm\\aws-cdk-lib@2.253.1_constructs@10.6.0\\node_modules\\aws-cdk-lib\\aws-ecs\\lib\\fargate\\fargate-service.js:1:6805)",
+        "new FargateService2 (D:\\WORK\\hsss\\hips\\build\\node_modules\\.pnpm\\aws-cdk-lib@2.253.1_constructs@10.6.0\\node_modules\\aws-cdk-lib\\core\\lib\\prop-injectable.js:1:855)",
+        "new EcsStack (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\lib\\ecs-stack.js:98:29)",
+        "Object.<anonymous> (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\bin\\hips.js:58:18)",
+        "Module._compile (node:internal/modules/cjs/loader:1761:14)",
+        "Object..js (node:internal/modules/cjs/loader:1893:10)",
+        "Module.load (node:internal/modules/cjs/loader:1481:32)",
+        "Module._load (node:internal/modules/cjs/loader:1300:12)",
+        "TracingChannel.traceSync (node:diagnostics_channel:328:14)",
+        "wrapModuleLoad (node:internal/modules/cjs/loader:245:24)",
+        "Module.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:154:5)",
+        "node:internal/main/run_main_module:33:47"
+      ]
+    }
+  ],
+  "/HipsEcsStack/SessionService": [
+    {
+      "type": "aws:cdk:warning",
+      "data": "Enable the 'circuitBreaker' property to trigger a quicker deployment failure if tasks are failing to come start (without this setting deployments may take up to 3 hours to fail). [ack: @aws-cdk/aws-ecs:shouldUseCircuitBreaker]",
+      "trace": [
+        "Annotations.addMessage (D:\\WORK\\hsss\\hips\\build\\node_modules\\.pnpm\\aws-cdk-lib@2.253.1_constructs@10.6.0\\node_modules\\aws-cdk-lib\\core\\lib\\annotations.js:1:2399)",
+        "Annotations.addWarningV2 (D:\\WORK\\hsss\\hips\\build\\node_modules\\.pnpm\\aws-cdk-lib@2.253.1_constructs@10.6.0\\node_modules\\aws-cdk-lib\\core\\lib\\annotations.js:1:1087)",
+        "new BaseService2 (D:\\WORK\\hsss\\hips\\build\\node_modules\\.pnpm\\aws-cdk-lib@2.253.1_constructs@10.6.0\\node_modules\\aws-cdk-lib\\aws-ecs\\lib\\base\\base-service.js:1:13431)",
+        "new BaseService2 (D:\\WORK\\hsss\\hips\\build\\node_modules\\.pnpm\\aws-cdk-lib@2.253.1_constructs@10.6.0\\node_modules\\aws-cdk-lib\\core\\lib\\no-box-stack-traces.js:1:345)",
+        "new FargateService2 (D:\\WORK\\hsss\\hips\\build\\node_modules\\.pnpm\\aws-cdk-lib@2.253.1_constructs@10.6.0\\node_modules\\aws-cdk-lib\\aws-ecs\\lib\\fargate\\fargate-service.js:1:6805)",
+        "new FargateService2 (D:\\WORK\\hsss\\hips\\build\\node_modules\\.pnpm\\aws-cdk-lib@2.253.1_constructs@10.6.0\\node_modules\\aws-cdk-lib\\core\\lib\\prop-injectable.js:1:855)",
+        "new EcsStack (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\lib\\ecs-stack.js:167:31)",
+        "Object.<anonymous> (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\bin\\hips.js:58:18)",
+        "Module._compile (node:internal/modules/cjs/loader:1761:14)",
+        "Object..js (node:internal/modules/cjs/loader:1893:10)",
+        "Module.load (node:internal/modules/cjs/loader:1481:32)",
+        "Module._load (node:internal/modules/cjs/loader:1300:12)",
+        "TracingChannel.traceSync (node:diagnostics_channel:328:14)",
+        "wrapModuleLoad (node:internal/modules/cjs/loader:245:24)",
+        "Module.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:154:5)",
+        "node:internal/main/run_main_module:33:47"
+      ]
+    },
+    {
+      "type": "aws:cdk:warning",
+      "data": "minHealthyPercent has not been configured so the default value of 50% is used. The number of running tasks will decrease below the desired count during deployments etc. See https://github.com/aws/aws-cdk/issues/31705 [ack: @aws-cdk/aws-ecs:minHealthyPercent]",
+      "trace": [
+        "Annotations.addMessage (D:\\WORK\\hsss\\hips\\build\\node_modules\\.pnpm\\aws-cdk-lib@2.253.1_constructs@10.6.0\\node_modules\\aws-cdk-lib\\core\\lib\\annotations.js:1:2399)",
+        "Annotations.addWarningV2 (D:\\WORK\\hsss\\hips\\build\\node_modules\\.pnpm\\aws-cdk-lib@2.253.1_constructs@10.6.0\\node_modules\\aws-cdk-lib\\core\\lib\\annotations.js:1:1087)",
+        "new BaseService2 (D:\\WORK\\hsss\\hips\\build\\node_modules\\.pnpm\\aws-cdk-lib@2.253.1_constructs@10.6.0\\node_modules\\aws-cdk-lib\\aws-ecs\\lib\\base\\base-service.js:1:14346)",
+        "new BaseService2 (D:\\WORK\\hsss\\hips\\build\\node_modules\\.pnpm\\aws-cdk-lib@2.253.1_constructs@10.6.0\\node_modules\\aws-cdk-lib\\core\\lib\\no-box-stack-traces.js:1:345)",
+        "new FargateService2 (D:\\WORK\\hsss\\hips\\build\\node_modules\\.pnpm\\aws-cdk-lib@2.253.1_constructs@10.6.0\\node_modules\\aws-cdk-lib\\aws-ecs\\lib\\fargate\\fargate-service.js:1:6805)",
+        "new FargateService2 (D:\\WORK\\hsss\\hips\\build\\node_modules\\.pnpm\\aws-cdk-lib@2.253.1_constructs@10.6.0\\node_modules\\aws-cdk-lib\\core\\lib\\prop-injectable.js:1:855)",
+        "new EcsStack (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\lib\\ecs-stack.js:167:31)",
+        "Object.<anonymous> (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\bin\\hips.js:58:18)",
+        "Module._compile (node:internal/modules/cjs/loader:1761:14)",
+        "Object..js (node:internal/modules/cjs/loader:1893:10)",
+        "Module.load (node:internal/modules/cjs/loader:1481:32)",
+        "Module._load (node:internal/modules/cjs/loader:1300:12)",
+        "TracingChannel.traceSync (node:diagnostics_channel:328:14)",
+        "wrapModuleLoad (node:internal/modules/cjs/loader:245:24)",
+        "Module.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:154:5)",
+        "node:internal/main/run_main_module:33:47"
+      ]
+    }
+  ],
+  "/HipsEcsStack/SafetyService": [
+    {
+      "type": "aws:cdk:warning",
+      "data": "Enable the 'circuitBreaker' property to trigger a quicker deployment failure if tasks are failing to come start (without this setting deployments may take up to 3 hours to fail). [ack: @aws-cdk/aws-ecs:shouldUseCircuitBreaker]",
+      "trace": [
+        "Annotations.addMessage (D:\\WORK\\hsss\\hips\\build\\node_modules\\.pnpm\\aws-cdk-lib@2.253.1_constructs@10.6.0\\node_modules\\aws-cdk-lib\\core\\lib\\annotations.js:1:2399)",
+        "Annotations.addWarningV2 (D:\\WORK\\hsss\\hips\\build\\node_modules\\.pnpm\\aws-cdk-lib@2.253.1_constructs@10.6.0\\node_modules\\aws-cdk-lib\\core\\lib\\annotations.js:1:1087)",
+        "new BaseService2 (D:\\WORK\\hsss\\hips\\build\\node_modules\\.pnpm\\aws-cdk-lib@2.253.1_constructs@10.6.0\\node_modules\\aws-cdk-lib\\aws-ecs\\lib\\base\\base-service.js:1:13431)",
+        "new BaseService2 (D:\\WORK\\hsss\\hips\\build\\node_modules\\.pnpm\\aws-cdk-lib@2.253.1_constructs@10.6.0\\node_modules\\aws-cdk-lib\\core\\lib\\no-box-stack-traces.js:1:345)",
+        "new FargateService2 (D:\\WORK\\hsss\\hips\\build\\node_modules\\.pnpm\\aws-cdk-lib@2.253.1_constructs@10.6.0\\node_modules\\aws-cdk-lib\\aws-ecs\\lib\\fargate\\fargate-service.js:1:6805)",
+        "new FargateService2 (D:\\WORK\\hsss\\hips\\build\\node_modules\\.pnpm\\aws-cdk-lib@2.253.1_constructs@10.6.0\\node_modules\\aws-cdk-lib\\core\\lib\\prop-injectable.js:1:855)",
+        "new EcsStack (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\lib\\ecs-stack.js:217:30)",
+        "Object.<anonymous> (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\bin\\hips.js:58:18)",
+        "Module._compile (node:internal/modules/cjs/loader:1761:14)",
+        "Object..js (node:internal/modules/cjs/loader:1893:10)",
+        "Module.load (node:internal/modules/cjs/loader:1481:32)",
+        "Module._load (node:internal/modules/cjs/loader:1300:12)",
+        "TracingChannel.traceSync (node:diagnostics_channel:328:14)",
+        "wrapModuleLoad (node:internal/modules/cjs/loader:245:24)",
+        "Module.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:154:5)",
+        "node:internal/main/run_main_module:33:47"
+      ]
+    },
+    {
+      "type": "aws:cdk:warning",
+      "data": "minHealthyPercent has not been configured so the default value of 50% is used. The number of running tasks will decrease below the desired count during deployments etc. See https://github.com/aws/aws-cdk/issues/31705 [ack: @aws-cdk/aws-ecs:minHealthyPercent]",
+      "trace": [
+        "Annotations.addMessage (D:\\WORK\\hsss\\hips\\build\\node_modules\\.pnpm\\aws-cdk-lib@2.253.1_constructs@10.6.0\\node_modules\\aws-cdk-lib\\core\\lib\\annotations.js:1:2399)",
+        "Annotations.addWarningV2 (D:\\WORK\\hsss\\hips\\build\\node_modules\\.pnpm\\aws-cdk-lib@2.253.1_constructs@10.6.0\\node_modules\\aws-cdk-lib\\core\\lib\\annotations.js:1:1087)",
+        "new BaseService2 (D:\\WORK\\hsss\\hips\\build\\node_modules\\.pnpm\\aws-cdk-lib@2.253.1_constructs@10.6.0\\node_modules\\aws-cdk-lib\\aws-ecs\\lib\\base\\base-service.js:1:14346)",
+        "new BaseService2 (D:\\WORK\\hsss\\hips\\build\\node_modules\\.pnpm\\aws-cdk-lib@2.253.1_constructs@10.6.0\\node_modules\\aws-cdk-lib\\core\\lib\\no-box-stack-traces.js:1:345)",
+        "new FargateService2 (D:\\WORK\\hsss\\hips\\build\\node_modules\\.pnpm\\aws-cdk-lib@2.253.1_constructs@10.6.0\\node_modules\\aws-cdk-lib\\aws-ecs\\lib\\fargate\\fargate-service.js:1:6805)",
+        "new FargateService2 (D:\\WORK\\hsss\\hips\\build\\node_modules\\.pnpm\\aws-cdk-lib@2.253.1_constructs@10.6.0\\node_modules\\aws-cdk-lib\\core\\lib\\prop-injectable.js:1:855)",
+        "new EcsStack (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\lib\\ecs-stack.js:217:30)",
+        "Object.<anonymous> (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\bin\\hips.js:58:18)",
+        "Module._compile (node:internal/modules/cjs/loader:1761:14)",
+        "Object..js (node:internal/modules/cjs/loader:1893:10)",
+        "Module.load (node:internal/modules/cjs/loader:1481:32)",
+        "Module._load (node:internal/modules/cjs/loader:1300:12)",
+        "TracingChannel.traceSync (node:diagnostics_channel:328:14)",
+        "wrapModuleLoad (node:internal/modules/cjs/loader:245:24)",
+        "Module.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:154:5)",
+        "node:internal/main/run_main_module:33:47"
+      ]
+    }
+  ],
+  "/HipsEcsStack/BootstrapVersion": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "BootstrapVersion"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "....pnpm, node internals...",
+        "(no user code in 9007199254740991 frames, use --stack-trace-limit to capture more)"
+      ]
+    }
+  ],
+  "/HipsEcsStack/CheckBootstrapVersion": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "CheckBootstrapVersion"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "....pnpm, node internals...",
+        "(no user code in 9007199254740991 frames, use --stack-trace-limit to capture more)"
+      ]
+    }
+  ],
+  "/HipsEcsStack/HipsCluster/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "HipsCluster854A50F9"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new Cluster2 in .pnpm...",
+        "new EcsStack (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\lib\\ecs-stack.js:63:24)",
+        "<anonymous> (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\bin\\hips.js:58:18)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/HipsEcsStack/VaultTaskDef/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "VaultTaskDef7F3B9DA5"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new FargateTaskDefinition2 in .pnpm...",
+        "new EcsStack (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\lib\\ecs-stack.js:71:36)",
+        "<anonymous> (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\bin\\hips.js:58:18)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/HipsEcsStack/VaultService/Service": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "VaultService5D8EC353"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new FargateService2 in .pnpm...",
+        "new EcsStack (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\lib\\ecs-stack.js:98:29)",
+        "<anonymous> (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\bin\\hips.js:58:18)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/HipsEcsStack/SessionTaskRole/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "SessionTaskRole9021DA3B"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new Role2 in .pnpm...",
+        "new EcsStack (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\lib\\ecs-stack.js:111:33)",
+        "<anonymous> (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\bin\\hips.js:58:18)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/HipsEcsStack/SessionTaskDef/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "SessionTaskDef2621F4BC"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new FargateTaskDefinition2 in .pnpm...",
+        "new EcsStack (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\lib\\ecs-stack.js:138:38)",
+        "<anonymous> (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\bin\\hips.js:58:18)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/HipsEcsStack/SessionService/Service": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "SessionServiceF5C19D32"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new FargateService2 in .pnpm...",
+        "new EcsStack (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\lib\\ecs-stack.js:167:31)",
+        "<anonymous> (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\bin\\hips.js:58:18)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/HipsEcsStack/SafetyTaskRole/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "SafetyTaskRole4FDF3A34"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new Role2 in .pnpm...",
+        "new EcsStack (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\lib\\ecs-stack.js:180:32)",
+        "<anonymous> (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\bin\\hips.js:58:18)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/HipsEcsStack/SafetyTaskDef/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "SafetyTaskDef64F66D63"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new FargateTaskDefinition2 in .pnpm...",
+        "new EcsStack (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\lib\\ecs-stack.js:191:37)",
+        "<anonymous> (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\bin\\hips.js:58:18)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/HipsEcsStack/SafetyService/Service": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "SafetyService72142BD0"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new FargateService2 in .pnpm...",
+        "new EcsStack (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\lib\\ecs-stack.js:217:30)",
+        "<anonymous> (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\bin\\hips.js:58:18)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/HipsEcsStack/CDKMetadata/Default": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "CDKMetadata"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "....pnpm, node internals...",
+        "(no user code in 9007199254740991 frames, use --stack-trace-limit to capture more)"
+      ]
+    }
+  ],
+  "/HipsEcsStack/Exports/Output{\"Ref\":\"HipsCluster854A50F9\"}": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "ExportsOutputRefHipsCluster854A50F9029B4888"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "....pnpm, node internals...",
+        "(no user code in 9007199254740991 frames, use --stack-trace-limit to capture more)"
+      ]
+    }
+  ],
+  "/HipsEcsStack/HipsCluster/DefaultServiceDiscoveryNamespace/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "HipsClusterDefaultServiceDiscoveryNamespaceD312969B"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new Cluster2 in .pnpm...",
+        "new EcsStack (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\lib\\ecs-stack.js:63:24)",
+        "<anonymous> (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\bin\\hips.js:58:18)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/HipsEcsStack/VaultTaskDef/ExecutionRole/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "VaultTaskDefExecutionRole541713A3"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...WrappedClass.<anonymous> in .pnpm...",
+        "new EcsStack (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\lib\\ecs-stack.js:76:57)",
+        "<anonymous> (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\bin\\hips.js:58:18)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/HipsEcsStack/SessionTaskRole/DefaultPolicy/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "SessionTaskRoleDefaultPolicy769D62EA"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...WrappedClass.<anonymous> in .pnpm...",
+        "new EcsStack (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\lib\\ecs-stack.js:116:25)",
+        "<anonymous> (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\bin\\hips.js:58:18)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/HipsEcsStack/SessionTaskDef/ExecutionRole/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "SessionTaskDefExecutionRoleB74E92CE"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...WrappedClass.<anonymous> in .pnpm...",
+        "new EcsStack (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\lib\\ecs-stack.js:143:61)",
+        "<anonymous> (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\bin\\hips.js:58:18)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/HipsEcsStack/SafetyTaskRole/DefaultPolicy/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "SafetyTaskRoleDefaultPolicy5B4342CE"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...WrappedClass.<anonymous> in .pnpm...",
+        "new EcsStack (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\lib\\ecs-stack.js:185:24)",
+        "<anonymous> (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\bin\\hips.js:58:18)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/HipsEcsStack/SafetyTaskDef/ExecutionRole/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "SafetyTaskDefExecutionRole4C757D64"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...WrappedClass.<anonymous> in .pnpm...",
+        "new EcsStack (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\lib\\ecs-stack.js:196:59)",
+        "<anonymous> (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\bin\\hips.js:58:18)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/HipsEcsStack/VaultTaskDef/VaultContainer/LogGroup/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "VaultTaskDefVaultContainerLogGroup187998A6"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...WrappedClass.<anonymous> in .pnpm...",
+        "new EcsStack (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\lib\\ecs-stack.js:76:57)",
+        "<anonymous> (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\bin\\hips.js:58:18)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/HipsEcsStack/VaultTaskDef/ExecutionRole/DefaultPolicy/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "VaultTaskDefExecutionRoleDefaultPolicyF5B55D88"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...WrappedClass.<anonymous> in .pnpm...",
+        "new EcsStack (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\lib\\ecs-stack.js:76:57)",
+        "<anonymous> (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\bin\\hips.js:58:18)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/HipsEcsStack/VaultService/TaskCount/Target/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "VaultServiceTaskCountTarget6020FD6A"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...WrappedClass.autoScaleTaskCount in .pnpm...",
+        "new EcsStack (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\lib\\ecs-stack.js:241:48)",
+        "<anonymous> (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\bin\\hips.js:58:18)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/HipsEcsStack/SessionTaskDef/SessionContainer/LogGroup/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "SessionTaskDefSessionContainerLogGroupD7C516DF"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...WrappedClass.<anonymous> in .pnpm...",
+        "new EcsStack (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\lib\\ecs-stack.js:143:61)",
+        "<anonymous> (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\bin\\hips.js:58:18)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/HipsEcsStack/SessionTaskDef/ExecutionRole/DefaultPolicy/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "SessionTaskDefExecutionRoleDefaultPolicy600969EE"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...WrappedClass.<anonymous> in .pnpm...",
+        "new EcsStack (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\lib\\ecs-stack.js:143:61)",
+        "<anonymous> (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\bin\\hips.js:58:18)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/HipsEcsStack/SessionService/TaskCount/Target/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "SessionServiceTaskCountTargetDEFB8921"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...WrappedClass.autoScaleTaskCount in .pnpm...",
+        "new EcsStack (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\lib\\ecs-stack.js:230:52)",
+        "<anonymous> (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\bin\\hips.js:58:18)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/HipsEcsStack/SafetyTaskDef/SafetyContainer/LogGroup/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "SafetyTaskDefSafetyContainerLogGroup41100D0A"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...WrappedClass.<anonymous> in .pnpm...",
+        "new EcsStack (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\lib\\ecs-stack.js:196:59)",
+        "<anonymous> (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\bin\\hips.js:58:18)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/HipsEcsStack/SafetyTaskDef/ExecutionRole/DefaultPolicy/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "SafetyTaskDefExecutionRoleDefaultPolicyB21B9918"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...WrappedClass.<anonymous> in .pnpm...",
+        "new EcsStack (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\lib\\ecs-stack.js:196:59)",
+        "<anonymous> (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\bin\\hips.js:58:18)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/HipsEcsStack/SafetyService/TaskCount/Target/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "SafetyServiceTaskCountTargetF18E6600"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...WrappedClass.autoScaleTaskCount in .pnpm...",
+        "new EcsStack (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\lib\\ecs-stack.js:249:50)",
+        "<anonymous> (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\bin\\hips.js:58:18)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/HipsEcsStack/VaultService/TaskCount/Target/VaultCpuScaling/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "VaultServiceTaskCountTargetVaultCpuScaling3155182B"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...ScalableTaskCount.scaleOnCpuUtilization in .pnpm...",
+        "new EcsStack (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\lib\\ecs-stack.js:245:22)",
+        "<anonymous> (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\bin\\hips.js:58:18)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/HipsEcsStack/SessionService/TaskCount/Target/SessionCpuScaling/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "SessionServiceTaskCountTargetSessionCpuScaling0D2F4A3B"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...ScalableTaskCount.scaleOnCpuUtilization in .pnpm...",
+        "new EcsStack (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\lib\\ecs-stack.js:234:24)",
+        "<anonymous> (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\bin\\hips.js:58:18)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/HipsEcsStack/SessionService/TaskCount/Target/SessionMemoryScaling/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "SessionServiceTaskCountTargetSessionMemoryScaling96ACEE80"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...ScalableTaskCount.scaleOnMemoryUtilization in .pnpm...",
+        "new EcsStack (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\lib\\ecs-stack.js:237:24)",
+        "<anonymous> (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\bin\\hips.js:58:18)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/HipsEcsStack/SafetyService/TaskCount/Target/SafetyCpuScaling/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "SafetyServiceTaskCountTargetSafetyCpuScalingF65DF099"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...ScalableTaskCount.scaleOnCpuUtilization in .pnpm...",
+        "new EcsStack (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\lib\\ecs-stack.js:253:23)",
+        "<anonymous> (D:\\WORK\\hsss\\hips\\build\\infra\\dist\\bin\\hips.js:58:18)",
+        "...node internals..."
+      ]
+    }
+  ]
+}

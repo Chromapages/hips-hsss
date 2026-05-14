@@ -1,0 +1,21 @@
+{
+  "version": "53.0.0",
+  "files": {
+    "a305ac6200f7bcf45000a143a00574176b2d482b706540618206fb616e56337c": {
+      "displayName": "HipsVaultStack Template",
+      "source": {
+        "path": "HipsVaultStack.template.json",
+        "packaging": "file"
+      },
+      "destinations": {
+        "522814696950-us-east-1-0bb5dee0": {
+          "bucketName": "cdk-hnb659fds-assets-522814696950-us-east-1",
+          "objectKey": "a305ac6200f7bcf45000a143a00574176b2d482b706540618206fb616e56337c.json",
+          "region": "us-east-1",
+          "assumeRoleArn": "arn:${AWS::Partition}:iam::522814696950:role/cdk-hnb659fds-file-publishing-role-522814696950-us-east-1"
+        }
+      }
+    }
+  },
+  "dockerImages": {}
+}

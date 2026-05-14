@@ -55,11 +55,10 @@ export enum DonationTier {
 }
 
 export enum LiveSessionStatus {
-  LOBBY = "LOBBY",           // services/session/prisma/session.prisma
-  ACTIVE = "ACTIVE",        // services/session/prisma/session.prisma
-  ENDED = "ENDED",          // services/session/prisma/session.prisma
-  ABANDONED = "ABANDONED",  // services/session/prisma/session.prisma
-  // Note: packages/db/prisma/session.prisma has additional statuses:
+  LOBBY = "LOBBY",         // services/session/prisma/session.prisma
+  ACTIVE = "ACTIVE",       // services/session/prisma/session.prisma
+  ENDED = "ENDED",         // services/session/prisma/session.prisma
+  ABANDONED = "ABANDONED", // services/session/prisma/session.prisma
   // CRISIS_FLAGGED, RECONNECTING — used by commerce session layer only
 }
 
@@ -234,7 +233,7 @@ export type { PaginatedResponse } from './api'
 // ============================================================
 
 export const UserRoleSchema = {
-  PARTICPANT: UserRole.PARTICIPANT,
+  PARTICIPANT: UserRole.PARTICIPANT,
   LEADER: UserRole.LEADER,
   ORG_BUYER: UserRole.ORG_BUYER,
   FACILITATOR: UserRole.FACILITATOR,

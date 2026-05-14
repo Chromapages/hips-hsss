@@ -12,21 +12,14 @@
     "./generated/commerce": {
       "types": "./generated/commerce/index.d.ts",
       "default": "./generated/commerce/index.js"
-    },
-    "./generated/session": {
-      "types": "./generated/session/index.d.ts",
-      "default": "./generated/session/index.js"
     }
   },
   "scripts": {
     "dev": "prisma studio --schema=./prisma/commerce.prisma",
-    "dev:session": "prisma studio --schema=./prisma/session.prisma",
-    "generate": "prisma generate --schema=./prisma/commerce.prisma && prisma generate --schema=./prisma/session.prisma",
+    "generate": "prisma generate --schema=./prisma/commerce.prisma",
     "generate:commerce": "prisma generate --schema=./prisma/commerce.prisma",
-    "generate:session": "prisma generate --schema=./prisma/session.prisma",
     "migrate:commerce": "prisma migrate dev --schema=./prisma/commerce.prisma",
-    "migrate:session": "prisma migrate dev --schema=./prisma/session.prisma",
-    "migrate:deploy": "prisma migrate deploy --schema=./prisma/commerce.prisma && prisma migrate deploy --schema=./prisma/session.prisma",
+    "migrate:deploy": "prisma migrate deploy --schema=./prisma/commerce.prisma",
     "exec": "ts-node"
   },
   "dependencies": {

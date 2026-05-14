@@ -132,22 +132,7 @@ async function main() {
     console.log(`  ✓ ${service.slug}`);
   }
 
-  // Initialize scholarship budget
-  const now = new Date();
-  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-  const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
-
-  await prisma.scholarshipBudget.upsert({
-    where: { id: "monthly_cap" },
-    update: {},
-    create: {
-      id: "monthly_cap",
-      monthlyCap: 50000,
-      used: 0,
-      resetAt: nextMonth,
-    },
-  });
-  console.log("  ✓ scholarship_budget");
+  console.log("  ✓ services catalog")
 
   console.log("\n✅ Seed complete.");
 }

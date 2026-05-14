@@ -30,6 +30,7 @@ export class AlertService {
 
   private readonly primaryPhone = process.env.CRISIS_SMS_PRIMARY
   private readonly backupPhone = process.env.CRISIS_SMS_BACKUP
+  private readonly adminDashboardUrl = process.env.ADMIN_DASHBOARD_URL
 
   /**
    * Fire all three alert channels simultaneously.
@@ -137,17 +138,17 @@ export class AlertService {
             text: `Immediate attention required. *SLA: 15 minutes.*${regionInfo}${localResource}`,
           },
         },
-        {
+        ...(this.adminDashboardUrl ? [{
           type: 'actions',
           elements: [
             {
               type: 'button',
               text: { type: 'plain_text', text: 'Review in Safety Dashboard', emoji: true },
-              url: `${process.env.ADMIN_DASHBOARD_URL ?? 'https://app.hips.foundation'}/admin/safety`,
+              url: this.adminSafetyUrl(),
               style: 'danger',
             },
           ],
-        },
+        }] : []),
         {
           type: 'context',
           elements: [
@@ -186,9 +187,16 @@ export class AlertService {
     return [
       `CRISIS PROTOCOL ACTIVATED`,
       `Session: ${payload.sessionId}`,
-      `Review at: ${process.env.ADMIN_DASHBOARD_URL ?? 'https://app.hips.foundation'}/admin/safety`,
+      this.adminDashboardUrl ? `Review at: ${this.adminSafetyUrl()}` : 'Review dashboard URL not configured',
       `SLA: 15 minutes${localContact}`,
     ].join('\n')
+  }
+
+  private adminSafetyUrl(): string {
+    if (!this.adminDashboardUrl) {
+      throw new Error('ADMIN_DASHBOARD_URL is required for crisis alerts')
+    }
+    return `${this.adminDashboardUrl.replace(/\/$/, '')}/admin/safety`
   }
 
   /**

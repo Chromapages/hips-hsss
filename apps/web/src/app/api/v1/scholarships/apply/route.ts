@@ -14,7 +14,7 @@ import { rateLimit, rateLimitKey, RATE_LIMITS } from '@/lib/middleware/rate-limi
 // POST /api/v1/scholarships/apply
 export async function POST(req: NextRequest) {
   const requestId = uuidv4()
-  const rl = rateLimit(rateLimitKey(req, 'scholarship'), RATE_LIMITS.scholarship)
+  const rl = await rateLimit(rateLimitKey(req, 'scholarship'), RATE_LIMITS.scholarship)
   if (rl !== 'ok') return rl
 
   try {

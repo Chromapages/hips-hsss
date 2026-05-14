@@ -1,0 +1,239 @@
+{
+ "Resources": {
+  "HipsAlertTopic7BEA4376": {
+   "Type": "AWS::SNS::Topic",
+   "Properties": {
+    "DisplayName": "H.I.P.S. Security Alerts",
+    "Tags": [
+     {
+      "Key": "Environment",
+      "Value": "development"
+     },
+     {
+      "Key": "HIPAA",
+      "Value": "true"
+     },
+     {
+      "Key": "Project",
+      "Value": "HIPS"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "HipsMonitoringStack/HipsAlertTopic/Resource"
+   }
+  },
+  "VaultAccessSpikeAlarm5FF536CC": {
+   "Type": "AWS::CloudWatch::Alarm",
+   "Properties": {
+    "AlarmActions": [
+     {
+      "Ref": "HipsAlertTopic7BEA4376"
+     }
+    ],
+    "AlarmDescription": "Alert when vault access count exceeds 2 in a 10-min window outside crisis events",
+    "AlarmName": "HIPS-Vault-Access-Spike",
+    "ComparisonOperator": "GreaterThanOrEqualToThreshold",
+    "DatapointsToAlarm": 1,
+    "EvaluationPeriods": 1,
+    "MetricName": "VaultAccessCount",
+    "Namespace": "HIPS/VaultService",
+    "Period": 60,
+    "Statistic": "Sum",
+    "Tags": [
+     {
+      "Key": "Environment",
+      "Value": "development"
+     },
+     {
+      "Key": "HIPAA",
+      "Value": "true"
+     },
+     {
+      "Key": "Project",
+      "Value": "HIPS"
+     }
+    ],
+    "Threshold": 2,
+    "TreatMissingData": "notBreaching"
+   },
+   "Metadata": {
+    "aws:cdk:path": "HipsMonitoringStack/VaultAccessSpikeAlarm/Resource"
+   }
+  },
+  "VaultAuthFailureAlarm05F09BDA": {
+   "Type": "AWS::CloudWatch::Alarm",
+   "Properties": {
+    "AlarmActions": [
+     {
+      "Ref": "HipsAlertTopic7BEA4376"
+     }
+    ],
+    "AlarmName": "HIPS-Vault-Auth-Failure",
+    "ComparisonOperator": "GreaterThanOrEqualToThreshold",
+    "DatapointsToAlarm": 1,
+    "EvaluationPeriods": 1,
+    "MetricName": "AuthFailureCount",
+    "Namespace": "HIPS/VaultService",
+    "Period": 60,
+    "Statistic": "Sum",
+    "Tags": [
+     {
+      "Key": "Environment",
+      "Value": "development"
+     },
+     {
+      "Key": "HIPAA",
+      "Value": "true"
+     },
+     {
+      "Key": "Project",
+      "Value": "HIPS"
+     }
+    ],
+    "Threshold": 5
+   },
+   "Metadata": {
+    "aws:cdk:path": "HipsMonitoringStack/VaultAuthFailureAlarm/Resource"
+   }
+  },
+  "KmsDecryptSpikeAlarmAD226F86": {
+   "Type": "AWS::CloudWatch::Alarm",
+   "Properties": {
+    "AlarmActions": [
+     {
+      "Ref": "HipsAlertTopic7BEA4376"
+     }
+    ],
+    "AlarmName": "HIPS-KMS-Decrypt-Spike",
+    "ComparisonOperator": "GreaterThanOrEqualToThreshold",
+    "DatapointsToAlarm": 1,
+    "Dimensions": [
+     {
+      "Name": "KeyId",
+      "Value": {
+       "Fn::ImportValue": "HipsDatabaseStack:ExportsOutputRefSessionDbKeyEA562358D4E45D1D"
+      }
+     }
+    ],
+    "EvaluationPeriods": 1,
+    "MetricName": "DecryptRequests",
+    "Namespace": "AWS/KMS",
+    "Period": 300,
+    "Statistic": "Sum",
+    "Tags": [
+     {
+      "Key": "Environment",
+      "Value": "development"
+     },
+     {
+      "Key": "HIPAA",
+      "Value": "true"
+     },
+     {
+      "Key": "Project",
+      "Value": "HIPS"
+     }
+    ],
+    "Threshold": 50
+   },
+   "Metadata": {
+    "aws:cdk:path": "HipsMonitoringStack/KmsDecryptSpikeAlarm/Resource"
+   }
+  },
+  "HipsDashboardAD2D1B7E": {
+   "Type": "AWS::CloudWatch::Dashboard",
+   "Properties": {
+    "DashboardBody": {
+     "Fn::Join": [
+      "",
+      [
+       "{\"widgets\":[{\"type\":\"metric\",\"width\":6,\"height\":6,\"x\":0,\"y\":0,\"properties\":{\"view\":\"timeSeries\",\"title\":\"Vault Access Count\",\"region\":\"",
+       {
+        "Ref": "AWS::Region"
+       },
+       "\",\"metrics\":[[\"HIPS/VaultService\",\"VaultAccessCount\",{\"period\":60,\"stat\":\"Sum\"}]],\"annotations\":{\"horizontal\":[{\"value\":2,\"color\":\"#FF0000\",\"label\":\"Spike Threshold\",\"yAxis\":\"left\"}]},\"yAxis\":{}}},{\"type\":\"metric\",\"width\":6,\"height\":6,\"x\":6,\"y\":0,\"properties\":{\"view\":\"timeSeries\",\"title\":\"Vault Auth Failures\",\"region\":\"",
+       {
+        "Ref": "AWS::Region"
+       },
+       "\",\"metrics\":[[\"HIPS/VaultService\",\"AuthFailureCount\",{\"period\":60,\"stat\":\"Sum\"}]],\"annotations\":{\"horizontal\":[{\"value\":5,\"color\":\"#FF0000\",\"label\":\"Failure Threshold\",\"yAxis\":\"left\"}]},\"yAxis\":{}}},{\"type\":\"metric\",\"width\":6,\"height\":6,\"x\":0,\"y\":6,\"properties\":{\"view\":\"timeSeries\",\"title\":\"KMS Decrypt Requests\",\"region\":\"",
+       {
+        "Ref": "AWS::Region"
+       },
+       "\",\"metrics\":[[\"AWS/KMS\",\"DecryptRequests\",\"KeyId\",\"",
+       {
+        "Fn::ImportValue": "HipsDatabaseStack:ExportsOutputRefSessionDbKeyEA562358D4E45D1D"
+       },
+       "\",{\"stat\":\"Sum\"}]],\"annotations\":{\"horizontal\":[{\"value\":50,\"color\":\"#FF0000\",\"label\":\"Spike Threshold\",\"yAxis\":\"left\"}]},\"yAxis\":{}}},{\"type\":\"metric\",\"width\":6,\"height\":6,\"x\":0,\"y\":12,\"properties\":{\"view\":\"timeSeries\",\"title\":\"Vault Service CPU Utilization\",\"region\":\"",
+       {
+        "Ref": "AWS::Region"
+       },
+       "\",\"metrics\":[[\"AWS/ECS\",\"CPUUtilization\",\"ClusterName\",\"",
+       {
+        "Fn::ImportValue": "HipsEcsStack:ExportsOutputRefHipsCluster854A50F9029B4888"
+       },
+       "\",\"ServiceName\",\"vault-service\",{\"period\":60}]],\"yAxis\":{}}}]}"
+      ]
+     ]
+    },
+    "DashboardName": "HIPS-Platform"
+   },
+   "Metadata": {
+    "aws:cdk:path": "HipsMonitoringStack/HipsDashboard/Resource"
+   }
+  },
+  "CDKMetadata": {
+   "Type": "AWS::CDK::Metadata",
+   "Properties": {
+    "Analytics": "v2:deflate64:H4sIAAAAAAAA/z2JwQ7CIBAFv6V3WAPqBxi9m1jvZgs1paXQsCAHwr8bbOLpzcyTIM9HEB1m4kov3JoBSh9RLQwzvQo5gvL0m1Hs+nY/qExZn3TGqCYoF4thbd8ON6Rp8Bh0S3+ptek9xS3FypzXI8x0+MgTCAGim8kYHpKLZh3hse8XBWfarJkAAAA="
+   },
+   "Metadata": {
+    "aws:cdk:path": "HipsMonitoringStack/CDKMetadata/Default"
+   }
+  }
+ },
+ "Outputs": {
+  "AlertTopicArn": {
+   "Value": {
+    "Ref": "HipsAlertTopic7BEA4376"
+   },
+   "Export": {
+    "Name": "HIPS-AlertTopicArn"
+   }
+  }
+ },
+ "Parameters": {
+  "BootstrapVersion": {
+   "Type": "AWS::SSM::Parameter::Value<String>",
+   "Default": "/cdk-bootstrap/hnb659fds/version",
+   "Description": "Version of the CDK Bootstrap resources in this environment, automatically retrieved from SSM Parameter Store. [cdk:skip]"
+  }
+ },
+ "Rules": {
+  "CheckBootstrapVersion": {
+   "Assertions": [
+    {
+     "Assert": {
+      "Fn::Not": [
+       {
+        "Fn::Contains": [
+         [
+          "1",
+          "2",
+          "3",
+          "4",
+          "5"
+         ],
+         {
+          "Ref": "BootstrapVersion"
+         }
+        ]
+       }
+      ]
+     },
+     "AssertDescription": "CDK bootstrap stack version 6 required. Please run 'cdk bootstrap' with a recent version of the CDK CLI."
+    }
+   ]
+  }
+ }
+}

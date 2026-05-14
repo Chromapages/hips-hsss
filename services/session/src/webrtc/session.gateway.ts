@@ -9,8 +9,7 @@ import {
   WsException,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
-import { Logger, UseFilters, UsePipes, ValidationPipe } from '@nestjs/common';
-import { WsAuthGuard } from './ws-auth.guard';
+import { Logger, UsePipes, ValidationPipe } from '@nestjs/common';
 import { TokenService } from '../token';
 import { SessionPrismaService } from '../common/prisma';
 import { GroupService } from '../group';
@@ -33,6 +32,11 @@ interface ModeratorActionPayload {
   reason?: string;
 }
 
+interface AuthPayload {
+  type?: string;
+  token?: string;
+}
+
 @WebSocketGateway({
   namespace: '/session/v1/connect',
   cors: {
@@ -51,7 +55,9 @@ export class SessionGateway implements OnGatewayConnection, OnGatewayDisconnect 
     sessionRecordId: string;
     anonId: string;
     isModerator: boolean;
+    roomId: string;
   }> = new Map();
+  private pendingAuthTimers: Map<string, ReturnType<typeof setTimeout>> = new Map();
 
   constructor(
     private tokenService: TokenService,
@@ -60,64 +66,37 @@ export class SessionGateway implements OnGatewayConnection, OnGatewayDisconnect 
   ) {}
 
   async handleConnection(client: Socket) {
-    try {
-      const protocolHeader = client.handshake.headers['sec-websocket-protocol'];
-      const protocols = Array.isArray(protocolHeader)
-        ? protocolHeader.join(',').split(',')
-        : typeof protocolHeader === 'string'
-          ? protocolHeader.split(',')
-          : [];
-      const protocolToken = protocols.map((p) => p.trim()).find((p) => p && p !== 'session-token');
-      const token = client.handshake.auth.token || client.handshake.headers['x-session-token'] || protocolToken;
-
-      if (!token) {
-        this.logger.warn(`Client ${client.id} connected without token`);
-        client.emit('error', { message: 'Authentication required' });
+    client.emit('AUTH_REQUIRED');
+    this.pendingAuthTimers.set(client.id, setTimeout(() => {
+      if (!this.connectedParticipants.has(client.id)) {
+        this.logger.warn(`Client ${client.id} did not authenticate in time`);
+        client.emit('AUTH_ERROR', { code: 'AUTH_TIMEOUT' });
         client.disconnect();
-        return;
       }
+    }, 10000));
+  }
 
-      const payload = await this.tokenService.validateSessionToken(token);
+  @SubscribeMessage('AUTH')
+  async handleAuthUpper(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: AuthPayload | string,
+  ) {
+    await this.authenticateClient(client, data);
+  }
 
-      // Store participant info
-      this.connectedParticipants.set(client.id, {
-        socketId: client.id,
-        sessionRecordId: payload.sessionRecordId,
-        anonId: payload.anonSessionToken,
-        isModerator: false,
-      });
-
-      // Join the room
-      await client.join(payload.roomId);
-
-      // Log connection
-      await this.prisma.auditEvent.create({
-        data: {
-          sessionRecordId: payload.sessionRecordId,
-          eventType: 'VOICE_CONNECTED',
-          severity: 'INFO',
-          actorAnonId: payload.anonSessionToken,
-          actorRole: 'participant',
-          eventData: { clientId: client.id },
-        },
-      });
-
-      this.logger.log(`Client ${client.id} connected to session ${payload.sessionRecordId}`);
-
-      // Notify others in the room
-      client.to(payload.roomId).emit('participant:joined', {
-        anonId: payload.anonSessionToken,
-        timestamp: new Date().toISOString(),
-      });
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Unknown error';
-      this.logger.warn(`Client ${client.id} authentication failed: ${message}`);
-      client.emit('error', { message: 'Invalid or expired session token' });
-      client.disconnect();
-    }
+  @SubscribeMessage('auth')
+  async handleAuthLower(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: AuthPayload | string,
+  ) {
+    await this.authenticateClient(client, data);
   }
 
   async handleDisconnect(client: Socket) {
+    const pendingTimer = this.pendingAuthTimers.get(client.id);
+    if (pendingTimer) clearTimeout(pendingTimer);
+    this.pendingAuthTimers.delete(client.id);
+
     const participant = this.connectedParticipants.get(client.id);
 
     if (participant) {
@@ -133,7 +112,7 @@ export class SessionGateway implements OnGatewayConnection, OnGatewayDisconnect 
       });
 
       // Notify others
-      this.server.to(participant.sessionRecordId).emit('participant:left', {
+      this.server.to(participant.roomId).emit('participant:left', {
         anonId: participant.anonId,
         timestamp: new Date().toISOString(),
       });
@@ -293,5 +272,55 @@ export class SessionGateway implements OnGatewayConnection, OnGatewayDisconnect 
       }
     }
     return null;
+  }
+
+  private async authenticateClient(client: Socket, data: AuthPayload | string) {
+    const token = typeof data === 'string' ? data : data?.token;
+    if (!token) {
+      client.emit('AUTH_ERROR', { code: 'AUTH_TOKEN_REQUIRED' });
+      client.disconnect();
+      return;
+    }
+
+    try {
+      const payload = await this.tokenService.validateSessionToken(token);
+      const timer = this.pendingAuthTimers.get(client.id);
+      if (timer) clearTimeout(timer);
+      this.pendingAuthTimers.delete(client.id);
+
+      this.connectedParticipants.set(client.id, {
+        socketId: client.id,
+        sessionRecordId: payload.sessionRecordId,
+        anonId: payload.anonSessionToken,
+        isModerator: false,
+        roomId: payload.roomId,
+      });
+      (client as Socket & { sessionToken?: typeof payload }).sessionToken = payload;
+
+      await client.join(payload.roomId);
+
+      await this.prisma.auditEvent.create({
+        data: {
+          sessionRecordId: payload.sessionRecordId,
+          eventType: 'VOICE_CONNECTED',
+          severity: 'INFO',
+          actorAnonId: payload.anonSessionToken,
+          actorRole: 'participant',
+          eventData: { clientId: client.id },
+        },
+      });
+
+      client.emit('AUTH_SUCCESS');
+      this.logger.log(`Client ${client.id} authenticated to session ${payload.sessionRecordId}`);
+      client.to(payload.roomId).emit('participant:joined', {
+        anonId: payload.anonSessionToken,
+        timestamp: new Date().toISOString(),
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      this.logger.warn(`Client ${client.id} authentication failed: ${message}`);
+      client.emit('AUTH_ERROR', { code: 'TOKEN_INVALID' });
+      client.disconnect();
+    }
   }
 }

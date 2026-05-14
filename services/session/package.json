@@ -8,7 +8,11 @@
     "start": "node dist/main",
     "lint": "eslint . --max-warnings=0",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "prisma:generate": "prisma generate --schema=./prisma/session.prisma",
+    "migrate:session": "prisma migrate dev --schema=./prisma/session.prisma",
+    "migrate:deploy": "prisma migrate deploy --schema=./prisma/session.prisma",
+    "studio": "prisma studio --schema=./prisma/session.prisma"
   },
   "dependencies": {
     "@hips/types": "workspace:*",

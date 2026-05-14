@@ -2,14 +2,27 @@ import { NextRequest, NextResponse } from 'next/server'
 import { v4 as uuidv4 } from 'uuid'
 import { commerceDb } from '@/lib/commerce-db'
 import { BookSessionSchema, ErrorCodes, makeError, makeResponse } from '@hips/types'
-import { SESSION_HOURS_END, SESSION_HOURS_START } from '@/lib/config'
+import { SESSION_HOURS_END, SESSION_HOURS_START, SESSION_HOURS_TIMEZONE } from '@/lib/config'
 import { getAuthUser } from '@/lib/auth'
 import { rateLimit, rateLimitKey, RATE_LIMITS } from '@/lib/middleware/rate-limit'
 
 function isWithinSessionHours(datetime: Date): boolean {
-  const day = datetime.getDay()
-  if (day === 0) return false
-  const hours = datetime.getHours()
+  // Get day and hours in the configured timezone
+  const formatter = new Intl.DateTimeFormat('en-US', {
+    timeZone: SESSION_HOURS_TIMEZONE,
+    hour: 'numeric',
+    weekday: 'short',
+  })
+  const parts = formatter.formatToParts(datetime)
+  const dayPart = parts.find(p => p.type === 'weekday')
+  const hourPart = parts.find(p => p.type === 'hour')
+
+  const day = dayPart?.value ?? ''
+  const hours = parseInt(hourPart?.value ?? '0', 10)
+
+  // No sessions on Sundays
+  if (day === 'Sun') return false
+
   const start = parseInt(SESSION_HOURS_START.split(':')[0])
   const end = parseInt(SESSION_HOURS_END.split(':')[0])
   return hours >= start && hours < end
@@ -17,7 +30,7 @@ function isWithinSessionHours(datetime: Date): boolean {
 
 export async function POST(req: NextRequest) {
   const requestId = uuidv4()
-  const rl = rateLimit(rateLimitKey(req, 'booking'), RATE_LIMITS.booking)
+  const rl = await rateLimit(rateLimitKey(req, 'booking'), RATE_LIMITS.booking)
   if (rl !== 'ok') return rl
 
   try {
@@ -91,7 +104,7 @@ export async function POST(req: NextRequest) {
             id: pkg.id,
             userId: authResult.userId,
             serviceId,
-            usedSessions: pkg.usedSessions,
+            usedSessions: { lt: pkg.totalSessions },
             status: 'ACTIVE',
           },
           data: { usedSessions: { increment: 1 } },
@@ -120,7 +133,7 @@ export async function POST(req: NextRequest) {
         }
 
         const redeemed = await tx.scholarship.updateMany({
-          where: { id: scholarship.id, status: 'APPROVED', userId: authResult.userId },
+          where: { id: scholarship.id, status: 'APPROVED', userId: authResult.userId, expiresAt: { gte: new Date() } },
           data: { status: 'EXPIRED' },
         })
         if (redeemed.count !== 1) {

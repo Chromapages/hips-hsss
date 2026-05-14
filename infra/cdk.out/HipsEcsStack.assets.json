@@ -1,0 +1,21 @@
+{
+  "version": "53.0.0",
+  "files": {
+    "7cfc2bf047e11f677604b12fe26ead767524a9dfdb4453c7a4c9d7db532c0a6f": {
+      "displayName": "HipsEcsStack Template",
+      "source": {
+        "path": "HipsEcsStack.template.json",
+        "packaging": "file"
+      },
+      "destinations": {
+        "522814696950-us-east-1-c22393f5": {
+          "bucketName": "cdk-hnb659fds-assets-522814696950-us-east-1",
+          "objectKey": "7cfc2bf047e11f677604b12fe26ead767524a9dfdb4453c7a4c9d7db532c0a6f.json",
+          "region": "us-east-1",
+          "assumeRoleArn": "arn:${AWS::Partition}:iam::522814696950:role/cdk-hnb659fds-file-publishing-role-522814696950-us-east-1"
+        }
+      }
+    }
+  },
+  "dockerImages": {}
+}
