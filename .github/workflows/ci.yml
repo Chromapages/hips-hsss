@@ -306,12 +306,58 @@ jobs:
           docker push $ECR_REGISTRY/hips-safety-service:$IMAGE_TAG
           docker push $ECR_REGISTRY/hips-safety-service:latest
 
+  # ─── Migrate databases ───────────────────────────────────────────────────────
+  migrate-databases:
+    name: Run Prisma Migrations
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: [build-and-push-images]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - uses: aws-actions/configure-aws-credentials@v6
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      # Run vault migration as one-off ECS task
+      - name: Migrate vault DB
+        run: |
+          TASK_ARN=$(aws ecs run-task \
+            --cluster hips-platform-staging \
+            --task-definition HipsEcsStack-staging-VaultTaskDef \
+            --network-configuration "awsvpcConfiguration={subnets=[${{ secrets.PRIVATE_SUBNET_ID }}],securityGroups=[${{ secrets.VAULT_SG_ID }}],assignPublicIp=DISABLED}" \
+            --overrides '{"containerOverrides":[{"name":"vault-service","command":["npx","prisma","migrate","deploy","--schema=../../packages/db/prisma/vault.prisma"]}]}' \
+            --query 'tasks[0].taskArn' --output text)
+          aws ecs wait tasks-stopped --cluster hips-platform-staging --tasks $TASK_ARN
+          EXIT=$(aws ecs describe-tasks --cluster hips-platform-staging --tasks $TASK_ARN \
+            --query 'tasks[0].containers[0].exitCode' --output text)
+          [ "$EXIT" = "0" ] || exit 1
+
+      # Run session migration as one-off ECS task
+      - name: Migrate session DB
+        run: |
+          TASK_ARN=$(aws ecs run-task \
+            --cluster hips-platform-staging \
+            --task-definition HipsEcsStack-staging-SessionTaskDef \
+            --network-configuration "awsvpcConfiguration={subnets=[${{ secrets.PRIVATE_SUBNET_ID }}],securityGroups=[${{ secrets.SESSION_SG_ID }}],assignPublicIp=DISABLED}" \
+            --overrides '{"containerOverrides":[{"name":"session-service","command":["npx","prisma","migrate","deploy","--schema=./prisma/session.prisma"]}]}' \
+            --query 'tasks[0].taskArn' --output text)
+          aws ecs wait tasks-stopped --cluster hips-platform-staging --tasks $TASK_ARN
+          EXIT=$(aws ecs describe-tasks --cluster hips-platform-staging --tasks $TASK_ARN \
+            --query 'tasks[0].containers[0].exitCode' --output text)
+          [ "$EXIT" = "0" ] || exit 1
+
   # ─── Deploy staging ──────────────────────────────────────────────────────────
   deploy-staging:
     name: Deploy to Staging
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    needs: [build-and-push-images]
+    needs: [migrate-databases]
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
 
     steps:
