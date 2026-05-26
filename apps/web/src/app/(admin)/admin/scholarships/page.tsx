@@ -53,7 +53,7 @@ export default function AdminScholarshipsPage() {
     <div className="p-8">
       <header className="mb-8">
         <h1 className="text-3xl font-bold text-white">Scholarship Management</h1>
-        <p className="text-gray-400 mt-2">Review and process financial assistance requests.</p>
+        <p className="text-sm text-zinc-400 mt-2">Review and process financial assistance requests.</p>
       </header>
 
       {loading ? (
@@ -61,9 +61,9 @@ export default function AdminScholarshipsPage() {
           <Loader2 className="h-8 w-8 animate-spin text-indigo-500" />
         </div>
       ) : (
-        <div className="overflow-hidden rounded-xl border border-white/10 bg-gray-900 shadow-2xl">
+        <div className="overflow-hidden rounded-xl border border-white/10 bg-zinc-900 shadow-2xl">
           <table className="w-full text-left text-sm">
-            <thead className="bg-white/5 text-gray-400 uppercase text-xs font-semibold tracking-wider">
+            <thead className="bg-white/5 text-zinc-400 uppercase text-xs font-semibold tracking-wider">
               <tr>
                 <th className="px-6 py-4">Applicant</th>
                 <th className="px-6 py-4">Requested</th>
@@ -77,13 +77,13 @@ export default function AdminScholarshipsPage() {
                 <tr key={s.id} className="hover:bg-white/[0.02] transition-colors">
                   <td className="px-6 py-4">
                     <p className="font-medium text-white">{s.user.email}</p>
-                    <p className="text-xs text-gray-500">{format(new Date(s.createdAt), 'MMM d, yyyy')}</p>
+                    <p className="text-xs text-zinc-500">{format(new Date(s.createdAt), 'MMM d, yyyy')}</p>
                   </td>
                   <td className="px-6 py-4 text-white font-mono">
                     ${s.requestedCents / 100}
                   </td>
                   <td className="px-6 py-4 max-w-xs">
-                    <p className="text-gray-400 line-clamp-2 text-xs italic">"{s.note}"</p>
+                    <p className="text-zinc-400 line-clamp-2 text-xs italic">"{s.note}"</p>
                   </td>
                   <td className="px-6 py-4">
                     <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold border ${
@@ -113,7 +113,7 @@ export default function AdminScholarshipsPage() {
                         </button>
                       </div>
                     ) : (
-                      <span className="text-gray-600 text-xs">Processed</span>
+                      <span className="text-zinc-600 text-xs">Processed</span>
                     )}
                   </td>
                 </tr>
@@ -121,7 +121,7 @@ export default function AdminScholarshipsPage() {
             </tbody>
           </table>
           {scholarships.length === 0 && (
-            <div className="p-20 text-center text-gray-500">
+            <div className="p-20 text-center text-zinc-500">
               <AlertCircle className="mx-auto h-12 w-12 opacity-20 mb-4" />
               <p>No scholarship applications found.</p>
             </div>

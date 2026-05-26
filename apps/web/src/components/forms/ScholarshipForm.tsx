@@ -138,8 +138,9 @@ export function ScholarshipForm() {
         {currentStep === 0 && (
           <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500">
             <div className="space-y-2">
-              <label className="text-sm font-medium text-zinc-300 ml-1">Employment Status</label>
-              <select 
+              <label className="text-sm font-medium text-zinc-300 ml-1" htmlFor="employmentStatus">Employment Status</label>
+              <select
+                id="employmentStatus"
                 {...register("employmentStatus")}
                 className="w-full h-12 rounded-2xl border border-white/5 bg-white/5 px-4 text-sm text-white focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500/50 outline-none transition-all appearance-none"
               >
@@ -162,8 +163,9 @@ export function ScholarshipForm() {
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium text-zinc-300 ml-1">Desired Service</label>
-              <select 
+              <label className="text-sm font-medium text-zinc-300 ml-1" htmlFor="serviceType">Desired Service</label>
+              <select
+                id="serviceType"
                 {...register("serviceType")}
                 className="w-full h-12 rounded-2xl border border-white/5 bg-white/5 px-4 text-sm text-white focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500/50 outline-none transition-all appearance-none"
               >

@@ -8,7 +8,7 @@ export default function AdminBookingsPage() {
         <h1 className="text-3xl font-bold text-white">Bookings Queue</h1>
       </div>
       
-      <div className="bg-gray-900 border border-gray-800 rounded-lg h-[600px] flex items-center justify-center">
+      <div className="bg-zinc-900 border border-zinc-800 rounded-lg h-[600px] flex items-center justify-center">
         <EmptyState 
           icon={CalendarX2}
           title="No Upcoming Bookings"

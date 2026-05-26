@@ -68,8 +68,9 @@ export async function PATCH(
     });
 
     return NextResponse.json({ success: true, scholarship });
-  } catch (error) {
-    console.error('Admin Scholarship Update Error:', error);
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Internal Server Error';
+    console.error('Admin Scholarship Update Error:', message);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }

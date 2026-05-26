@@ -31,7 +31,7 @@ export class SessionGuard implements CanActivate {
       request['sessionRef'] = payload.ref;
       
       return true;
-    } catch (err) {
+    } catch {
       throw new UnauthorizedException('Invalid or expired session token');
     }
   }

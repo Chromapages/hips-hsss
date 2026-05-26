@@ -55,16 +55,17 @@ export default function LoginPage() {
   return (
     <div className="space-y-8">
       <div className="space-y-2">
-        <h1 className="text-4xl font-black tracking-tighter text-white">Welcome back.</h1>
+        <h1 className="text-3xl md:text-4xl font-black tracking-tighter text-white">Welcome back.</h1>
         <p className="text-sm font-medium text-zinc-500">Enter your credentials to access your sanctuary.</p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-5">
         <div className="space-y-2">
-          <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-500 ml-1">Email Address</label>
+          <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-500 ml-1" htmlFor="login-email">Email Address</label>
           <div className="relative group">
             <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-600 group-focus-within:text-indigo-500 transition-colors" />
             <input
+              id="login-email"
               type="email"
               required
               value={email}
@@ -77,7 +78,7 @@ export default function LoginPage() {
 
         <div className="space-y-2">
           <div className="flex justify-between items-center px-1">
-            <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-500">Password</label>
+            <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-500" htmlFor="login-password">Password</label>
             <Link href="/forgot-password" className="text-[10px] font-bold uppercase tracking-[0.2em] text-indigo-400 hover:text-indigo-300">
               Forgot?
             </Link>
@@ -85,6 +86,7 @@ export default function LoginPage() {
           <div className="relative group">
             <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-600 group-focus-within:text-indigo-500 transition-colors" />
             <input
+              id="login-password"
               type="password"
               required
               value={password}

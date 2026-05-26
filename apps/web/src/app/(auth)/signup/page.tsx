@@ -49,7 +49,7 @@ export default function SignupPage() {
   return (
     <div className="space-y-8">
       <div className="space-y-2">
-        <h1 className="text-4xl font-black tracking-tighter text-white">New Sanctuary.</h1>
+        <h1 className="text-3xl md:text-4xl font-black tracking-tighter text-white">New Sanctuary.</h1>
         <p className="text-sm font-medium text-zinc-500">Begin your journey with hard anonymity protection.</p>
       </div>
 
@@ -74,10 +74,11 @@ export default function SignupPage() {
 
       <form onSubmit={handleSubmit} className="space-y-5">
         <div className="space-y-2">
-          <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-500 ml-1">Display Name</label>
+          <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-500 ml-1" htmlFor="signup-display-name">Display Name</label>
           <div className="relative group">
             <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-600 group-focus-within:text-indigo-500 transition-colors" />
             <input
+              id="signup-display-name"
               type="text"
               required
               value={name}
@@ -89,10 +90,11 @@ export default function SignupPage() {
         </div>
 
         <div className="space-y-2">
-          <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-500 ml-1">Email Address</label>
+          <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-500 ml-1" htmlFor="signup-email">Email Address</label>
           <div className="relative group">
             <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-600 group-focus-within:text-indigo-500 transition-colors" />
             <input
+              id="signup-email"
               type="email"
               required
               value={email}
@@ -104,10 +106,11 @@ export default function SignupPage() {
         </div>
 
         <div className="space-y-2">
-          <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-500 ml-1">Password</label>
+          <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-500 ml-1" htmlFor="signup-password">Password</label>
           <div className="relative group">
             <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-600 group-focus-within:text-indigo-500 transition-colors" />
             <input
+              id="signup-password"
               type="password"
               required
               minLength={8}

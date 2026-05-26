@@ -3,18 +3,52 @@
 import { useEffect, useRef } from "react";
 
 export function CrisisResourceOverlay({ onClose }: { onClose: () => void }) {
-  const firstLink = useRef<HTMLAnchorElement>(null);
+  const overlayRef = useRef<HTMLDivElement>(null);
+  const firstLinkRef = useRef<HTMLAnchorElement>(null);
 
   useEffect(() => {
-    firstLink.current?.focus();
-    function onKeyDown(event: KeyboardEvent) {
+    // Focus the first link on mount
+    firstLinkRef.current?.focus();
+
+    // Focus trap: keep focus within the overlay
+    function trapFocus(event: KeyboardEvent) {
+      if (event.key === "Tab") {
+        const focusable = overlayRef.current?.querySelectorAll<HTMLElement>(
+          'a[href], button:not([disabled]), input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        );
+        if (!focusable || focusable.length === 0) return;
+
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+
+        if (event.shiftKey) {
+          if (document.activeElement === first) {
+            event.preventDefault();
+            last.focus();
+          }
+        } else {
+          if (document.activeElement === last) {
+            event.preventDefault();
+            first.focus();
+          }
+        }
+      }
+
+      // Allow Escape to close when user explicitly wants out
       if (event.key === "Escape") {
-        event.preventDefault();
+        onClose();
       }
     }
-    document.addEventListener("keydown", onKeyDown);
-    return () => document.removeEventListener("keydown", onKeyDown);
-  }, []);
+
+    document.addEventListener("keydown", trapFocus);
+    // Prevent background scrolling
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      document.removeEventListener("keydown", trapFocus);
+      document.body.style.overflow = "";
+    };
+  }, [onClose]);
 
   return (
     <div
@@ -27,7 +61,7 @@ export function CrisisResourceOverlay({ onClose }: { onClose: () => void }) {
       <section className="max-w-2xl">
         <h2 className="text-3xl font-bold" id="crisis-heading">Help is available right now.</h2>
         <div className="mt-6 grid gap-3 text-xl" id="crisis-body">
-          <a ref={firstLink} className="rounded-lg border border-white/30 p-4 focus:outline-none focus:ring-2 focus:ring-white" href="tel:988">
+          <a ref={firstLinkRef} className="rounded-lg border border-white/30 p-4 focus:outline-none focus:ring-2 focus:ring-white" href="tel:988">
             988 Suicide & Crisis Lifeline. Call or text 988.
           </a>
           <a className="rounded-lg border border-white/30 p-4 focus:outline-none focus:ring-2 focus:ring-white" href="sms:741741">
@@ -35,7 +69,7 @@ export function CrisisResourceOverlay({ onClose }: { onClose: () => void }) {
           </a>
           <p className="rounded-lg border border-white/30 p-4">Local emergency number: 911.</p>
         </div>
-        <button className="mt-8 min-h-11 rounded-md bg-white px-4 font-semibold text-red-950" onClick={onClose} type="button">
+        <button className="mt-8 min-h-11 rounded-xl bg-white px-4 font-semibold text-red-950" onClick={onClose} type="button">
           I am safe, close this
         </button>
       </section>

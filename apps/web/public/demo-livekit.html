@@ -1,0 +1,939 @@
+<!DOCTYPE html>
+<html lang="en" style="height: 100dvh;">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>H.I.P.S. — Anonymous Session Demo</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    * { font-family: 'Inter', system-ui, sans-serif; }
+    html { scroll-behavior: smooth; height: 100dvh; }
+    body { background: #030712; overflow-y: auto; min-height: 100dvh; }
+
+    /* Mobile viewport fix - dynamic viewport height for iOS */
+    .screen { display: none; }
+    .screen.active { display: flex; }
+
+    /* Animations */
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes speakRing { 0%,100% { transform: scale(1); opacity: 0.8; } 50% { transform: scale(1.15); opacity: 1; } }
+    @keyframes audioBar { 0%,100% { height: 8px; } 50% { height: 32px; } }
+
+    .fade-in { animation: fadeIn 0.3s ease-out forwards; }
+    .pulse { animation: pulse 2s ease-in-out infinite; }
+    .spin { animation: spin 1s linear infinite; }
+
+    /* Avatar */
+    .avatar-ring {
+      animation: speakRing 1s ease-in-out infinite;
+      border-color: #6366F1;
+      transition: box-shadow 0.2s ease;
+    }
+    .avatar-ring.speaking {
+      box-shadow: 0 0 0 4px rgba(99,102,241,0.4), 0 0 20px rgba(99,102,241,0.3);
+    }
+    .avatar-ring.peer {
+      border-color: #6B7280;
+    }
+    .avatar-ring.peer.speaking {
+      box-shadow: 0 0 0 4px rgba(107,114,128,0.4), 0 0 20px rgba(107,114,128,0.3);
+    }
+
+    /* Audio visualizer bars */
+    .audio-bar { animation: audioBar 0.3s ease-in-out infinite; }
+    .audio-bar:nth-child(1) { animation-delay: 0s; }
+    .audio-bar:nth-child(2) { animation-delay: 0.1s; }
+    .audio-bar:nth-child(3) { animation-delay: 0.2s; }
+    .audio-bar:nth-child(4) { animation-delay: 0.15s; }
+    .audio-bar:nth-child(5) { animation-delay: 0.05s; }
+
+    /* Buttons with touch feedback */
+    .btn-primary {
+      background: #6366F1;
+      transition: all 0.15s;
+    }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(99,102,241,0.4); }
+    .btn-primary:active { transform: scale(0.97); }
+    .btn-primary:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(99,102,241,0.5); }
+    .btn-secondary {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      transition: all 0.15s;
+    }
+    .btn-secondary:hover { background: rgba(255,255,255,0.1); }
+    .btn-secondary:active { transform: scale(0.97); }
+    .btn-secondary:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(99,102,241,0.5); }
+
+    /* Control buttons */
+    .ctrl-btn {
+      transition: all 0.15s;
+    }
+    .ctrl-btn:active { transform: scale(0.95); }
+    .ctrl-btn:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(99,102,241,0.5); }
+    .ctrl-btn.active {
+      background: rgba(99,102,241,0.2);
+      border-color: #6366F1;
+    }
+    .ctrl-btn.muted {
+      background: rgba(239,68,68,0.1);
+      border-color: rgba(239,68,68,0.3);
+    }
+    .ctrl-btn.hand-raised {
+      background: rgba(245,158,11,0.15);
+      border-color: rgba(245,158,11,0.5);
+    }
+
+    /* Modals */
+    .modal { display: none; }
+    .modal.open { display: flex; }
+
+    /* Mobile-first responsive styles */
+    @media (max-width: 640px) {
+      html, body { height: 100dvh; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+      
+      .screen { 
+        height: 100dvh; 
+        overflow-y: auto; 
+        -webkit-overflow-scrolling: touch;
+      }
+      
+      /* Scale down typography */
+      h1 { font-size: 1.875rem !important; line-height: 1.2 !important; }
+      h2 { font-size: 1.5rem !important; }
+      
+      /* Control bar fixed at bottom */
+      #screen-session { 
+        padding-bottom: 100px;
+        height: 100dvh;
+      }
+      #session-controls { 
+        position: fixed; 
+        bottom: 0; 
+        left: 0; 
+        right: 0; 
+        z-index: 100; 
+        background: rgba(0,0,0,0.85); 
+        backdrop-filter: blur(20px);
+        padding-bottom: env(safe-area-inset-bottom);
+      }
+      
+      /* Control bar 2x2 grid on mobile */
+      #session-controls .flex.gap-3 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.5rem;
+        width: 100%;
+        padding: 0.5rem;
+      }
+      #session-controls .ctrl-btn,
+      #session-controls .flex.items-center.gap-3 {
+        justify-content: center;
+      }
+      #session-controls .leave-btn {
+        grid-column: span 2;
+        margin-left: 0 !important;
+        margin-top: 0.25rem;
+      }
+      
+      /* Smaller avatars side by side */
+      #peer-section { 
+        opacity: 1 !important; 
+        flex-direction: row !important; 
+        gap: 1rem !important;
+      }
+      .avatar-ring { 
+        width: 5rem !important; 
+        height: 5rem !important; 
+      }
+      #your-avatar .avatar-ring {
+        width: 5rem !important;
+        height: 5rem !important;
+      }
+      
+      /* Compact spacing on mobile */
+      .screen .px-6 { padding-left: 1rem !important; padding-right: 1rem !important; }
+      .screen .p-6 { padding: 1rem !important; }
+      .avatar-ring { width: 5rem; height: 5rem; }
+      
+      /* Modal full-screen on mobile */
+      .modal.open > div {
+        position: fixed;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        max-width: none;
+        border-radius: 0;
+        margin: 0;
+        padding: 1.5rem;
+        padding-bottom: calc(1.5rem + env(safe-area-inset-bottom));
+        display: flex;
+        flex-direction: column;
+      }
+      .modal.open > div textarea {
+        flex: 1;
+        min-height: 120px;
+      }
+      
+      /* Top bar compact on mobile */
+      #screen-session header {
+        padding: 0.75rem 1rem;
+      }
+      
+      /* Sidebar hidden on mobile, content full width */
+      #screen-session section {
+        grid-template-columns: 1fr !important;
+      }
+      #screen-session aside {
+        display: none;
+      }
+      
+      /* Smaller text on mobile */
+      .text-lg { font-size: 1rem !important; }
+      .text-sm { font-size: 0.875rem !important; }
+      .text-xs { font-size: 0.75rem !important; }
+    }
+
+    /* Tablet and up */
+    @media (min-width: 641px) {
+      h1 { font-size: 3rem; }
+      h2 { font-size: 2rem; }
+    }
+  </style>
+</head>
+<body class="min-h-screen text-white">
+
+  <!-- SCREEN 1: Landing -->
+  <div id="screen-landing" class="screen active flex-col items-center justify-center min-h-screen px-4 sm:px-6 text-center">
+    <div class="fade-in max-w-2xl">
+      <div class="flex items-center justify-center gap-3 mb-8">
+        <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-2xl font-black">H</div>
+        <span class="text-2xl font-black tracking-tight">H.I.P.S.</span>
+      </div>
+      <p class="text-xs font-bold uppercase tracking-widest text-indigo-300 mb-4">Anonymous Peer Support</p>
+      <h1 class="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black leading-tight mb-6">
+        Your voice will be masked.<br>Your identity stays hidden.
+      </h1>
+      <p class="text-base sm:text-lg text-slate-400 mb-10 max-w-lg mx-auto leading-relaxed">
+        Press start to enter a private peer support session. Your voice is pitch-shifted in real-time so it can't be recognized. No recording. No correlation.
+      </p>
+      <button onclick="startDemo()" class="btn-primary text-white font-bold text-base sm:text-lg px-8 sm:px-10 py-3 sm:py-4 rounded-xl">
+        🎤 Start Session
+      </button>
+      <div class="mt-10 flex items-center justify-center gap-4 sm:gap-6 text-xs text-slate-500">
+        <span class="flex items-center gap-2">🔒 Zero data correlation</span>
+        <span class="flex items-center gap-2">🛡️ Safety engine active</span>
+        <span class="flex items-center gap-2">🚫 No recording</span>
+      </div>
+      <p class="mt-6 text-xs text-slate-600">We never store your voice and identity together.</p>
+    </div>
+  </div>
+
+  <!-- SCREEN 2: Microphone Setup -->
+  <div id="screen-mic" class="screen flex-col items-center justify-center min-h-screen px-4 sm:px-6">
+    <div class="fade-in max-w-xl w-full">
+      <p class="text-xs font-bold uppercase tracking-widest text-indigo-300 mb-4 text-center">Step 1 of 2</p>
+      <h2 class="text-2xl sm:text-3xl md:text-4xl font-black mb-2 text-center">Set up your microphone</h2>
+      <p class="text-slate-400 text-center mb-8 text-sm sm:text-base">We need microphone access to connect you to the session with voice masking enabled.</p>
+
+      <!-- Audio visualizer placeholder -->
+      <div id="audio-viz-placeholder" class="flex items-center justify-center gap-2 h-16 mb-8 rounded-xl border border-white/5 bg-white/[0.02]">
+        <div class="audio-bar w-1 bg-indigo-500/30 rounded-full" style="height:8px"></div>
+        <div class="audio-bar w-1 bg-indigo-500/30 rounded-full" style="height:8px"></div>
+        <div class="audio-bar w-1 bg-indigo-500/30 rounded-full" style="height:8px"></div>
+        <div class="audio-bar w-1 bg-indigo-500/30 rounded-full" style="height:8px"></div>
+        <div class="audio-bar w-1 bg-indigo-500/30 rounded-full" style="height:8px"></div>
+        <span class="ml-3 text-sm text-slate-500 hidden sm:inline">Microphone will appear here</span>
+      </div>
+
+      <!-- Mic status -->
+      <div id="mic-status" class="hidden mb-6 p-4 rounded-xl border text-center"></div>
+
+      <!-- Voice Masking Preview -->
+      <div class="rounded-xl border border-white/10 bg-white/[0.02] p-4 sm:p-6 mb-8">
+        <h3 class="font-semibold text-indigo-200 mb-2">🎭 Voice Masking Preview</h3>
+        <p class="text-sm text-slate-400 mb-4">Your voice will be pitch-shifted so it's not recognizable. Here's what it sounds like:</p>
+        <div class="flex flex-col sm:flex-row gap-3">
+          <button onclick="playOriginal()" class="btn-secondary flex-1 py-3 rounded-xl text-sm font-semibold flex items-center justify-center gap-2">
+            🔊 Hear Original
+          </button>
+          <button onclick="playMasked()" class="btn-secondary flex-1 py-3 rounded-xl text-sm font-semibold flex items-center justify-center gap-2">
+            🎭 Hear Masked
+          </button>
+        </div>
+        <p id="audio-play-status" class="text-xs text-slate-500 mt-3 text-center"></p>
+      </div>
+
+      <button id="btn-allow-mic" onclick="requestMic()" class="btn-primary w-full text-white font-bold py-4 rounded-xl text-base sm:text-lg">
+        Allow Microphone Access
+      </button>
+      <button id="btn-proceed" onclick="proceedToConnecting()" class="btn-primary w-full text-white font-bold py-4 rounded-xl text-base sm:text-lg mt-3 hidden">
+        Continue →
+      </button>
+<button onclick="resetDemo()" class="mt-4 text-sm text-slate-500 hover:text-white rounded-md px-4 py-2">
+        ← Back
+</button>
+    </div>
+  </div>
+
+  <!-- SCREEN 3: Connecting -->
+  <div id="screen-connecting" class="screen flex-col items-center justify-center min-h-screen px-4 sm:px-6">
+    <div class="fade-in text-center">
+      <div class="w-16 h-16 border-4 border-indigo-500/30 border-t-indigo-500 rounded-full spin mx-auto mb-6"></div>
+      <h2 class="text-2xl sm:text-3xl font-black mb-3">Preparing your anonymous room...</h2>
+      <p class="text-slate-400 mb-4 text-sm sm:text-base">Connecting to LiveKit servers</p>
+      <p class="font-mono text-sm text-indigo-300">Room: demo-room-hips</p>
+      <p id="connecting-anon-id" class="font-mono text-xs text-slate-500 mt-2"></p>
+    </div>
+  </div>
+
+  <!-- SCREEN 4: Session Room -->
+  <div id="screen-session" class="screen flex-col lg:h-screen h-dvh">
+    <!-- Top bar -->
+    <header class="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-white/10 bg-black/50 backdrop-blur-xl">
+      <div>
+        <p class="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-slate-500">Anonymous Room</p>
+        <p id="session-anon-id" class="font-mono text-sm text-indigo-300">anon_xxxx</p>
+      </div>
+      <div class="flex items-center gap-2 text-xs sm:text-sm font-bold text-emerald-300">
+        <span class="text-lg">🛡️</span>
+        <span class="hidden xs:inline">Safety Engine Active</span>
+      </div>
+      <div class="text-right">
+        <p class="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-slate-500">Room</p>
+        <p class="font-mono text-xs text-slate-400">demo-room-hips</p>
+      </div>
+    </header>
+
+    <!-- Main content -->
+    <section class="flex-1 grid grid-cols-1 lg:grid-cols-[1fr_320px] overflow-hidden">
+      <!-- Avatar area -->
+      <div class="relative overflow-hidden bg-[radial-gradient(circle_at_50%_20%,rgba(99,102,241,0.12),transparent_50%),#030712] flex flex-col items-center justify-center p-4 sm:p-8">
+        <!-- Your avatar -->
+        <div class="flex flex-col items-center mb-6 sm:mb-8">
+          <div id="your-avatar" class="avatar-ring w-24 h-24 sm:w-32 sm:h-32 rounded-full border-4 border-indigo-500 bg-gradient-to-br from-indigo-600 to-purple-700 flex items-center justify-center mb-3 relative">
+            <span class="text-3xl sm:text-4xl font-black">👤</span>
+            <div id="your-speaking-ring" class="absolute inset-0 rounded-full border-2 border-indigo-400 opacity-0 transition-opacity"></div>
+          </div>
+          <p id="your-anon-label" class="font-mono text-sm text-indigo-300">anon_xxxx</p>
+          <p class="text-xs text-slate-500">You</p>
+        </div>
+
+        <!-- Peer avatar -->
+        <div id="peer-section" class="flex flex-col sm:flex-col items-center opacity-0 transition-opacity duration-700">
+          <div class="w-20 h-20 sm:w-24 sm:h-24 rounded-full border-4 border-slate-500 bg-gradient-to-br from-slate-600 to-slate-700 flex items-center justify-center mb-3 relative">
+            <span class="text-2xl sm:text-3xl font-black">👤</span>
+            <div id="peer-speaking-ring" class="absolute inset-0 rounded-full border-2 border-slate-400 opacity-0 transition-opacity"></div>
+          </div>
+          <p id="peer-anon-label" class="font-mono text-sm text-slate-400">anon_xxxx</p>
+          <p class="text-xs text-slate-500">Peer</p>
+        </div>
+
+<!-- Voice mask active indicator -->
+        <div class="voice-mask-active absolute bottom-4 left-4 sm:bottom-6 sm:left-6 flex items-center gap-2 text-xs text-emerald-400 bg-emerald-400/10 border border-emerald-400/20 px-2 sm:px-3 py-2 rounded-full cursor-default">
+          <span>🎭</span> <span class="hidden sm:inline">Voice mask active — pitch shift + reverb</span>
+          <span class="sm:hidden">Masked</span>
+        </div>
+      </div>
+
+      <!-- Sidebar -->
+      <aside class="border-t border-l border-white/10 bg-zinc-950 flex flex-col overflow-hidden">
+        <div class="p-4 border-b border-white/10">
+          <p class="text-[10px] font-bold uppercase tracking-widest text-slate-500">Participants</p>
+        </div>
+        <div id="participant-list" class="flex-1 overflow-y-auto p-4 space-y-3">
+          <div class="flex items-center gap-3 p-3 rounded-xl bg-white/[0.03] border border-white/5">
+            <div class="w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center text-sm font-bold">Y</div>
+            <div>
+              <p id="plist-you" class="font-mono text-sm">anon_xxxx</p>
+              <p class="text-xs text-slate-500">You</p>
+            </div>
+          </div>
+          <div id="plist-peer" class="hidden flex items-center gap-3 p-3 rounded-xl bg-white/[0.03] border border-white/5">
+            <div class="w-8 h-8 rounded-full bg-slate-600 flex items-center justify-center text-sm font-bold">P</div>
+            <div>
+              <p class="font-mono text-sm text-slate-400">anon_7XM2</p>
+              <p class="text-xs text-slate-500">Peer</p>
+            </div>
+          </div>
+        </div>
+        <div class="p-4 border-t border-white/10">
+          <p class="text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-2">Hand Queue</p>
+          <p id="hand-queue-empty" class="text-sm text-slate-500">Raise your hand when you need facilitator attention.</p>
+          <div id="hand-queue-item" class="hidden flex items-center gap-3 p-3 rounded-xl bg-amber-500/10 border border-amber-500/20">
+            <div class="w-8 h-8 rounded-full bg-amber-600 flex items-center justify-center text-sm font-bold">Y</div>
+            <p class="font-mono text-sm text-amber-200">anon_xxxx</p>
+          </div>
+        </div>
+      </aside>
+    </section>
+
+    <!-- Control bar -->
+    <footer id="session-controls" class="flex items-center justify-center px-4 sm:px-6 py-4 sm:py-5 border-t border-white/10 bg-black/60 backdrop-blur-xl">
+      <div class="flex items-center gap-2 sm:gap-3 p-2 rounded-3xl border border-white/10 bg-white/[0.03]">
+        <!-- Mute button -->
+        <button id="btn-mute" onclick="toggleMute()" class="ctrl-btn flex items-center gap-2 sm:gap-3 px-4 sm:px-6 py-3 sm:py-4 rounded-2xl border border-white/10 font-bold transition-all hover:bg-white/10">
+          <span id="mic-icon" class="text-lg sm:text-xl">🎤</span>
+          <span id="mic-label" class="text-sm sm:text-base">Mute</span>
+        </button>
+
+        <!-- Raise hand button -->
+        <button id="btn-hand" onclick="toggleHand()" class="ctrl-btn flex items-center gap-2 sm:gap-3 px-4 sm:px-6 py-3 sm:py-4 rounded-2xl border border-white/10 font-bold transition-all hover:bg-white/10">
+          <span class="text-lg sm:text-xl">✋</span>
+          <span class="text-sm sm:text-base">Raise Hand</span>
+        </button>
+
+        <!-- Flag button -->
+        <button onclick="showFlagModal()" class="ctrl-btn flex items-center gap-2 sm:gap-3 px-4 sm:px-6 py-3 sm:py-4 rounded-xl border border-white/10 font-bold transition-all hover:bg-white/10">
+          <span class="text-lg sm:text-xl">🚨</span>
+          <span class="text-sm sm:text-base">Flag</span>
+        </button>
+
+        <!-- Leave button -->
+        <button onclick="leaveSession()" class="flex items-center gap-2 sm:gap-3 px-4 sm:px-6 py-3 sm:py-4 rounded-xl bg-red-600 text-white font-bold transition-all hover:bg-red-500 ml-0 sm:ml-3 leave-btn">
+          <span class="text-lg sm:text-xl">📞</span>
+          <span class="text-sm sm:text-base">Leave</span>
+        </button>
+      </div>
+    </footer>
+  </div>
+
+  <!-- SCREEN 5: Summary -->
+  <div id="screen-summary" class="screen flex-col items-center justify-center min-h-screen px-4 sm:px-6">
+    <div class="fade-in max-w-md text-center">
+      <div class="text-5xl sm:text-6xl mb-6">✅</div>
+      <h2 class="text-3xl sm:text-4xl font-black mb-3">Session Complete</h2>
+      <p class="text-slate-400 mb-8 text-sm sm:text-base">Your session has ended. Here's what happened:</p>
+
+      <div class="text-left rounded-2xl border border-white/10 bg-white/[0.03] p-4 sm:p-6 space-y-4 mb-8">
+        <div class="flex justify-between">
+          <span class="text-slate-400 text-sm">Anonymous ID</span>
+          <span id="summary-anon-id" class="font-mono text-indigo-300">anon_xxxx</span>
+        </div>
+        <div class="flex justify-between">
+          <span class="text-slate-400 text-sm">Duration</span>
+          <span id="summary-duration" class="text-white">0 minutes</span>
+        </div>
+        <div class="flex justify-between">
+          <span class="text-slate-400 text-sm">Recording</span>
+          <span class="text-emerald-400">None — as promised</span>
+        </div>
+        <div class="flex justify-between">
+          <span class="text-slate-400 text-sm">Data correlation</span>
+          <span class="text-emerald-400">Zero — hard anonymity</span>
+        </div>
+      </div>
+
+      <div class="rounded-xl border border-indigo-500/20 bg-indigo-500/5 p-4 mb-8">
+        <p class="text-sm text-indigo-200">🛡️ Your identity was never stored with your voice. The session DB only knew your anonymous token — never your billing identity.</p>
+      </div>
+
+      <button onclick="resetDemo()" class="btn-primary w-full text-white font-bold py-4 rounded-xl text-base sm:text-lg">
+        ← Back to Home
+      </button>
+    </div>
+  </div>
+
+  <!-- FLAG MODAL -->
+  <div id="flag-modal" class="modal fixed inset-0 z-50 items-center justify-center bg-black/80 backdrop-blur-xl px-4 sm:px-6">
+    <div class="w-full max-w-md rounded-xl border border-white/10 bg-zinc-950 p-6 sm:p-8">
+      <h3 class="text-xl sm:text-2xl font-black mb-2">🚨 Flag Safety Concern</h3>
+      <p class="text-sm text-slate-400 mb-6">Describe what's happening. A facilitator will be notified immediately.</p>
+      <textarea id="flag-reason" class="w-full h-32 bg-white/5 border border-white/10 rounded-xl p-4 text-white placeholder-slate-500 mb-4" placeholder="Describe the safety concern..."></textarea>
+      <div class="flex gap-3">
+        <button onclick="closeFlagModal()" class="flex-1 py-3 rounded-xl border border-white/10 font-bold hover:bg-white/5">Cancel</button>
+        <button onclick="submitFlag()" class="flex-1 py-3 rounded-xl bg-red-600 text-white font-bold hover:bg-red-500">Submit Flag</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- LEAVE CONFIRM MODAL -->
+  <div id="leave-modal" class="modal fixed inset-0 z-50 items-center justify-center bg-black/80 backdrop-blur-xl px-4 sm:px-6">
+    <div class="w-full max-w-md rounded-xl border border-white/10 bg-zinc-950 p-6 sm:p-8">
+      <h3 class="text-xl sm:text-2xl font-black mb-2">Leave this session?</h3>
+      <p class="text-sm text-slate-400 mb-6">Your audio will stop and you'll return to the dashboard.</p>
+      <div class="flex gap-3">
+        <button onclick="closeLeaveModal()" class="flex-1 py-3 rounded-xl border border-white/10 font-bold hover:bg-white/5">Cancel</button>
+        <button onclick="confirmLeave()" class="flex-1 py-3 rounded-xl bg-red-600 text-white font-bold hover:bg-red-500">Leave Session</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+  // ============================================================
+  // STATE
+  // ============================================================
+  let micStream = null;
+  let audioContext = null;
+  let analyser = null;
+  let sourceNode = null;
+  let workletNode = null;
+  let isMicActive = false;
+  let isMuted = false;
+  let isHandRaised = false;
+  let sessionStartTime = null;
+  let myAnonId = '';
+  let animationFrameId = null;
+
+  // Global keyboard handler for modals
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      const modals = document.querySelectorAll('.modal.open');
+      modals.forEach(m => m.classList.remove('open'));
+    }
+  });
+
+  // Click backdrop to close
+  document.addEventListener('click', (e) => {
+    if (e.target.classList.contains('modal') && e.target.classList.contains('open')) {
+      e.target.classList.remove('open');
+    }
+  });
+
+  // The pitch shift worklet — same as voice-mask-processor.ts
+  const pitchShiftWorkletSource = `
+class HipsPitchShiftProcessor extends AudioWorkletProcessor {
+  constructor(options) {
+    super();
+    const semitones = options.processorOptions?.semitones ?? 4;
+    this.ratio = Math.pow(2, semitones / 12); // ~1.26 for 4 semitones
+    this.BUF_SIZE = 4096;          // power of 2
+    this.MASK = this.BUF_SIZE - 1;
+    this.HALF = this.BUF_SIZE >> 1;
+    this.buf = new Float32Array(this.BUF_SIZE);
+    this.wp = 0;                   // write pointer (0..BUF_SIZE-1)
+    this.baseRp = 0;               // read pointer base (advances with ratio)
+    this.frac = 0;                 // fractional part of read pointer
+  }
+
+  // Hann window
+  win(n) {
+    return 0.5 * (1 - Math.cos(6.2831853 * n / this.HALF));
+  }
+
+  // Linear interpolate from circular buffer at fractional position
+  lerp(rp) {
+    const i0 = Math.floor(rp) & this.MASK;
+    const i1 = (i0 + 1) & this.MASK;
+    const f  = rp - Math.floor(rp);
+    return this.buf[i0] * (1 - f) + this.buf[i1] * f;
+  }
+
+  process(inputs, outputs) {
+    const src = inputs[0]?.[0];
+    const dst = outputs[0]?.[0];
+    if (!src || !dst) return true;
+
+    for (let i = 0; i < src.length; i++) {
+      // Write input sample
+      this.buf[this.wp & this.MASK] = src[i];
+      this.wp++;
+
+      // Advance read pointer by ratio
+      this.frac += this.ratio;
+      if (this.frac >= 1) {
+        const whole = Math.floor(this.frac);
+        this.baseRp += whole;
+        this.frac  -= whole;
+      }
+
+      // Compute two read positions (windowed overlap-add)
+      const rp1 = (this.baseRp               ) & this.MASK;
+      const rp2 = (this.baseRp + this.HALF) & this.MASK;
+      dst[i] = this.lerp(this.baseRp       ) * this.win(rp1)
+             + this.lerp((this.baseRp + this.HALF) & this.MASK) * this.win(rp2);
+
+      // Wrap baseRp to stay within reasonable range (no runaway)
+      if (this.baseRp > this.BUF_SIZE * 16) {
+        this.baseRp -= this.BUF_SIZE * 16;
+      }
+    }
+    return true;
+  }
+}
+registerProcessor('hips-pitch-shift', HipsPitchShiftProcessor);
+`;
+
+  // ============================================================
+  // SCREEN MANAGEMENT
+  // ============================================================
+  function showScreen(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+  }
+
+  function showModal(id) {
+    document.getElementById(id).classList.add('open');
+  }
+
+  function closeModal(id) {
+    document.getElementById(id).classList.remove('open');
+  }
+
+  // ============================================================
+  // DEMO FLOW
+  // ============================================================
+  function startDemo() {
+    myAnonId = 'anon_' + Math.random().toString(36).slice(2,6).toUpperCase();
+    showScreen('screen-mic');
+  }
+
+  async function requestMic() {
+    const btn = document.getElementById('btn-allow-mic');
+    const status = document.getElementById('mic-status');
+    btn.disabled = true;
+    btn.textContent = 'Requesting...';
+
+    try {
+      micStream = await navigator.mediaDevices.getUserMedia({
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true,
+          sampleRate: 44100
+        },
+        video: false
+      });
+
+      // Show live audio visualizer
+      audioContext = new AudioContext();
+      const ctx = audioContext;
+      sourceNode = ctx.createMediaStreamSource(micStream);
+      analyser = ctx.createAnalyser();
+      analyser.fftSize = 256;
+      sourceNode.connect(analyser);
+
+      // Build visualization
+      const placeholder = document.getElementById('audio-viz-placeholder');
+      placeholder.innerHTML = `
+        <div class="flex items-end gap-1 h-16">
+          <div id="bar1" class="w-2 bg-indigo-500/40 rounded-full transition-all" style="height:8px"></div>
+          <div id="bar2" class="w-2 bg-indigo-500/40 rounded-full transition-all" style="height:8px"></div>
+          <div id="bar3" class="w-2 bg-indigo-500/40 rounded-full transition-all" style="height:8px"></div>
+          <div id="bar4" class="w-2 bg-indigo-500/40 rounded-full transition-all" style="height:8px"></div>
+          <div id="bar5" class="w-2 bg-indigo-500/40 rounded-full transition-all" style="height:8px"></div>
+          <div id="bar6" class="w-2 bg-indigo-500/40 rounded-full transition-all" style="height:8px"></div>
+          <div id="bar7" class="w-2 bg-indigo-500/40 rounded-full transition-all" style="height:8px"></div>
+          <div id="bar8" class="w-2 bg-indigo-500/40 rounded-full transition-all" style="height:8px"></div>
+        </div>
+        <span class="ml-3 text-sm text-emerald-400">Microphone active</span>
+      `;
+
+      function updateViz() {
+        if (!analyser) return;
+        const data = new Uint8Array(analyser.frequencyBinCount);
+        analyser.getByteFrequencyData(data);
+        const bars = document.querySelectorAll('#audio-viz-placeholder .w-2');
+        const step = Math.floor(data.length / bars.length);
+        bars.forEach((bar, i) => {
+          const val = data[i * step] / 255;
+          bar.style.height = (8 + val * 28) + 'px';
+          bar.style.background = val > 0.1 ? '#6366F1' : 'rgba(99,102,241,0.3)';
+        });
+        animationFrameId = requestAnimationFrame(updateViz);
+      }
+      updateViz();
+
+      status.className = 'mb-6 p-4 rounded-xl border text-center border-emerald-500/20 bg-emerald-500/10 text-emerald-300';
+      status.textContent = '✓ Microphone ready';
+      status.classList.remove('hidden');
+      btn.classList.add('hidden');
+      document.getElementById('btn-proceed').classList.remove('hidden');
+
+    } catch (err) {
+      status.className = 'mb-6 p-4 rounded-xl border text-center border-red-500/20 bg-red-500/10 text-red-300';
+      status.textContent = '✗ Microphone access denied. Please enable it in your browser settings.';
+      status.classList.remove('hidden');
+      btn.disabled = false;
+      btn.textContent = 'Try Again';
+    }
+  }
+
+  function proceedToConnecting() {
+    showScreen('screen-connecting');
+    document.getElementById('connecting-anon-id').textContent = myAnonId;
+
+    // Resume AudioContext if suspended (required before AudioWorklet setup)
+    if (audioContext && audioContext.state === 'suspended') {
+      audioContext.resume();
+    }
+
+    // Apply voice mask and route audio
+    setupVoiceMask();
+
+    // Check if mobile for immediate peer display
+    const isMobile = window.innerWidth <= 640;
+    const peerDelay = isMobile ? 500 : 3000;
+
+    setTimeout(() => {
+      showScreen('screen-session');
+      sessionStartTime = Date.now();
+      document.getElementById('session-anon-id').textContent = myAnonId;
+      document.getElementById('your-anon-label').textContent = myAnonId;
+      document.getElementById('plist-you').textContent = myAnonId;
+
+      // Simulate peer joining - faster on mobile since it's already a simulation
+      setTimeout(() => {
+        document.getElementById('peer-section').style.opacity = '1';
+        document.getElementById('plist-peer').classList.remove('hidden');
+        document.getElementById('peer-anon-label').textContent = 'anon_7XM2';
+      }, peerDelay);
+    }, 2000);
+  }
+
+  async function setupVoiceMask() {
+    if (!micStream || !audioContext) return;
+
+    try {
+      // Load the AudioWorklet module
+      const workletBlob = new Blob([pitchShiftWorkletSource], { type: 'application/javascript' });
+      const workletUrl = URL.createObjectURL(workletBlob);
+      await audioContext.audioWorklet.addModule(workletUrl);
+
+      // Create audio chain: mic → pitchShiftWorklet → destination (so you hear yourself masked)
+      const highpass = audioContext.createBiquadFilter();
+      highpass.type = 'highpass';
+      highpass.frequency.value = 90;
+
+      const lowpass = audioContext.createBiquadFilter();
+      lowpass.type = 'lowpass';
+      lowpass.frequency.value = 7000;
+
+      const compressor = audioContext.createDynamicsCompressor();
+      compressor.threshold.value = -22;
+      compressor.knee.value = 20;
+      compressor.ratio.value = 2.8;
+      compressor.attack.value = 0.003;
+      compressor.release.value = 0.22;
+
+      // Simple reverb via convolver
+      const convolver = audioContext.createConvolver();
+      const reverbLen = Math.floor(audioContext.sampleRate * 0.75);
+      const ir = audioContext.createBuffer(2, reverbLen, audioContext.sampleRate);
+      for (let ch = 0; ch < 2; ch++) {
+        const d = ir.getChannelData(ch);
+        for (let i = 0; i < reverbLen; i++) {
+          d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i/reverbLen, 2.8);
+        }
+      }
+      convolver.buffer = ir;
+
+      const dryGain = audioContext.createGain();
+      dryGain.gain.value = 0.78;
+
+      const wetGain = audioContext.createGain();
+      wetGain.gain.value = 0.22;
+
+      // Create worklet node with 4 semitone pitch shift
+      workletNode = new AudioWorkletNode(audioContext, 'hips-pitch-shift', {
+        processorOptions: { semitones: 4 }
+      });
+
+      // Route: source → highpass → worklet → lowpass → compressor → dryGain → destination
+      //                                                    └→ convolver → wetGain → destination
+      sourceNode.connect(highpass);
+      highpass.connect(workletNode);
+      workletNode.connect(lowpass);
+      lowpass.connect(compressor);
+      compressor.connect(dryGain);
+      dryGain.connect(audioContext.destination);
+      compressor.connect(convolver);
+      convolver.connect(wetGain);
+      wetGain.connect(audioContext.destination);
+
+      isMicActive = true;
+      isMuted = false;
+      updateMuteButton();
+
+    } catch (err) {
+      console.warn('Voice mask setup failed, using plain audio:', err);
+      sourceNode.connect(audioContext.destination);
+      isMicActive = true;
+      isMuted = false;
+      // Hide voice mask indicator since it's not actually active
+      const maskIndicator = document.querySelector('.voice-mask-active');
+      if (maskIndicator) maskIndicator.style.display = 'none';
+      updateMuteButton();
+    }
+  }
+
+  // ============================================================
+  // VOICE MASK PREVIEW (demo sounds)
+  // ============================================================
+  function playOriginal() {
+    const status = document.getElementById('audio-play-status');
+    status.textContent = 'Playing original voice...';
+    playTone(440, 2000);
+    setTimeout(() => { status.textContent = ''; }, 2500);
+  }
+
+  function playMasked() {
+    const status = document.getElementById('audio-play-status');
+    status.textContent = 'Playing pitch-shifted voice...';
+    // Play a higher tone to simulate the pitch shift effect
+    playTone(880, 2000); // One octave up = 4 semitones = the pitch shift amount
+    setTimeout(() => { status.textContent = ''; }, 2500);
+  }
+
+  function playTone(freq, duration) {
+    const ctx = new AudioContext();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.value = freq;
+    gain.gain.setValueAtTime(0.3, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + duration/1000);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start();
+    osc.stop(ctx.currentTime + duration/1000);
+  }
+
+  // ============================================================
+  // SESSION CONTROLS
+  // ============================================================
+  function toggleMute() {
+    if (!micStream) return;
+    isMuted = !isMuted;
+
+    if (isMuted) {
+      micStream.getTracks().forEach(t => t.enabled = false);
+    } else {
+      micStream.getTracks().forEach(t => t.enabled = true);
+    }
+    updateMuteButton();
+  }
+
+  function updateMuteButton() {
+    const btn = document.getElementById('btn-mute');
+    const icon = document.getElementById('mic-icon');
+    const label = document.getElementById('mic-label');
+    const ring = document.getElementById('your-avatar');
+
+    if (isMuted) {
+      btn.classList.add('muted');
+      btn.classList.remove('active');
+      icon.textContent = '🔇';
+      label.textContent = 'Unmute';
+      ring.classList.remove('speaking');
+    } else {
+      btn.classList.remove('muted');
+      icon.textContent = '🎤';
+      label.textContent = 'Mute';
+    }
+  }
+
+  function toggleHand() {
+    isHandRaised = !isHandRaised;
+    const btn = document.getElementById('btn-hand');
+    const queueItem = document.getElementById('hand-queue-item');
+    const queueEmpty = document.getElementById('hand-queue-empty');
+
+    if (isHandRaised) {
+      btn.classList.add('hand-raised');
+      queueItem.classList.remove('hidden');
+      queueEmpty.classList.add('hidden');
+      document.getElementById('plist-you').parentElement.classList.add('bg-amber-500/10', 'border-amber-500/20');
+    } else {
+      btn.classList.remove('hand-raised');
+      queueItem.classList.add('hidden');
+      queueEmpty.classList.remove('hidden');
+      document.getElementById('plist-you').parentElement.classList.remove('bg-amber-500/10', 'border-amber-500/20');
+    }
+  }
+
+  // ============================================================
+  // MODALS
+  // ============================================================
+  function showFlagModal() { showModal('flag-modal'); }
+  function closeFlagModal() {
+    document.getElementById('flag-reason').value = '';
+    closeModal('flag-modal');
+  }
+
+  function submitFlag() {
+    const reason = document.getElementById('flag-reason').value;
+    closeModal('flag-modal');
+    document.getElementById('flag-reason').value = '';
+    alert('🚨 Safety flag submitted. A facilitator has been notified.\n\nReason: ' + (reason || 'Not specified'));
+  }
+
+  function leaveSession() { showModal('leave-modal'); }
+  function closeLeaveModal() { closeModal('leave-modal'); }
+
+  function confirmLeave() {
+    closeModal('leave-modal');
+
+    // Ensure sessionStartTime is set
+    if (!sessionStartTime) sessionStartTime = Date.now();
+
+    // Stop audio
+    if (animationFrameId) cancelAnimationFrame(animationFrameId);
+    if (micStream) micStream.getTracks().forEach(t => t.stop());
+    if (audioContext) audioContext.close();
+
+    // Show summary
+    const totalSeconds = Math.floor((Date.now() - sessionStartTime) / 1000);
+    const mins = Math.floor(totalSeconds / 60);
+    const secs = totalSeconds % 60;
+    let durationText;
+    if (mins > 0) {
+      durationText = mins + ' minute' + (mins !== 1 ? 's' : '');
+      if (secs > 0) durationText += ' ' + secs + ' second' + (secs !== 1 ? 's' : '');
+    } else {
+      durationText = secs + ' second' + (secs !== 1 ? 's' : '');
+    }
+    document.getElementById('summary-anon-id').textContent = myAnonId;
+    document.getElementById('summary-duration').textContent = durationText;
+
+    showScreen('screen-summary');
+  }
+
+  function resetDemo() {
+    // Cancel any pending animation frame first
+    if (animationFrameId) {
+      cancelAnimationFrame(animationFrameId);
+      animationFrameId = null;
+    }
+
+    // Reset all state
+    micStream = null;
+    audioContext = null;
+    analyser = null;
+    sourceNode = null;
+    workletNode = null;
+    isMicActive = false;
+    isMuted = false;
+    isHandRaised = false;
+    sessionStartTime = null;
+
+    // Reset UI
+    document.getElementById('audio-viz-placeholder').innerHTML = `
+      <div class="flex items-center gap-2 h-16">
+        <div class="audio-bar w-1 bg-indigo-500/30 rounded-full" style="height:8px"></div>
+        <div class="audio-bar w-1 bg-indigo-500/30 rounded-full" style="height:8px"></div>
+        <div class="audio-bar w-1 bg-indigo-500/30 rounded-full" style="height:8px"></div>
+        <div class="audio-bar w-1 bg-indigo-500/30 rounded-full" style="height:8px"></div>
+        <div class="audio-bar w-1 bg-indigo-500/30 rounded-full" style="height:8px"></div>
+      </div>
+      <span class="ml-3 text-sm text-slate-500">Microphone will appear here</span>
+    `;
+    document.getElementById('mic-status').classList.add('hidden');
+    document.getElementById('btn-allow-mic').classList.remove('hidden');
+    document.getElementById('btn-allow-mic').disabled = false;
+    document.getElementById('btn-allow-mic').textContent = 'Allow Microphone Access';
+    document.getElementById('btn-proceed').classList.add('hidden');
+    document.getElementById('peer-section').style.opacity = '0';
+    document.getElementById('plist-peer').classList.add('hidden');
+    document.getElementById('hand-queue-item').classList.add('hidden');
+    document.getElementById('hand-queue-empty').classList.remove('hidden');
+    document.getElementById('btn-hand').classList.remove('hand-raised');
+
+    showScreen('screen-landing');
+  }
+  </script>
+</body>
+</html>

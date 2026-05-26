@@ -1,4 +1,5 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, Logger } from '@nestjs/common';
+import { Cron } from '@nestjs/schedule';
 import { PrismaService } from '../prisma.service.js';
 import { VaultCryptoService } from './vault-crypto.service.js';
 
@@ -22,10 +23,72 @@ export type VaultAccessInput = {
 
 @Injectable()
 export class VaultService {
+  private readonly logger = new Logger(VaultService.name);
+
   constructor(
     private prisma: PrismaService,
     private crypto: VaultCryptoService
   ) {}
+
+  @Cron('0 0 * * *') // daily at midnight
+  async expireOldIpAddresses(): Promise<void> {
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+    const expired = await this.prisma.identityRecord.findMany({
+      where: {
+        ipExpiresAt: { lt: new Date() },
+        encryptedIpAddress: { not: null },
+      },
+    });
+
+    for (const record of expired) {
+      await this.prisma.identityRecord.update({
+        where: { id: record.id },
+        data: { encryptedIpAddress: null, ipExpiresAt: null },
+      });
+      await this.logAccess({
+        subjectRef: record.subjectRef,
+        actorRef: 'SYSTEM',
+        purpose: 'RECORD_READ',
+        action: 'IP_EXPIRY',
+        metadata: { expiredAt: new Date().toISOString() },
+      });
+      this.logger.log(`IP expired for subjectRef: ${record.subjectRef}`);
+    }
+
+    this.logger.log(`IP expiry job complete. Records processed: ${expired.length}`);
+  }
+
+  @Cron('0 0 * * *') // daily at midnight
+  async expireOldDeviceFingerprints(): Promise<void> {
+    const ninetyDaysAgo = new Date();
+    ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
+
+    const expired = await this.prisma.identityRecord.findMany({
+      where: {
+        deviceFingerprintExpiresAt: { lt: new Date() },
+        encryptedDeviceFingerprint: { not: null },
+      },
+    });
+
+    for (const record of expired) {
+      await this.prisma.identityRecord.update({
+        where: { id: record.id },
+        data: { encryptedDeviceFingerprint: null, deviceFingerprintExpiresAt: null },
+      });
+      await this.logAccess({
+        subjectRef: record.subjectRef,
+        actorRef: 'SYSTEM',
+        purpose: 'RECORD_READ',
+        action: 'DEVICE_FINGERPRINT_EXPIRY',
+        metadata: { expiredAt: new Date().toISOString() },
+      });
+      this.logger.log(`Device fingerprint expired for subjectRef: ${record.subjectRef}`);
+    }
+
+    this.logger.log(`Device fingerprint expiry job complete. Records processed: ${expired.length}`);
+  }
 
   async createRecord(data: CreateVaultRecordInput) {
     const { subjectRef, realName, emergencyContact, region, disclosure, ipAddress, deviceFingerprint } = data;

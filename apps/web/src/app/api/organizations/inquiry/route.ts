@@ -34,8 +34,9 @@ export async function POST(req: NextRequest) {
       success: true,
       inquiryId: inquiry.id,
     });
-  } catch (error) {
-    console.error('Org Inquiry Error:', error);
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Internal Server Error';
+    console.error('Org Inquiry Error:', message);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }

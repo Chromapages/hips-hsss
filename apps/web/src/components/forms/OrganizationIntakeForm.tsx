@@ -146,8 +146,9 @@ export function OrganizationIntakeForm() {
         {/* Right Column */}
         <div className="space-y-6">
           <div className="space-y-2">
-            <label className="text-sm font-medium text-zinc-300 ml-1">Event Type</label>
-            <select 
+            <label className="text-sm font-medium text-zinc-300 ml-1" htmlFor="eventType">Event Type</label>
+            <select
+              id="eventType"
               {...register("eventType")}
               className="w-full h-12 rounded-2xl border border-white/5 bg-white/5 px-4 text-sm text-white focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500/50 outline-none transition-all appearance-none"
             >

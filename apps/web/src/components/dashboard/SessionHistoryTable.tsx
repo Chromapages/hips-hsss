@@ -8,7 +8,7 @@ import { format } from "date-fns";
 const badgeClass = {
   UPCOMING: "bg-indigo-500/15 text-indigo-200 border-indigo-500/30",
   COMPLETED: "bg-emerald-500/15 text-emerald-200 border-emerald-500/30",
-  CANCELLED: "bg-gray-500/15 text-gray-300 border-gray-500/30",
+  CANCELLED: "bg-zinc-500/15 text-zinc-300 border-zinc-500/30",
   SCHEDULED: "bg-indigo-500/15 text-indigo-200 border-indigo-500/30",
 } as const;
 
@@ -38,9 +38,9 @@ export function SessionHistoryTable({ sessions = [] }: { sessions?: SessionHisto
   }
 
   return (
-    <div className="overflow-hidden rounded-lg border border-white/10 bg-gray-950">
+    <div className="overflow-hidden rounded-lg border border-white/10 bg-zinc-950">
       <table className="w-full text-left text-sm">
-        <thead className="bg-white/5 text-gray-400">
+        <thead className="bg-white/5 text-zinc-400">
           <tr>
             {["Session ID", "Service", "Date", "Status", "Duration"].map(
               (heading) => (
@@ -54,9 +54,9 @@ export function SessionHistoryTable({ sessions = [] }: { sessions?: SessionHisto
         <tbody>
           {visible.map((row) => (
             <tr className="border-t border-white/10" key={row.id}>
-              <td className="px-4 py-4 font-mono text-gray-300">{row.id}</td>
+              <td className="px-4 py-4 font-mono text-zinc-300">{row.id}</td>
               <td className="px-4 py-4 text-white">{row.service}</td>
-              <td className="px-4 py-4 text-gray-300">
+              <td className="px-4 py-4 text-zinc-300">
                 {row.date ? format(new Date(row.date), 'MMM d, yyyy') : 'Pending'}
               </td>
               <td className="px-4 py-4">
@@ -66,12 +66,12 @@ export function SessionHistoryTable({ sessions = [] }: { sessions?: SessionHisto
                   {row.status}
                 </span>
               </td>
-              <td className="px-4 py-4 text-gray-300">60 min</td>
+              <td className="px-4 py-4 text-zinc-300">60 min</td>
             </tr>
           ))}
         </tbody>
       </table>
-      <div className="flex items-center justify-between border-t border-white/10 px-4 py-3 text-sm text-gray-400">
+      <div className="flex items-center justify-between border-t border-white/10 px-4 py-3 text-sm text-zinc-400">
         <span>
           Page {page + 1} of {Math.ceil(sessions.length / pageSize)}
         </span>

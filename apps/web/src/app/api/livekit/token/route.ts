@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { AccessToken } from 'livekit-server-sdk';
 import crypto from 'crypto';
-import { verifyFirebaseIdToken } from '@/lib/auth-edge';
+import { db } from '@/lib/firebase-admin';
 
 const palettes = ['coastal', 'sunrise', 'forest'] as const;
 
+// Phase 5 spec: avatar params lock on session start — never persist to identity
 function makeAvatar(seed: string) {
   const first = seed.charCodeAt(0) || 1;
   const second = seed.charCodeAt(1) || 2;
@@ -17,32 +18,89 @@ function makeAvatar(seed: string) {
   };
 }
 
+// Session lifecycle states
+type SessionStatus = 'pending' | 'active' | 'ended' | 'flagged';
+
+interface Phase5Session {
+  id: string;
+  status: SessionStatus;
+  createdAt: string;
+  activeAt?: string;
+  endedAt?: string;
+  participantCount: number;
+  flagged: boolean;
+  flaggedBy?: string;
+  flaggedReason?: string;
+}
+
+async function getOrCreateSession(sessionId: string): Promise<Phase5Session> {
+  const sessionRef = db.collection('phase5_sessions').doc(sessionId);
+  const doc = await sessionRef.get();
+
+  if (doc.exists) {
+    return doc.data() as Phase5Session;
+  }
+
+  // Create new session
+  const session: Phase5Session = {
+    id: sessionId,
+    status: 'pending',
+    createdAt: new Date().toISOString(),
+    participantCount: 0,
+    flagged: false,
+  };
+
+  await sessionRef.set(session);
+  return session;
+}
+
+async function transitionSession(sessionId: string, newStatus: SessionStatus) {
+  const sessionRef = db.collection('phase5_sessions').doc(sessionId);
+  const update: Partial<Phase5Session> = { status: newStatus };
+
+  if (newStatus === 'active') {
+    update.activeAt = new Date().toISOString();
+  } else if (newStatus === 'ended') {
+    update.endedAt = new Date().toISOString();
+  }
+
+  await sessionRef.update(update);
+}
+
 export async function POST(req: NextRequest) {
   try {
-    const authHeader = req.headers.get('authorization');
-    const token = authHeader?.startsWith('Bearer ') ? authHeader.split(' ')[1] : null;
-
-    if (!token) {
-      return NextResponse.json({ error: 'Unauthorized: No token provided' }, { status: 401 });
-    }
-
-    const payload = await verifyFirebaseIdToken(token);
-
     const apiKey = process.env.LIVEKIT_API_KEY;
     const apiSecret = process.env.LIVEKIT_API_SECRET;
 
     if (!apiKey || !apiSecret) {
       console.error('[LiveKitAPI] MISSING CREDENTIALS', { apiKey: !!apiKey, apiSecret: !!apiSecret });
-      return NextResponse.json({ 
+      return NextResponse.json({
         error: 'LiveKit credentials missing from server environment',
         details: 'Check .env.local for LIVEKIT_API_KEY and LIVEKIT_API_SECRET'
       }, { status: 500 });
     }
 
     const body = await req.json().catch(() => ({}));
-    const roomName = body.sessionId || 'general-sanctuary';
-    const anonymousIdentity = `anon-${crypto.randomUUID()}`;
-    const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour from now
+    const roomName = body.sessionId || `session-${crypto.randomUUID()}`;
+
+    // Phase 5: Anonymous identity ONLY — no Firebase UID
+    const anonymousIdentity = crypto.randomUUID();
+    const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour max
+
+    // Session lifecycle — ensure session exists and transition to active
+    let session: Phase5Session;
+    try {
+      session = await getOrCreateSession(roomName);
+      if (session.status === 'pending') {
+        await transitionSession(roomName, 'active');
+        session.status = 'active';
+        session.activeAt = new Date().toISOString();
+      }
+    } catch (err) {
+      // Non-fatal: continue with token issuance even if Firestore unavailable
+      console.warn('[LiveKitAPI] Session lifecycle error:', err);
+      session = { id: roomName, status: 'active', createdAt: new Date().toISOString(), participantCount: 0, flagged: false };
+    }
 
     console.log(`[LiveKitAPI] Issuing token for room: ${roomName}, identity: ${anonymousIdentity}`);
 
@@ -59,6 +117,12 @@ export async function POST(req: NextRequest) {
       canPublishData: true,
     });
 
+    // Add metadata forFacilitator identification
+    at.metadata = JSON.stringify({
+      joinedAt: new Date().toISOString(),
+      sessionId: roomName,
+    });
+
     const tokenJwt = await at.toJwt();
 
     return NextResponse.json({
@@ -67,17 +131,17 @@ export async function POST(req: NextRequest) {
       anonymousIdentity,
       avatar: makeAvatar(anonymousIdentity),
       expiresAt: expiresAt.toISOString(),
+      sessionStatus: session.status,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     console.error('[LiveKitAPI] CRITICAL Error:', {
-      message: error.message,
-      code: error.code,
-      stack: error.stack
+      message: errorMessage,
+      code: error && typeof error === 'object' && 'code' in error ? (error as { code: unknown }).code : undefined,
     });
-    return NextResponse.json({ 
-      error: 'LiveKit token generation failed', 
-      details: error.message,
-      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    return NextResponse.json({
+      error: 'LiveKit token generation failed',
+      details: process.env.NODE_ENV === 'development' ? errorMessage : undefined,
     }, { status: 500 });
   }
 }

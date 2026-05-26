@@ -11,7 +11,7 @@ function cleanEnvValue(value: string) {
 }
 
 function normalizePrivateKey(value?: string) {
-  return value ? cleanEnvValue(value).replace(/\\n/g, '\n') : undefined;
+  return value ? cleanEnvValue(value).replace(/\\/g, '\\n') : undefined;
 }
 
 function parseServiceAccountJson(value?: string): ServiceAccountJson | null {
@@ -55,53 +55,73 @@ function getServiceAccount() {
   const privateKey = normalizePrivateKey(jsonAccount?.private_key || process.env.FIREBASE_PRIVATE_KEY);
 
   if (!projectId || !clientEmail || !privateKey) {
-    throw new Error(
-      'Firebase Admin credentials are missing. Set FIREBASE_ADMIN_SDK_KEY to the service-account JSON, or set FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL, and FIREBASE_PRIVATE_KEY.'
-    );
+    return null;
   }
 
-  if (privateKey.includes('(your full key here)') || privateKey.includes('...')) {
-    throw new Error(
-      'Firebase Admin private key is still a placeholder. Replace FIREBASE_PRIVATE_KEY or use FIREBASE_ADMIN_SDK_KEY with the full service-account JSON.'
-    );
+  if (
+    privateKey.includes('(your full key here)') ||
+    privateKey.includes('...') ||
+    privateKey === 'undefined'
+  ) {
+    return null;
   }
 
   return { projectId, clientEmail, privateKey };
 }
 
-function initAdmin() {
-  if (admin.apps.length) return;
+let _adminApp: admin.app.App | null = null;
+
+function initAdmin(): admin.app.App {
+  if (_adminApp) return _adminApp;
 
   const serviceAccount = getServiceAccount();
 
-  admin.initializeApp({
+  if (!serviceAccount) {
+    throw new Error(
+      'Firebase Admin credentials are missing. Set FIREBASE_ADMIN_SDK_KEY to the service-account JSON, ' +
+      'or set FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL, and FIREBASE_PRIVATE_KEY. ' +
+      'Alternatively, set NONE of these to skip Firebase Admin initialization entirely for local development.'
+    );
+  }
+
+  _adminApp = admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),
   });
+
   console.log('[FirebaseAdmin] Initialized successfully');
+  return _adminApp;
 }
 
-// Export getters to prevent top-level evaluation errors
-export const getAdminAuth = () => {
+// Lazy auth instance
+let _auth: admin.auth.Auth | null = null;
+const getAuth = (): admin.auth.Auth => {
   initAdmin();
-  return admin.auth();
+  if (!_auth) _auth = admin.auth();
+  return _auth;
 };
 
-export const getDb = () => {
+// Lazy firestore instance
+let _db: admin.firestore.Firestore | null = null;
+const getDb = (): admin.firestore.Firestore => {
   initAdmin();
-  return admin.firestore();
+  if (!_db) _db = admin.firestore();
+  return _db;
 };
 
-// Legacy support if needed, but usage should move to getDb()
+// Legacy support — only created when accessed (lazy)
 export const db = {
   collection: (name: string) => getDb().collection(name),
-  runTransaction: <T>(cb: (transaction: admin.firestore.Transaction) => Promise<T>) =>
+  runTransaction: <T>(cb: (tx: admin.firestore.Transaction) => Promise<T>) =>
     getDb().runTransaction(cb),
 };
 
 export const adminAuth = {
   setCustomUserClaims: (uid: string, claims: Record<string, unknown>) =>
-    getAdminAuth().setCustomUserClaims(uid, claims),
-  verifyIdToken: (token: string) => getAdminAuth().verifyIdToken(token),
+    getAuth().setCustomUserClaims(uid, claims),
+  verifyIdToken: (token: string) => getAuth().verifyIdToken(token),
 };
 
-export const isFirebaseAdminReady = () => !!admin.apps.length;
+export const getAdminAuth = () => getAuth();
+export { getDb };
+
+export const isFirebaseAdminReady = () => _adminApp !== null;

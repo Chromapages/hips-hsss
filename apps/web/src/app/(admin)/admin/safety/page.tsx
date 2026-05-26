@@ -39,7 +39,7 @@ export default function AdminSafetyQueuePage() {
         <h1 className="mt-2 text-3xl font-bold text-white">
           Human-reviewed escalation queue
         </h1>
-        <p className="mt-3 max-w-3xl text-gray-400">
+        <p className="mt-3 max-w-3xl text-zinc-400">
           Flags appear by anonymous session reference. Crisis protocol and
           vault access require reviewer justification.
         </p>
@@ -50,9 +50,9 @@ export default function AdminSafetyQueuePage() {
           <Loader2 className="h-8 w-8 animate-spin text-indigo-500" />
         </div>
       ) : (
-        <div className="overflow-hidden rounded-xl border border-white/10 bg-gray-900 shadow-2xl">
+        <div className="overflow-hidden rounded-xl border border-white/10 bg-zinc-900 shadow-2xl">
           <table className="w-full text-left text-sm">
-            <thead className="bg-white/5 text-gray-400 uppercase text-xs font-semibold tracking-wider">
+            <thead className="bg-white/5 text-zinc-400 uppercase text-xs font-semibold tracking-wider">
               <tr>
                 <th className="px-6 py-4">Session Ref</th>
                 <th className="px-6 py-4">Severity</th>
@@ -64,7 +64,7 @@ export default function AdminSafetyQueuePage() {
             <tbody className="divide-y divide-white/5">
               {alerts.map((alert) => (
                 <tr key={alert.id} className="hover:bg-white/[0.02] transition-colors">
-                  <td className="px-6 py-4 font-mono text-xs text-gray-300">
+                  <td className="px-6 py-4 font-mono text-xs text-zinc-300">
                     {alert.sessionId}
                   </td>
                   <td className="px-6 py-4">
@@ -79,7 +79,7 @@ export default function AdminSafetyQueuePage() {
                   <td className="px-6 py-4">
                     <span className="text-white font-medium">{alert.category}</span>
                   </td>
-                  <td className="px-6 py-4 text-gray-400">
+                  <td className="px-6 py-4 text-zinc-400">
                     {format(new Date(alert.createdAt), 'MMM d, h:mm a')}
                   </td>
                   <td className="px-6 py-4">
@@ -92,7 +92,7 @@ export default function AdminSafetyQueuePage() {
             </tbody>
           </table>
           {alerts.length === 0 && (
-            <div className="p-20 text-center text-gray-500">
+            <div className="p-20 text-center text-zinc-500">
               <ShieldAlert className="mx-auto h-12 w-12 opacity-20 mb-4" />
               <p>No safety alerts detected.</p>
             </div>

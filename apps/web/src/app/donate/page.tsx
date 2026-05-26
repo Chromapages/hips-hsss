@@ -45,11 +45,11 @@ export default function DonatePage() {
   }
 
   return (
-    <main className="min-h-screen bg-black text-white pb-32">
-      <header className="pt-24 pb-16 text-center border-b border-white/5 bg-gray-900/30">
+    <main className="min-h-screen bg-black text-white pb-32 overflow-x-hidden">
+      <header className="pt-24 pb-16 text-center border-b border-white/5 bg-zinc-900/30">
         <div className="container mx-auto px-6 max-w-3xl">
           <h1 className="text-4xl md:text-5xl font-bold mb-6">Support the Mission</h1>
-          <p className="text-xl text-gray-400">
+          <p className="text-xl text-zinc-400">
             Your tax-deductible donation funds our scholarship program, enabling individuals in financial distress to access our secure, anonymous support services for free.
           </p>
         </div>
@@ -57,17 +57,17 @@ export default function DonatePage() {
 
       <section className="container mx-auto px-6 max-w-4xl mt-16">
         <div className="grid md:grid-cols-2 gap-8">
-          <Card className="bg-gray-900 border-gray-800">
+          <Card className="bg-zinc-900 border-zinc-800">
             <CardHeader>
               <CardTitle className="text-white text-2xl">Make a Contribution</CardTitle>
-              <CardDescription className="text-gray-400">Select a tier or enter a custom amount.</CardDescription>
+              <CardDescription className="text-zinc-400">Select a tier or enter a custom amount.</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-2 gap-4 mb-6">
                 {tiers.map(t => (
                   <button 
                     key={t.tier}
-                    className={`h-16 text-lg border rounded-md transition-all ${selected.tier === t.tier ? 'border-indigo-500 bg-indigo-500/10 text-indigo-400' : 'border-gray-700 hover:bg-indigo-600 hover:text-white hover:border-indigo-600'}`}
+                    className={`h-16 text-lg border rounded-xl transition-all ${selected.tier === t.tier ? 'border-indigo-500 bg-indigo-500/10 text-indigo-400' : 'border-zinc-700 hover:bg-indigo-600 hover:text-white hover:border-indigo-600'}`}
                     onClick={() => setSelected(t)}
                   >
                     {t.label}
@@ -76,13 +76,13 @@ export default function DonatePage() {
               </div>
               <Button 
                 size="lg" 
-                className="w-full h-14 bg-white text-black hover:bg-gray-200 text-lg disabled:opacity-50"
+                className="w-full h-14 bg-white text-black hover:bg-zinc-200 text-lg disabled:opacity-50"
                 onClick={handleDonate}
                 disabled={loading}
               >
                 {loading ? <Loader2 className="animate-spin h-5 w-5" /> : "Continue to Payment"}
               </Button>
-              <p className="text-xs text-center text-gray-500 mt-4">
+              <p className="text-xs text-center text-zinc-500 mt-4">
                 Secure payment processed by Stripe. You will receive an IRS-compliant receipt for your 501(c)(3) contribution.
               </p>
             </CardContent>
@@ -93,14 +93,14 @@ export default function DonatePage() {
             <div className="space-y-6">
               <div>
                 <h4 className="font-semibold text-indigo-400 mb-2">$50 funds one session</h4>
-                <p className="text-gray-400 text-sm">Provides a full 45-minute peer support session for someone who otherwise couldn&apos;t afford it.</p>
+                <p className="text-zinc-400 text-sm">Provides a full 45-minute peer support session for someone who otherwise couldn&apos;t afford it.</p>
               </div>
               <div>
                 <h4 className="font-semibold text-purple-400 mb-2">$200 funds a full program</h4>
-                <p className="text-gray-400 text-sm">Covers a 4-week workshop series for a participant dealing with severe workplace burnout.</p>
+                <p className="text-zinc-400 text-sm">Covers a 4-week workshop series for a participant dealing with severe workplace burnout.</p>
               </div>
-              <div className="pt-6 border-t border-gray-800">
-                <p className="text-sm text-gray-500 italic">
+              <div className="pt-6 border-t border-zinc-800">
+                <p className="text-sm text-zinc-500 italic">
                   &quot;H.I.P.S. allowed me to get help without risking my security clearance. The scholarship made it possible when I was between jobs. Thank you.&quot;
                 </p>
               </div>

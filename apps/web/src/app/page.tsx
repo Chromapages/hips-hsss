@@ -22,7 +22,7 @@ export default function HomePage() {
             LIVE PEER SUPPORT NETWORK
           </div>
           
-          <h1 className="text-6xl md:text-8xl font-black tracking-tighter mb-8 leading-[0.9] bg-gradient-to-b from-white via-white to-white/40 bg-clip-text text-transparent animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-100">
+          <h1 className="text-4xl md:text-6xl font-black tracking-tighter mb-8 leading-[0.9] bg-gradient-to-b from-white via-white to-white/40 bg-clip-text text-transparent animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-100">
             Support Without <br /> the Spotlight.
           </h1>
           

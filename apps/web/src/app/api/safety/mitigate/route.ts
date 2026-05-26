@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { RoomServiceClient, DataPacket_Kind } from 'livekit-server-sdk';
 
 const apiKey = process.env.LIVEKIT_API_KEY || 'devkey';
@@ -34,11 +35,27 @@ export async function POST(req: NextRequest) {
     const token = authHeader?.startsWith('Bearer ') ? authHeader.split(' ')[1] : null;
 
     // Security: Verify the webhook secret
-    if (token !== process.env.WEBHOOK_SECRET && process.env.NODE_ENV === 'production') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (token !== process.env.WEBHOOK_SECRET) {
+      if (process.env.NODE_ENV === 'production') {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      }
+      // In development, log but don't hard-block for easier testing
+      console.warn('[SafetyMitigation] WARNING: Webhook secret not validated in non-production');
     }
 
-    const { sessionId, offenderId, assessment, alertId, mitigationAction } = await req.json();
+    const body = await req.json();
+    
+    // Validate required fields
+    if (!body.sessionId || !body.assessment || !body.mitigationAction) {
+      return NextResponse.json({ error: 'Missing required fields: sessionId, assessment, mitigationAction' }, { status: 400 });
+    }
+    
+    const { sessionId, offenderId, assessment, alertId, mitigationAction } = body;
+
+    // Validate assessment structure
+    if (!assessment.category || !assessment.severity) {
+      return NextResponse.json({ error: 'Invalid assessment structure' }, { status: 400 });
+    }
 
     console.warn(`[SafetyMitigation] ALERT in session ${sessionId}: ${assessment.category} (${assessment.severity}) -> Action: ${mitigationAction}`);
 
@@ -106,8 +123,9 @@ export async function POST(req: NextRequest) {
     console.log(`[SafetyMitigation] Audit: SAFETY_MITIGATION event for session ${sessionId}, offender ${offenderId}, action ${actionTaken}`);
 
     return NextResponse.json({ success });
-  } catch (error) {
-    console.error('[SafetyMitigation] Webhook Error:', error);
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Internal Server Error';
+    console.error('[SafetyMitigation] Webhook Error:', message);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }

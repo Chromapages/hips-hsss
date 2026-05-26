@@ -14,7 +14,7 @@ export default function CheckoutPage() {
             <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-indigo-400 mb-4 animate-in fade-in slide-in-from-bottom-2 duration-700">
               Final Step
             </p>
-            <h1 className="text-5xl md:text-7xl font-black tracking-tighter leading-[0.9] mb-8 animate-in fade-in slide-in-from-bottom-4 duration-1000">
+            <h1 className="text-3xl md:text-5xl font-black tracking-tighter leading-[0.9] mb-8 animate-in fade-in slide-in-from-bottom-4 duration-1000">
               Complete your <br />
               <span className="text-zinc-600">reservation.</span>
             </h1>

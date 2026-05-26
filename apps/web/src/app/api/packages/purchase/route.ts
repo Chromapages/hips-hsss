@@ -70,8 +70,9 @@ export async function POST(req: NextRequest) {
         expiresAt: pkg.expiresAt,
       }
     });
-  } catch (error) {
-    console.error('Package purchase failed:', error);
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Internal Server Error';
+    console.error('Package purchase failed:', message);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }

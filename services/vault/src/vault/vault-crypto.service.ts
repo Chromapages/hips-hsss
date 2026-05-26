@@ -112,8 +112,8 @@ export class VaultCryptoService {
       ]);
 
       return plaintext.toString('utf8');
-    } catch (error) {
-      console.error('Decryption failed:', error);
+    } catch {
+      console.error('Decryption failed');
       throw new Error('Could not decrypt vault record');
     }
   }

@@ -63,8 +63,9 @@ export async function POST(req: NextRequest) {
       packageName: pkg.name,
       amount: pkg.priceCents / 100,
     });
-  } catch (error: any) {
-    console.error('Stripe Package Intent Error:', error.message || error);
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Internal Server Error';
+    console.error('Stripe Package Intent Error:', message);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }

@@ -38,14 +38,14 @@ export default function DonateCheckoutPage() {
         <div className="max-w-xl mx-auto">
           <header className="mb-10 text-center">
             <div className="inline-flex items-center gap-2 mb-4">
-              <Lock className="w-4 h-4 text-gray-500" />
-              <span className="text-xs font-mono uppercase tracking-widest text-gray-500">Secure Donation</span>
+              <Lock className="w-4 h-4 text-zinc-500" />
+              <span className="text-xs font-mono uppercase tracking-widest text-zinc-500">Secure Donation</span>
             </div>
             <h1 className="text-3xl font-bold text-white">Complete Your Contribution</h1>
-            <p className="mt-3 text-gray-400">Your support helps provide anonymous peer support to those in need.</p>
+            <p className="mt-3 text-zinc-400">Your support helps provide anonymous peer support to those in need.</p>
           </header>
 
-          <Suspense fallback={<div className="text-center text-gray-500">Loading donation gateway...</div>}>
+          <Suspense fallback={<div className="text-center text-zinc-500">Loading donation gateway...</div>}>
             <DonateCheckoutContent />
           </Suspense>
         </div>

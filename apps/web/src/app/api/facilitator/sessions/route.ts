@@ -22,7 +22,8 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({ sessions });
 
-  } catch (error: any) {
+  } catch (error: unknown) {
+    console.error('[FacilitatorSessions] Error:', error instanceof Error ? error.message : error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }

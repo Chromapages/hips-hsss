@@ -14,22 +14,22 @@ export function PageShell({ children }: { children: ReactNode }) {
     <main className="min-h-screen bg-[var(--color-neutral-50)] text-[var(--color-neutral-900)]">
       <a
         href="#content"
-        className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-md focus:bg-[var(--color-brand-primary)] focus:px-4 focus:py-3 focus:text-white"
+        className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-md focus:bg-[var(--color-brand-primary)] focus:px-4 focus:py-3 focus:text-white focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-primary)]"
       >
         Skip to content
       </a>
-      <header className="border-b border-[var(--color-neutral-200)] bg-white">
+      <header className="border-b border-[var(--color-neutral-200)] bg-white sticky top-0 z-40">
         <nav className="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-4 md:flex-row md:items-center md:justify-between md:px-8">
           <Link
             href="/"
-            className="text-lg font-semibold text-[var(--color-brand-deep)]"
+            className="text-lg font-semibold text-[var(--color-brand-deep)] hover:opacity-80 transition-opacity"
           >
             H.I.P.S. Foundation
           </Link>
           <div className="flex flex-wrap gap-2 text-sm">
             {navItems.map(([label, href]) => (
               <Link
-                className="rounded-md px-3 py-2 text-[var(--color-neutral-600)] hover:bg-[var(--color-neutral-100)] hover:text-[var(--color-brand-primary)]"
+                className="rounded-md px-3 py-2 text-[var(--color-neutral-600)] hover:bg-[var(--color-neutral-100)] hover:text-[var(--color-brand-primary)] transition-colors"
                 href={href}
                 key={href}
               >

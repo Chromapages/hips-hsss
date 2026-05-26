@@ -31,7 +31,7 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
       suppressHydrationWarning
     >
-      <body className="min-h-full flex flex-col" suppressHydrationWarning>
+      <body className="min-h-full flex flex-col pb-[env(safe-area-inset-bottom)]" suppressHydrationWarning>
         <AuthProvider>
           <ToastProvider>
             <GlobalDisclaimerBanner />

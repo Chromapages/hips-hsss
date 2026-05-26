@@ -1,5 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { adminAuth, db } from '@/lib/firebase-admin';
+import { z } from 'zod';
+import type { DocumentData } from 'firebase-admin/firestore';
+
+const roleSchema = z.enum(['PARTICIPANT', 'FACILITATOR', 'ADMIN']);
+const userIdSchema = z.string().min(1, 'userId is required');
 
 export async function GET(req: NextRequest) {
   try {
@@ -14,15 +19,16 @@ export async function GET(req: NextRequest) {
     }
 
     const usersSnapshot = await db.collection('users').limit(100).get();
-    const users = usersSnapshot.docs.map(doc => ({
+    const users = usersSnapshot.docs.map((doc: DocumentData) => ({
       id: doc.id,
       ...doc.data()
     }));
 
     return NextResponse.json({ users });
 
-  } catch (error: any) {
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Internal Server Error';
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
 
@@ -38,11 +44,19 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    const { userId, role } = await req.json();
+    const body = await req.json();
 
-    if (!['PARTICIPANT', 'FACILITATOR', 'ADMIN'].includes(role)) {
+    const parseResult = userIdSchema.safeParse(body.userId);
+    if (!parseResult.success) {
+      return NextResponse.json({ error: 'Invalid userId' }, { status: 400 });
+    }
+    const userId = parseResult.data;
+
+    const roleResult = roleSchema.safeParse(body.role);
+    if (!roleResult.success) {
       return NextResponse.json({ error: 'Invalid role' }, { status: 400 });
     }
+    const role = roleResult.data;
 
     // 1. Update Custom Claims in Firebase Auth
     await adminAuth.setCustomUserClaims(userId, { role });
@@ -55,7 +69,8 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ success: true });
 
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Internal Server Error';
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

@@ -57,8 +57,9 @@ export async function POST(req: NextRequest) {
     console.log(`[FacilitatorClaim] Session ${sessionId} claimed by ${userId}`);
     return NextResponse.json(result);
 
-  } catch (error: any) {
-    console.error('[FacilitatorClaim] Error:', error.message);
-    return NextResponse.json({ error: error.message || 'Internal Server Error' }, { status: 400 });
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Internal Server Error';
+    console.error('[FacilitatorClaim] Error:', message);
+    return NextResponse.json({ error: message }, { status: 400 });
   }
 }

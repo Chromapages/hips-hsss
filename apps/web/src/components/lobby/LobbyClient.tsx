@@ -43,23 +43,23 @@ export function LobbyClient({ groupId }: LobbyClientProps) {
           <span className="text-[10px] font-mono uppercase tracking-widest text-indigo-300">Secure Entry Point</span>
         </div>
         <h1 className="text-4xl font-bold text-white mb-3">Session Lobby</h1>
-        <p className="text-gray-400">ID: <span className="font-mono text-indigo-300">{groupId}</span></p>
+        <p className="text-zinc-400">ID: <span className="font-mono text-indigo-300">{groupId}</span></p>
       </header>
 
       <div className="grid gap-6 md:grid-cols-2">
         {/* Device Check Section */}
         <section className="space-y-4">
-          <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider px-1">Hardware Audit</h2>
+          <h2 className="text-sm font-semibold text-zinc-500 uppercase tracking-wider px-1">Hardware Audit</h2>
           
-          <div className="rounded-xl border border-white/10 bg-white/5 p-5 transition-colors hover:bg-white/[0.07]">
+          <div className="rounded-xl border border-white/5 bg-white/5 p-5 transition-colors hover:bg-white/[0.07]">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-3">
                 <div className={`p-2 rounded-lg ${micActive ? 'bg-emerald-500/20' : micError ? 'bg-red-500/20' : 'bg-white/5'}`}>
-                  <Mic className={`w-5 h-5 ${micActive ? 'text-emerald-400' : micError ? 'text-red-400' : 'text-gray-400'}`} />
+                  <Mic className={`w-5 h-5 ${micActive ? 'text-emerald-400' : micError ? 'text-red-400' : 'text-zinc-400'}`} />
                 </div>
                 <div>
                   <p className="text-sm font-medium">Microphone</p>
-                  <p className="text-xs text-gray-500">{micActive ? 'Input detected' : micError ? 'Test failed' : 'Click to test'}</p>
+                  <p className="text-xs text-zinc-500">{micActive ? 'Input detected' : micError ? 'Test failed' : 'Click to test'}</p>
                 </div>
               </div>
               <button 
@@ -79,13 +79,13 @@ export function LobbyClient({ groupId }: LobbyClientProps) {
             )}
           </div>
 
-          <div className="rounded-xl border border-white/10 bg-white/5 p-5 flex items-center gap-3">
+          <div className="rounded-xl border border-white/5 bg-white/5 p-5 flex items-center gap-3">
             <div className="p-2 rounded-lg bg-white/5">
-              <Volume2 className="w-5 h-5 text-gray-400" />
+              <Volume2 className="w-5 h-5 text-zinc-400" />
             </div>
             <div>
               <p className="text-sm font-medium">Audio Output</p>
-              <p className="text-xs text-gray-500">Speakers/Headphones OK</p>
+              <p className="text-xs text-zinc-500">Speakers/Headphones OK</p>
             </div>
           </div>
 
@@ -99,9 +99,9 @@ export function LobbyClient({ groupId }: LobbyClientProps) {
 
         {/* Privacy Checklist Section */}
         <section className="space-y-4">
-          <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider px-1">Privacy Protocols</h2>
+          <h2 className="text-sm font-semibold text-zinc-500 uppercase tracking-wider px-1">Privacy Protocols</h2>
           
-          <div className="rounded-xl border border-white/10 bg-gray-950 p-6 space-y-4">
+          <div className="rounded-xl border border-white/5 bg-zinc-950 p-6 space-y-4">
             <label className="flex items-start gap-4 cursor-pointer group">
               <input 
                 type="checkbox"
@@ -111,10 +111,10 @@ export function LobbyClient({ groupId }: LobbyClientProps) {
               />
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
-                  <ShieldCheck className="w-4 h-4 text-gray-500" />
-                  <p className="text-sm font-medium text-gray-200 group-hover:text-white">Handle-only Protocol</p>
+                  <ShieldCheck className="w-4 h-4 text-zinc-500" />
+                  <p className="text-sm font-medium text-zinc-200 group-hover:text-white">Handle-only Protocol</p>
                 </div>
-                <p className="text-xs text-gray-500 italic">"I will not share my real name or physical location."</p>
+                <p className="text-xs text-zinc-500 italic">"I will not share my real name or physical location."</p>
               </div>
             </label>
 
@@ -127,10 +127,10 @@ export function LobbyClient({ groupId }: LobbyClientProps) {
               />
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
-                  <Headphones className="w-4 h-4 text-gray-500" />
-                  <p className="text-sm font-medium text-gray-200 group-hover:text-white">Aural Isolation</p>
+                  <Headphones className="w-4 h-4 text-zinc-500" />
+                  <p className="text-sm font-medium text-zinc-200 group-hover:text-white">Aural Isolation</p>
                 </div>
-                <p className="text-xs text-gray-500">"I am wearing headphones to protect others&apos; privacy."</p>
+                <p className="text-xs text-zinc-500">"I am wearing headphones to protect others' privacy."</p>
               </div>
             </label>
 
@@ -143,10 +143,10 @@ export function LobbyClient({ groupId }: LobbyClientProps) {
               />
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
-                  <Lock className="w-4 h-4 text-gray-500" />
-                  <p className="text-sm font-medium text-gray-200 group-hover:text-white">Safe Environment</p>
+                  <Lock className="w-4 h-4 text-zinc-500" />
+                  <p className="text-sm font-medium text-zinc-200 group-hover:text-white">Safe Environment</p>
                 </div>
-                <p className="text-xs text-gray-500">"I am in a private space where I will not be overheard."</p>
+                <p className="text-xs text-zinc-500">"I am in a private space where I will not be overheard."</p>
               </div>
             </label>
           </div>
@@ -163,7 +163,7 @@ export function LobbyClient({ groupId }: LobbyClientProps) {
               type="button"
               disabled
               aria-disabled="true"
-              className="flex items-center justify-center min-h-12 w-full rounded-xl font-bold bg-white/5 text-gray-500 cursor-not-allowed border border-white/5"
+              className="flex items-center justify-center min-h-12 w-full rounded-xl font-bold bg-white/5 text-zinc-500 cursor-not-allowed border border-white/5"
             >
               Complete Protocols to Enter
             </button>

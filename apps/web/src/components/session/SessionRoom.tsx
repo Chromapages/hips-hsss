@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import {
   LiveKitRoom,
   RoomAudioRenderer,
+  useConnectionState,
   useDataChannel,
   useLocalParticipant,
   useParticipants,
@@ -76,6 +77,16 @@ export default function SessionRoom({ sessionId }: { sessionId: string }) {
   const [kickReason, setKickReason] = useState('');
   const [isCrisis, setIsCrisis] = useState(false);
   const [crisisReason, setCrisisReason] = useState('');
+  const [isMobile, setIsMobile] = useState(false);
+  const [isReconnecting, setIsReconnecting] = useState(false);
+
+  // Task 5.12 — Block mobile users before any connection attempt
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 1024);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -84,18 +95,12 @@ export default function SessionRoom({ sessionId }: { sessionId: string }) {
       setError(null);
 
       try {
-        const firebaseToken = await getToken();
-
-        if (!firebaseToken) {
-          throw new Error('Sign in to join this anonymous session.');
-        }
-
-        // Direct request to our new LiveKit token generator
+        // Phase 5: Anonymous token issuance — no Firebase UID required
+        // Backend uses crypto.randomUUID() for identity
         const liveKitResponse = await fetch('/api/livekit/token', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${firebaseToken}`,
           },
           body: JSON.stringify({ sessionId }),
         });
@@ -136,6 +141,30 @@ export default function SessionRoom({ sessionId }: { sessionId: string }) {
         onAction={() => router.push('/dashboard')}
         title="Session Terminated"
       />
+    );
+  }
+
+  // Task 5.12 — Mobile block page, no connection attempt
+  if (isMobile) {
+    return (
+      <div className="flex h-screen flex-col items-center justify-center bg-zinc-950 p-8 text-center text-white">
+        <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-full border border-amber-500/20 bg-amber-500/10">
+          <svg className="h-10 w-10 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+          </svg>
+        </div>
+        <h1 className="text-2xl font-bold">Sessions require a laptop or desktop computer</h1>
+        <p className="mt-3 max-w-sm text-zinc-400">
+          Your device screen is too small for the 3D session environment.
+        </p>
+        <button
+          className="mt-8 rounded-xl bg-indigo-600 px-8 py-3 font-medium text-white shadow-lg shadow-indigo-900/20 transition-all hover:bg-indigo-500"
+          onClick={() => router.push('/dashboard')}
+          type="button"
+        >
+          Back to Dashboard
+        </button>
+      </div>
     );
   }
 
@@ -186,6 +215,8 @@ export default function SessionRoom({ sessionId }: { sessionId: string }) {
           setKickReason(reason);
           setIsKicked(true);
         }}
+        onReconnecting={setIsReconnecting}
+        isReconnecting={isReconnecting}
         roomName={liveKitToken.roomName}
       />
       {isCrisis ? <CrisisEscalation reason={crisisReason} /> : null}
@@ -201,6 +232,8 @@ function SessionContent({
   roomName,
   onKick,
   onCrisis,
+  onReconnecting,
+  isReconnecting,
 }: {
   anonymousIdentity: string;
   avatar: AvatarProfile;
@@ -208,6 +241,8 @@ function SessionContent({
   roomName: string;
   onKick: (reason: string) => void;
   onCrisis: (reason: string) => void;
+  onReconnecting: (value: boolean) => void;
+  isReconnecting: boolean;
 }) {
   const router = useRouter();
   const room = useRoomContext();
@@ -219,6 +254,60 @@ function SessionContent({
   const [micBusy, setMicBusy] = useState(false);
   const [confirmLeave, setConfirmLeave] = useState(false);
   const [voiceMaskWarning, setVoiceMaskWarning] = useState<string | null>(null);
+  const [sessionSeconds, setSessionSeconds] = useState(0);
+  const [facilitatorNotes, setFacilitatorNotes] = useState('');
+
+  // Task 5.14 — LiveKit reconnection event handlers
+  useEffect(() => {
+    const handleReconnecting = () => onReconnecting(true);
+    const handleReconnected = () => onReconnecting(false);
+    const handleDisconnected = () => onReconnecting(false);
+
+    room.on('reconnecting', handleReconnecting);
+    room.on('reconnected', handleReconnected);
+    room.on('disconnected', handleDisconnected);
+
+    return () => {
+      room.off('reconnecting', handleReconnecting);
+      room.off('reconnected', handleReconnected);
+      room.off('disconnected', handleDisconnected);
+    };
+  }, [room, onReconnecting]);
+
+  // Task 5.8 — Session timer counting up from first render
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setSessionSeconds((s) => s + 1);
+    }, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Task 5.8 — Connection quality via hook
+  const connectionState = useConnectionState(room);
+
+  const connectionQuality = useMemo((): 'good' | 'fair' | 'poor' => {
+    if (isReconnecting) return 'poor';
+    switch (connectionState) {
+      case 'connected':
+        return 'good';
+      case 'connecting':
+      case 'reconnecting':
+        return 'fair';
+      default:
+        return 'poor';
+    }
+  }, [connectionState, isReconnecting]);
+
+  const connectionLabel = useMemo(() => {
+    switch (connectionQuality) {
+      case 'good':
+        return 'Connected';
+      case 'fair':
+        return 'Connecting';
+      case 'poor':
+        return 'Unstable';
+    }
+  }, [connectionQuality]);
 
   const applyControlMessage = useCallback((message: SessionControlMessage) => {
     setRaisedHands((current) => {
@@ -384,9 +473,27 @@ function SessionContent({
           <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Anonymous Room</p>
           <p className="font-mono text-sm font-bold text-indigo-300">anon-{anonymousIdentity.slice(0, 8)}</p>
         </div>
-        <div className="flex items-center gap-2 text-sm font-bold text-emerald-300">
-          <ShieldAlert className="h-4 w-4" />
-          Safety Engine Active
+        <div className="flex flex-col items-center gap-1">
+          <p className="font-mono text-2xl font-black tracking-widest text-white">
+            {String(Math.floor(sessionSeconds / 60)).padStart(2, '0')}:
+            {String(sessionSeconds % 60).padStart(2, '0')}
+          </p>
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-1.5">
+              <span
+                className={[
+                  'h-2 w-2 rounded-full',
+                  connectionQuality === 'good' ? 'bg-emerald-400' :
+                  connectionQuality === 'fair' ? 'bg-amber-400' : 'bg-red-400',
+                ].join(' ')}
+              />
+              <span className="text-xs font-bold text-zinc-400">{connectionLabel}</span>
+            </div>
+            <div className="flex items-center gap-2 text-sm font-bold text-emerald-300">
+              <ShieldAlert className="h-4 w-4" />
+              Safety Engine Active
+            </div>
+          </div>
         </div>
         <div className="text-right">
           <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Room Hash</p>
@@ -395,7 +502,7 @@ function SessionContent({
       </header>
 
       <section className="grid min-h-0 grid-cols-[1fr_360px]">
-        <div className="relative min-w-0 overflow-hidden bg-[radial-gradient(circle_at_50%_20%,rgba(99,102,241,0.16),transparent_45%),#030712]">
+        <div className="relative min-w-0 overflow-hidden bg-[radial-gradient(circle_at_50%_20%,rgba(99,102,241,0.16),transparent_45%),black]">
           <AvatarCanvas
             avatar={avatar}
             localIdentity={localParticipant.identity}
@@ -420,8 +527,33 @@ function SessionContent({
             </div>
           )}
           <SafetyMonitor sessionId={roomName} onCrisis={onCrisis} onKick={onKick} />
+          {canFacilitate ? (
+            <div className="border-t border-white/10 p-4">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Facilitator Notes</p>
+              <textarea
+                className="mt-2 w-full resize-none rounded-xl border border-white/10 bg-white/5 p-3 text-sm text-zinc-200 placeholder-zinc-500 focus:border-indigo-500/50 focus:outline-none focus:ring-1 focus:ring-indigo-500/20"
+                placeholder="Session notes (not persisted)..."
+                rows={3}
+                value={facilitatorNotes}
+                onChange={(e) => setFacilitatorNotes(e.target.value)}
+              />
+            </div>
+          ) : null}
         </aside>
       </section>
+
+      {/* Task 5.14 — Reconnecting overlay (non-blocking) */}
+      {isReconnecting ? (
+        <div className="pointer-events-none fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+          <div className="flex items-center gap-4 rounded-2xl border border-indigo-500/20 bg-black/80 px-8 py-5 shadow-2xl">
+            <Loader2 className="h-6 w-6 animate-spin text-indigo-300" />
+            <div>
+              <p className="font-bold text-white">Reconnecting to session...</p>
+              <p className="mt-0.5 text-sm text-zinc-400">Please wait, your connection will restore shortly.</p>
+            </div>
+          </div>
+        </div>
+      ) : null}
 
       <footer className="flex items-center justify-center border-t border-white/10 bg-black/75 px-6 py-4 backdrop-blur-2xl">
         <div className="flex items-center gap-3 rounded-3xl border border-white/10 bg-white/[0.03] p-3 shadow-2xl">
@@ -462,7 +594,7 @@ function SessionContent({
 
           <button
             aria-label="Flag safety concern"
-            className="flex h-14 min-w-14 items-center justify-center rounded-2xl border border-amber-500/20 bg-amber-500/10 px-5 font-bold text-amber-200 transition-all hover:bg-amber-500/20"
+            className="flex h-14 min-w-14 items-center justify-center rounded-2xl border border-amber-500/20 bg-amber-500/10 px-5 font-bold text-amber-200 transition-all hover:bg-amber-500/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500/50"
             data-testid="flag-button"
             onClick={handleFlag}
             type="button"
@@ -471,7 +603,7 @@ function SessionContent({
           </button>
 
           <button
-            className="flex h-14 items-center justify-center rounded-2xl bg-red-600 px-6 font-bold text-white transition-all hover:bg-red-500"
+            className="flex h-14 items-center justify-center rounded-2xl bg-red-600 px-6 font-bold text-white transition-all hover:bg-red-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500/50"
             data-testid="end-session-button"
             onClick={() => setConfirmLeave(true)}
             type="button"
@@ -568,12 +700,12 @@ function SessionExitState({
   const Icon = icon === 'danger' ? ShieldAlert : AlertTriangle;
 
   return (
-    <div className="flex h-screen flex-col items-center justify-center bg-gray-950 p-6 text-center text-white">
+    <div className="flex h-screen flex-col items-center justify-center bg-zinc-950 p-6 text-center text-white">
       <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-full border border-red-500/20 bg-red-500/10">
         <Icon className="h-10 w-10 text-red-400" />
       </div>
       <h1 className="text-3xl font-bold">{title}</h1>
-      <p className="mt-3 max-w-md text-gray-400">{description}</p>
+      <p className="mt-3 max-w-md text-zinc-400">{description}</p>
       <button
         className="mt-8 rounded-xl bg-indigo-600 px-8 py-3 font-medium text-white shadow-lg shadow-indigo-900/20 transition-all hover:bg-indigo-500"
         onClick={onAction}

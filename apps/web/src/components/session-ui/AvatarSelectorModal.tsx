@@ -18,9 +18,9 @@ export function AvatarSelectorModal() {
 
   return (
     <div className="fixed inset-0 z-50 grid place-items-center bg-black/85 p-6 text-white backdrop-blur-xl" role="dialog" aria-modal="true" aria-labelledby="avatar-title">
-      <section className="max-w-lg rounded-lg border border-white/10 bg-gray-950 p-6">
+      <section className="max-w-lg rounded-lg border border-white/10 bg-zinc-950 p-6">
         <h2 className="text-2xl font-bold" id="avatar-title">Choose your avatar color</h2>
-        <p className="mt-3 text-gray-400">Your avatar color is stored only for this browser session.</p>
+        <p className="mt-3 text-zinc-400">Your avatar color is stored only for this browser session.</p>
         <div className="mt-6 grid grid-cols-6 gap-3">
           {colors.map((color) => (
             <button
@@ -35,7 +35,7 @@ export function AvatarSelectorModal() {
           ))}
         </div>
         <button
-          className="mt-8 min-h-11 w-full rounded-md bg-indigo-500 px-4 font-semibold transition hover:bg-indigo-400"
+          className="mt-8 min-h-11 w-full rounded-xl bg-indigo-500 px-4 font-semibold transition hover:bg-indigo-400"
           onClick={() => {
             sessionStorage.setItem("hips-avatar-color", selected);
             setOpen(false);

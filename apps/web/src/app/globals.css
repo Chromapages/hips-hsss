@@ -33,8 +33,20 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+  overflow-x: hidden;
 }
 
-* {
-  box-sizing: border-box;
+/* Ensure mobile viewport height works properly */
+@supports (height: 100dvh) {
+  body {
+    min-height: 100dvh;
+  }
+}
+
+/* Prevent horizontal overflow on all containers */
+#content,
+main,
+section,
+article {
+  overflow-x: hidden;
 }

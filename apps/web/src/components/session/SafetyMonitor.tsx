@@ -112,16 +112,16 @@ export default function SafetyMonitor({
   const canChat = localParticipant.permissions?.canPublishData !== false;
 
   return (
-    <div className="flex flex-col h-full bg-gray-900 border-l border-gray-800">
-      <div className="p-4 border-b border-gray-800 flex items-center justify-between bg-gray-900/50 backdrop-blur-md sticky top-0 z-10">
+    <div className="flex flex-col h-full bg-zinc-900 border-l border-zinc-800">
+      <div className="p-4 border-b border-zinc-800 flex items-center justify-between bg-zinc-900/50 backdrop-blur-md sticky top-0 z-10">
         <div className="flex items-center gap-2">
           <MessageSquare className="w-4 h-4 text-indigo-400" />
-          <span className="text-gray-300 font-medium">Session Chat</span>
+          <span className="text-zinc-300 font-medium">Session Chat</span>
         </div>
         <div className="flex items-center gap-2">
           <button 
             onClick={handleManualFlag}
-            className="p-1.5 rounded-lg hover:bg-red-500/10 text-gray-500 hover:text-red-400 transition-colors"
+            className="p-1.5 rounded-lg hover:bg-red-500/10 text-zinc-500 hover:text-red-400 transition-colors"
             title="Flag Safety Concern"
           >
             <AlertTriangle className="w-4 h-4" />
@@ -136,13 +136,13 @@ export default function SafetyMonitor({
       <div className="flex-1 p-4 overflow-y-auto space-y-4">
         {chatMessages.map((msg, idx) => (
           <div key={idx} className={`flex flex-col ${msg.from?.identity === localParticipant.identity ? 'items-end' : 'items-start'}`}>
-            <span className="text-[10px] text-gray-500 mb-1 px-1">
+            <span className="text-[10px] text-zinc-500 mb-1 px-1">
               {msg.from?.identity === localParticipant.identity ? 'You' : 'Anonymous Participant'}
             </span>
             <div className={`max-w-[85%] px-3 py-2 rounded-2xl text-sm ${
               msg.from?.identity === localParticipant.identity 
                 ? 'bg-indigo-600 text-white rounded-tr-none shadow-lg shadow-indigo-900/20' 
-                : 'bg-gray-800 text-gray-200 rounded-tl-none border border-gray-700'
+                : 'bg-zinc-800 text-zinc-200 rounded-tl-none border border-zinc-700'
             }`}>
               {msg.message}
             </div>
@@ -150,12 +150,12 @@ export default function SafetyMonitor({
         ))}
         {chatMessages.length === 0 && (
           <div className="h-full flex flex-col items-center justify-center text-center space-y-3 px-6">
-            <div className="w-12 h-12 rounded-full bg-gray-800 flex items-center justify-center">
-              <ShieldAlert className="w-6 h-6 text-gray-600" />
+            <div className="w-12 h-12 rounded-full bg-zinc-800 flex items-center justify-center">
+              <ShieldAlert className="w-6 h-6 text-zinc-600" />
             </div>
             <div>
-              <p className="text-gray-400 font-medium">Automated Guardian Active</p>
-              <p className="text-gray-500 text-xs mt-1">
+              <p className="text-zinc-400 font-medium">Automated Guardian Active</p>
+              <p className="text-zinc-500 text-xs mt-1">
                 Messages are monitored in real-time to ensure a safe, supportive space for everyone.
               </p>
             </div>
@@ -163,7 +163,7 @@ export default function SafetyMonitor({
         )}
       </div>
 
-      <div className="p-4 bg-gray-900/80 backdrop-blur-md border-t border-gray-800">
+      <div className="p-4 bg-zinc-900/80 backdrop-blur-md border-t border-zinc-800">
          {!canChat ? (
            <div className="flex items-center gap-2 p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-red-400 text-xs">
              <AlertTriangle className="w-4 h-4 shrink-0" />
@@ -177,7 +177,7 @@ export default function SafetyMonitor({
                onChange={(e) => setInputText(e.target.value)}
                onKeyDown={(e) => e.key === 'Enter' && handleSend()}
                placeholder="Type a supportive message..." 
-               className="flex-1 bg-gray-800 text-white rounded-xl px-4 py-2.5 text-sm border border-gray-700 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all placeholder:text-gray-500" 
+               className="flex-1 bg-zinc-800 text-white rounded-xl px-4 py-2.5 text-sm border border-zinc-700 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all placeholder:text-zinc-500" 
              />
              <button 
                onClick={handleSend} 

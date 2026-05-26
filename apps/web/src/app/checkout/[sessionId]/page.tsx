@@ -60,7 +60,7 @@ export default function CheckoutPage({
               <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-zinc-500">Secure Payment Terminal</span>
             </div>
             
-            <h1 className="text-5xl md:text-6xl font-black tracking-tighter leading-[0.9] text-white mb-6 animate-in fade-in slide-in-from-bottom-4 duration-1000">
+            <h1 className="text-4xl md:text-6xl font-black tracking-tighter leading-[0.9] text-white mb-6 animate-in fade-in slide-in-from-bottom-4 duration-1000">
               Confirm your <br />
               <span className="text-zinc-600">session access.</span>
             </h1>

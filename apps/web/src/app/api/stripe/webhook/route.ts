@@ -21,9 +21,10 @@ export async function POST(req: NextRequest) {
       sig,
       process.env.STRIPE_WEBHOOK_SECRET
     );
-  } catch (err: any) {
-    console.error('Webhook signature verification failed.', err.message);
-    return NextResponse.json({ error: `Webhook Error: ${err.message}` }, { status: 400 });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Internal Server Error';
+    console.error('Webhook signature verification failed.', message);
+    return NextResponse.json({ error: `Webhook Error: ${message}` }, { status: 400 });
   }
 
   // Handle the event
@@ -84,8 +85,9 @@ export async function POST(req: NextRequest) {
               `,
             });
           }
-        } catch (error: any) {
-          console.error(`[Stripe Webhook] Failed to fulfill package purchase for ${userId}:`, error.message);
+        } catch (error: unknown) {
+          const message = error instanceof Error ? error.message : 'Internal Server Error';
+          console.error(`[Stripe Webhook] Failed to fulfill package purchase for ${userId}:`, message);
           return NextResponse.json({ error: 'Package fulfillment failed' }, { status: 500 });
         }
       } else if (sessionId) {
@@ -128,8 +130,9 @@ export async function POST(req: NextRequest) {
               `,
             });
           }
-        } catch (error: any) {
-          console.error(`[Stripe Webhook] Failed to update session or send email for ${sessionId}:`, error.message || error);
+        } catch (error: unknown) {
+          const message = error instanceof Error ? error.message : 'Internal Server Error';
+          console.error(`[Stripe Webhook] Failed to update session or send email for ${sessionId}:`, message);
           return NextResponse.json({ error: 'Post-payment processing failed' }, { status: 500 });
         }
       }

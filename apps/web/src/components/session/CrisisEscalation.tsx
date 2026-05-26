@@ -47,7 +47,7 @@ export const CrisisEscalation: React.FC<CrisisEscalationProps> = ({ reason }) =>
         role="presentation"
       />
 
-      <div className="relative z-10 w-full max-w-2xl p-8 mx-4 bg-white/5 border border-white/10 rounded-3xl shadow-2xl backdrop-blur-xl">
+      <div className="relative z-10 w-full max-w-2xl p-6 mx-4 bg-white/5 border border-white/10 rounded-xl shadow-2xl backdrop-blur-xl">
         <div className="flex flex-col items-center text-center space-y-6">
           <div 
             className="p-4 bg-red-500/20 rounded-full border border-red-500/30 animate-pulse"

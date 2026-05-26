@@ -8,7 +8,7 @@ export default function OrganizationsPage() {
           Organizations
         </p>
         <h1 className="mt-3 text-4xl font-bold">Bring peer support to your team.</h1>
-        <p className="mt-3 max-w-2xl text-gray-400">
+        <p className="mt-3 max-w-2xl text-zinc-400">
           Submit event details and the team will respond with a custom quote within 48 hours.
         </p>
         <div className="mt-8">

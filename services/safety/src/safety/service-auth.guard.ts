@@ -28,7 +28,7 @@ export class ServiceAuthGuard implements CanActivate {
       const { payload } = await jwtVerify(token, this.secret);
       request['serviceRef'] = payload.ref;
       return true;
-    } catch (err) {
+    } catch {
       throw new UnauthorizedException('Invalid or expired service token');
     }
   }

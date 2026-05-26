@@ -48,8 +48,9 @@ export async function GET(req: NextRequest) {
     }
 
     return NextResponse.json(availableSlots);
-  } catch (error: any) {
-    console.error('Failed to fetch availability:', error.message || error);
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Internal Server Error';
+    console.error('Failed to fetch availability:', message);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }

@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>H.I.P.S. Foundation Platform - Demo</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              primary: '#6366F1',
+              secondary: '#9333EA',
+              accent: '#10B981',
+              warm: '#FBBF24',
+              deep: '#1A3A5C',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    :root {
+      --brand-primary: #6366F1;
+      --brand-secondary: #9333EA;
+      --brand-accent: #10B981;
+      --brand-warm: #FBBF24;
+      --brand-deep: #1A3A5C;
+    }
+    html { scroll-behavior: smooth; }
+    body {
+      background: #000000;
+      color: #FFFFFF;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.6; }
+    }
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .fade-in-up { animation: fadeInUp 0.5s ease-out forwards; opacity: 0; }
+    .pulse-badge { animation: pulse 2s ease-in-out infinite; }
+    .spin { animation: spin 1s linear infinite; }
+    .slide-in { animation: slideIn 0.3s ease-out forwards; }
+    .service-card {
+      transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
+    }
+    .service-card:hover { transform: translateY(-4px); box-shadow: 0 8px 24px rgba(0,0,0,0.3); }
+    .service-card:active { transform: scale(0.98); }
+    .service-card:focus-visible { outline: none; ring: 2px; ring-color: #6366F1; }
+    .service-card.dimmed { opacity: 0.5; }
+    .service-card.selected { border-color: var(--brand-primary); box-shadow: 0 0 0 2px var(--brand-primary), 0 0 20px rgba(99,102,241,0.3); }
+    .glowing-border { border-color: var(--brand-primary); box-shadow: 0 0 0 2px var(--brand-primary), 0 0 20px rgba(99,102,241,0.3); }
+    input:focus, textarea:focus {
+      outline: none;
+      border-color: var(--brand-primary) !important;
+      box-shadow: 0 0 0 2px rgba(99,102,241,0.2);
+    }
+  </style>
+</head>
+<body>
+  <main class="min-h-screen bg-black text-white">
+    <section class="mx-auto grid min-h-screen w-full max-w-7xl gap-8 px-5 py-8 lg:grid-cols-[1.05fr_0.95fr] lg:px-10">
+      <div class="flex flex-col justify-between gap-8">
+        <div id="header-section">
+          <p class="text-sm font-semibold uppercase tracking-widest text-emerald-400">
+            Proof of Anonymity
+          </p>
+          <h1 class="mt-4 max-w-3xl text-3xl font-semibold leading-tight sm:text-4xl md:text-6xl">
+            Billing identity becomes a short-lived anonymous session token.
+          </h1>
+        </div>
+
+        <div id="db-section" class="grid gap-4 md:grid-cols-2">
+          <section class="rounded-xl border border-zinc-600 bg-zinc-900 p-5">
+            <h2 class="text-lg font-semibold text-emerald-300">
+              Commerce DB
+            </h2>
+            <dl class="mt-4 space-y-3 text-sm">
+              <div class="flex justify-between gap-4">
+                <dt class="text-zinc-400">Firebase UID</dt>
+                <dd>usr_89F2</dd>
+              </div>
+              <div class="flex justify-between gap-4">
+                <dt class="text-zinc-400">Package</dt>
+                <dd>6 sessions</dd>
+              </div>
+              <div class="flex justify-between gap-4">
+                <dt class="text-zinc-400">Session ref</dt>
+                <dd>sha256:a81e...</dd>
+              </div>
+            </dl>
+          </section>
+          <section class="rounded-xl border border-amber-900 bg-zinc-900 p-5">
+            <h2 class="text-lg font-semibold text-amber-200">
+              Session DB
+            </h2>
+            <dl class="mt-4 space-y-3 text-sm">
+              <div class="flex justify-between gap-4">
+                <dt class="text-amber-300">Anonymous ID</dt>
+                <dd>anon_4KQ9</dd>
+              </div>
+              <div class="flex justify-between gap-4">
+                <dt class="text-amber-300">Room</dt>
+                <dd>room_breath_12</dd>
+              </div>
+              <div class="flex justify-between gap-4">
+                <dt class="text-amber-300">Status</dt>
+                <dd>active</dd>
+              </div>
+            </dl>
+          </section>
+        </div>
+
+        <section id="booking-section" class="rounded-xl border border-zinc-700 bg-zinc-900 p-5">
+          <h2 class="text-lg font-semibold">Mock booking dashboard</h2>
+          <div id="service-cards" class="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            <article class="service-card rounded-xl border border-zinc-700 bg-black p-4 cursor-pointer" data-service="coaching" data-price="$65" data-topic="coaching">
+              <div class="flex items-start justify-between gap-4">
+                <h3 class="font-semibold">One-on-one coaching</h3>
+                <span class="text-sm text-emerald-400">$65</span>
+              </div>
+              <p class="mt-3 text-sm leading-6 text-zinc-400">
+                Private peer support
+              </p>
+            </article>
+            <article class="service-card rounded-xl border border-zinc-700 bg-black p-4 cursor-pointer" data-service="circle" data-price="$35" data-topic="circle">
+              <div class="flex items-start justify-between gap-4">
+                <h3 class="font-semibold">Small group circle</h3>
+                <span class="text-sm text-emerald-400">$35</span>
+              </div>
+              <p class="mt-3 text-sm leading-6 text-zinc-400">
+                Moderated anonymous room
+              </p>
+            </article>
+            <article class="service-card rounded-xl border border-zinc-700 bg-black p-4 cursor-pointer" data-service="care" data-price="$50" data-topic="care">
+              <div class="flex items-start justify-between gap-4">
+                <h3 class="font-semibold">Care navigation</h3>
+                <span class="text-sm text-emerald-400">$50</span>
+              </div>
+              <p class="mt-3 text-sm leading-6 text-zinc-400">
+                Benefits and referral planning
+              </p>
+            </article>
+          </div>
+
+          <!-- Booking Form -->
+          <div id="booking-form-container" class="hidden mt-4 slide-in">
+            <form id="booking-form" class="rounded-xl border border-zinc-700 bg-zinc-800 p-5">
+              <h3 id="booking-form-title" class="text-lg font-semibold mb-4">Request coaching</h3>
+              <div class="space-y-4">
+                <div>
+                  <label class="block text-sm text-zinc-400 mb-1">Your name (optional)</label>
+                  <input type="text" name="name" class="w-full rounded-xl border border-zinc-600 bg-zinc-900 px-4 py-2 text-white placeholder-zinc-500" placeholder="Anonymous">
+                </div>
+                <div>
+                  <label class="block text-sm text-zinc-400 mb-1">Email (for confirmation)</label>
+                  <input type="email" name="email" class="w-full rounded-xl border border-zinc-600 bg-zinc-900 px-4 py-2 text-white placeholder-zinc-500" placeholder="you@example.com">
+                </div>
+                <div>
+                  <label class="block text-sm text-zinc-400 mb-1">Anything you'd like us to know</label>
+                  <textarea name="message" rows="3" class="w-full rounded-xl border border-zinc-600 bg-zinc-900 px-4 py-2 text-white placeholder-zinc-500 resize-none" placeholder="Optional context..."></textarea>
+                </div>
+                <div class="flex items-center gap-4 pt-2">
+                  <button type="submit" id="booking-submit-btn" class="flex items-center gap-2 rounded-xl bg-indigo-500 px-6 py-2.5 font-semibold hover:bg-indigo-600 active:scale-[0.97] transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500">
+                    <span>Request Anonymous Session</span>
+                  </button>
+                  <button type="button" id="booking-cancel-btn" class="text-sm text-zinc-400 hover:text-white active:scale-[0.97] transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500">Cancel</button>
+                </div>
+              </div>
+            </form>
+            <!-- Confirmation Screen -->
+            <div id="booking-confirmation" class="hidden rounded-xl border border-emerald-500 bg-emerald-950 p-5">
+              <div class="text-center mb-4">
+                <svg class="w-12 h-12 mx-auto text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                </svg>
+                <h3 class="mt-2 text-xl font-semibold">Your session request is received</h3>
+              </div>
+              <dl class="space-y-3 text-sm">
+                <div class="flex justify-between gap-4">
+                  <dt class="text-zinc-400">Your anonymous ID</dt>
+                  <dd id="conf-anon-id" class="font-mono text-emerald-400">anon_XXXX</dd>
+                </div>
+                <div class="flex justify-between gap-4">
+                  <dt class="text-zinc-400">Your session room</dt>
+                  <dd id="conf-room" class="font-mono text-emerald-400">room_XXXX_XX</dd>
+                </div>
+                <div class="flex justify-between gap-4">
+                  <dt class="text-zinc-400">Link expires in</dt>
+                  <dd>24 hours</dd>
+                </div>
+              </dl>
+              <div class="mt-4 p-3 rounded bg-black border border-zinc-700">
+                <p class="text-xs text-zinc-400 mb-1">Session link</p>
+                <a id="conf-livekit-url" href="#" class="text-sm text-indigo-400 break-all hover:underline">https://hips-hsss.livekit.cloud/room/room_breath_12#token=...</a>
+              </div>
+              <p id="conf-email-msg" class="mt-4 text-sm text-zinc-400">You'll receive a link at <span id="conf-email" class="text-white">—</span> when a facilitator is available.</p>
+              <button id="booking-reset-btn" class="mt-4 w-full rounded-xl border border-zinc-600 bg-zinc-800 py-2.5 text-sm hover:bg-zinc-700 active:scale-[0.97] transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500">Start a new request</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- Contact Link -->
+        <div id="contact-section" class="mt-2">
+          <button id="contact-link" class="text-sm text-indigo-400 hover:text-indigo-300 active:scale-[0.97] transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500">Questions? Get in touch →</button>
+        </div>
+
+        <!-- Contact Form Modal -->
+        <div id="contact-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/70">
+          <div class="mx-4 w-full max-w-md rounded-xl border border-zinc-600 bg-zinc-800 p-4 sm:p-6 slide-in">
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="text-lg font-semibold">Get in touch</h3>
+              <button id="contact-modal-close" class="text-zinc-400 hover:text-white active:scale-[0.97] transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+              </button>
+            </div>
+            <form id="contact-form" class="space-y-4">
+              <div>
+                <label class="block text-sm text-zinc-400 mb-1">Your name</label>
+                <input type="text" name="name" class="w-full rounded-xl border border-zinc-600 bg-zinc-900 px-4 py-2 text-white placeholder-zinc-500" placeholder="Anonymous">
+              </div>
+              <div>
+                <label class="block text-sm text-zinc-400 mb-1">Email</label>
+                <input type="email" name="email" class="w-full rounded-xl border border-zinc-600 bg-zinc-900 px-4 py-2 text-white placeholder-zinc-500" placeholder="you@example.com">
+              </div>
+              <div>
+                <label class="block text-sm text-zinc-400 mb-1">Message</label>
+                <textarea name="message" rows="4" class="w-full rounded-xl border border-zinc-600 bg-zinc-900 px-4 py-2 text-white placeholder-zinc-500 resize-none" placeholder="How can we help?"></textarea>
+              </div>
+              <button type="submit" class="w-full rounded-xl bg-indigo-500 py-2.5 font-semibold hover:bg-indigo-600 active:scale-[0.97] transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500">Send message</button>
+            </form>
+            <div id="contact-confirmation" class="hidden text-center py-4">
+              <svg class="w-12 h-12 mx-auto text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+              </svg>
+              <p class="mt-2 font-semibold">Message sent!</p>
+              <p class="mt-1 text-sm text-zinc-400">We'll be in touch within 24 hours.</p>
+              <button id="contact-ok-btn" class="mt-4 rounded-xl border border-zinc-600 bg-zinc-700 px-6 py-2 hover:bg-zinc-600 active:scale-[0.97] transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500">OK</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <aside class="relative min-h-0 overflow-hidden rounded-xl border border-zinc-700 bg-zinc-900">
+        <div class="absolute inset-x-0 top-0 h-1/2 bg-gradient-to-b from-zinc-600 to-zinc-800"></div>
+        <div class="absolute inset-x-8 bottom-16 h-36 rounded-t-lg bg-zinc-700 shadow-2xl"></div>
+        <div class="absolute inset-x-0 bottom-0 h-1/2 bg-zinc-600"></div>
+        <div class="absolute bottom-20 left-1/2 h-32 w-52 -translate-x-1/2 rounded-xl bg-zinc-500 shadow-xl"></div>
+        <div class="absolute bottom-52 left-[22%] h-24 w-24 rounded-full bg-emerald-400 shadow-xl"></div>
+        <div class="absolute bottom-52 right-[22%] h-24 w-24 rounded-full bg-amber-400 shadow-xl"></div>
+        <div id="crisis-badge" class="absolute left-8 top-8 rounded-xl border border-amber-500 bg-amber-950 px-4 py-3 text-sm font-semibold text-red-200 cursor-pointer pulse-badge hover:bg-amber-900 active:scale-[0.97] transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500">
+          Crisis overlay armed
+        </div>
+        <div class="absolute bottom-8 left-8 right-8 rounded-xl bg-black/90 p-4 backdrop-blur">
+          <h2 class="text-xl font-semibold">Virtual office mock</h2>
+          <p class="mt-2 text-sm leading-6 text-zinc-300">
+            A frontend-only room concept for client review. The production
+            session engine remains isolated from commerce identity data.
+          </p>
+        </div>
+      </aside>
+    </section>
+
+    <!-- Crisis Modal -->
+    <div id="crisis-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/70">
+      <div class="mx-4 w-full max-w-md rounded-xl border border-purple-500 bg-purple-950 p-4 sm:p-6 slide-in">
+        <div class="text-center mb-6">
+          <div class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-purple-500/20">
+            <svg class="w-6 h-6 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
+            </svg>
+          </div>
+          <h3 class="text-xl font-semibold">Immediate Support Resources</h3>
+        </div>
+        <div class="space-y-3">
+          <a href="tel:988" class="flex items-center gap-3 rounded-xl border border-zinc-600 bg-zinc-800 p-4 hover:bg-zinc-700 transition-colors">
+            <span class="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-500/20 text-emerald-400 font-bold">988</span>
+            <div>
+              <p class="font-semibold">National Suicide Prevention</p>
+              <p class="text-sm text-zinc-400">Call or text 988</p>
+            </div>
+          </a>
+          <a href="sms:741741&body=HOME" class="flex items-center gap-3 rounded-xl border border-zinc-600 bg-zinc-800 p-4 hover:bg-zinc-700 transition-colors">
+            <span class="flex h-10 w-10 items-center justify-center rounded-full bg-indigo-500/20 text-indigo-400 font-bold">🆘</span>
+            <div>
+              <p class="font-semibold">Crisis Text Line</p>
+              <p class="text-sm text-zinc-400">Text HOME to 741741</p>
+            </div>
+          </a>
+          <a href="tel:1-800-662-4357" class="flex items-center gap-3 rounded-xl border border-zinc-600 bg-zinc-800 p-4 hover:bg-zinc-700 transition-colors">
+            <span class="flex h-10 w-10 items-center justify-center rounded-full bg-amber-500/20 text-amber-400 font-bold">💬</span>
+            <div>
+              <p class="font-semibold">SAMHSA Helpline</p>
+              <p class="text-sm text-zinc-400">1-800-662-4357 (24/7)</p>
+            </div>
+          </a>
+        </div>
+        <button id="crisis-modal-close" class="mt-6 w-full rounded-xl border border-zinc-600 bg-zinc-700 py-2.5 font-semibold hover:bg-zinc-600 active:scale-[0.97] transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500">I'm okay, close this</button>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    (function() {
+      // DOM Elements
+      const serviceCards = document.querySelectorAll('.service-card');
+      const bookingFormContainer = document.getElementById('booking-form-container');
+      const bookingForm = document.getElementById('booking-form');
+      const bookingFormTitle = document.getElementById('booking-form-title');
+      const bookingSubmitBtn = document.getElementById('booking-submit-btn');
+      const bookingCancelBtn = document.getElementById('booking-cancel-btn');
+      const bookingConfirmation = document.getElementById('booking-confirmation');
+      const bookingResetBtn = document.getElementById('booking-reset-btn');
+      const crisisBadge = document.getElementById('crisis-badge');
+      const crisisModal = document.getElementById('crisis-modal');
+      const crisisModalClose = document.getElementById('crisis-modal-close');
+      const contactLink = document.getElementById('contact-link');
+      const contactModal = document.getElementById('contact-modal');
+      const contactModalClose = document.getElementById('contact-modal-close');
+      const contactForm = document.getElementById('contact-form');
+      const contactConfirmation = document.getElementById('contact-confirmation');
+      const contactOkBtn = document.getElementById('contact-ok-btn');
+
+      let selectedService = null;
+
+      // Animated section reveals on page load
+      function animateSections() {
+        const sections = [
+          document.getElementById('header-section'),
+          document.getElementById('db-section'),
+          document.getElementById('booking-section'),
+          document.querySelector('aside')
+        ];
+        sections.forEach((section, i) => {
+          if (section) {
+            section.style.animationDelay = `${i * 100}ms`;
+            section.classList.add('fade-in-up');
+          }
+        });
+      }
+
+      // Service card click handler
+      serviceCards.forEach(card => {
+        card.addEventListener('click', () => {
+          const service = card.dataset.service;
+          const price = card.dataset.price;
+          const topic = card.dataset.topic;
+          const name = card.querySelector('h3').textContent;
+
+          // If clicking same card, deselect
+          if (selectedService === service) {
+            resetBookingUI();
+            return;
+          }
+
+          selectedService = service;
+
+          // Update card states
+          serviceCards.forEach(c => {
+            c.classList.remove('selected', 'dimmed');
+            if (c !== card) c.classList.add('dimmed');
+          });
+          card.classList.add('selected', 'glowing-border');
+
+          // Update form title
+          bookingFormTitle.textContent = `Request ${name}`;
+
+          // Hide confirmation, show form
+          bookingConfirmation.classList.add('hidden');
+          bookingForm.classList.remove('hidden');
+          bookingFormContainer.classList.remove('hidden');
+
+          // Scroll form into view
+          bookingFormContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        });
+      });
+
+      // Cancel button
+      bookingCancelBtn.addEventListener('click', resetBookingUI);
+
+      function resetBookingUI() {
+        selectedService = null;
+        serviceCards.forEach(c => {
+          c.classList.remove('selected', 'dimmed', 'glowing-border');
+        });
+        bookingFormContainer.classList.add('hidden');
+        bookingForm.reset();
+      }
+
+      // Booking form submission
+      bookingForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+
+        const name = bookingForm.querySelector('[name="name"]').value;
+        const email = bookingForm.querySelector('[name="email"]').value;
+        const message = bookingForm.querySelector('[name="message"]').value;
+
+        // Show loading state
+        bookingSubmitBtn.disabled = true;
+        bookingSubmitBtn.innerHTML = `
+          <svg class="w-5 h-5 spin" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          <span>Sending...</span>
+        `;
+
+        // Simulate API call
+        setTimeout(() => {
+          // Generate random IDs
+          const anonId = 'anon_' + Math.random().toString(36).substring(2, 6).toUpperCase();
+          const roomNum = Math.floor(Math.random() * 90) + 10;
+          const token = Math.random().toString(36).substring(2, 12);
+
+          // Get selected card topic
+          const selectedCard = document.querySelector('.service-card.selected');
+          const topic = selectedCard ? selectedCard.dataset.topic : 'session';
+
+          // Update confirmation
+          document.getElementById('conf-anon-id').textContent = anonId;
+          document.getElementById('conf-room').textContent = `room_${topic}_${roomNum}`;
+          document.getElementById('conf-email').textContent = email || 'your email';
+          document.getElementById('conf-email-msg').querySelector('span').textContent = email || 'your email';
+          document.getElementById('conf-livekit-url').textContent = `https://hips-hsss.livekit.cloud/room/room_${topic}_${roomNum}#token=${token}`;
+          document.getElementById('conf-livekit-url').href = `https://hips-hsss.livekit.cloud/room/room_${topic}_${roomNum}#token=${token}`;
+
+          // Show confirmation
+          bookingForm.classList.add('hidden');
+          bookingConfirmation.classList.remove('hidden');
+
+          // Reset button
+          bookingSubmitBtn.disabled = false;
+          bookingSubmitBtn.innerHTML = '<span>Request Anonymous Session</span>';
+        }, 1500);
+      });
+
+      // Booking reset
+      bookingResetBtn.addEventListener('click', () => {
+        resetBookingUI();
+        bookingForm.reset();
+      });
+
+      // Crisis badge click
+      crisisBadge.addEventListener('click', () => {
+        crisisModal.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+      });
+
+      // Crisis modal close
+      crisisModalClose.addEventListener('click', closeCrisisModal);
+
+      function closeCrisisModal() {
+        crisisModal.classList.add('hidden');
+        document.body.style.overflow = '';
+      }
+
+      // Close modal on backdrop click
+      crisisModal.addEventListener('click', (e) => {
+        if (e.target === crisisModal) closeCrisisModal();
+      });
+
+      // Contact link click
+      contactLink.addEventListener('click', () => {
+        contactModal.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+      });
+
+      // Contact modal close
+      contactModalClose.addEventListener('click', closeContactModal);
+      contactOkBtn.addEventListener('click', closeContactModal);
+
+      function closeContactModal() {
+        contactModal.classList.add('hidden');
+        document.body.style.overflow = '';
+        // Reset form state after a delay
+        setTimeout(() => {
+          contactForm.classList.remove('hidden');
+          contactConfirmation.classList.add('hidden');
+          contactForm.reset();
+        }, 300);
+      }
+
+      // Close modal on backdrop click
+      contactModal.addEventListener('click', (e) => {
+        if (e.target === contactModal) closeContactModal();
+      });
+
+      // Contact form submission
+      contactForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        contactForm.classList.add('hidden');
+        contactConfirmation.classList.remove('hidden');
+      });
+
+      // Keyboard accessibility
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+          if (!crisisModal.classList.contains('hidden')) closeCrisisModal();
+          if (!contactModal.classList.contains('hidden')) closeContactModal();
+        }
+      });
+
+      // Initialize animations on load
+      animateSections();
+    })();
+  </script>
+</body>
+</html>

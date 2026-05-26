@@ -1,7 +1,10 @@
 import { PageShell, SectionHeader } from "@/components/PageShell";
 import { packages } from "@/data/catalog";
+import { useState } from "react";
 
 export default function PackagesPage() {
+  const [selected, setSelected] = useState<string | null>(null);
+
   return (
     <PageShell>
       <section className="mx-auto max-w-7xl px-4 py-12 md:px-8">
@@ -24,7 +27,7 @@ export default function PackagesPage() {
               <p className="mt-2 text-sm text-[var(--color-success)]">
                 Saves {item.savings}
               </p>
-              <button className="mt-6 min-h-11 rounded-md bg-[var(--color-brand-primary)] px-4 font-semibold text-white">
+              <button className="mt-6 min-h-11 rounded-xl bg-[var(--color-brand-primary)] px-4 font-semibold text-white">
                 Select package
               </button>
             </article>

@@ -1,6 +1,6 @@
 export default function SessionLoading() {
   return (
-    <div className="flex h-screen flex-col items-center justify-center gap-8 bg-[#030712] text-white">
+    <div className="flex h-screen flex-col items-center justify-center gap-8 bg-black text-white">
       <style>{`
         @keyframes sanctuary-breathe {
           0%, 100% { transform: scale(1);   opacity: 0.35; }

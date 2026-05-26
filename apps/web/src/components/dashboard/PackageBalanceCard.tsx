@@ -32,7 +32,7 @@ export function PackageBalanceCard({ packages = [] }: { packages?: PackageBalanc
                 style={{ width: `${progress}%` }}
               />
             </div>
-            <p className="mt-3 text-xs text-gray-500">{pkg.remaining} sessions remaining of {pkg.total} pack</p>
+            <p className="mt-3 text-xs text-zinc-500">{pkg.remaining} sessions remaining of {pkg.total} pack</p>
           </article>
         );
       })}

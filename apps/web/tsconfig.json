@@ -8,9 +8,14 @@
       }
     ],
     "paths": {
-      "@/*": ["./src/*"],
-      "@hips/types": ["../../packages/types/src/index.ts"]
-    }
+      "@/*": [
+        "./src/*"
+      ],
+      "@hips/types": [
+        "../../packages/types/src/index.ts"
+      ]
+    },
+    "jsx": "preserve"
   },
   "include": [
     "next-env.d.ts",
@@ -20,5 +25,7 @@
     ".next/dev/types/**/*.ts",
     "**/*.mts"
   ],
-  "exclude": ["node_modules"]
+  "exclude": [
+    "node_modules"
+  ]
 }

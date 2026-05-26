@@ -55,8 +55,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       clientSecret: paymentIntent.client_secret,
     });
-  } catch (error) {
-    console.error('Donation Error:', error);
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Internal Server Error';
+    console.error('Donation Error:', message);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }

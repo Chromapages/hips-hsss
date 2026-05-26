@@ -56,7 +56,7 @@ export default async function ServiceDetailPage({ params }: { params: Promise<{ 
                 </div>
                 <span className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-600">{service.category}</span>
               </div>
-              <h1 className="text-5xl md:text-6xl font-black tracking-tighter mb-6 leading-tight">
+              <h1 className="text-4xl md:text-6xl font-black tracking-tighter mb-6 leading-tight">
                 {service.title}
               </h1>
               <p className="text-xl text-zinc-400 leading-relaxed">

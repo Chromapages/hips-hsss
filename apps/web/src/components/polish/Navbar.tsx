@@ -16,7 +16,7 @@ export function Navbar() {
   ];
 
   return (
-    <nav className="border-b border-white/5 bg-black/40 backdrop-blur-3xl sticky top-0 z-50 transition-all">
+    <nav className="border-b border-white/5 bg-black/40 backdrop-blur-3xl sticky top-0 z-50 transition-all pt-[env(safe-area-inset-top)]">
       <div className="container mx-auto px-6 h-20 flex items-center justify-between">
         {/* Logo */}
         <Link href="/" className="flex items-center space-x-3 group">
@@ -86,7 +86,7 @@ export function Navbar() {
 
         {/* Mobile Toggle */}
         <button 
-          className="md:hidden p-2 text-gray-400 hover:text-white transition-colors"
+          className="md:hidden p-2 text-zinc-400 hover:text-white transition-colors"
           onClick={() => setIsOpen(!isOpen)}
           aria-expanded={isOpen}
           aria-label="Toggle navigation menu"
@@ -97,14 +97,14 @@ export function Navbar() {
 
       {/* Mobile Menu */}
       {isOpen && (
-        <div className="md:hidden border-t border-white/5 bg-black/95 backdrop-blur-2xl animate-in slide-in-from-top-4 duration-300">
+        <div className="md:hidden border-t border-white/5 bg-black/95 backdrop-blur-2xl animate-in slide-in-from-top-4 duration-300 pb-[env(safe-area-inset-bottom)]">
           <div className="container mx-auto px-6 py-8 flex flex-col gap-6">
             {navLinks.map(link => (
               <Link 
                 key={link.href} 
                 href={link.href} 
                 onClick={() => setIsOpen(false)}
-                className="text-lg font-medium text-gray-300 hover:text-white transition-colors"
+                className="text-lg font-medium text-zinc-300 hover:text-white transition-colors"
               >
                 {link.label}
               </Link>

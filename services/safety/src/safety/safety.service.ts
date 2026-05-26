@@ -125,6 +125,7 @@ export class SafetyService implements OnModuleInit {
 
       return assessment;
     } catch (error) {
+      // Classification failed - return error status without throwing
       console.error('Safety classification failed:', error);
       return { status: 'error', reason: 'classification_failed' };
     }
@@ -187,8 +188,8 @@ export class SafetyService implements OnModuleInit {
             mitigationAction // New field
           })
         });
-      } catch (err) {
-        console.error('Failed to send safety webhook:', err);
+      } catch {
+        console.error('Failed to send safety webhook');
       }
     }
     
@@ -243,7 +244,10 @@ export class SafetyService implements OnModuleInit {
     }
 
     // 1. Request PII from Vault
-    const vaultUrl = this.configService.get<string>('VAULT_SERVICE_URL') || 'http://localhost:3005';
+    const vaultUrl = this.configService.get<string>('VAULT_SERVICE_URL');
+    if (!vaultUrl) {
+      throw new Error('VAULT_SERVICE_URL is not configured');
+    }
     const vaultSecret = this.configService.get<string>('VAULT_API_SECRET');
 
     // We assume the participantId is stored in the alert or can be derived
@@ -276,9 +280,9 @@ export class SafetyService implements OnModuleInit {
         pii: piiData,
         message: 'Crisis protocol activated. PII retrieved for emergency response.'
       };
-    } catch (err) {
-      console.error('Crisis Protocol Error:', err);
-      throw err;
+    } catch {
+      console.error('Crisis Protocol Error');
+      throw new Error('Crisis protocol failed');
     }
   }
 

@@ -21,32 +21,53 @@ export function CheckoutShell() {
           <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
-                <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-500 ml-1">Cardholder Name</label>
-                <div className="h-14 rounded-2xl border border-white/5 bg-white/5 flex items-center px-4 text-zinc-400 font-medium">
-                  Stripe Field Placeholder
-                </div>
+                <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-500 ml-1" htmlFor="cardholder-name">Cardholder Name</label>
+                <input
+                  id="cardholder-name"
+                  type="text"
+                  autoComplete="cc-name"
+                  className="h-14 bg-white/5 border border-white/5 rounded-2xl px-4 text-sm font-medium focus:outline-none focus:border-indigo-500/50 focus:bg-white/10 transition-all placeholder:text-zinc-700"
+                  placeholder="Jane Doe"
+                />
               </div>
               <div className="space-y-2">
-                <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-500 ml-1">Card Number</label>
-                <div className="h-14 rounded-2xl border border-white/5 bg-white/5 flex items-center px-4 text-zinc-400 font-medium">
-                  <CreditCard className="mr-3 h-4 w-4 opacity-50" />
-                  •••• •••• •••• ••••
-                </div>
+                <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-500 ml-1" htmlFor="card-number">Card Number</label>
+                <input
+                  id="card-number"
+                  type="text"
+                  autoComplete="cc-number"
+                  inputMode="numeric"
+                  pattern="[0-9\s]{13,19}"
+                  maxLength={19}
+                  className="h-14 bg-white/5 border border-white/5 rounded-2xl px-4 text-sm font-medium focus:outline-none focus:border-indigo-500/50 focus:bg-white/10 transition-all placeholder:text-zinc-700"
+                  placeholder="•••• •••• •••• ••••"
+                />
               </div>
             </div>
 
             <div className="grid grid-cols-3 gap-6">
               <div className="col-span-2 space-y-2">
-                <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-500 ml-1">Expiry Date</label>
-                <div className="h-14 rounded-2xl border border-white/5 bg-white/5 flex items-center px-4 text-zinc-400 font-medium">
-                  MM / YY
-                </div>
+                <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-500 ml-1" htmlFor="expiry-date">Expiry Date</label>
+                <input
+                  id="expiry-date"
+                  type="text"
+                  autoComplete="cc-exp"
+                  inputMode="numeric"
+                  placeholder="MM / YY"
+                  className="h-14 bg-white/5 border border-white/5 rounded-2xl px-4 text-sm font-medium focus:outline-none focus:border-indigo-500/50 focus:bg-white/10 transition-all placeholder:text-zinc-700"
+                />
               </div>
               <div className="space-y-2">
-                <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-500 ml-1">CVC</label>
-                <div className="h-14 rounded-2xl border border-white/5 bg-white/5 flex items-center px-4 text-zinc-400 font-medium">
-                  •••
-                </div>
+                <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-500 ml-1" htmlFor="cvc">CVC</label>
+                <input
+                  id="cvc"
+                  type="text"
+                  autoComplete="cc-csc"
+                  inputMode="numeric"
+                  maxLength={4}
+                  placeholder="•••"
+                  className="h-14 bg-white/5 border border-white/5 rounded-2xl px-4 text-sm font-medium focus:outline-none focus:border-indigo-500/50 focus:bg-white/10 transition-all placeholder:text-zinc-700"
+                />
               </div>
             </div>
           </div>

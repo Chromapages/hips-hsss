@@ -46,8 +46,9 @@ export async function PATCH(
     });
 
     return NextResponse.json({ success: true, inquiry });
-  } catch (error) {
-    console.error('Admin Inquiry Update Error:', error);
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Internal Server Error';
+    console.error('Admin Inquiry Update Error:', message);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }

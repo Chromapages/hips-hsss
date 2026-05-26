@@ -8,7 +8,7 @@ export default function ScholarshipPage() {
           Scholarship
         </p>
         <h1 className="mt-3 text-4xl font-bold">Request access support.</h1>
-        <p className="mt-3 max-w-2xl text-gray-400">
+        <p className="mt-3 max-w-2xl text-zinc-400">
           Applications are reviewed privately and do not appear in session rooms.
         </p>
         <div className="mt-8">
