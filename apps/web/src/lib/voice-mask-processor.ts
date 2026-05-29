@@ -1,10 +1,9 @@
 import type { AudioProcessorOptions, TrackProcessor } from 'livekit-client';
 import { Track } from 'livekit-client';
-
-type VoiceMaskPreset = 'subtle';
+import type { VoicePreset } from './voice-mask-presets';
 
 type VoiceMaskProcessorOptions = {
-  preset: VoiceMaskPreset;
+  preset: VoicePreset;
   semitones?: number;
 };
 

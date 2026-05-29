@@ -1,8 +1,10 @@
 "use client";
 
-import { Flag, Mic, MicOff, PhoneOff, Hand } from "lucide-react";
+import { Flag, Mic, MicOff, PhoneOff, Hand, Waves } from "lucide-react";
 import { useState, useCallback } from "react";
 import type { AvatarGesture } from "@hips/types";
+import type { VoicePreset } from "@/lib/voice-mask-presets";
+import { VoiceEffectsPanel } from "./VoiceEffectsPanel";
 
 // Task 5.6 — 5 gesture presets for voice controls
 const gestureOptions: { value: AvatarGesture; label: string; icon: string }[] = [
@@ -23,6 +25,10 @@ interface VoiceControlsBarProps {
   onLeave: () => void;
   gesture?: AvatarGesture;
   onGestureChange?: (g: AvatarGesture) => void;
+  voicePreset?: VoicePreset;
+  voiceSemitones?: number;
+  onVoicePresetChange?: (preset: VoicePreset) => void;
+  onVoiceSemitoneChange?: (semitones: number) => void;
 }
 
 // Task 5.7 — Voice controls bar (mute, gesture, flag, end)
@@ -36,8 +42,13 @@ export function VoiceControlsBar({
   onLeave,
   gesture = "idle",
   onGestureChange,
+  voicePreset = "subtle",
+  voiceSemitones = 4,
+  onVoicePresetChange,
+  onVoiceSemitoneChange,
 }: VoiceControlsBarProps) {
   const [confirmEnd, setConfirmEnd] = useState(false);
+  const [showFxPanel, setShowFxPanel] = useState(false);
 
   const handleLeaveClick = useCallback(() => {
     setConfirmEnd(true);
@@ -51,6 +62,8 @@ export function VoiceControlsBar({
   const handleCancelLeave = useCallback(() => {
     setConfirmEnd(false);
   }, []);
+
+  const hasFxControls = Boolean(onVoicePresetChange && onVoiceSemitoneChange);
 
   return (
     <>
@@ -118,6 +131,41 @@ export function VoiceControlsBar({
         )}
 
         <div className="mx-1 h-8 w-px bg-white/10" />
+
+        {/* FX button */}
+        {hasFxControls && (
+          <div className="relative">
+            <button
+              aria-label="Voice effects"
+              aria-pressed={showFxPanel}
+              onClick={() => setShowFxPanel(!showFxPanel)}
+              className={[
+                "flex h-14 w-14 items-center justify-center rounded-full transition-all group",
+                showFxPanel
+                  ? "border border-indigo-500/40 bg-indigo-500/20 text-indigo-300"
+                  : "border border-white/5 bg-white/5 text-white hover:bg-white/10",
+              ].join(" ")}
+            >
+              <Waves className="h-6 w-6 transition-transform group-hover:scale-110" />
+            </button>
+
+            {showFxPanel && (
+              <>
+                {/* Backdrop to close */}
+                <div
+                  className="fixed inset-0 z-[-1]"
+                  onClick={() => setShowFxPanel(false)}
+                />
+                <VoiceEffectsPanel
+                  activePreset={voicePreset}
+                  semitones={voiceSemitones}
+                  onPresetChange={onVoicePresetChange!}
+                  onSemitoneChange={onVoiceSemitoneChange!}
+                />
+              </>
+            )}
+          </div>
+        )}
 
         {/* Flag button */}
         <button

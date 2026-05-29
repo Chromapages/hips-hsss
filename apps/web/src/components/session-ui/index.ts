@@ -3,7 +3,6 @@
 
 export { VoiceControlsBar } from "./VoiceControlsBar";
 export { SessionHeader } from "./SessionHeader";
-export { GroupSessionLobby } from "./GroupSessionLobby";
 export { MobileBlockPage, useIsMobile } from "./MobileBlockPage";
 export { WebGLFallback, isWebGLAvailable, useWebGLSupport } from "./WebGLFallback";
 
@@ -16,7 +15,9 @@ export {
   avatarGestures,
 } from "./avatars/VirtualOfficeAvatar";
 
-export type { AvatarStyle, AvatarPalette, AvatarGesture } from "./avatars/VirtualOfficeAvatar";
+export type { AvatarStyle, AvatarPalette } from "./avatars/VirtualOfficeAvatar";
+// AvatarGesture re-exported from @hips/types (used by VoiceControlsBar)
+export type { AvatarGesture } from "./avatars/VirtualOfficeAvatar";
 
 // Office scene
 export { OfficeRoomScene } from "./office/OfficeRoomScene";

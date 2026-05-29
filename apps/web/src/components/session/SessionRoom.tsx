@@ -14,12 +14,8 @@ import {
 import '@livekit/components-styles';
 import {
   AlertTriangle,
-  Hand,
   Loader2,
-  Mic,
-  MicOff,
   PhoneOff,
-  ShieldAlert,
 } from 'lucide-react';
 import type { AvatarProfile, UserRole } from '@hips/types';
 import { createLocalAudioTrack, LocalAudioTrack } from 'livekit-client';
@@ -28,6 +24,17 @@ import AvatarCanvas from './AvatarCanvas';
 import SafetyMonitor from './SafetyMonitor';
 import { CrisisEscalation } from './CrisisEscalation';
 import { createVoiceMaskProcessor } from '@/lib/voice-mask-processor';
+import { SessionHeader } from '../session-ui/SessionHeader';
+import { VoiceControlsBar } from '../session-ui/VoiceControlsBar';
+import { WebGLFallback } from '../session-ui/WebGLFallback';
+import { MobileBlockPage } from '../session-ui/MobileBlockPage';
+import { MediaToolbar } from '../session-ui/MediaToolbar';
+import { useMediaDevices } from '@/hooks/useMediaDevices';
+import { useVoiceEffects } from '@/hooks/useVoiceEffects';
+import type { AvatarGesture } from '../session-ui/avatars/VirtualOfficeAvatar';
+import { SessionExitState } from './SessionExitState';
+import { RaisedHandQueue } from './RaisedHandQueue';
+import type { VoicePreset } from '@/lib/voice-mask-presets';
 
 type LiveKitTokenResponse = {
   token: string;
@@ -43,6 +50,11 @@ type SessionControlMessage = {
   at: string;
 };
 
+// SECURITY NOTE [M12]: NEXT_PUBLIC_LIVEKIT_URL exposes internal infrastructure.
+// LiveKit URL must be public for client-side WebSocket connections.
+// For production: move room token generation server-side so URL doesn't need to be public.
+// Current mitigation: URL is only used for WebSocket connection, not for auth.
+// TODO [Phase 3]: Refactor to generate tokens server-side and remove NEXT_PUBLIC_LIVEKIT_URL.
 const liveKitUrl = process.env.NEXT_PUBLIC_LIVEKIT_URL || 'ws://localhost:7880';
 const textEncoder = new TextEncoder();
 
@@ -68,7 +80,13 @@ function roleCanFacilitate(role: string | null): role is Extract<UserRole, 'FACI
   return role === 'FACILITATOR' || role === 'ADMIN';
 }
 
-export default function SessionRoom({ sessionId }: { sessionId: string }) {
+export default function SessionRoom({
+  sessionId,
+  prefetchedToken,
+}: {
+  sessionId: string;
+  prefetchedToken?: string | null;
+}) {
   const router = useRouter();
   const { getToken, role } = useAuth();
   const [liveKitToken, setLiveKitToken] = useState<LiveKitTokenResponse | null>(null);
@@ -89,14 +107,15 @@ export default function SessionRoom({ sessionId }: { sessionId: string }) {
   }, []);
 
   useEffect(() => {
+    // Skip fetch if token was pre-supplied via ?token= query param
+    if (prefetchedToken) return;
+
     let cancelled = false;
 
     async function fetchLiveKitToken() {
       setError(null);
 
       try {
-        // Phase 5: Anonymous token issuance — no Firebase UID required
-        // Backend uses crypto.randomUUID() for identity
         const liveKitResponse = await fetch('/api/livekit/token', {
           method: 'POST',
           headers: {
@@ -104,7 +123,7 @@ export default function SessionRoom({ sessionId }: { sessionId: string }) {
           },
           body: JSON.stringify({ sessionId }),
         });
-        
+
         const liveKitJson = await liveKitResponse.json().catch(() => ({}));
 
         if (!liveKitResponse.ok || !liveKitJson.token) {
@@ -126,7 +145,7 @@ export default function SessionRoom({ sessionId }: { sessionId: string }) {
     return () => {
       cancelled = true;
     };
-  }, [getToken, sessionId]);
+  }, [getToken, sessionId, prefetchedToken]);
 
   if (isKicked) {
     return (
@@ -181,6 +200,38 @@ export default function SessionRoom({ sessionId }: { sessionId: string }) {
   }
 
   if (!liveKitToken) {
+    // If we have a prefetched token from query params, use it directly
+    if (prefetchedToken) {
+      return (
+        <LiveKitRoom
+          audio={false}
+          connect
+          data-lk-theme="default"
+          serverUrl={liveKitUrl}
+          token={prefetchedToken}
+          video={false}
+          style={{ height: '100vh', backgroundColor: '#030712' }}
+        >
+          <SessionContent
+            anonymousIdentity="direct-join"
+            avatar={{ style: 1, palette: 'coastal', gesture: 'idle', locked: true }}
+            canFacilitate={false}
+            onCrisis={(reason) => {
+              setCrisisReason(reason);
+              setIsCrisis(true);
+            }}
+            onKick={(reason) => {
+              setKickReason(reason);
+              setIsKicked(true);
+            }}
+            onReconnecting={setIsReconnecting}
+            isReconnecting={isReconnecting}
+            roomName={sessionId}
+          />
+          <RoomAudioRenderer />
+        </LiveKitRoom>
+      );
+    }
     return (
       <div className="flex h-screen items-center justify-center bg-black text-white">
         <div className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.03] px-5 py-4">
@@ -229,20 +280,20 @@ function SessionContent({
   anonymousIdentity,
   avatar,
   canFacilitate,
-  roomName,
-  onKick,
   onCrisis,
+  onKick,
   onReconnecting,
   isReconnecting,
+  roomName,
 }: {
   anonymousIdentity: string;
   avatar: AvatarProfile;
   canFacilitate: boolean;
-  roomName: string;
-  onKick: (reason: string) => void;
   onCrisis: (reason: string) => void;
-  onReconnecting: (value: boolean) => void;
+  onKick: (reason: string) => void;
+  onReconnecting: (reconnecting: boolean) => void;
   isReconnecting: boolean;
+  roomName: string;
 }) {
   const router = useRouter();
   const room = useRoomContext();
@@ -252,10 +303,39 @@ function SessionContent({
   const [localAudioTrack, setLocalAudioTrack] = useState<LocalAudioTrack | null>(null);
   const [micEnabled, setMicEnabled] = useState(false);
   const [micBusy, setMicBusy] = useState(false);
-  const [confirmLeave, setConfirmLeave] = useState(false);
   const [voiceMaskWarning, setVoiceMaskWarning] = useState<string | null>(null);
   const [sessionSeconds, setSessionSeconds] = useState(0);
   const [facilitatorNotes, setFacilitatorNotes] = useState('');
+  const [webGLSupported, setWebGLSupported] = useState(true);
+  const [gesture, setGesture] = useState<AvatarGesture>('idle');
+  const [cameraEnabled, setCameraEnabled] = useState(false);
+
+  // Voice effects state
+  const { activePreset, semitones, setPreset, setSemitones } = useVoiceEffects('subtle', 4);
+
+  // Media devices for toolbar
+  const {
+    audioInputs,
+    audioOutputs,
+    selectedAudioInput,
+    selectedAudioOutput,
+    selectAudioInput,
+    selectAudioOutput,
+  } = useMediaDevices();
+
+  // Task 5.13 — Detect WebGL support on mount
+  useEffect(() => {
+    try {
+      const canvas = document.createElement('canvas');
+      const supported = !!(
+        window.WebGLRenderingContext &&
+        (canvas.getContext('webgl') || canvas.getContext('experimental-webgl'))
+      );
+      setWebGLSupported(supported);
+    } catch {
+      setWebGLSupported(false);
+    }
+  }, []);
 
   // Task 5.14 — LiveKit reconnection event handlers
   useEffect(() => {
@@ -365,7 +445,7 @@ function SessionContent({
       await localParticipant.publishTrack(track as unknown as MediaStreamTrack);
 
       try {
-        await track.setProcessor(createVoiceMaskProcessor({ preset: 'subtle' }));
+        await track.setProcessor(createVoiceMaskProcessor({ preset: activePreset, semitones }));
       } catch (processorError) {
         setVoiceMaskWarning(
           processorError instanceof Error
@@ -379,7 +459,7 @@ function SessionContent({
     } finally {
       setMicBusy(false);
     }
-  }, [localParticipant]);
+  }, [localParticipant, activePreset, semitones]);
 
   const toggleMicrophone = useCallback(async () => {
     if (micBusy) return;
@@ -436,6 +516,18 @@ function SessionContent({
     });
   };
 
+  const handleToggleCamera = useCallback(() => {
+    setCameraEnabled((v) => !v);
+  }, []);
+
+  const handleVoicePresetChange = useCallback((preset: VoicePreset) => {
+    setPreset(preset);
+  }, [setPreset]);
+
+  const handleVoiceSemitoneChange = useCallback((st: number) => {
+    setSemitones(st);
+  }, [setSemitones]);
+
   const lowerHand = async (participantIdentity: string) => {
     await publishControlMessage({
       type: 'HAND_LOWERED',
@@ -468,46 +560,27 @@ function SessionContent({
 
   return (
     <main className="grid h-screen grid-rows-[auto_1fr_auto] overflow-hidden bg-black text-white">
-      <header className="flex items-center justify-between border-b border-white/10 bg-black/70 px-6 py-4 backdrop-blur-2xl">
-        <div>
-          <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Anonymous Room</p>
-          <p className="font-mono text-sm font-bold text-indigo-300">anon-{anonymousIdentity.slice(0, 8)}</p>
-        </div>
-        <div className="flex flex-col items-center gap-1">
-          <p className="font-mono text-2xl font-black tracking-widest text-white">
-            {String(Math.floor(sessionSeconds / 60)).padStart(2, '0')}:
-            {String(sessionSeconds % 60).padStart(2, '0')}
-          </p>
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-1.5">
-              <span
-                className={[
-                  'h-2 w-2 rounded-full',
-                  connectionQuality === 'good' ? 'bg-emerald-400' :
-                  connectionQuality === 'fair' ? 'bg-amber-400' : 'bg-red-400',
-                ].join(' ')}
-              />
-              <span className="text-xs font-bold text-zinc-400">{connectionLabel}</span>
-            </div>
-            <div className="flex items-center gap-2 text-sm font-bold text-emerald-300">
-              <ShieldAlert className="h-4 w-4" />
-              Safety Engine Active
-            </div>
-          </div>
-        </div>
-        <div className="text-right">
-          <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Room Hash</p>
-          <p className="font-mono text-xs text-zinc-400">{roomName.slice(0, 12)}</p>
-        </div>
-      </header>
+      <SessionHeader
+        anonymousHandle={anonymousIdentity}
+        sessionSeconds={sessionSeconds}
+        connectionQuality={connectionQuality}
+        connectionLabel={connectionLabel}
+        roomName={roomName}
+      />
 
       <section className="grid min-h-0 grid-cols-[1fr_360px]">
         <div className="relative min-w-0 overflow-hidden bg-[radial-gradient(circle_at_50%_20%,rgba(99,102,241,0.16),transparent_45%),black]">
-          <AvatarCanvas
-            avatar={avatar}
-            localIdentity={localParticipant.identity}
-            raisedHands={raisedHands}
-          />
+          {webGLSupported ? (
+            <AvatarCanvas
+              avatar={avatar}
+              localIdentity={localParticipant.identity}
+              raisedHands={raisedHands}
+              isLocalFacilitator={canFacilitate}
+              gesture={gesture}
+            />
+          ) : (
+            <WebGLFallback avatar={avatar} roomName={localParticipant.identity} />
+          )}
           {voiceMaskWarning ? (
             <div className="absolute left-6 top-6 max-w-md rounded-2xl border border-amber-500/20 bg-amber-500/10 px-4 py-3 text-sm text-amber-100 backdrop-blur-xl">
               {voiceMaskWarning}
@@ -555,164 +628,35 @@ function SessionContent({
         </div>
       ) : null}
 
-      <footer className="flex items-center justify-center border-t border-white/10 bg-black/75 px-6 py-4 backdrop-blur-2xl">
-        <div className="flex items-center gap-3 rounded-3xl border border-white/10 bg-white/[0.03] p-3 shadow-2xl">
-          <button
-            aria-label={micEnabled ? 'Mute microphone' : 'Unmute microphone'}
-            className={[
-              'flex h-14 min-w-14 items-center justify-center rounded-2xl border px-5 font-bold transition-all disabled:cursor-wait disabled:opacity-60',
-              micEnabled
-                ? 'border-white/10 bg-white/10 text-white hover:bg-white/15'
-                : 'border-red-500/20 bg-red-500/10 text-red-300 hover:bg-red-500/20',
-            ].join(' ')}
-            data-testid="mute-button"
-            disabled={micBusy}
-            onClick={toggleMicrophone}
-            type="button"
-          >
-            {micEnabled ? <Mic className="h-5 w-5" /> : <MicOff className="h-5 w-5" />}
-            <span className="ml-2 hidden sm:inline">{micEnabled ? 'Mute' : 'Unmute'}</span>
-          </button>
+      <MediaToolbar
+        micEnabled={micEnabled}
+        micBusy={micBusy}
+        cameraEnabled={cameraEnabled}
+        onToggleMic={toggleMicrophone}
+        onToggleCamera={handleToggleCamera}
+        audioInputs={audioInputs}
+        audioOutputs={audioOutputs}
+        selectedAudioInput={selectedAudioInput}
+        selectedAudioOutput={selectedAudioOutput}
+        onSelectAudioInput={selectAudioInput}
+        onSelectAudioOutput={selectAudioOutput}
+      />
 
-          <button
-            aria-pressed={raisedHands.has(localParticipant.identity)}
-            className={[
-              'flex h-14 min-w-14 items-center justify-center rounded-2xl border px-5 font-bold transition-all',
-              raisedHands.has(localParticipant.identity)
-                ? 'border-amber-500/30 bg-amber-500/20 text-amber-100'
-                : 'border-white/10 bg-white/5 text-white hover:bg-white/10',
-            ].join(' ')}
-            data-testid="raise-hand-button"
-            onClick={toggleHand}
-            type="button"
-          >
-            <Hand className="h-5 w-5" />
-            <span className="ml-2 hidden sm:inline">
-              {raisedHands.has(localParticipant.identity) ? 'Lower Hand' : 'Raise Hand'}
-            </span>
-          </button>
-
-          <button
-            aria-label="Flag safety concern"
-            className="flex h-14 min-w-14 items-center justify-center rounded-2xl border border-amber-500/20 bg-amber-500/10 px-5 font-bold text-amber-200 transition-all hover:bg-amber-500/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500/50"
-            data-testid="flag-button"
-            onClick={handleFlag}
-            type="button"
-          >
-            <AlertTriangle className="h-5 w-5" />
-          </button>
-
-          <button
-            className="flex h-14 items-center justify-center rounded-2xl bg-red-600 px-6 font-bold text-white transition-all hover:bg-red-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500/50"
-            data-testid="end-session-button"
-            onClick={() => setConfirmLeave(true)}
-            type="button"
-          >
-            <PhoneOff className="h-5 w-5" />
-            <span className="ml-2">Leave</span>
-          </button>
-        </div>
-      </footer>
-
-      {confirmLeave ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 p-6 backdrop-blur-xl">
-          <section className="w-full max-w-md rounded-3xl border border-white/10 bg-zinc-950 p-8">
-            <h2 className="text-2xl font-black tracking-tight">Leave this session?</h2>
-            <p className="mt-3 text-sm leading-6 text-zinc-400">
-              Your audio will stop and you will return to the dashboard.
-            </p>
-            <div className="mt-8 flex gap-3">
-              <button
-                className="h-12 flex-1 rounded-2xl border border-white/10 font-bold text-white hover:bg-white/5"
-                onClick={() => setConfirmLeave(false)}
-                type="button"
-              >
-                Cancel
-              </button>
-              <button
-                className="h-12 flex-1 rounded-2xl bg-red-600 font-bold text-white hover:bg-red-500"
-                onClick={leaveSession}
-                type="button"
-              >
-                Leave
-              </button>
-            </div>
-          </section>
-        </div>
-      ) : null}
+      <VoiceControlsBar
+        micEnabled={micEnabled}
+        micBusy={micBusy}
+        raisedHand={raisedHands.has(localParticipant.identity)}
+        gesture={gesture}
+        onToggleMute={toggleMicrophone}
+        onToggleHand={toggleHand}
+        onFlag={handleFlag}
+        onLeave={leaveSession}
+        onGestureChange={setGesture}
+        voicePreset={activePreset}
+        voiceSemitones={semitones}
+        onVoicePresetChange={handleVoicePresetChange}
+        onVoiceSemitoneChange={handleVoiceSemitoneChange}
+      />
     </main>
-  );
-}
-
-function RaisedHandQueue({
-  raisedHands,
-  onLowerHand,
-}: {
-  raisedHands: string[];
-  onLowerHand: (participantIdentity: string) => void;
-}) {
-  return (
-    <div className="border-b border-white/10 p-4">
-      <div className="flex items-center justify-between">
-        <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Facilitator Queue</p>
-        <span className="rounded-full bg-amber-500/10 px-2 py-1 text-xs font-bold text-amber-200">
-          {raisedHands.length}
-        </span>
-      </div>
-      <div className="mt-3 space-y-2">
-        {raisedHands.length === 0 ? (
-          <p className="text-sm text-zinc-500">No raised hands.</p>
-        ) : (
-          raisedHands.map((identity) => (
-            <div
-              className="flex items-center justify-between rounded-2xl border border-white/10 bg-white/[0.03] px-3 py-2"
-              key={identity}
-            >
-              <span className="font-mono text-xs text-zinc-300">anon-{identity.slice(0, 8)}</span>
-              <button
-                className="rounded-full border border-white/10 px-3 py-1 text-xs font-bold text-zinc-300 hover:bg-white/10"
-                onClick={() => onLowerHand(identity)}
-                type="button"
-              >
-                Lower
-              </button>
-            </div>
-          ))
-        )}
-      </div>
-    </div>
-  );
-}
-
-function SessionExitState({
-  actionLabel,
-  description,
-  icon,
-  onAction,
-  title,
-}: {
-  actionLabel: string;
-  description: string;
-  icon: 'danger' | 'warning';
-  onAction: () => void;
-  title: string;
-}) {
-  const Icon = icon === 'danger' ? ShieldAlert : AlertTriangle;
-
-  return (
-    <div className="flex h-screen flex-col items-center justify-center bg-zinc-950 p-6 text-center text-white">
-      <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-full border border-red-500/20 bg-red-500/10">
-        <Icon className="h-10 w-10 text-red-400" />
-      </div>
-      <h1 className="text-3xl font-bold">{title}</h1>
-      <p className="mt-3 max-w-md text-zinc-400">{description}</p>
-      <button
-        className="mt-8 rounded-xl bg-indigo-600 px-8 py-3 font-medium text-white shadow-lg shadow-indigo-900/20 transition-all hover:bg-indigo-500"
-        onClick={onAction}
-        type="button"
-      >
-        {actionLabel}
-      </button>
-    </div>
   );
 }
