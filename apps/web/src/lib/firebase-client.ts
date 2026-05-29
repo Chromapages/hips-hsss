@@ -1,6 +1,6 @@
 import { initializeApp, getApps, getApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
-import { getAnalytics, isSupported } from 'firebase/analytics';
+import { Analytics, getAnalytics, isSupported } from 'firebase/analytics';
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || '',
@@ -53,10 +53,24 @@ export const auth: ReturnType<typeof getAuth> | null = (() => {
   }
 })();
 
-// Analytics instance (conditional for SSR/Browser compatibility)
-export const analytics = typeof window !== 'undefined' && firebaseConfig.apiKey
-  ? isSupported().then(yes => yes ? getAnalytics(getFirebaseApp()!) : null)
-  : null;
+let analyticsPromise: Promise<Analytics | null> | null = null;
+
+// Analytics probes can be blocked by browser extensions or privacy settings.
+// Keep analytics lazy so importing auth never trips a dev runtime overlay.
+export function getFirebaseAnalytics() {
+  if (typeof window === 'undefined' || !firebaseConfig.apiKey) {
+    return Promise.resolve(null);
+  }
+
+  analyticsPromise ??= isSupported()
+    .then((yes) => (yes ? getAnalytics(getFirebaseApp()!) : null))
+    .catch((error) => {
+      console.warn('Firebase analytics unavailable:', error);
+      return null;
+    });
+
+  return analyticsPromise;
+}
 
 export const isFirebaseClientReady = () => _initialized && _app !== null && _auth !== null;
 

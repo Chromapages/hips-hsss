@@ -1,3 +1,5 @@
+"use client";
+
 import { Navbar } from "@/components/polish/Navbar"
 import { ImpactStats } from "@/components/polish/ImpactStats"
 import { Shield, Lock, EyeOff, Heart, ChevronRight, ArrowUpRight } from "lucide-react"

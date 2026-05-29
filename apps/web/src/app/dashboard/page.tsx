@@ -49,7 +49,7 @@ const emptyDashboardData: DashboardData = {
 };
 
 export default function DashboardPage() {
-  const { getToken } = useAuth();
+  const { getToken, loading: authLoading } = useAuth();
   const router = useRouter();
 
   const { data, error, isLoading } = useSWRData<{
@@ -57,7 +57,7 @@ export default function DashboardPage() {
     nextSession: { id: string; serviceName: string; startsAt: string | null } | null;
     sessions: Array<{ id: string; service: string; date: string | null; status?: string }>;
     packages: Array<{ id: string; service: string; remaining: number; total: number }>;
-  }>('dashboard', {
+  }>(authLoading ? null : 'dashboard', {
     revalidateOnFocus: false,
     dedupingInterval: 10_000,
     refreshInterval: 30_000,
@@ -79,7 +79,7 @@ export default function DashboardPage() {
     },
   });
 
-  if (isLoading) {
+  if (authLoading || isLoading) {
     return (
       <DashboardLayout>
         <div className="flex h-[60vh] items-center justify-center">

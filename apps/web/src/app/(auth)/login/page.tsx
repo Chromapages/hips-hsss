@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { signInWithEmailAndPassword } from "firebase/auth";
-import { auth, isFirebaseClientReady } from "@/lib/firebase-client";
+import { auth } from "@/lib/firebase-client";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/components/auth/AuthProvider";
 import Link from "next/link";
@@ -44,18 +44,22 @@ export default function LoginPage() {
       await signInWithEmailAndPassword(auth, email, password);
       console.log("[Login] Firebase auth success, wait for AuthProvider sync...");
       router.push(from);
-    } catch (err: any) {
-      console.error("[Login] Error details:", err?.code, err?.message);
+    } catch (err: unknown) {
+      const authError = err instanceof Error
+        ? err as Error & { code?: string }
+        : { message: "An unexpected error occurred. Please try again." };
+
+      console.error("[Login] Error details:", authError.code, authError.message);
 
       // Halt on null app error - do not retry silently
-      if (!err?.code) {
+      if (!authError.code) {
         setError("Authentication temporarily unavailable. Please try again.");
         setLoading(false);
         return;
       }
 
       // Handle specific Firebase error codes
-      switch (err.code) {
+      switch (authError.code) {
         case 'auth/invalid-credential':
         case 'auth/user-not-found':
         case 'auth/wrong-password':
@@ -74,13 +78,19 @@ export default function LoginPage() {
           setError("Sign-in is not available from this domain. Please try again later.");
           break;
         default:
-          setError(err.message || "An unexpected error occurred. Please try again.");
+          setError(authError.message || "An unexpected error occurred. Please try again.");
       }
       setLoading(false);
     }
   };
 
-  if (authLoading) return null; // Let AuthProvider handle global loading
+  if (authLoading) {
+    return (
+      <div className="flex min-h-72 items-center justify-center">
+        <Loader2 className="h-6 w-6 animate-spin text-indigo-500" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8">
@@ -152,7 +162,7 @@ export default function LoginPage() {
 
       <div className="pt-4 text-center">
         <p className="text-xs font-medium text-zinc-500">
-          Don't have an account?{" "}
+          Don&apos;t have an account?{" "}
           <Link href="/signup" className="text-white font-bold hover:text-indigo-400 transition-colors">
             Create Sanctuary
           </Link>

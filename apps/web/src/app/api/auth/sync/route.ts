@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { adminAuth, getDb, isFirebaseAdminReady } from '@/lib/firebase-admin';
-import * as fs from 'fs';
 
 function getErrorMessage(error: unknown) {
   return error instanceof Error ? error.message : String(error);
@@ -22,36 +21,6 @@ function isFirestoreApiDisabled(error: unknown) {
     message.includes('Cloud Firestore API has not been used') ||
     message.includes('firestore.googleapis.com')
   );
-}
-
-function tryReadFile(filePath: string): string | null {
-  try {
-    return fs.readFileSync(filePath, 'utf8');
-  } catch {
-    return null;
-  }
-}
-
-/**
- * Resolve FIREBASE_ADMIN_SDK_KEY that may be a file path (VPS deployment).
- * Falls back to env var value directly if not a readable file.
- */
-function resolveServiceAccountKey(): string | null {
-  const raw = process.env.FIREBASE_ADMIN_SDK_KEY || process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
-  if (!raw) return null;
-
-  const trimmed = raw.trim();
-  // If it looks like a file path (contains / and .json or starts with /), try to read it
-  if (trimmed.includes('/') && (trimmed.endsWith('.json') || trimmed.startsWith('/'))) {
-    const fileContents = tryReadFile(trimmed);
-    if (fileContents) {
-      console.log(`[AuthSync] FIREBASE_ADMIN_SDK_KEY resolved from file: ${trimmed}`);
-      return fileContents;
-    }
-  }
-
-  // Otherwise use the value directly (base64 or raw JSON)
-  return trimmed;
 }
 
 export async function POST(req: NextRequest) {
@@ -134,7 +103,7 @@ export async function POST(req: NextRequest) {
       // Role is managed server-side only — never sourced from user-writable fields
       const defaultRole = 'PARTICIPANT';
       if (!user?.role) {
-        await userRef.update({ role: defaultRole }, { merge: true });
+        await userRef.set({ role: defaultRole }, { merge: true });
         user = { ...user, role: defaultRole };
       }
 
