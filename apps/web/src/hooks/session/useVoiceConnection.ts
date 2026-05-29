@@ -83,7 +83,7 @@ export function useVoiceConnection() {
     room.on(RoomEvent.ActiveSpeakersChanged, (speakers) => {
       if (speakers.length > 0) {
         const loudest = speakers[0];
-        setActiveSpeakerIdentity(loudest.identity);
+        setActiveSpeakerIdentity(loudest?.identity ?? null);
       } else {
         setActiveSpeakerIdentity(null);
       }
