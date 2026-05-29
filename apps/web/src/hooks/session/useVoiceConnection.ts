@@ -6,7 +6,6 @@ import {
   LocalAudioTrack,
   RoomEvent,
   ConnectionState,
-  Track,
 } from "livekit-client";
 import { useRoomContext, useDataChannel, useParticipants } from "@livekit/components-react";
 
@@ -131,7 +130,7 @@ export function useVoiceConnection() {
           }
         }
 
-        await room.localParticipant.publishTrack(processedTrack as unknown as Track);
+        await room.localParticipant.publishTrack(processedTrack as unknown as MediaStreamTrack);
         localAudioTrackRef.current = processedTrack;
         setLocalAudioTrack(processedTrack);
         setMicEnabled(true);
