@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDb, getAdminAuth } from '@/lib/firebase-admin';
 import { ROLES } from '@/lib/roles';
+import { z } from 'zod';
+
+const updateStatusSchema = z.object({
+  status: z.enum(['SCHEDULED', 'ACTIVE', 'ENDED', 'CANCELLED']),
+});
 
 export async function GET(req: NextRequest) {
   const db = getDb();
@@ -60,8 +65,12 @@ export async function POST(req: NextRequest) {
     const { action, sessionId, data } = body;
 
     if (action === 'updateStatus' && sessionId) {
+      const validation = updateStatusSchema.safeParse(data);
+      if (!validation.success) {
+        return NextResponse.json({ error: 'Invalid status value' }, { status: 400 });
+      }
       const sessionRef = db.collection('sessions').doc(sessionId);
-      await sessionRef.update({ status: data.status, updatedAt: new Date().toISOString() });
+      await sessionRef.update({ status: validation.data.status, updatedAt: new Date().toISOString() });
       return NextResponse.json({ success: true });
     }
 

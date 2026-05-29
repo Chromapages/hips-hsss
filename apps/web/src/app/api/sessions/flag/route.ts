@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/firebase-admin';
+import { getDb } from '@/lib/firebase-admin';
+import { ROLES } from '@/lib/roles';
+import { verifyFirebaseIdToken } from '@/lib/auth-edge';
 import crypto from 'crypto';
 
 /**
@@ -23,6 +25,11 @@ interface FlagReport {
 }
 
 export async function POST(req: NextRequest) {
+  const db = getDb();
+  if (!db) {
+    return NextResponse.json({ error: 'Service temporarily unavailable' }, { status: 503 });
+  }
+
   try {
     const body = await req.json().catch(() => ({}));
 
@@ -121,7 +128,32 @@ export async function POST(req: NextRequest) {
  * GET — Retrieve flag status (for facilitators)
  */
 export async function GET(req: NextRequest) {
+  const db = getDb();
+  if (!db) {
+    return NextResponse.json({ error: 'Service temporarily unavailable' }, { status: 503 });
+  }
+
   try {
+    // Auth: require FACILITATOR or ADMIN role
+    const authHeader = req.headers.get('authorization');
+    const token = authHeader?.startsWith('Bearer ') ? authHeader.split(' ')[1] : null;
+
+    if (!token) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    let payload;
+    try {
+      payload = await verifyFirebaseIdToken(token);
+    } catch {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const role = (payload.role as string) || null;
+    if (role !== ROLES.FACILITATOR && role !== ROLES.ADMIN) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
     const { searchParams } = new URL(req.url);
     const sessionId = searchParams.get('sessionId');
 

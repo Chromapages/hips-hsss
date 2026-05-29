@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { AccessToken } from 'livekit-server-sdk';
 import crypto from 'crypto';
 import { db } from '@/lib/firebase-admin';
+import { verifyFirebaseIdToken } from '@/lib/auth-edge';
+import { verifySessionToken } from '@/lib/session-auth';
+import { checkRateLimit, getRateLimitHeaders } from '@/lib/rate-limit';
 
 const palettes = ['coastal', 'sunrise', 'forest'] as const;
 
@@ -76,12 +79,68 @@ export async function POST(req: NextRequest) {
       console.error('[LiveKitAPI] MISSING CREDENTIALS', { apiKey: !!apiKey, apiSecret: !!apiSecret });
       return NextResponse.json({
         error: 'LiveKit credentials missing from server environment',
-        details: 'Check .env.local for LIVEKIT_API_KEY and LIVEKIT_API_SECRET'
       }, { status: 500 });
+    }
+
+    const authHeader = req.headers.get('authorization');
+    const token = authHeader?.startsWith('Bearer ') ? authHeader.split(' ')[1] : null;
+
+    // Rate limit by IP before doing any auth work
+    const forwarded = req.headers.get('x-forwarded-for');
+    const ip = forwarded?.split(',')[0]?.trim() ?? 'unknown';
+    const rateLimitResult = checkRateLimit(ip, 20, 60_000); // 20 tokens per minute per IP
+    if (!rateLimitResult.allowed) {
+      return NextResponse.json(
+        { error: 'Rate limit exceeded' },
+        {
+          status: 429,
+          headers: getRateLimitHeaders(rateLimitResult.resetAt, 0, 20),
+        }
+      );
+    }
+
+    if (!token) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // Verify Firebase token first (preferred)
+    let sessionRef: string | null = null;
+    try {
+      const payload = await verifyFirebaseIdToken(token);
+      sessionRef = payload.sub || null;
+    } catch {
+      // Fallback: verify session token
+      const sessionPayload = await verifySessionToken(token);
+      if (sessionPayload) {
+        sessionRef = sessionPayload.ref;
+      }
+    }
+
+    if (!sessionRef) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const body = await req.json().catch(() => ({}));
     const roomName = body.sessionId || `session-${crypto.randomUUID()}`;
+
+    // Validate that the sessionId matches the caller's session reference
+    // This prevents IDOR: users can only join their own session
+    if (body.sessionId && sessionRef !== body.sessionId) {
+      // Allow if the session document has the user as a participant
+      const sessionDoc = await db.collection('phase5_sessions').doc(body.sessionId).get();
+      if (!sessionDoc.exists) {
+        return NextResponse.json({ error: 'Session not found' }, { status: 404 });
+      }
+      const sessionData = sessionDoc.data();
+      // If session exists but caller is not the owner/participant, reject
+      // Owner is identified by roomName containing the sessionRef
+      const isAuthorized = roomName === `session-${sessionRef}` ||
+        sessionData?.participantIdentities?.includes(sessionRef) ||
+        sessionData?.facilitatorId === sessionRef;
+      if (!isAuthorized) {
+        return NextResponse.json({ error: 'Forbidden: not authorized for this session' }, { status: 403 });
+      }
+    }
 
     // Phase 5: Anonymous identity ONLY — no Firebase UID
     const anonymousIdentity = crypto.randomUUID();

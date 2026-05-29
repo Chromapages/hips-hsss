@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getDb } from '@/lib/firebase-admin';
 import { AccessToken } from 'livekit-server-sdk';
 import crypto from 'crypto';
+import { verifyFirebaseIdToken } from '@/lib/auth-edge';
 
 /**
  * Phase 5 — Session Reconnection Handler (5.14)
@@ -65,6 +66,20 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       error: 'Service temporarily unavailable. Please try again later.',
     }, { status: 503 });
+  }
+
+  // Verify Firebase auth token
+  const authHeader = req.headers.get('authorization');
+  const token = authHeader?.startsWith('Bearer ') ? authHeader.split(' ')[1] : null;
+
+  if (!token) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  try {
+    await verifyFirebaseIdToken(token);
+  } catch {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
   try {

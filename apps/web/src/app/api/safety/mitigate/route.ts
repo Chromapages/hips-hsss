@@ -45,7 +45,7 @@ export async function POST(req: NextRequest) {
     }
 
     const tokenStr = token || '';
-    if (tokenStr.length !== expectedSecret.length || !crypto.subtle.timingSafeEqual(Buffer.from(tokenStr), Buffer.from(expectedSecret))) {
+    if (tokenStr.length !== expectedSecret.length || !crypto.timingSafeEqual(Buffer.from(tokenStr), Buffer.from(expectedSecret))) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 

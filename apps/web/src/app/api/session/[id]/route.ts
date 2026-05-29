@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { db } from '@/lib/firebase-admin';
+import { db, isFirebaseAdminReady } from '@/lib/firebase-admin';
+import { verifyFirebaseIdToken } from '@/lib/auth-edge';
+import { verifySessionToken } from '@/lib/session-auth';
 
 /**
  * Phase 5 — Session Lifecycle Manager: Session Operations (5.3)
@@ -53,6 +55,9 @@ const VALID_TRANSITIONS: Record<SessionStatus, SessionStatus[]> = {
 
 // Helper to get session document reference
 function getSessionRef(sessionId: string) {
+  if (!isFirebaseAdminReady()) {
+    throw new Error('Firestore not initialized');
+  }
   return db.collection('phase5_sessions').doc(sessionId);
 }
 
@@ -82,6 +87,35 @@ export async function GET(
       return NextResponse.json({ error: 'Session ID required' }, { status: 400 });
     }
 
+    // Auth: verify caller is authorized for this session
+    const authHeader = req.headers.get('authorization');
+    const token = authHeader?.startsWith('Bearer ') ? authHeader.split(' ')[1] : null;
+
+    let authorized = false;
+    if (token) {
+      try {
+        const payload = await verifyFirebaseIdToken(token);
+        const firebaseUid = payload.sub;
+        const sessionDoc = await getSessionRef(id).get();
+        if (sessionDoc.exists) {
+          const sessionData = sessionDoc.data();
+          authorized = firebaseUid === sessionData?.userId ||
+            firebaseUid === sessionData?.facilitatorId ||
+            sessionData?.participantIdentities?.includes(firebaseUid);
+        }
+      } catch {
+        // try session token
+        const sessionPayload = await verifySessionToken(token);
+        if (sessionPayload) {
+          authorized = sessionPayload.ref === id;
+        }
+      }
+    }
+
+    if (!authorized) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const session = await getSession(id);
 
     if (!session) {
@@ -107,7 +141,7 @@ export async function GET(
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     console.error('[SessionOps] GET Error:', errorMessage);
     return NextResponse.json(
-      { error: 'Failed to get session', details: errorMessage },
+      { error: 'Failed to get session' },
       { status: 500 }
     );
   }
@@ -122,9 +156,37 @@ export async function PATCH(
 ) {
   try {
     const { id } = await params;
-    
+
     if (!id) {
       return NextResponse.json({ error: 'Session ID required' }, { status: 400 });
+    }
+
+    // Auth: verify caller is authorized for this session
+    const authHeader = req.headers.get('authorization');
+    const token = authHeader?.startsWith('Bearer ') ? authHeader.split(' ')[1] : null;
+
+    let authorized = false;
+    if (token) {
+      try {
+        const payload = await verifyFirebaseIdToken(token);
+        const firebaseUid = payload.sub;
+        const sessionDoc = await getSessionRef(id).get();
+        if (sessionDoc.exists) {
+          const sessionData = sessionDoc.data();
+          authorized = firebaseUid === sessionData?.userId ||
+            firebaseUid === sessionData?.facilitatorId ||
+            sessionData?.participantIdentities?.includes(firebaseUid);
+        }
+      } catch {
+        const sessionPayload = await verifySessionToken(token);
+        if (sessionPayload) {
+          authorized = sessionPayload.ref === id;
+        }
+      }
+    }
+
+    if (!authorized) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const body = await req.json().catch(() => ({}));
@@ -181,8 +243,8 @@ export async function PATCH(
           if (session.status === 'active') {
             finalStatus = 'flagged';
             updateData.flagged = true;
-            updateData.flaggedBy = flaggedBy;
-            updateData.flaggedReason = flaggedReason;
+            if (flaggedBy !== undefined) if (flaggedBy !== undefined) updateData.flaggedBy = flaggedBy;
+            if (flaggedReason !== undefined) updateData.flaggedReason = flaggedReason;
             updateData.flaggedAt = now;
           }
           break;
@@ -211,8 +273,8 @@ export async function PATCH(
         updateData.endedAt = now;
       } else if (newStatus === 'flagged') {
         updateData.flagged = true;
-        updateData.flaggedBy = flaggedBy;
-        updateData.flaggedReason = flaggedReason;
+        if (flaggedBy !== undefined) updateData.flaggedBy = flaggedBy;
+        if (flaggedReason !== undefined) updateData.flaggedReason = flaggedReason;
         updateData.flaggedAt = now;
       }
     }
@@ -250,7 +312,7 @@ export async function PATCH(
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     console.error('[SessionOps] PATCH Error:', errorMessage);
     return NextResponse.json(
-      { error: 'Failed to update session', details: errorMessage },
+      { error: 'Failed to update session' },
       { status: 500 }
     );
   }
@@ -265,9 +327,37 @@ export async function DELETE(
 ) {
   try {
     const { id } = await params;
-    
+
     if (!id) {
       return NextResponse.json({ error: 'Session ID required' }, { status: 400 });
+    }
+
+    // Auth: verify caller is authorized for this session
+    const authHeader = req.headers.get('authorization');
+    const token = authHeader?.startsWith('Bearer ') ? authHeader.split(' ')[1] : null;
+
+    let authorized = false;
+    if (token) {
+      try {
+        const payload = await verifyFirebaseIdToken(token);
+        const firebaseUid = payload.sub;
+        const sessionDoc = await getSessionRef(id).get();
+        if (sessionDoc.exists) {
+          const sessionData = sessionDoc.data();
+          authorized = firebaseUid === sessionData?.userId ||
+            firebaseUid === sessionData?.facilitatorId ||
+            sessionData?.participantIdentities?.includes(firebaseUid);
+        }
+      } catch {
+        const sessionPayload = await verifySessionToken(token);
+        if (sessionPayload) {
+          authorized = sessionPayload.ref === id;
+        }
+      }
+    }
+
+    if (!authorized) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     // Get current session state
@@ -315,7 +405,7 @@ export async function DELETE(
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     console.error('[SessionOps] DELETE Error:', errorMessage);
     return NextResponse.json(
-      { error: 'Failed to end session', details: errorMessage },
+      { error: 'Failed to end session' },
       { status: 500 }
     );
   }
