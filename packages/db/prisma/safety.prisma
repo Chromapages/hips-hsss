@@ -17,6 +17,7 @@ model SafetyAlert {
   transcriptChunk  String?  @db.Text
   isResolved       Boolean  @default(false)
   createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 
   mitigations      SafetyMitigation[]
   escalations      EscalationQueue[]
@@ -30,7 +31,7 @@ model SafetyMitigation {
   metadata  Json?
   createdAt DateTime @default(now())
 
-  alert     SafetyAlert @relation(fields: [alertId], references: [id])
+  alert     SafetyAlert @relation(fields: [alertId], references: [id], onDelete: Cascade)
 }
 
 model SafetyStrike {

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { getStripeServerClient } from '@/lib/stripe';
-import { db } from '@/lib/firebase-admin';
+import { getDb, isFirebaseAdminReady } from '@/lib/firebase-admin';
 import { verifyFirebaseIdToken } from '@/lib/auth-edge';
 
 const intentSchema = z.object({
@@ -9,6 +9,14 @@ const intentSchema = z.object({
 });
 
 export async function POST(req: NextRequest) {
+  // Initialize Firestore lazily — return 503 if not configured
+  const db = getDb();
+  if (!db) {
+    return NextResponse.json({
+      error: 'Service temporarily unavailable. Please try again later.',
+    }, { status: 503 });
+  }
+
   try {
     // 1. Verify Authentication
     const authHeader = req.headers.get('authorization');
@@ -57,6 +65,11 @@ export async function POST(req: NextRequest) {
 
     if (!service) {
       return NextResponse.json({ error: 'Service details not found' }, { status: 404 });
+    }
+
+    // Verify user owns or has access to the service
+    if (service.userId !== undefined && service.userId !== firebaseUid) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
     // 4. Create Payment Intent

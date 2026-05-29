@@ -1,0 +1,143 @@
+// Row-Level Security (RLS) is required for production deployment.
+// Run the following in your Postgres database:
+//
+// ALTER TABLE "safety_alert" ENABLE ROW LEVEL SECURITY;
+// CREATE POLICY "safety_alert_admin_only" ON "safety_alert" FOR ALL USING (true);
+//
+// ALTER TABLE "audit_event" ENABLE ROW LEVEL SECURITY;
+// CREATE POLICY "audit_event_admin_only" ON "audit_event" FOR ALL USING (true);
+//
+// ALTER TABLE "escalation_queue" ENABLE ROW LEVEL SECURITY;
+// CREATE POLICY "escalation_queue_admin_only" ON "escalation_queue" FOR ALL USING (true);
+
+// Safety Service schema — extends shared @hips/db safety schema
+// This service-level schema is used for code generation (prisma generate)
+// The actual database uses the shared schema at packages/db/prisma/safety.prisma
+
+// TODO [M4]: Schema drift detected — this file diverges from packages/db/prisma/safety.prisma:
+//   - Uses String instead of enums (SafetySeverity, SafetyCategory, etc.)
+//   - Missing EscalationLevel, MitigationAction enum definitions
+//   - VaultAccessLog model appears here but not in shared schema
+//   - AuditEvent model present here but not in shared schema
+// Sync required before next deployment.
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../../../packages/db/generated/safety"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// PHI-1: Safety Audit Trail — INSERT only, never modify
+model AuditEvent {
+  id         String   @id @default(cuid())
+  service    String
+  action     String
+  actorRef   String
+  subjectRef String?
+  metadata   Json     @default("{}")
+  createdAt  DateTime @default(now())
+
+  @@index([service, action])
+  @@index([actorRef])
+  @@index([createdAt])
+  @@map("audit_event")
+}
+
+// Safety Alert — raised when content triggers keyword or manual flag
+model SafetyAlert {
+  id               String   @id @default(uuid()) @db.Uuid
+  sessionId        String
+  severity         String   // LOW, MEDIUM, HIGH, CRITICAL
+  category         String   // HARM, SELF_HARM, HARASSMENT, DISCLOSURE
+  anonymizedReason String
+  transcriptChunk  String?  @db.Text
+  isResolved       Boolean  @default(false)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  mitigations      SafetyMitigation[]
+  escalations      EscalationQueue[]
+}
+
+// Safety Mitigation — action taken in response to an alert
+model SafetyMitigation {
+  id        String   @id @default(uuid()) @db.Uuid
+  alertId   String   @db.Uuid
+  action    String   // WARNING, MUTE, KICK, ESCALATE
+  success   Boolean
+  metadata  Json?
+  createdAt DateTime @default(now())
+
+  alert     SafetyAlert @relation(fields: [alertId], references: [id])
+}
+
+// Safety Strike — tracks repeated violations per participant per session
+model SafetyStrike {
+  id            String   @id @default(uuid()) @db.Uuid
+  sessionId     String
+  participantId String
+  count         Int      @default(1)
+  lastStrikeAt  DateTime @default(now())
+  createdAt     DateTime @default(now())
+
+  @@unique([sessionId, participantId])
+}
+
+// Safety Audit Log — service-local write-only audit trail
+model SafetyAuditLog {
+  id        String   @id @default(uuid()) @db.Uuid
+  action    String
+  actor     String
+  metadata  Json
+  createdAt DateTime @default(now())
+}
+
+// Escalation Queue — human review queue for HIGH/CRITICAL alerts
+model EscalationQueue {
+  id             String       @id @default(uuid()) @db.Uuid
+  sessionRef    String
+  level         String       // watch, urgent, crisis
+  source        String       // keyword, manual
+  summary       String
+  status        String       @default("open") // open, reviewing, resolved
+  reviewerHandle String?
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  alertId       String?      @db.Uuid
+  alert         SafetyAlert? @relation(fields: [alertId], references: [id])
+
+  @@index([status])
+  @@index([sessionRef])
+}
+
+// Keyword Rule — configurable keyword matching rules
+model KeywordRule {
+  id        String   @id @default(uuid()) @db.Uuid
+  term      String   // lowercase, normalized search term
+  severity  String   // LOW, MEDIUM, HIGH, CRITICAL
+  category  String   // HARM, SELF_HARM, HARASSMENT, DISCLOSURE
+  enabled   Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([term])
+  @@index([enabled])
+  @@map("keyword_rule")
+}
+
+// Vault Access Log — HIPAA access tracking for PHI retrieval
+model VaultAccessLog {
+  id         String   @id @default(uuid()) @db.Uuid
+  actor      String
+  subjectRef String
+  purpose    String
+  success    Boolean
+  createdAt  DateTime @default(now())
+
+  @@index([actor])
+  @@index([subjectRef])
+}

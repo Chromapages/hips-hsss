@@ -34,13 +34,19 @@ export async function POST(req: NextRequest) {
     const authHeader = req.headers.get('authorization');
     const token = authHeader?.startsWith('Bearer ') ? authHeader.split(' ')[1] : null;
 
-    // Security: Verify the webhook secret
-    if (token !== process.env.WEBHOOK_SECRET) {
+    // Security: Verify the webhook secret using constant-time comparison
+    const expectedSecret = process.env.WEBHOOK_SECRET;
+    if (!expectedSecret) {
       if (process.env.NODE_ENV === 'production') {
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        return NextResponse.json({ error: 'Webhook secret not configured' }, { status: 500 });
       }
-      // In development, log but don't hard-block for easier testing
-      console.warn('[SafetyMitigation] WARNING: Webhook secret not validated in non-production');
+      console.warn('[SafetyMitigation] WARNING: Webhook secret not set — rejecting in production');
+      return NextResponse.json({ error: 'Webhook secret not configured' }, { status: 500 });
+    }
+
+    const tokenStr = token || '';
+    if (tokenStr.length !== expectedSecret.length || !crypto.subtle.timingSafeEqual(Buffer.from(tokenStr), Buffer.from(expectedSecret))) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const body = await req.json();

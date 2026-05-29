@@ -108,6 +108,7 @@ model Session {
   @@index([packageId])
   @@index([status])
   @@index([startsAt])
+  @@index([endsAt])
 }
 
 model Package {
@@ -167,6 +168,7 @@ model OrgInquiry {
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
 
+  @@unique([email])
   @@index([status])
   @@index([createdAt])
 }

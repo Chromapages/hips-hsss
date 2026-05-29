@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { db } from '@/lib/firebase-admin';
+import { getDb } from '@/lib/firebase-admin';
 import type { QueryDocumentSnapshot } from 'firebase-admin/firestore';
 import { sendSessionReminder24HEmail } from '@/emails';
 import { addHours, startOfHour } from 'date-fns';
@@ -7,17 +7,24 @@ import { addHours, startOfHour } from 'date-fns';
 /**
  * Cron: 24h Session Reminder
  * GET /api/cron/session-reminder-24h
- * 
+ *
  * Searches for sessions starting in ~24h and sends SESSION_REMINDER_24H email.
  * Safe to run hourly — idempotent via lastReminder24h flag.
  */
 export async function GET() {
+  const db = getDb();
+  if (!db) {
+    return NextResponse.json({ error: 'Service temporarily unavailable' }, { status: 503 });
+  }
+
   const cronSecret = process.env.CRON_SECRET;
   if (cronSecret) {
-    const url = new URL(process.env.FILES_HOST || 'http://localhost');
+    const url = new URL(req.url);
     if (url.searchParams.get('secret') !== cronSecret) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
+  } else if (process.env.NODE_ENV === 'production') {
+    return NextResponse.json({ error: 'CRON_SECRET not configured' }, { status: 500 });
   }
 
   try {
@@ -37,12 +44,15 @@ export async function GET() {
       return NextResponse.json({ sent: 0, message: 'No sessions in 24h window' });
     }
 
+    // Batch-fetch all users in a single query to avoid N+1
+    const userIds = [...new Set(snapshot.docs.map((doc: QueryDocumentSnapshot) => doc.data().userId as string))];
+    const userSnapshot = await db.collection('users').where('id', 'in', userIds).get();
+    const userMap = new Map(userSnapshot.docs.map((doc: QueryDocumentSnapshot) => [doc.id, doc.data()]));
+
     const results = await Promise.allSettled(
       snapshot.docs.map(async (doc: QueryDocumentSnapshot) => {
         const session = doc.data();
-        const userRef = db.collection('users').doc(session.userId as string);
-        const userDoc = await userRef.get();
-        const user = userDoc.data();
+        const user = userMap.get(session.userId as string);
 
         if (!user?.email) {
           console.warn(`[Cron 24h] No email for user ${session.userId}`);

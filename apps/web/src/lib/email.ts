@@ -26,15 +26,18 @@ export async function sendEmail({
   }
 
   try {
-    const data = await resend.emails.send({
-      from: 'H.I.P.S. <notifications@hips-support.org>',
-      to,
-      subject,
-      html,
-    });
+    const data = await resend.emails.send(
+      {
+        from: 'H.I.P.S. <notifications@hips-support.org>',
+        to,
+        subject,
+        html,
+      },
+      { signal: AbortSignal.timeout(10_000) }
+    );
     return data;
   } catch (error) {
     console.error('Failed to send email:', error);
-    throw error;
+    return { id: null };
   }
 }

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { adminAuth, db } from '@/lib/firebase-admin';
+import { getDb, getAdminAuth } from '@/lib/firebase-admin';
 import { z } from 'zod';
 
 const claimSchema = z.object({
@@ -7,6 +7,16 @@ const claimSchema = z.object({
 });
 
 export async function POST(req: NextRequest) {
+  const db = getDb();
+  if (!db) {
+    return NextResponse.json({ error: 'Service temporarily unavailable' }, { status: 503 });
+  }
+
+  const auth = getAdminAuth();
+  if (!auth) {
+    return NextResponse.json({ error: 'Service temporarily unavailable' }, { status: 503 });
+  }
+
   try {
     // 1. Verify Authentication & Role
     const authHeader = req.headers.get('authorization');
@@ -14,7 +24,7 @@ export async function POST(req: NextRequest) {
 
     if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-    const payload = await adminAuth.verifyIdToken(token);
+    const payload = await auth.verifyIdToken(token);
     const role = (payload.role as string) || 'PARTICIPANT';
 
     if (role !== 'FACILITATOR' && role !== 'ADMIN') {
@@ -29,14 +39,14 @@ export async function POST(req: NextRequest) {
 
     // 3. Claim Session (Atomic Transaction)
     const sessionRef = db.collection('sessions').doc(sessionId);
-    
+
     const result = await db.runTransaction(async (transaction) => {
       const sessionDoc = await transaction.get(sessionRef);
-      
+
       if (!sessionDoc.exists) throw new Error('Session not found');
-      
+
       const data = sessionDoc.data();
-      
+
       if (data?.facilitatorId) {
         throw new Error('Session already claimed by another facilitator');
       }
@@ -47,7 +57,7 @@ export async function POST(req: NextRequest) {
 
       transaction.update(sessionRef, {
         facilitatorId: userId,
-        status: 'ASSIGNED', // Or keep as SCHEDULED but with assigned lead
+        status: 'SCHEDULED',
         updatedAt: new Date().toISOString(),
       });
 

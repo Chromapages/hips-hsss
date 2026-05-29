@@ -4,9 +4,31 @@ import { verifyFirebaseIdToken } from '@/lib/auth-edge';
 const SAFETY_ENGINE_URL = process.env.SAFETY_ENGINE_URL || 'http://localhost:3003';
 const SESSION_SERVICE_SECRET = process.env.SESSION_SERVICE_SECRET;
 
+// In-memory idempotency store: key → { response, timestamp }
+// TTL: 60 seconds
+const idempotencyStore = new Map<string, { response: unknown; timestamp: number }>();
+const IDEMPOTENCY_TTL_MS = 60_000;
+
+// Periodic cleanup of expired keys
+setInterval(() => {
+  const now = Date.now();
+  for (const [key, entry] of idempotencyStore.entries()) {
+    if (now - entry.timestamp > IDEMPOTENCY_TTL_MS) idempotencyStore.delete(key);
+  }
+}, 30_000);
+
 export async function POST(req: NextRequest) {
   try {
-    // 1. Verify Authentication
+    // 1. Idempotency check — must be first to avoid duplicate work
+    const idempotencyKey = req.headers.get('X-Idempotency-Key');
+    if (idempotencyKey) {
+      const cached = idempotencyStore.get(idempotencyKey);
+      if (cached && Date.now() - cached.timestamp < IDEMPOTENCY_TTL_MS) {
+        return NextResponse.json(cached.response, { status: 200 });
+      }
+    }
+
+    // 2. Verify Authentication
     const authHeader = req.headers.get('authorization');
     const token = authHeader?.startsWith('Bearer ') ? authHeader.split(' ')[1] : null;
 
@@ -46,6 +68,15 @@ export async function POST(req: NextRequest) {
     }
 
     const data = await response.json();
+
+    // 3. Cache successful response for idempotent replay
+    if (idempotencyKey) {
+      idempotencyStore.set(idempotencyKey, {
+        response: data,
+        timestamp: Date.now(),
+      });
+    }
+
     return NextResponse.json(data);
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Internal Server Error';

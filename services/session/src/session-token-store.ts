@@ -1,3 +1,5 @@
+// IMPORTANT: This in-memory store is for development only. For production
+// multi-instance deployments, replace with Redis-backed store at redis-token-store.ts
 import { randomBytes } from "node:crypto";
 
 export type TokenRecord = {
@@ -8,8 +10,15 @@ export type TokenRecord = {
   consumed: boolean;
 };
 
+// NOTE: This is an in-memory token store. For multi-instance production,
+// replace with Redis-based implementation to share tokens across instances.
 export class SessionTokenStore {
   private readonly tokens = new Map<string, TokenRecord>();
+
+  constructor() {
+    // Periodically purge expired tokens to prevent memory buildup
+    setInterval(() => this.purgeExpired(), 60_000);
+  }
 
   issue(sessionId: string, anonymousParticipantId: string, expiresAt: Date) {
     const token = randomBytes(32).toString("hex");

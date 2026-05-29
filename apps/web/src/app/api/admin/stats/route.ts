@@ -1,8 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/firebase-admin';
+import { getDb } from '@/lib/firebase-admin';
 import { verifyFirebaseIdToken } from '@/lib/auth-edge';
+import { ROLES } from '@/lib/roles';
 
 export async function GET(req: NextRequest) {
+  const db = getDb();
+  if (!db) {
+    return NextResponse.json({ error: 'Service temporarily unavailable' }, { status: 503 });
+  }
+
   try {
     const authHeader = req.headers.get('Authorization');
     const token = authHeader?.startsWith('Bearer ') ? authHeader.split(' ')[1] : null;
@@ -15,40 +21,37 @@ export async function GET(req: NextRequest) {
     if (!firebaseUid) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
-    
+
     // Check Admin Role in Firestore
     const userRef = db.collection('users').doc(firebaseUid);
     const userDoc = await userRef.get();
     const user = userDoc.data();
 
-    if (!user || user.role !== 'ADMIN') {
+    if (!user || user.role !== ROLES.ADMIN) {
       return NextResponse.json({ error: 'Forbidden: Admin access required' }, { status: 403 });
     }
 
-    // Aggregate stats from Firestore
-    const sessionsSnapshot = await db.collection('sessions')
-      .where('status', '==', 'SCHEDULED')
-      .get();
-    
-    const scholarshipsSnapshot = await db.collection('scholarships')
-      .where('status', '==', 'APPROVED')
-      .get();
-    
-    const inquiriesSnapshot = await db.collection('inquiries')
-      .get();
+    // Aggregate stats from Firestore in parallel
+    const [
+      sessionsSnapshot,
+      scholarshipsSnapshot,
+      inquiriesSnapshot,
+      usersSnapshot,
+      packagesSnapshot,
+      alertsSnapshot,
+    ] = await Promise.all([
+      db.collection('sessions').where('status', '==', 'SCHEDULED').get(),
+      db.collection('scholarships').where('status', '==', 'APPROVED').get(),
+      db.collection('inquiries').get(),
+      db.collection('users').get(),
+      db.collection('packages').get(),
+      db.collection('safetyAlerts').orderBy('createdAt', 'desc').limit(5).get(),
+    ]);
 
-    const usersSnapshot = await db.collection('users').get();
-
-    const packagesSnapshot = await db.collection('packages').get();
     let totalRevenue = 0;
     packagesSnapshot.docs.forEach(doc => {
       totalRevenue += (doc.data().amount || 0);
     });
-
-    const alertsSnapshot = await db.collection('safetyAlerts')
-      .orderBy('createdAt', 'desc')
-      .limit(5)
-      .get();
 
     return NextResponse.json({
       activeSessions: sessionsSnapshot.size,

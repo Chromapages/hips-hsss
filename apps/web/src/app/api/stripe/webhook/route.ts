@@ -1,10 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getStripeServerClient } from '@/lib/stripe';
-import { db } from '@/lib/firebase-admin';
+import { getDb } from '@/lib/firebase-admin';
 import Stripe from 'stripe';
 import { sendEmail } from '@/lib/email';
 
 export async function POST(req: NextRequest) {
+  const db = getDb();
+  if (!db) {
+    return NextResponse.json({ error: 'Service temporarily unavailable' }, { status: 503 });
+  }
+
   const payload = await req.text();
   const sig = req.headers.get('stripe-signature');
 
@@ -34,14 +39,23 @@ export async function POST(req: NextRequest) {
       const { type, sessionId, userId, tier, credits, packageName } = paymentIntent.metadata;
 
       if (type === 'DONATION') {
-        await db.collection('donations').add({
-          amountCents: paymentIntent.amount,
-          tier: tier || 'GENERAL',
-          stripePaymentId: paymentIntent.id,
-          userId: userId || null,
-          createdAt: new Date().toISOString(),
-        });
-        console.log(`[Stripe Webhook] Donation recorded in Firestore: ${paymentIntent.amount} cents`);
+        // Idempotency: skip if donation with this stripePaymentId already exists
+        const existingDonation = await db.collection('donations')
+          .where('stripePaymentId', '==', paymentIntent.id)
+          .limit(1)
+          .get();
+        if (!existingDonation.empty) {
+          console.log(`[Stripe Webhook] Donation already recorded for payment ${paymentIntent.id}, skipping`);
+        } else {
+          await db.collection('donations').add({
+            amountCents: paymentIntent.amount,
+            tier: tier || 'GENERAL',
+            stripePaymentId: paymentIntent.id,
+            userId: userId || null,
+            createdAt: new Date().toISOString(),
+          });
+          console.log(`[Stripe Webhook] Donation recorded in Firestore: ${paymentIntent.amount} cents`);
+        }
       } else if (type === 'PACKAGE_PURCHASE') {
         // Handle Session Package Purchase
         try {
@@ -50,7 +64,7 @@ export async function POST(req: NextRequest) {
           }
 
           const numCredits = parseInt(credits || '0');
-          
+
           // Create a new package entry for the user
           // For simplicity, each purchase adds a new "Package" document
           await db.collection('packages').add({
@@ -95,20 +109,20 @@ export async function POST(req: NextRequest) {
         try {
           const sessionRef = db.collection('sessions').doc(sessionId);
           const sessionDoc = await sessionRef.get();
-          
+
           if (!sessionDoc.exists) {
             console.error(`[Stripe Webhook] Session ${sessionId} not found`);
             return NextResponse.json({ error: 'Session not found' }, { status: 404 });
           }
 
           const session = sessionDoc.data();
-          
+
           await sessionRef.update({
             stripePaymentId: paymentIntent.id,
             status: 'SCHEDULED',
             updatedAt: new Date().toISOString(),
           });
-          
+
           console.log(`[Stripe Webhook] Payment succeeded for session ${sessionId}`);
 
           // Send confirmation email
@@ -141,9 +155,9 @@ export async function POST(req: NextRequest) {
     case 'payment_intent.payment_failed': {
       const paymentIntent = event.data.object as Stripe.PaymentIntent;
       const sessionId = paymentIntent.metadata.sessionId;
-      
+
       if (sessionId) {
-        await db.collection('sessions').doc(sessionId).update({ 
+        await db.collection('sessions').doc(sessionId).update({
           status: 'CANCELLED',
           updatedAt: new Date().toISOString(),
         });

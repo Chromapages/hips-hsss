@@ -41,6 +41,15 @@ export class LiveKitTokenService {
   constructor(private readonly options: LiveKitTokenOptions) {}
 
   issue(sessionId: string, now = new Date()): AnonymousLiveSessionToken {
+    // Validate sessionId: only alphanumeric, hyphens, and underscores allowed.
+    // Prevents injection into roomName which is used as a LiveKit room identifier.
+    if (!/^[a-zA-Z0-9_-]+$/.test(sessionId)) {
+      throw new Error(
+        `Invalid sessionId "${sessionId}": must contain only alphanumeric characters, hyphens, and underscores. ` +
+        `Received value may contain unsafe characters and was rejected for security.`
+      );
+    }
+
     const anonymousIdentity = randomUUID();
     const roomName = `session-${sessionId}`;
     const expiresAt = new Date(

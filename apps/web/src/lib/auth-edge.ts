@@ -53,10 +53,10 @@ export async function verifyFirebaseIdToken(token: string) {
     audience: projectId,
   });
 
-  // Additional Firebase checks
-  const now = Math.floor(Date.now() / 1000);
-  if (payload.auth_time && typeof payload.auth_time === 'number' && payload.auth_time > now) {
-    throw new Error('Token used before auth_time');
+  // auth_time must be in the past — if it's in the future, token is being used before it was issued (replay attack)
+  const nowInSeconds = Math.floor(Date.now() / 1000);
+  if (payload.auth_time && typeof payload.auth_time === 'number' && payload.auth_time > nowInSeconds) {
+    throw new Error('Token auth_time is in the future — possible replay attack');
   }
 
   return payload;

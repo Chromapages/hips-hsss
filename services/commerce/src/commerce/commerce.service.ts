@@ -22,6 +22,9 @@ const PACKAGES = {
   SANCTUARY: { priceCents: 40000, credits: 10, name: 'Sanctuary Pack (10)' },
 };
 
+// DonationTier enum values
+const DONATION_TIER_VALUES = ['SUPPORTER', 'BUILDER', 'SUSTAINER', 'CATALYST'] as const;
+
 @Injectable()
 export class CommerceService {
   constructor(private readonly prisma: PrismaService) {}
@@ -148,10 +151,14 @@ export class CommerceService {
     stripePaymentId: string,
     userId: string | null,
   ) {
+    const validTier = DONATION_TIER_VALUES.includes(tier as typeof DONATION_TIER_VALUES[number])
+      ? tier as typeof DONATION_TIER_VALUES[number]
+      : 'SUPPORTER';
+
     return this.prisma.donation.create({
       data: {
         amountCents,
-        tier: tier as any,
+        tier: validTier,
         stripePaymentId,
         userId: userId || null,
       },
@@ -268,9 +275,16 @@ export class CommerceService {
     } catch (emailErr) {
       console.error(`[Commerce] Failed to send admin notification for org inquiry ${inquiry.id}:`, emailErr);
       // Don't fail the inquiry creation if email fails
+      return { success: true, inquiryId: inquiry.id, emailSent: false };
     }
 
-    return { success: true, inquiryId: inquiry.id };
+    return { success: true, inquiryId: inquiry.id, emailSent: true };
+  }
+
+  // ========== USER LOOKUPS ==========
+
+  async getUserByEmail(email: string) {
+    return this.prisma.user.findFirst({ where: { email } });
   }
 
   // ========== READ OPERATIONS ==========

@@ -91,9 +91,7 @@ export class WebhooksController {
           // For donations, record directly (payment_intent.succeeded already handles this
           // but we handle checkout.session.completed as well for completeness)
           const userIdFromSession = checkoutSession.customer_details?.email
-            ? (await this.commerceService['prisma'].user.findFirst({
-                where: { email: checkoutSession.customer_details.email },
-              }))?.id
+            ? (await this.commerceService.getUserByEmail(checkoutSession.customer_details.email))?.id
             : null;
           await this.commerceService.recordDonation(
             parseInt(amount),

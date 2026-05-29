@@ -35,29 +35,15 @@ export class VaultService {
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-    const expired = await this.prisma.identityRecord.findMany({
+    const result = await this.prisma.identityRecord.updateMany({
       where: {
         ipExpiresAt: { lt: new Date() },
         encryptedIpAddress: { not: null },
       },
+      data: { encryptedIpAddress: null, ipExpiresAt: null },
     });
 
-    for (const record of expired) {
-      await this.prisma.identityRecord.update({
-        where: { id: record.id },
-        data: { encryptedIpAddress: null, ipExpiresAt: null },
-      });
-      await this.logAccess({
-        subjectRef: record.subjectRef,
-        actorRef: 'SYSTEM',
-        purpose: 'RECORD_READ',
-        action: 'IP_EXPIRY',
-        metadata: { expiredAt: new Date().toISOString() },
-      });
-      this.logger.log(`IP expired for subjectRef: ${record.subjectRef}`);
-    }
-
-    this.logger.log(`IP expiry job complete. Records processed: ${expired.length}`);
+    this.logger.log(`IP expiry job complete. Records expired: ${result.count}`);
   }
 
   @Cron('0 0 * * *') // daily at midnight
@@ -65,29 +51,15 @@ export class VaultService {
     const ninetyDaysAgo = new Date();
     ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
 
-    const expired = await this.prisma.identityRecord.findMany({
+    const result = await this.prisma.identityRecord.updateMany({
       where: {
         deviceFingerprintExpiresAt: { lt: new Date() },
         encryptedDeviceFingerprint: { not: null },
       },
+      data: { encryptedDeviceFingerprint: null, deviceFingerprintExpiresAt: null },
     });
 
-    for (const record of expired) {
-      await this.prisma.identityRecord.update({
-        where: { id: record.id },
-        data: { encryptedDeviceFingerprint: null, deviceFingerprintExpiresAt: null },
-      });
-      await this.logAccess({
-        subjectRef: record.subjectRef,
-        actorRef: 'SYSTEM',
-        purpose: 'RECORD_READ',
-        action: 'DEVICE_FINGERPRINT_EXPIRY',
-        metadata: { expiredAt: new Date().toISOString() },
-      });
-      this.logger.log(`Device fingerprint expired for subjectRef: ${record.subjectRef}`);
-    }
-
-    this.logger.log(`Device fingerprint expiry job complete. Records processed: ${expired.length}`);
+    this.logger.log(`Device fingerprint expiry job complete. Records expired: ${result.count}`);
   }
 
   async createRecord(data: CreateVaultRecordInput) {
@@ -126,6 +98,16 @@ export class VaultService {
   async getRecord(subjectRef: string, actor: string, purpose: string) {
     const record = await this.prisma.identityRecord.findUnique({
       where: { subjectRef },
+      select: {
+        subjectRef: true,
+        encryptedRealName: true,
+        encryptedEmergencyContact: true,
+        encryptedDateOfBirth: true,
+        encryptedPhone: true,
+        encryptedAddress: true,
+        encryptedInsuranceInfo: true,
+        encryptedEmergencyContactPhone: true,
+      },
     });
 
     if (!record) {
@@ -146,10 +128,11 @@ export class VaultService {
       subjectRef: record.subjectRef,
       realName: await this.crypto.decrypt(record.encryptedRealName),
       emergencyContact: await this.crypto.decrypt(record.encryptedEmergencyContact),
-      region: await this.crypto.decrypt(record.encryptedRegion),
-      disclosure: record.encryptedDisclosure ? await this.crypto.decrypt(record.encryptedDisclosure) : null,
-      ipAddress: record.encryptedIpAddress ? await this.crypto.decrypt(record.encryptedIpAddress) : null,
-      deviceFingerprint: record.encryptedDeviceFingerprint ? await this.crypto.decrypt(record.encryptedDeviceFingerprint) : null,
+      dateOfBirth: record.encryptedDateOfBirth ? await this.crypto.decrypt(record.encryptedDateOfBirth) : null,
+      phone: record.encryptedPhone ? await this.crypto.decrypt(record.encryptedPhone) : null,
+      address: record.encryptedAddress ? await this.crypto.decrypt(record.encryptedAddress) : null,
+      insuranceInfo: record.encryptedInsuranceInfo ? await this.crypto.decrypt(record.encryptedInsuranceInfo) : null,
+      emergencyContactPhone: record.encryptedEmergencyContactPhone ? await this.crypto.decrypt(record.encryptedEmergencyContactPhone) : null,
     };
   }
 

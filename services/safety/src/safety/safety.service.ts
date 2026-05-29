@@ -36,6 +36,22 @@ export class SafetyService implements OnModuleInit {
   private transcriptBuffers = new Map<string, string[]>();
   private readonly MAX_BUFFER_SIZE = 10; // Sentences to buffer before classification
 
+  // TTL-based buffer expiry to prevent unbounded memory growth
+  private readonly BUFFER_TTL_MS = 30 * 60 * 1000; // 30 minutes
+  private bufferTimestamps = new Map<string, number>();
+
+  private touchBuffer(sessionId: string) {
+    const now = Date.now();
+    this.bufferTimestamps.set(sessionId, now);
+    // Drain stale entries
+    for (const [sid, ts] of this.bufferTimestamps) {
+      if (now - ts > this.BUFFER_TTL_MS) {
+        this.transcriptBuffers.delete(sid);
+        this.bufferTimestamps.delete(sid);
+      }
+    }
+  }
+
   // High-severity keyword blocklist for instant detection
   private readonly KEYWORD_BLOCKLIST = [
     'kill myself', 'suicide', 'end my life', 'hurt others', 
@@ -74,6 +90,7 @@ export class SafetyService implements OnModuleInit {
     }
 
     // 2. Add to buffer
+    this.touchBuffer(sessionId);
     let buffer = this.transcriptBuffers.get(sessionId) || [];
     buffer.push(`[${participantId}]: ${text}`);
     
@@ -286,16 +303,20 @@ export class SafetyService implements OnModuleInit {
     }
   }
 
-  async getAlerts(sessionId: string) {
+  async getAlerts(sessionId: string, take = 50, skip = 0) {
     return this.prisma.safetyAlert.findMany({
       where: { sessionId },
       orderBy: { createdAt: 'desc' },
+      take,
+      skip,
     });
   }
 
-  async findAllAlerts() {
+  async findAllAlerts(take = 50, skip = 0) {
     return this.prisma.safetyAlert.findMany({
       orderBy: { createdAt: 'desc' },
+      take,
+      skip,
     });
   }
 }

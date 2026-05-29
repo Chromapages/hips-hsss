@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { adminAuth, db } from '@/lib/firebase-admin';
+import { adminAuth } from '@/lib/firebase-admin';
+
+// Lazy import to avoid initialization at module load time
+import { getDb, isFirebaseAdminReady } from '@/lib/firebase-admin';
 
 type DashboardSession = {
   id: string;
@@ -52,6 +55,15 @@ function isFirestoreApiDisabled(error: unknown) {
 }
 
 export async function GET(req: NextRequest) {
+  // Initialize Firestore lazily — return 503 if not configured
+  const db = getDb();
+  if (!db) {
+    return NextResponse.json({
+      error: 'Firestore is not configured. Please set up Firebase Admin credentials.',
+      setupUrl: 'https://console.firebase.google.com/project/_/settings/serviceaccounts/adminsdk',
+    }, { status: 503 });
+  }
+
   try {
     const authHeader = req.headers.get('authorization');
     const token = authHeader?.startsWith('Bearer ') ? authHeader.split(' ')[1] : null;
@@ -61,27 +73,22 @@ export async function GET(req: NextRequest) {
     const payload = await adminAuth.verifyIdToken(token);
     const userId = payload.uid;
 
-    // Look up the user's internal anonymous ID (never expose Firebase UID)
-    const userRef = db.collection('users').doc(userId);
-    const userDoc = await userRef.get();
+    // Look up the user's internal anonymous ID and fetch data in parallel
+    const [userDoc, sessionsSnapshot, packagesSnapshot] = await Promise.all([
+      db.collection('users').doc(userId).get(),
+      db.collection('sessions').where('userId', '==', userId)
+        .orderBy('startsAt', 'desc').limit(50).get(),
+      db.collection('packages').where('userId', '==', userId)
+        .orderBy('id').limit(50).get(),
+    ]);
 
     if (!userDoc.exists) return NextResponse.json({ error: 'User not found' }, { status: 404 });
 
-    // 2. Fetch User Sessions
-    const sessionsSnapshot = await db.collection('sessions')
-      .where('userId', '==', userId)
-      .get();
-    
     const sessions = sessionsSnapshot.docs.map(doc => ({
       id: doc.id,
       ...doc.data()
     } as DashboardSession));
 
-    // 3. Fetch User Packages (Optional/Placeholder for now)
-    const packagesSnapshot = await db.collection('packages')
-      .where('userId', '==', userId)
-      .get();
-    
     const packages = packagesSnapshot.docs.map(doc => ({
       id: doc.id,
       ...doc.data()

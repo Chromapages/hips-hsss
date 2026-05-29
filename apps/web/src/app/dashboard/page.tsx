@@ -1,13 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import type { LucideIcon } from "lucide-react";
-import { AlertCircle, Download, Package, Timer, Loader2, RefreshCw } from "lucide-react";
+import { AlertCircle, Download, Package, Timer, Loader2, RefreshCw, ArrowRight } from "lucide-react";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { PackageBalanceCard } from "@/components/dashboard/PackageBalanceCard";
 import { SessionHistoryTable } from "@/components/dashboard/SessionHistoryTable";
 import { useAuth } from "@/components/auth/AuthProvider";
+import { useSWRData } from "@/hooks/useSWR";
 import { format } from "date-fns";
 
 type DashboardData = {
@@ -50,48 +51,35 @@ const emptyDashboardData: DashboardData = {
 };
 
 export default function DashboardPage() {
-  const [data, setData] = useState<DashboardData>(emptyDashboardData);
-  const [error, setError] = useState<DashboardError | null>(null);
-  const [loading, setLoading] = useState(true);
   const { getToken } = useAuth();
+  const router = useRouter();
 
-  useEffect(() => {
-    async function loadData() {
-      try {
-        const token = await getToken();
-        if (!token) {
-          setError({ message: "Sign in to view your dashboard." });
-          return;
-        }
-
-        const res = await fetch('/api/dashboard', {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
+  const { data, error, isLoading } = useSWRData<{
+    stats: { upcoming: number; packages: number };
+    nextSession: { id: string; serviceName: string; startsAt: string | null } | null;
+    sessions: Array<{ id: string; service: string; date: string | null; status?: string }>;
+    packages: Array<{ id: string; service: string; remaining: number; total: number }>;
+  }>('dashboard', {
+    revalidateOnFocus: false,
+    dedupingInterval: 10_000,
+    refreshInterval: 30_000,
+    fetcher: async (key: string) => {
+      const token = await getToken();
+      if (!token) throw new Error('Unauthorized');
+      const res = await fetch(`/api/${key}`, {
+        headers: { 'Authorization': `Bearer ${token}` },
+      });
+      if (!res.ok) {
         const json = await res.json().catch(() => ({}));
-
-        if (!res.ok) {
-          setError({
-            message: json.details || json.error || 'Dashboard request failed',
-            setupUrl: json.setupUrl,
-          });
-          return;
-        }
-
-        setData(json);
-        setError(null);
-      } catch (error) {
-        console.error('Failed to load dashboard:', error);
-        setError({
-          message: error instanceof Error ? error.message : 'Failed to load dashboard.',
-        });
-      } finally {
-        setLoading(false);
+        const err: any = new Error(json.details || json.error || 'Dashboard request failed');
+        err.setupUrl = json.setupUrl;
+        throw err;
       }
-    }
-    loadData();
-  }, [getToken]);
+      return res.json();
+    },
+  });
 
-  if (loading) {
+  if (isLoading) {
     return (
       <DashboardLayout>
         <div className="flex h-[60vh] items-center justify-center">
@@ -101,10 +89,20 @@ export default function DashboardPage() {
     );
   }
 
-  const statsList: { label: string; value: string; icon: LucideIcon }[] = [
-    { label: "Upcoming", value: data.stats.upcoming.toString(), icon: Timer },
-    { label: "Packages", value: `${data.stats.packages} active`, icon: Package },
-    { label: "Downloads", value: "4 ready", icon: Download },
+  const dashboardData = data ?? emptyDashboardData;
+
+  const upcomingSessions = dashboardData.sessions.filter(
+    s => s.status === 'SCHEDULED' || s.status === 'UPCOMING'
+  );
+  const upcomingCount = upcomingSessions.length;
+  const nextUpId = upcomingSessions[0]?.id;
+
+  const statsList: { label: string; value: string; icon: LucideIcon; action?: () => void }[] = [
+    { label: "Upcoming", value: dashboardData.stats.upcoming.toString(), icon: Timer },
+    { label: "Packages", value: `${dashboardData.stats.packages} active`, icon: Package },
+    { label: "Join Session", value: upcomingCount > 0 ? `${upcomingCount} ready` : "None", icon: Timer, action: () => {
+      if (nextUpId) router.push(`/session/${nextUpId}`);
+    }},
   ];
 
   return (
@@ -149,8 +147,12 @@ export default function DashboardPage() {
 
         {/* Stats Grid */}
         <div className="grid gap-6 md:grid-cols-3 mb-10">
-          {statsList.map(({ label, value, icon: Icon }) => (
-            <article className="relative overflow-hidden rounded-[2rem] border border-white/5 bg-zinc-950 p-8 group hover:border-white/10 transition-all duration-500" key={label}>
+          {statsList.map(({ label, value, icon: Icon, action }) => (
+            <article
+              className="relative overflow-hidden rounded-[2rem] border border-white/5 bg-zinc-950 p-8 group hover:border-white/10 transition-all duration-500 cursor-pointer"
+              key={label}
+              onClick={action}
+            >
               <div className="absolute -top-12 -right-12 w-32 h-32 bg-indigo-500/10 rounded-full blur-[40px] group-hover:bg-indigo-500/20 transition-colors" />
               <div className="flex items-center justify-between mb-6 relative z-10">
                 <div className="h-12 w-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center group-hover:scale-110 group-hover:bg-indigo-600/10 group-hover:border-indigo-500/20 transition-all">
@@ -184,7 +186,7 @@ export default function DashboardPage() {
                   <span className="text-[10px] font-bold uppercase tracking-widest text-emerald-400">Next Session Ready</span>
                 </div>
 
-                {data.nextSession ? (
+                {dashboardData.nextSession ? (
                   <>
                     <h2 className="text-3xl font-black tracking-tighter text-white mb-4">
                       {data.nextSession.serviceName}
@@ -232,7 +234,7 @@ export default function DashboardPage() {
                 <h3 className="text-xl font-bold tracking-tight text-white">Session History</h3>
                 <Link href="/dashboard/sessions" className="text-xs font-bold uppercase tracking-widest text-indigo-400 hover:text-indigo-300">View All</Link>
               </div>
-              <SessionHistoryTable sessions={data.sessions} />
+              <SessionHistoryTable sessions={dashboardData.sessions} />
             </div>
           </div>
 
@@ -271,8 +273,54 @@ export default function DashboardPage() {
               </button>
             </article>
 
-            <PackageBalanceCard packages={data.packages} />
-            
+            <PackageBalanceCard packages={dashboardData.packages} />
+
+            {/* Session Lobby Quick Access */}
+            <article className="rounded-[2rem] border border-indigo-500/20 bg-indigo-500/5 p-8">
+              <h3 className="text-lg font-bold tracking-tight text-white mb-2">Session Lobby</h3>
+              <p className="text-[10px] text-zinc-500 mb-6 leading-relaxed uppercase tracking-widest font-bold">Direct Session Access</p>
+              <div className="space-y-3">
+                <Link
+                  href="/join"
+                  className="flex items-center justify-between p-4 rounded-2xl bg-white/5 border border-white/5 hover:bg-white/10 hover:border-indigo-500/20 transition-all group"
+                >
+                  <div className="flex flex-col">
+                    <span className="text-sm font-medium text-zinc-300 group-hover:text-white transition-colors">Enter a Session</span>
+                    <span className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest mt-1">With Session ID</span>
+                  </div>
+                  <div className="h-8 w-8 rounded-full bg-indigo-500/20 flex items-center justify-center group-hover:bg-indigo-500/40 transition-all">
+                    <ArrowRight className="w-4 h-4 text-indigo-400" />
+                  </div>
+                </Link>
+                {dashboardData.nextSession ? (
+                  <Link
+                    href={`/session/${data.nextSession.id}`}
+                    className="flex items-center justify-between p-4 rounded-2xl bg-indigo-600/20 border border-indigo-500/30 hover:bg-indigo-600/30 transition-all group"
+                  >
+                    <div className="flex flex-col">
+                      <span className="text-sm font-medium text-indigo-200 group-hover:text-white transition-colors">Next Session</span>
+                      <span className="text-[10px] font-bold text-indigo-400/70 uppercase tracking-widest mt-1">{data.nextSession.serviceName}</span>
+                    </div>
+                    <div className="h-8 w-8 rounded-full bg-indigo-500/30 flex items-center justify-center group-hover:bg-indigo-500/50 transition-all">
+                      <ArrowRight className="w-4 h-4 text-indigo-300" />
+                    </div>
+                  </Link>
+                ) : null}
+                <Link
+                  href="/services"
+                  className="flex items-center justify-between p-4 rounded-2xl bg-white/5 border border-white/5 hover:bg-white/10 hover:border-white/10 transition-all group"
+                >
+                  <div className="flex flex-col">
+                    <span className="text-sm font-medium text-zinc-300 group-hover:text-white transition-colors">Browse Services</span>
+                    <span className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest mt-1">Book a Session</span>
+                  </div>
+                  <div className="h-8 w-8 rounded-full bg-white/5 flex items-center justify-center group-hover:bg-indigo-500/20 group-hover:text-indigo-400 transition-all">
+                    <ArrowRight className="w-4 h-4 text-zinc-500" />
+                  </div>
+                </Link>
+              </div>
+            </article>
+
             <article className="rounded-[2rem] border border-white/5 bg-white/[0.02] p-8">
               <h3 className="text-lg font-bold tracking-tight text-white mb-6">Support Resources</h3>
               <div className="space-y-3">

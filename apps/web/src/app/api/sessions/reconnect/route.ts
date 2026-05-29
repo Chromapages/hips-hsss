@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/firebase-admin';
+import { getDb } from '@/lib/firebase-admin';
 import { AccessToken } from 'livekit-server-sdk';
 import crypto from 'crypto';
 
@@ -39,35 +39,34 @@ interface ReconnectRecord {
 }
 
 async function getReconnectRecord(sessionId: string, identity: string): Promise<ReconnectRecord | null> {
-  const snapshot = await db.collection('session_reconnects')
-    .where('sessionId', '==', sessionId)
-    .where('originalIdentity', '==', identity)
-    .limit(1)
-    .get();
+  const db = getDb();
+  if (!db) return null;
 
-  if (snapshot.empty) return null;
-  return snapshot.docs[0].data() as ReconnectRecord;
+  const docRef = db.collection('session_reconnects').doc(`${sessionId}_${identity}`);
+  const doc = await docRef.get();
+  if (!doc.exists) return null;
+  return doc.data() as ReconnectRecord;
 }
 
 async function upsertReconnectRecord(record: ReconnectRecord) {
-  const snapshot = await db.collection('session_reconnects')
-    .where('sessionId', '==', record.sessionId)
-    .where('originalIdentity', '==', record.originalIdentity)
-    .limit(1)
-    .get();
+  const db = getDb();
+  if (!db) return;
 
-  if (!snapshot.empty) {
-    await snapshot.docs[0].ref.update({
-      reconnectCount: record.reconnectCount,
-      lastReconnectAt: record.lastReconnectAt,
-      expiresAt: record.expiresAt,
-    });
-  } else {
-    await db.collection('session_reconnects').add(record);
-  }
+  // Atomic upsert — set with merge avoids query-before-write
+  const docRef = db.collection('session_reconnects').doc(
+    `${record.sessionId}_${record.originalIdentity}`
+  );
+  await docRef.set(record, { merge: true });
 }
 
 export async function POST(req: NextRequest) {
+  const db = getDb();
+  if (!db) {
+    return NextResponse.json({
+      error: 'Service temporarily unavailable. Please try again later.',
+    }, { status: 503 });
+  }
+
   try {
     const body = await req.json().catch(() => ({}));
 

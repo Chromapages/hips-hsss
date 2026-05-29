@@ -55,6 +55,8 @@ export function useVoiceConnection() {
   const [activeSpeakerIdentity, setActiveSpeakerIdentity] = useState<string | null>(null);
 
   const localAudioTrackRef = useRef<LocalAudioTrack | null>(null);
+  // Track AudioContext to avoid leaking instances
+  const audioContextRef = useRef<AudioContext | null>(null);
 
   // Task 5.4 — Connection quality tracking
   useEffect(() => {
@@ -98,7 +100,16 @@ export function useVoiceConnection() {
     async (voiceMaskProcessor?: (track: MediaStreamTrack) => Promise<MediaStreamTrack>) => {
       setMicBusy(true);
       try {
+        // Close any existing AudioContext before creating a new one
+        if (audioContextRef.current) {
+          audioContextRef.current.close();
+          audioContextRef.current = null;
+        }
+        const audioCtx = new AudioContext();
+        audioContextRef.current = audioCtx;
+
         const track = await createLocalAudioTrack({
+          audioContext: audioCtx,
           autoGainControl: true,
           echoCancellation: true,
           noiseSuppression: true,
@@ -112,7 +123,7 @@ export function useVoiceConnection() {
             const processed = await voiceMaskProcessor(track.mediaStreamTrack);
             // Create a new LocalAudioTrack from the processed stream
             const newTrack = createLocalAudioTrack({
-              audioContext: new AudioContext(),
+              audioContext: audioCtx,
               channelCount: 1,
               echoCancellation: true,
               noiseSuppression: true,
@@ -163,6 +174,10 @@ export function useVoiceConnection() {
     return () => {
       if (localAudioTrackRef.current) {
         localAudioTrackRef.current.stop();
+      }
+      if (audioContextRef.current) {
+        audioContextRef.current.close();
+        audioContextRef.current = null;
       }
     };
   }, []);

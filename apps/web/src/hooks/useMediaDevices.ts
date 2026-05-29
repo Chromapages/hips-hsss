@@ -125,7 +125,7 @@ export function useMediaDevices(): UseMediaDevicesReturn {
         cancelAnimationFrame(animationFrameRef.current);
       }
       micStreamRef.current?.getTracks().forEach((t) => t.stop());
-      micStream?.getTracks().forEach((t) => t.stop());
+      micStreamRef.current = null;
     };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 

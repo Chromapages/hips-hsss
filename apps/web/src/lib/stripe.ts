@@ -8,7 +8,7 @@ export function getStripeServerClient() {
   }
 
   stripeClient ??= new Stripe(process.env.STRIPE_SECRET_KEY, {
-    apiVersion: '2024-11-20.acacia' as any,
+    apiVersion: '2024-04-10',
     typescript: true,
   });
 
