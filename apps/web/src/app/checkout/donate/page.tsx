@@ -6,7 +6,6 @@ import { loadStripe } from "@stripe/stripe-js";
 import { Elements } from "@stripe/react-stripe-js";
 import { CheckoutForm } from "@/components/checkout/CheckoutForm";
 import { Lock } from "lucide-react";
-import { RouteChrome } from "@/components/polish/RouteChrome";
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || '');
 
@@ -33,8 +32,7 @@ function DonateCheckoutContent() {
 
 export default function DonateCheckoutPage() {
   return (
-    <RouteChrome>
-      <main className="min-h-screen bg-black pt-24 pb-12 px-6">
+    <main className="min-h-screen bg-black pt-24 pb-12 px-6">
         <div className="max-w-xl mx-auto">
           <header className="mb-10 text-center">
             <div className="inline-flex items-center gap-2 mb-4">
@@ -50,6 +48,5 @@ export default function DonateCheckoutPage() {
           </Suspense>
         </div>
       </main>
-    </RouteChrome>
   );
 }
