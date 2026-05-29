@@ -3,6 +3,8 @@
 import { CheckoutShell } from "@/components/checkout/CheckoutShell";
 import { Navbar } from "@/components/polish/Navbar";
 
+export const dynamic = "force-dynamic";
+
 export default function CheckoutPage() {
   return (
     <>
