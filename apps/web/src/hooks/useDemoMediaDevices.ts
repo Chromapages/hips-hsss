@@ -88,13 +88,13 @@ export function useDemoMediaDevices(isDemo: boolean = true): UseDemoMediaDevices
 
         // Set default selections
         if (realAudioInputs.length > 0 && !selectedAudioInput) {
-          setSelectedAudioInput(realAudioInputs[0].deviceId);
+          setSelectedAudioInput(realAudioInputs[0]?.deviceId);
         }
         if (realAudioOutputs.length > 0 && !selectedAudioOutput) {
-          setSelectedAudioOutput(realAudioOutputs[0].deviceId);
+          setSelectedAudioOutput(realAudioOutputs[0]?.deviceId);
         }
         if (realVideoInputs.length > 0 && !selectedVideoInput) {
-          setSelectedVideoInput(realVideoInputs[0].deviceId);
+          setSelectedVideoInput(realVideoInputs[0]?.deviceId);
         }
       } else {
         setAudioInputs(realAudioInputs);
