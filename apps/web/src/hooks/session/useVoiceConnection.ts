@@ -120,7 +120,6 @@ export function useVoiceConnection() {
             const processed = await voiceMaskProcessor(track.mediaStreamTrack);
             // Create a new LocalAudioTrack from the processed stream
             const newTrack = createLocalAudioTrack({
-              audioContext: audioCtx,
               channelCount: 1,
               echoCancellation: true,
               noiseSuppression: true,
