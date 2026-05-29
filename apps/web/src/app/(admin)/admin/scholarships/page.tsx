@@ -1,10 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useAuth } from "@/components/auth/AuthProvider";
-import { Check, X, Loader2, AlertCircle } from "lucide-react";
-import { format } from "date-fns";
 
+export const dynamic = "force-dynamic";import { useAuth } from "@/components/auth/AuthProvider";
+
+export const dynamic = "force-dynamic";import { Check, X, Loader2, AlertCircle } from "lucide-react";
+
+export const dynamic = "force-dynamic";import { format } from "date-fns";
+
+export const dynamic = "force-dynamic";
 export default function AdminScholarshipsPage() {
   const [scholarships, setScholarships] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);

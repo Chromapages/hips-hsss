@@ -30,6 +30,8 @@ interface Phase5Session {
   createdAt: string;
   activeAt?: string;
   endedAt?: string;
+  startsAt?: string;
+  endsAt?: string;
   participantCount: number;
   flagged: boolean;
   flaggedBy?: string;
@@ -125,24 +127,50 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json().catch(() => ({}));
-    const roomName = body.sessionId || `session-${crypto.randomUUID()}`;
+    // Canonical room naming: always use `session-${sessionId}` format.
+    // This normalizes the room name between /api/livekit/token and the session service's
+    // livekit-token-service so both issue tokens for the same LiveKit room.
+    const roomName = body.sessionId
+      ? `session-${body.sessionId}`
+      : `session-${crypto.randomUUID()}`;
 
-    // Validate that the sessionId matches the caller's session reference
-    // This prevents IDOR: users can only join their own session
-    if (body.sessionId && sessionRef !== body.sessionId) {
-      // Allow if the session document has the user as a participant
+    // Authorize: fetch the session document and verify the caller is a legitimate participant.
+    // This prevents IDOR — callers cannot join sessions they are not recorded in.
+    if (body.sessionId) {
       const sessionDoc = await db.collection('phase5_sessions').doc(body.sessionId).get();
       if (!sessionDoc.exists) {
         return NextResponse.json({ error: 'Session not found' }, { status: 404 });
       }
-      const sessionData = sessionDoc.data();
-      // If session exists but caller is not the owner/participant, reject
-      // Owner is identified by roomName containing the sessionRef
-      const isAuthorized = roomName === `session-${sessionRef}` ||
+      const sessionData = sessionDoc.data() as Partial<Phase5Session>;
+
+      const isAuthorized =
         sessionData?.participantIdentities?.includes(sessionRef) ||
         sessionData?.facilitatorId === sessionRef;
       if (!isAuthorized) {
         return NextResponse.json({ error: 'Forbidden: not authorized for this session' }, { status: 403 });
+      }
+
+      // Enforce booking status: only ACTIVE sessions can be joined
+      if (sessionData.status && sessionData.status !== 'active') {
+        return NextResponse.json(
+          { error: 'Session is not currently joinable', sessionStatus: sessionData.status },
+          { status: 403 }
+        );
+      }
+
+      // Enforce join window: current time must be within session start/end window
+      const now = Date.now();
+      if (sessionData.startsAt && now < new Date(sessionData.startsAt).getTime() - 5 * 60 * 1000) {
+        return NextResponse.json(
+          { error: 'Session has not started yet' },
+          { status: 403 }
+        );
+      }
+      if (sessionData.endsAt && now > new Date(sessionData.endsAt).getTime() + 15 * 60 * 1000) {
+        return NextResponse.json(
+          { error: 'Session has ended' },
+          { status: 403 }
+        );
       }
     }
 

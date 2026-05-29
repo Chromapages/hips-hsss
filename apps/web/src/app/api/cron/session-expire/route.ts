@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/firebase-admin';
 import {
   SESSION_COLLECTION,
@@ -13,7 +13,7 @@ import {
  * Uses activeAt as the reference point — sessions without activeAt are skipped.
  * Safe to run every 5 minutes; idempotent (only transitions active sessions).
  */
-export async function GET() {
+export async function GET(req: NextRequest) {
   const cronSecret = process.env.CRON_SECRET;
   const isProduction = process.env.NODE_ENV === 'production';
 
@@ -23,8 +23,8 @@ export async function GET() {
   }
 
   if (cronSecret) {
-    const url = new URL(process.env.FILES_HOST ?? 'http://localhost');
-    if (url.searchParams.get('secret') !== cronSecret) {
+    const requestUrl = new URL(req.url);
+    if (requestUrl.searchParams.get('secret') !== cronSecret) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
   }

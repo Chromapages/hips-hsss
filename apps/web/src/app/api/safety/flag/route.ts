@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyFirebaseIdToken } from '@/lib/auth-edge';
+import { db } from '@/lib/firebase-admin';
 
 const SAFETY_ENGINE_URL = process.env.SAFETY_ENGINE_URL || 'http://localhost:3003';
 const SESSION_SERVICE_SECRET = process.env.SESSION_SERVICE_SECRET;
@@ -16,6 +17,21 @@ setInterval(() => {
     if (now - entry.timestamp > IDEMPOTENCY_TTL_MS) idempotencyStore.delete(key);
   }
 }, 30_000);
+
+async function isSessionMember(firebaseUid: string, sessionId: string): Promise<boolean> {
+  try {
+    const sessionDoc = await db.collection('phase5_sessions').doc(sessionId).get();
+    if (!sessionDoc.exists) return false;
+    const data = sessionDoc.data()!;
+    return (
+      data['facilitatorId'] === firebaseUid ||
+      (Array.isArray(data['participantIdentities']) &&
+        data['participantIdentities'].includes(firebaseUid))
+    );
+  } catch {
+    return false;
+  }
+}
 
 export async function POST(req: NextRequest) {
   try {
@@ -52,6 +68,14 @@ export async function POST(req: NextRequest) {
 
     if (!['HIGH', 'CRITICAL'].includes(body.level)) {
       return NextResponse.json({ error: 'Invalid level' }, { status: 400 });
+    }
+
+    // Verify the caller is a member of this session
+    if (!await isSessionMember(firebaseUid, body.sessionId)) {
+      return NextResponse.json(
+        { error: 'Forbidden: you are not a member of this session' },
+        { status: 403 }
+      );
     }
 
     const response = await fetch(`${SAFETY_ENGINE_URL}/safety/flag`, {

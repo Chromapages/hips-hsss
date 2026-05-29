@@ -49,7 +49,7 @@ export async function GET(req: NextRequest) {
     const sessionsSnapshot = await db.collection('sessions')
       .where('serviceId', '==', serviceId)
       .where('status', '==', 'SCHEDULED')
-      .where('startsAt', '>=', now.toISOString())
+      .where('startsAt', '>=', new Date(now).toISOString())
       .where('startsAt', '<=', addDays(new Date(), daysToCheck).toISOString())
       .get();
 

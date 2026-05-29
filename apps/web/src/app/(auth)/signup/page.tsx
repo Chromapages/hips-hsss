@@ -1,12 +1,18 @@
 "use client";
 
 import { useState } from "react";
-import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
-import { auth } from "@/lib/firebase-client";
-import { useRouter } from "next/navigation";
-import Link from "next/link";
-import { Loader2, Mail, Lock, User, ArrowRight, ShieldCheck } from "lucide-react";
 
+export const dynamic = "force-dynamic";import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
+
+export const dynamic = "force-dynamic";import { auth } from "@/lib/firebase-client";
+
+export const dynamic = "force-dynamic";import { useRouter } from "next/navigation";
+
+export const dynamic = "force-dynamic";import Link from "next/link";
+
+export const dynamic = "force-dynamic";import { Loader2, Mail, Lock, User, ArrowRight, ShieldCheck } from "lucide-react";
+
+export const dynamic = "force-dynamic";
 export default function SignupPage() {
   const router = useRouter();
 

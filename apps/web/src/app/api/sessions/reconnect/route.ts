@@ -76,9 +76,14 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
+  let firebaseUid: string | null = null;
   try {
-    await verifyFirebaseIdToken(token);
+    firebaseUid = (await verifyFirebaseIdToken(token))?.sub ?? null;
   } catch {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  if (!firebaseUid) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
@@ -91,6 +96,30 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(
         { error: 'sessionId and originalIdentity required' },
         { status: 400 }
+      );
+    }
+
+    // Verify the caller owns this session and their identity is a legitimate participant
+    // This prevents IDOR: callers cannot reconnect to arbitrary sessions
+    let callerAuthorized = false;
+    try {
+      const sessionDoc = await db.collection('phase5_sessions').doc(sessionId).get();
+      if (sessionDoc.exists) {
+        const sessionData = sessionDoc.data();
+        // Caller must be the facilitator or a recorded participant
+        callerAuthorized =
+          sessionData?.facilitatorId === firebaseUid ||
+          (Array.isArray(sessionData?.participantIdentities) &&
+            sessionData.participantIdentities.includes(firebaseUid));
+      }
+    } catch (err) {
+      console.warn('[SessionReconnect] Could not verify session membership:', err);
+    }
+
+    if (!callerAuthorized) {
+      return NextResponse.json(
+        { error: 'Forbidden: you are not a member of this session' },
+        { status: 403 }
       );
     }
 

@@ -1,17 +1,28 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import type { LucideIcon } from "lucide-react";
-import { AlertCircle, Download, Package, Timer, Loader2, RefreshCw, ArrowRight } from "lucide-react";
-import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
-import { PackageBalanceCard } from "@/components/dashboard/PackageBalanceCard";
-import { SessionHistoryTable } from "@/components/dashboard/SessionHistoryTable";
-import { useAuth } from "@/components/auth/AuthProvider";
-import { useSWRData } from "@/hooks/useSWR";
-import { format } from "date-fns";
-import { toast } from "sonner";
 
+export const dynamic = "force-dynamic";import { useRouter } from "next/navigation";
+
+export const dynamic = "force-dynamic";import type { LucideIcon } from "lucide-react";
+
+export const dynamic = "force-dynamic";import { AlertCircle, Download, Package, Timer, Loader2, RefreshCw, ArrowRight } from "lucide-react";
+
+export const dynamic = "force-dynamic";import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
+
+export const dynamic = "force-dynamic";import { PackageBalanceCard } from "@/components/dashboard/PackageBalanceCard";
+
+export const dynamic = "force-dynamic";import { SessionHistoryTable } from "@/components/dashboard/SessionHistoryTable";
+
+export const dynamic = "force-dynamic";import { useAuth } from "@/components/auth/AuthProvider";
+
+export const dynamic = "force-dynamic";import { useSWRData } from "@/hooks/useSWR";
+
+export const dynamic = "force-dynamic";import { format } from "date-fns";
+
+export const dynamic = "force-dynamic";import { toast } from "sonner";
+
+export const dynamic = "force-dynamic";
 type DashboardData = {
   stats: {
     upcoming: number;

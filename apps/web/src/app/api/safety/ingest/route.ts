@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyFirebaseIdToken } from '@/lib/auth-edge';
 import { z } from 'zod';
+import { db } from '@/lib/firebase-admin';
 
 const SAFETY_ENGINE_URL = process.env.SAFETY_ENGINE_URL || 'http://localhost:3003';
 const SESSION_SERVICE_SECRET = process.env.SESSION_SERVICE_SECRET;
@@ -10,6 +11,21 @@ const SafetyIngestSchema = z.object({
   text: z.string().min(1).max(10000),
   participantId: z.string().min(1).max(64),
 });
+
+async function isSessionMember(firebaseUid: string, sessionId: string): Promise<boolean> {
+  try {
+    const sessionDoc = await db.collection('phase5_sessions').doc(sessionId).get();
+    if (!sessionDoc.exists) return false;
+    const data = sessionDoc.data()!;
+    return (
+      data['facilitatorId'] === firebaseUid ||
+      (Array.isArray(data['participantIdentities']) &&
+        data['participantIdentities'].includes(firebaseUid))
+    );
+  } catch {
+    return false;
+  }
+}
 
 export async function POST(req: NextRequest) {
   try {
@@ -38,6 +54,14 @@ export async function POST(req: NextRequest) {
     }
 
     const { sessionId, text, participantId } = parseResult.data;
+
+    // Verify the caller is a member of this session
+    if (!await isSessionMember(firebaseUid, sessionId)) {
+      return NextResponse.json(
+        { error: 'Forbidden: you are not a member of this session' },
+        { status: 403 }
+      );
+    }
 
     const response = await fetch(`${SAFETY_ENGINE_URL}/safety/transcript`, {
       method: 'POST',

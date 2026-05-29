@@ -66,14 +66,17 @@ export async function POST(req: NextRequest) {
       let user = userDoc.data();
 
       // Ensure a default role exists if it's a new user
+      // Role is managed server-side only — never sourced from user-writable fields
+      const defaultRole = 'PARTICIPANT';
       if (!user?.role) {
-        const defaultRole = 'PARTICIPANT';
-        await userRef.update({ role: defaultRole });
+        await userRef.update({ role: defaultRole }, { merge: true });
         user = { ...user, role: defaultRole };
       }
 
-      // Sync Role to Firebase Custom Claims if not already set correctly
-      await adminAuth.setCustomUserClaims(payload.uid, { role: user?.role });
+      // IMPORTANT: Custom claims must NOT be set from user-writable Firestore fields.
+      // Custom claims are the authoritative source for RBAC on the client.
+      // Role is only promoted via a privileged internal flow, never via self-write.
+      await adminAuth.setCustomUserClaims(payload.uid, { role: defaultRole });
 
       console.log(`[AuthSync] User synced to Firestore & Claims: ${payload.uid} (Role: ${user?.role})`);
 

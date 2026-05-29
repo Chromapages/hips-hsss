@@ -1,10 +1,14 @@
 'use client';
 
 import { useState } from 'react';
-import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
-import { PackageCheckout } from '@/components/checkout/PackageCheckout';
-import { Shield, Users, HeartPulse, Zap, CheckCircle2 } from 'lucide-react';
 
+export const dynamic = "force-dynamic";import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
+
+export const dynamic = "force-dynamic";import { PackageCheckout } from '@/components/checkout/PackageCheckout';
+
+export const dynamic = "force-dynamic";import { Shield, Users, HeartPulse, Zap, CheckCircle2 } from 'lucide-react';
+
+export const dynamic = "force-dynamic";
 const PACKAGES = [
   {
     id: 'SINGLE',

@@ -11,7 +11,7 @@ import { addHours, startOfHour } from 'date-fns';
  * Searches for sessions starting in ~24h and sends SESSION_REMINDER_24H email.
  * Safe to run hourly — idempotent via lastReminder24h flag.
  */
-export async function GET() {
+export async function GET(req: NextRequest) {
   const db = getDb();
   if (!db) {
     return NextResponse.json({ error: 'Service temporarily unavailable' }, { status: 503 });

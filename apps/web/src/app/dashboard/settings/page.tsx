@@ -1,10 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
-import { useAuth } from "@/components/auth/AuthProvider";
-import { 
-  User, 
+
+export const dynamic = "force-dynamic";import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
+
+export const dynamic = "force-dynamic";import { useAuth } from "@/components/auth/AuthProvider";
+
+export const dynamic = "force-dynamic";import { 
+
+export const dynamic = "force-dynamic";  User, 
   ShieldCheck, 
   Lock, 
   LogOut, 
@@ -16,6 +20,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 
+export const dynamic = "force-dynamic";
 export default function SettingsPage() {
   const { user, role, logout } = useAuth();
   const [syncing, setSyncing] = useState(false);

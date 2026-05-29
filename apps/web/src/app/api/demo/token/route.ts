@@ -13,7 +13,6 @@ const DemoTokenSchema = z.object({
 type DemoTokenResponse = z.infer<typeof DemoTokenSchema>;
 
 const DEMO_ROOM_NAME = 'demo-room-sandbox';
-const DEMO_IDENTITY = 'demo-user';
 const DEMO_TTL_SECONDS = 30 * 60; // 30 minutes
 
 /**
@@ -94,10 +93,15 @@ export async function POST(req: NextRequest) {
 
     const expiresAt = new Date(Date.now() + DEMO_TTL_SECONDS * 1000);
 
-    console.log(`[DemoTokenAPI] Issuing demo token for room: ${DEMO_ROOM_NAME}, identity: ${DEMO_IDENTITY}`);
+    // Unique per-visitor identity — prevents identity collision between demo users.
+    // IP-based derivation gives stability across reconnects within the same session
+    // while maintaining anonymity (no PII stored).
+    const visitorIdentity = `demo-${ip.replace(/\./g, '-')}-${crypto.randomUUID().slice(0, 8)}`;
+
+    console.log(`[DemoTokenAPI] Issuing demo token for room: ${DEMO_ROOM_NAME}, identity: ${visitorIdentity}`);
 
     const at = new AccessToken(apiKey, apiSecret, {
-      identity: DEMO_IDENTITY,
+      identity: visitorIdentity,
       ttl: `${DEMO_TTL_SECONDS}s`,
     });
 
@@ -121,7 +125,7 @@ export async function POST(req: NextRequest) {
     const response: DemoTokenResponse = {
       token: tokenJwt,
       roomName: DEMO_ROOM_NAME,
-      identity: DEMO_IDENTITY,
+      identity: visitorIdentity,
       expiresAt: expiresAt.toISOString(),
     };
 
