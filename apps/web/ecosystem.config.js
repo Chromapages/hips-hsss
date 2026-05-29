@@ -12,8 +12,8 @@ module.exports = {
   apps: [
     {
       name: 'hips-web',
-      script: 'node_modules/.bin/next',
-      args: 'start -p 3000',
+      script: 'node',
+      args: 'node_modules/.bin/next start -p 3000',
       cwd: './apps/web',
       env: {
         NODE_ENV: 'production',
