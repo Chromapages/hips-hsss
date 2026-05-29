@@ -33,5 +33,5 @@ export const removeAuthCookie = () => {
 export const getAuthCookie = (): string | null => {
   if (typeof document === 'undefined') return null;
   const match = document.cookie.match(new RegExp(`(?:^|; )${TOKEN_KEY}=([^;]*)`));
-  return match ? decodeURIComponent(match[1]) : null;
+  return match ? decodeURIComponent(match[1] ?? '') : null;
 };
