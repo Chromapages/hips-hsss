@@ -12,20 +12,52 @@ const firebaseConfig = {
   measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID || '',
 };
 
-// Debug: Check if env vars are loaded
-if (!firebaseConfig.apiKey) {
-  console.warn("Firebase API Key is missing. Ensure NEXT_PUBLIC_FIREBASE_API_KEY is set in .env.local");
+// Singleton guard for app initialization
+let _app: ReturnType<typeof initializeApp> | null = null;
+let _auth: ReturnType<typeof getAuth> | null = null;
+let _initialized = false;
+
+function getFirebaseApp() {
+  if (!_initialized) {
+    if (!firebaseConfig.apiKey) {
+      console.warn("Firebase API Key is missing. Ensure NEXT_PUBLIC_FIREBASE_API_KEY is set in .env.local");
+    }
+    _app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
+    _initialized = true;
+  }
+  return _app;
 }
 
-// Initialize Firebase
-const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
+function getFirebaseAuth() {
+  if (!_auth) {
+    const app = getFirebaseApp();
+    if (!app) {
+      throw new Error("Firebase app not initialized");
+    }
+    _auth = getAuth(app);
+  }
+  return _auth;
+}
 
-// Auth instance
-export const auth = getAuth(app);
+// Auth instance - lazy initialization with null guard
+export const auth: ReturnType<typeof getAuth> | null = (() => {
+  try {
+    if (!firebaseConfig.apiKey) {
+      console.warn("Firebase API Key is missing. Ensure NEXT_PUBLIC_FIREBASE_API_KEY is set in .env.local");
+      return null;
+    }
+    return getFirebaseAuth();
+  } catch (e) {
+    console.error("Firebase auth initialization failed:", e);
+    return null;
+  }
+})();
 
 // Analytics instance (conditional for SSR/Browser compatibility)
-export const analytics = typeof window !== 'undefined' 
-  ? isSupported().then(yes => yes ? getAnalytics(app) : null)
+export const analytics = typeof window !== 'undefined' && firebaseConfig.apiKey
+  ? isSupported().then(yes => yes ? getAnalytics(getFirebaseApp()) : null)
   : null;
 
-export default app;
+export const isFirebaseClientReady = () => _initialized && _app !== null && _auth !== null;
+
+export default getFirebaseApp;

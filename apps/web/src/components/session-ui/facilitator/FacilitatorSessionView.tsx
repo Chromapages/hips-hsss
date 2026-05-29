@@ -218,13 +218,7 @@ export function FacilitatorSessionView({
                       </span>
                       <button
                         className="rounded-full border border-white/10 px-3 py-1 text-xs font-bold text-zinc-300 hover:bg-white/10"
-                        onClick={() => {
-                          setRaisedHands((prev) => {
-                            const next = new Set(prev);
-                            next.delete(identity);
-                            return next;
-                          });
-                        }}
+                        onClick={() => publishControlMessage("HAND_LOWERED")}
                         type="button"
                       >
                         Lower

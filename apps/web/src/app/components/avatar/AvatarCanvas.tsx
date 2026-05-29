@@ -43,7 +43,7 @@ function createAvatarGeometry(style: AvatarStyleId): THREE.BufferGeometry {
     geometric: new THREE.BoxGeometry(0.55, 0.6, 0.5, 6, 6, 6),
   };
 
-  return geometries[style] ?? geometries.round;
+  return (geometries[style] ?? geometries.round)!;
 }
 
 /**

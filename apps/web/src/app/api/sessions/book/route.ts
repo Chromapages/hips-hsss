@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { db } from '@/lib/firebase-admin';
+import { getDb } from '@/lib/firebase-admin';
 import { verifyFirebaseIdToken } from '@/lib/auth-edge';
 import { addHours, isBefore, startOfHour } from 'date-fns';
 import { sendBookingConfirmationEmail } from '@/emails';
@@ -11,6 +11,11 @@ const bookSchema = z.object({
 });
 
 export async function POST(req: NextRequest) {
+  const db = getDb();
+  if (!db) {
+    return NextResponse.json({ error: 'Service temporarily unavailable' }, { status: 503 });
+  }
+
   try {
     const authHeader = req.headers.get('authorization');
     const token = authHeader?.startsWith('Bearer ') ? authHeader.split(' ')[1] : null;
@@ -25,7 +30,7 @@ export async function POST(req: NextRequest) {
     if (!firebaseUid) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
-    
+
     const body = await req.json();
     const result = bookSchema.safeParse(body);
 
@@ -53,7 +58,7 @@ export async function POST(req: NextRequest) {
       const txResult = await db.runTransaction(async (transaction) => {
         const userRef = db.collection('users').doc(firebaseUid as string);
         const userDoc = await transaction.get(userRef);
-        
+
         if (!userDoc.exists) {
           throw new Error('USER_NOT_FOUND');
         }
@@ -62,7 +67,7 @@ export async function POST(req: NextRequest) {
 
         const serviceRef = db.collection('services').doc(serviceId);
         const serviceDoc = await transaction.get(serviceRef);
-        
+
         if (!serviceDoc.exists) {
           throw new Error('SERVICE_NOT_FOUND');
         }
@@ -73,7 +78,7 @@ export async function POST(req: NextRequest) {
           .where('serviceId', '==', serviceId)
           .where('startsAt', '==', startTime.toISOString())
           .where('status', '==', 'SCHEDULED');
-        
+
         const existingDocs = await transaction.get(existingQuery);
 
         if (!existingDocs.empty) {
@@ -82,7 +87,7 @@ export async function POST(req: NextRequest) {
 
         const sessionTokenRef = crypto.randomUUID();
         const sessionId = crypto.randomUUID();
-        
+
         const sessionData = {
           id: sessionId,
           userId: firebaseUid,

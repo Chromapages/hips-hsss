@@ -22,8 +22,8 @@ import React, {
 } from 'react';
 import * as THREE from 'three';
 import { AVATAR_STYLES, AvatarStyleId } from './AvatarStyles';
-import { AVATAR_PALETTES, PaletteId } from './AvatarPalettes';
-import { GESTURE_PRESETS, GestureId } from './GesturePresets';
+import { AVATAR_PALETTES, PaletteId, ColorPalette } from './AvatarPalettes';
+import { GESTURE_PRESETS, GestureId, GesturePreset } from './GesturePresets';
 
 // Lazy load the Three.js canvas component
 const AvatarCanvas = lazy(() => import('./AvatarCanvas'));
@@ -61,12 +61,18 @@ export const Avatar: React.FC<AvatarConfig> = ({
 
   // Get palette and gesture data
   const paletteData = useMemo(
-    () => AVATAR_PALETTES.find((p) => p.id === palette) ?? AVATAR_PALETTES[0],
+    () => {
+      const found = AVATAR_PALETTES.find((p) => p.id === palette);
+      return found ?? { id: 'midnight', name: 'Midnight', primary: '#1E293B', secondary: '#334155', accent: '#6366F1', emissive: '#818CF8' } as unknown as ColorPalette;
+    },
     [palette]
   );
 
   const gestureData = useMemo(
-    () => GESTURE_PRESETS.find((g) => g.id === gesture) ?? GESTURE_PRESETS[0],
+    () => {
+      const found = GESTURE_PRESETS.find((g) => g.id === gesture);
+      return found ?? { id: 'idle', name: 'Idle', duration: 1000 } as unknown as GesturePreset;
+    },
     [gesture]
   );
 

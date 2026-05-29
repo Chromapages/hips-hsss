@@ -10,6 +10,7 @@ import { SessionHistoryTable } from "@/components/dashboard/SessionHistoryTable"
 import { useAuth } from "@/components/auth/AuthProvider";
 import { useSWRData } from "@/hooks/useSWR";
 import { format } from "date-fns";
+import { toast } from "sonner";
 
 type DashboardData = {
   stats: {
@@ -250,20 +251,19 @@ export default function DashboardPage() {
                     const token = await getToken();
                     const res = await fetch('/api/livekit/token', {
                       method: 'POST',
-                      headers: { 
+                      headers: {
                         'Authorization': `Bearer ${token}`,
                         'Content-Type': 'application/json'
                       }
                     });
                     const data = await res.json();
                     if (data.token) {
-                      console.log("LIVEKIT TOKEN:", data.token);
-                      alert("SUCCESS: Token generated! Check console for the full JWT.");
+                      toast.success("Token generated successfully.");
                     } else {
-                      alert("FAILED: " + JSON.stringify(data));
+                      toast.error("Token generation failed: " + (data.error || JSON.stringify(data)));
                     }
-                  } catch (e: any) {
-                    alert("ERROR: " + e.message);
+                  } catch (e: unknown) {
+                    toast.error("Connection test error: " + (e instanceof Error ? e.message : "Unknown error"));
                   }
                 }}
                 className="w-full flex items-center justify-center gap-2 h-12 rounded-2xl bg-indigo-600 text-xs font-bold text-white hover:bg-indigo-500 transition-all active:scale-95"

@@ -23,6 +23,7 @@ export default function SignupPage() {
     setError(null);
 
     try {
+      if (!auth) throw new Error("Firebase auth not initialized");
       const { user } = await createUserWithEmailAndPassword(auth, email, password);
       await updateProfile(user, { displayName: name });
       
@@ -40,7 +41,13 @@ export default function SignupPage() {
       router.push("/dashboard");
     } catch (err: any) {
       console.error("Signup error:", err);
-      setError(err.message || "Failed to create account. Please try again.");
+
+      // Handle specific Firebase error codes
+      if (err.code === 'auth/unauthorized-domain') {
+        setError("Sign-up is not available from this domain. Please try again later.");
+      } else {
+        setError(err.message || "Failed to create account. Please try again.");
+      }
     } finally {
       setLoading(false);
     }

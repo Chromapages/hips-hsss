@@ -28,7 +28,8 @@ interface FlagReport {
 
 // In-memory ephemeral store (resets on server restart)
 // For production, use Redis with TTL or short-lived Firestore documents
-const ephemeralFlags = new Map<string, FlagReport>();
+// Key type is FlagReport for single-flag lookups, FlagReport[] for session-grouped lookups
+const ephemeralFlags = new Map<string, FlagReport | FlagReport[]>();
 
 const VALID_REASONS = ['inappropriate_content', 'harassment', 'technical_issue', 'other'] as const;
 const SEVERITY_MAP: Record<string, 'low' | 'medium' | 'high' | 'critical'> = {
@@ -103,10 +104,11 @@ export async function POST(
     // Store ephemerally
     ephemeralFlags.set(flagId, flagReport);
     
-    // Also store by sessionId for easy lookup
-    const sessionFlags = ephemeralFlags.get(`session:${sessionId}`) || [];
+    // Store by sessionId for easy lookup
+    const existing = ephemeralFlags.get(`session:${sessionId}`);
+    const sessionFlags: FlagReport[] = Array.isArray(existing) ? existing : [];
     sessionFlags.push(flagReport);
-    ephemeralFlags.set(`session:${sessionId}`, sessionFlags);
+    ephemeralFlags.set(`session:${sessionId}`, sessionFlags as FlagReport[]);
 
     console.log(`[SessionFlag] Flag ${flagId} created for session ${sessionId}: ${reasonType} by ${reporterIdentity}`);
 
@@ -147,7 +149,8 @@ export async function GET(
     const reporterIdentity = searchParams.get('reporterIdentity');
 
     // Get flags for this session
-    const sessionFlags = ephemeralFlags.get(`session:${sessionId}`) || [];
+    const rawSessionFlags = ephemeralFlags.get(`session:${sessionId}`);
+    const sessionFlags: FlagReport[] = Array.isArray(rawSessionFlags) ? rawSessionFlags : [];
 
     // Filter by reporter if provided (for anonymous status check)
     const flags = reporterIdentity

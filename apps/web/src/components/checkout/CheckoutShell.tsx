@@ -5,6 +5,10 @@ import { CreditCard } from "lucide-react";
 
 const tiers = [0, 10, 25, 50] as const;
 
+function formatCurrency(amount: number) {
+  return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
+}
+
 export function CheckoutShell() {
   const [donation, setDonation] = useState(0);
   const [ack, setAck] = useState(false);
@@ -96,7 +100,7 @@ export function CheckoutShell() {
             className="mt-8 group relative w-full h-16 items-center justify-center overflow-hidden rounded-[1.5rem] bg-white font-black tracking-tighter text-black transition-all hover:scale-[1.01] active:scale-[0.99] disabled:opacity-30 disabled:hover:scale-100"
           >
             <div className="absolute inset-0 bg-gradient-to-r from-indigo-500 to-purple-500 opacity-0 transition-opacity group-hover:opacity-10" />
-            <span className="relative z-10 text-lg">Complete Booking • ${total}</span>
+            <span className="relative z-10 text-lg">Complete Booking • {formatCurrency(total)}</span>
           </button>
         </div>
       </section>
@@ -108,7 +112,7 @@ export function CheckoutShell() {
           <div className="space-y-4">
             <div className="flex justify-between items-center text-sm">
               <span className="text-zinc-500 font-bold uppercase tracking-widest text-[10px]">Session Fee</span>
-              <span className="text-white font-black">$50.00</span>
+              <span className="text-white font-black">{formatCurrency(50)}</span>
             </div>
 
             <div className="pt-6 border-t border-white/5">
@@ -125,7 +129,7 @@ export function CheckoutShell() {
                         : "bg-white/5 border-white/5 text-zinc-500 hover:border-white/20 hover:text-white",
                     ].join(" ")}
                   >
-                    {tier === 0 ? "NONE" : `$${tier}`}
+                    {tier === 0 ? "NONE" : formatCurrency(tier)}
                   </button>
                 ))}
               </div>
@@ -134,7 +138,7 @@ export function CheckoutShell() {
             <div className="pt-6 border-t border-white/5 flex justify-between items-end">
               <div>
                 <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 mb-1">Total Amount</p>
-                <p className="text-3xl font-black tracking-tighter text-white">${total}.00</p>
+                <p className="text-3xl font-black tracking-tighter text-white">{formatCurrency(total)}</p>
               </div>
               <div className="text-right">
                 <span className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest bg-white/5 px-2 py-1 rounded-md">USD</span>

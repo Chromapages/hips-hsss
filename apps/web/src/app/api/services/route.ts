@@ -1,7 +1,15 @@
 import { NextResponse } from 'next/server';
-import { db } from '@/lib/firebase-admin';
+import { getDb } from '@/lib/firebase-admin';
 
 export async function GET() {
+  // Initialize Firestore lazily — return 503 if not configured
+  const db = getDb();
+  if (!db) {
+    return NextResponse.json({
+      error: 'Service temporarily unavailable. Please try again later.',
+    }, { status: 503 });
+  }
+
   try {
     const servicesRef = db.collection('services');
     const snapshot = await servicesRef.where('active', '==', true).get();

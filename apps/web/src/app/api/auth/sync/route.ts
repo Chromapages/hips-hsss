@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { adminAuth, db } from '@/lib/firebase-admin';
+import { adminAuth, getDb, isFirebaseAdminReady } from '@/lib/firebase-admin';
 
 function getErrorMessage(error: unknown) {
   return error instanceof Error ? error.message : String(error);
@@ -25,6 +25,14 @@ function isFirestoreApiDisabled(error: unknown) {
 
 export async function POST(req: NextRequest) {
   try {
+    // Initialize Firestore lazily — return 503 if not configured
+    const db = getDb();
+    if (!db) {
+      return NextResponse.json({
+        error: 'Service temporarily unavailable. Please try again later.',
+      }, { status: 503 });
+    }
+
     const authHeader = req.headers.get('authorization');
     const token = authHeader?.startsWith('Bearer ') ? authHeader.split(' ')[1] : null;
 

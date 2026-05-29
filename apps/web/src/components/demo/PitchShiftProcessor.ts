@@ -1,9 +1,14 @@
 'use client';
 
+// AudioWorkletProcessor is a browser global - declare it for TypeScript
+declare const AudioWorkletProcessor: any;
+declare const registerProcessor: any;
+
 import { useEffect, useRef, useCallback } from 'react';
 
 interface PitchShiftProcessorOptions {
   semitones?: number;
+  processorOptions?: { semitones?: number };
 }
 
 class HipsPitchShiftProcessor extends AudioWorkletProcessor {
@@ -30,7 +35,7 @@ class HipsPitchShiftProcessor extends AudioWorkletProcessor {
     const i0 = Math.floor(rp) & this.MASK;
     const i1 = (i0 + 1) & this.MASK;
     const f = rp - Math.floor(rp);
-    return this.buf[i0] * (1 - f) + this.buf[i1] * f;
+    return (this.buf[i0] ?? 0) * (1 - f) + (this.buf[i1] ?? 0) * f;
   }
 
   private win(n: number): number {
@@ -47,7 +52,7 @@ class HipsPitchShiftProcessor extends AudioWorkletProcessor {
     if (!src || !dst) return true;
 
     for (let i = 0; i < src.length; i++) {
-      this.buf[this.wp & this.MASK] = src[i];
+      this.buf[this.wp & this.MASK] = src[i] ?? 0;
       this.wp++;
 
       this.frac += this.ratio;

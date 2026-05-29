@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card"
 import { Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useToast } from "@/components/polish/ToastProvider";
 
 const tiers = [
   { label: "$25", value: 2500, tier: 'SUPPORTER' },
@@ -17,9 +18,11 @@ export default function DonatePage() {
   const [selected, setSelected] = useState<(typeof tiers)[number]>(tiers[1]);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const toast = useToast();
 
   const handleDonate = async () => {
     setLoading(true);
+    let errorThrown = false;
     try {
       const res = await fetch('/api/donations', {
         method: 'POST',
@@ -30,17 +33,28 @@ export default function DonatePage() {
         }),
       });
       const data = await res.json();
+
+      // Check HTTP status first
+      if (!res.ok) {
+        toast("error", data.error || 'Failed to initialize donation');
+        errorThrown = true;
+        return;
+      }
+
       if (data.clientSecret) {
-        // Redirect to checkout with the client secret
         router.push(`/checkout/donate?secret=${data.clientSecret}`);
       } else {
-        alert(data.error || 'Failed to initialize donation');
+        toast("error", data.error || 'Failed to initialize donation');
       }
     } catch (e) {
       console.error('Donation initialization failed:', e);
-      alert('An error occurred. Please try again.');
+      if (!errorThrown) {
+        toast("error", 'An error occurred. Please try again.');
+      }
     } finally {
-      setLoading(false);
+      if (!errorThrown) {
+        setLoading(false);
+      }
     }
   }
 

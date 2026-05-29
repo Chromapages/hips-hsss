@@ -1,3 +1,5 @@
+'use client';
+
 import { PageShell, SectionHeader } from "@/components/PageShell";
 import { packages } from "@/data/catalog";
 import { useState } from "react";

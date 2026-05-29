@@ -10,8 +10,8 @@ import VirtualOfficeAvatar, {
   paletteColors,
   fallbackColors,
   type AvatarGesture,
-} from "./VirtualOfficeAvatar";
-import { OfficeRoomScene } from "./office/OfficeRoomScene";
+} from "../session-ui/avatars/VirtualOfficeAvatar";
+import { OfficeRoomScene } from "../session-ui/office/OfficeRoomScene";
 
 // Task 5.13 — Audio-only fallback when WebGL is unavailable
 function AudioOnlyFallback({ roomName }: { avatar: AvatarProfile; roomName: string }) {

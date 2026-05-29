@@ -71,11 +71,24 @@ export function ScholarshipForm() {
   };
 
   const onSubmit = async (values: ScholarshipValues) => {
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-    console.log("Scholarship Submission:", values);
-    setIsSubmitted(true);
-    toast("success", "Application submitted successfully.");
+    try {
+      const res = await fetch('/api/scholarships/apply', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(values),
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        toast("error", data.error || "Failed to submit application.");
+        return;
+      }
+
+      setIsSubmitted(true);
+      toast("success", "Application submitted successfully.");
+    } catch (err) {
+      toast("error", "Failed to submit application. Please try again.");
+    }
   };
 
   if (isSubmitted) {

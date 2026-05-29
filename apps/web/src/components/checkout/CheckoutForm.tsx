@@ -13,6 +13,15 @@ export function CheckoutForm({ amount }: { amount: number }) {
   const elements = useElements();
   const [message, setMessage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [elementError, setElementError] = useState<string | null>(null);
+
+  const handleChange = (event: { error?: { message?: string } }) => {
+    if (event.error?.message) {
+      setElementError(event.error.message);
+    } else {
+      setElementError(null);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -39,9 +48,15 @@ export function CheckoutForm({ amount }: { amount: number }) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-      <div className="rounded-[2rem] border border-white/5 bg-zinc-950 p-6 shadow-2xl">
-        <PaymentElement options={{ layout: "tabs" }} />
+      <div className="rounded-[2rem] border border-white/5 bg-zinc-950 p-6 shadow-2xl relative overflow-hidden">
+        <PaymentElement options={{ layout: "tabs" }} onChange={handleChange} />
       </div>
+
+      {elementError && (
+        <div className="p-4 rounded-2xl bg-red-500/5 border border-red-500/10 text-red-400 text-xs font-bold uppercase tracking-widest text-center animate-in shake-in duration-300">
+          {elementError}
+        </div>
+      )}
       
       <div className="rounded-2xl bg-emerald-500/5 border border-emerald-500/10 p-5 flex items-start gap-4">
         <div className="w-10 h-10 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0">
@@ -66,7 +81,7 @@ export function CheckoutForm({ amount }: { amount: number }) {
             <span>Authorizing...</span>
           </div>
         ) : (
-          <span className="relative z-10 text-lg">Pay Securely • ${amount / 100}.00</span>
+          <span className="relative z-10 text-lg">Pay Securely • {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount / 100)}</span>
         )}
       </button>
 

@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { CalendarX2 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -42,7 +43,7 @@ export function SessionHistoryTable({ sessions = [] }: { sessions?: SessionHisto
       <table className="w-full text-left text-sm">
         <thead className="bg-white/5 text-zinc-400">
           <tr>
-            {["Session ID", "Service", "Date", "Status", "Duration"].map(
+            {["Session ID", "Service", "Date", "Status", "Duration", "Join"].map(
               (heading) => (
                 <th className="px-4 py-3 font-medium" key={heading}>
                   {heading}
@@ -67,6 +68,18 @@ export function SessionHistoryTable({ sessions = [] }: { sessions?: SessionHisto
                 </span>
               </td>
               <td className="px-4 py-4 text-zinc-300">60 min</td>
+              <td className="px-4 py-4">
+                {(row.status === 'SCHEDULED' || row.status === 'UPCOMING') ? (
+                  <Link
+                    href={`/session/${row.id}`}
+                    className="inline-flex h-8 items-center justify-center rounded-xl bg-indigo-600/20 border border-indigo-500/30 px-3 text-xs font-bold text-indigo-300 hover:bg-indigo-600/40 transition-all"
+                  >
+                    Join
+                  </Link>
+                ) : (
+                  <span className="text-zinc-600">-</span>
+                )}
+              </td>
             </tr>
           ))}
         </tbody>

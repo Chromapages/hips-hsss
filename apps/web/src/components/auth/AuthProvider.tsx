@@ -2,13 +2,14 @@
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { onAuthStateChanged, User } from 'firebase/auth';
-import { auth } from '@/lib/firebase-client';
+import { auth, isFirebaseClientReady } from '@/lib/firebase-client';
 import { setAuthCookie, removeAuthCookie } from '@/lib/auth-cookies';
 
 interface AuthContextType {
   user: User | null;
   role: string | null;
   loading: boolean;
+  firebaseReady: boolean;
   getToken: () => Promise<string | null>;
   logout: () => Promise<void>;
 }
@@ -17,6 +18,7 @@ const AuthContext = createContext<AuthContextType>({
   user: null,
   role: null,
   loading: true,
+  firebaseReady: false,
   getToken: async () => null,
   logout: async () => {},
 });
@@ -25,15 +27,38 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [role, setRole] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [firebaseReady, setFirebaseReady] = useState(false);
 
   useEffect(() => {
+    // Wait for Firebase to be ready before subscribing to auth state
+    if (!isFirebaseClientReady()) {
+      console.warn("[AuthProvider] Firebase client not ready yet");
+      // Retry after a short delay
+      const retryTimeout = setTimeout(() => {
+        if (!isFirebaseClientReady()) {
+          console.error("[AuthProvider] Firebase client initialization failed - auth may not work");
+          setFirebaseReady(false);
+          setLoading(false);
+        }
+      }, 3000);
+      return () => clearTimeout(retryTimeout);
+    }
+
+    setFirebaseReady(true);
+
+    if (!auth) {
+      console.error("[AuthProvider] Auth instance is null");
+      setLoading(false);
+      return;
+    }
+
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
         // Force refresh token to get latest custom claims
         const idTokenResult = await user.getIdTokenResult(true);
         setRole((idTokenResult.claims.role as string) || 'PARTICIPANT');
         setUser(user);
-        
+
         // Synchronize cookie for middleware
         setAuthCookie(idTokenResult.token);
 
@@ -60,12 +85,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   const getToken = async () => {
-    if (!auth.currentUser) return null;
+    if (!auth?.currentUser) return null;
     return auth.currentUser.getIdToken();
   };
 
   const logout = async () => {
-    await auth.signOut();
+    if (auth) {
+      await auth.signOut();
+    }
   };
 
   if (loading) {
@@ -73,13 +100,18 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black">
         {/* Ambient Pulse */}
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] bg-indigo-500/10 rounded-full blur-[100px] animate-pulse" />
-        
+
         <div className="relative flex flex-col items-center gap-6">
           <div className="relative w-16 h-16">
             <div className="absolute inset-0 rounded-full border-t-2 border-indigo-500 animate-spin" />
             <div className="absolute inset-2 rounded-full border-t-2 border-purple-500 animate-spin duration-700" />
           </div>
           <div className="flex flex-col items-center gap-1">
+            {!firebaseReady && (
+              <p className="text-[10px] font-bold uppercase tracking-[0.4em] text-red-500 animate-pulse">
+                Firebase Initializing...
+              </p>
+            )}
             <p className="text-[10px] font-bold uppercase tracking-[0.4em] text-zinc-500 animate-pulse">
               Initializing Secure Session
             </p>
@@ -93,7 +125,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }
 
   return (
-    <AuthContext.Provider value={{ user, role, loading, getToken, logout }}>
+    <AuthContext.Provider value={{ user, role, loading, firebaseReady, getToken, logout }}>
       {children}
     </AuthContext.Provider>
   );

@@ -54,11 +54,24 @@ export function OrganizationIntakeForm() {
   const isNonprofit = watch("isNonprofit");
 
   const onSubmit = async (values: IntakeValues) => {
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-    console.log("Org Intake Submission:", values);
-    setIsSubmitted(true);
-    toast("success", "Organization inquiry sent.");
+    try {
+      const res = await fetch('/api/organizations/inquiry', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(values),
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        toast("error", data.error || "Failed to submit inquiry.");
+        return;
+      }
+
+      setIsSubmitted(true);
+      toast("success", "Organization inquiry sent.");
+    } catch (err) {
+      toast("error", "Failed to submit inquiry. Please try again.");
+    }
   };
 
   if (isSubmitted) {

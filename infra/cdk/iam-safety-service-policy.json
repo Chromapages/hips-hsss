@@ -1,0 +1,51 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AllowSnsPublishCrisisAlerts",
+      "Effect": "Allow",
+      "Action": [
+        "sns:Publish"
+      ],
+      "Resource": "arn:aws:sns:us-east-1:123456789012:hips-safety-crisis"
+    },
+    {
+      "Sid": "AllowSnsPublishToCrisisTopicOnly",
+      "Effect": "Deny",
+      "Action": [
+        "sns:Publish"
+      ],
+      "NotResource": "arn:aws:sns:us-east-1:123456789012:hips-safety-crisis"
+    },
+    {
+      "Sid": "AllowRdsConnectSessionDbReadOnly",
+      "Effect": "Allow",
+      "Action": [
+        "rds-db:connect"
+      ],
+      "Resource": "arn:aws:rds-db:us-east-1:123456789012:db-user:*/session-db-reader/safety-service"
+    },
+    {
+      "Sid": "AllowSecretsManagerReadSafetySecrets",
+      "Effect": "Allow",
+      "Action": [
+        "secretsmanager:GetSecretValue"
+      ],
+      "Resource": [
+        "arn:aws:secretsmanager:us-east-1:123456789012:secret:hips/safety/*",
+        "arn:aws:secretsmanager:us-east-1:123456789012:secret:hips/pagerduty/*",
+        "arn:aws:secretsmanager:us-east-1:123456789012:secret:hips/slack/*"
+      ]
+    },
+    {
+      "Sid": "AllowCloudWatchLogs",
+      "Effect": "Allow",
+      "Action": [
+        "logs:CreateLogGroup",
+        "logs:CreateLogStream",
+        "logs:PutLogEvents"
+      ],
+      "Resource": "arn:aws:logs:*:*:*"
+    }
+  ]
+}

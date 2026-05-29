@@ -5,40 +5,45 @@
  * Without ioredis installed or if REDIS_URL is not configured, this module
  * returns null to allow graceful degradation to in-memory fallbacks.
  */
-import Redis from 'ioredis';
 
-let redis: Redis | null = null;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let Redis: any = null;
+let redis: unknown = null;
 
-function createRedisClient(): Redis | null {
-  const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379';
-
-  let client: Redis;
+function createRedisClient(): unknown {
   try {
-    client = new Redis(redisUrl, {
+    // Dynamic require - only loads if ioredis is installed
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const IORedis = require('ioredis');
+    Redis = IORedis;
+    const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379';
+
+    const client = new Redis(redisUrl, {
       lazyConnect: true,
       maxRetriesPerRequest: 3,
       enableOfflineQueue: false,
     });
+
+    client.on('error', (err: Error) => {
+      console.warn('[redis] Connection error:', err.message);
+    });
+
+    client.on('connect', () => {
+      console.log('[redis] Connected to', redisUrl);
+    });
+
+    return client;
   } catch {
-    console.warn('[redis] Failed to create Redis client — falling back to in-memory');
+    console.warn('[redis] ioredis not installed or unavailable — falling back to in-memory rate limiting');
     return null;
   }
-
-  client.on('error', (err) => {
-    console.warn('[redis] Connection error:', err.message);
-  });
-
-  client.on('connect', () => {
-    console.log('[redis] Connected to', redisUrl);
-  });
-
-  return client;
 }
 
 redis = createRedisClient();
 
 export { redis };
 
-export function getRedis(): Redis | null {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function getRedis(): any {
   return redis;
 }

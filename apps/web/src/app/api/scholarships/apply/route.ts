@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { db } from '@/lib/firebase-admin';
+import { getDb } from '@/lib/firebase-admin';
 import { verifyFirebaseIdToken } from '@/lib/auth-edge';
 
 const applySchema = z.object({
@@ -9,6 +9,11 @@ const applySchema = z.object({
 });
 
 export async function POST(req: NextRequest) {
+  const db = getDb();
+  if (!db) {
+    return NextResponse.json({ error: 'Service temporarily unavailable' }, { status: 503 });
+  }
+
   try {
     // 1. Verify Authentication
     const authHeader = req.headers.get('authorization');

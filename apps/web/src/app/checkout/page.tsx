@@ -1,3 +1,5 @@
+"use client";
+
 import { CheckoutShell } from "@/components/checkout/CheckoutShell";
 import { Navbar } from "@/components/polish/Navbar";
 
@@ -19,7 +21,7 @@ export default function CheckoutPage() {
               <span className="text-zinc-600">reservation.</span>
             </h1>
             <p className="text-lg text-zinc-500 font-medium max-w-xl leading-relaxed animate-in fade-in slide-in-from-bottom-6 duration-1000">
-              Your billing information is handled securely via Stripe. H.I.P.S. ensures 
+              Your billing information is handled securely via Stripe. H.I.P.S. ensures
               that this data is never connected to your session participation.
             </p>
           </div>

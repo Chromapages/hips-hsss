@@ -8,19 +8,27 @@
  * - React.lazy + Suspense for code splitting
  */
 
-export { Avatar, AvatarRing } from './Avatar';
+import { Avatar, AvatarRing } from './Avatar';
 export type { AvatarConfig, AvatarRingProps } from './Avatar';
+export { Avatar, AvatarRing };
 
-export { AvatarCanvas } from './AvatarCanvas';
+import AvatarCanvas from './AvatarCanvas';
+export { AvatarCanvas };
 
-export { AVATAR_STYLES } from './AvatarStyles';
-export type { AvatarStyle, AvatarStyleId } from './AvatarStyles';
+import { AVATAR_STYLES } from './AvatarStyles';
+import type { AvatarStyle, AvatarStyleId } from './AvatarStyles';
+export { AVATAR_STYLES };
+export type { AvatarStyle, AvatarStyleId };
 
-export { AVATAR_PALETTES } from './AvatarPalettes';
-export type { ColorPalette, PaletteId } from './AvatarPalettes';
+import { AVATAR_PALETTES } from './AvatarPalettes';
+import type { ColorPalette, PaletteId } from './AvatarPalettes';
+export { AVATAR_PALETTES };
+export type { ColorPalette, PaletteId };
 
-export { GESTURE_PRESETS } from './GesturePresets';
-export type { GesturePreset, GestureId } from './GesturePresets';
+import { GESTURE_PRESETS } from './GesturePresets';
+import type { GesturePreset, GestureId } from './GesturePresets';
+export { GESTURE_PRESETS };
+export type { GesturePreset, GestureId };
 
 /**
  * All possible avatar combinations: 36

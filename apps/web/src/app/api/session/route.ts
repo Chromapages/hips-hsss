@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { db } from '@/lib/firebase-admin';
+import { db, getDb, isFirebaseAdminReady } from '@/lib/firebase-admin';
 import crypto from 'crypto';
 
 /**
@@ -42,7 +42,7 @@ const createSessionSchema = z.object({
 });
 
 // Helper to get session document reference
-async function getSessionRef(sessionId: string) {
+function getSessionRef(sessionId: string) {
   return db.collection('phase5_sessions').doc(sessionId);
 }
 
@@ -83,6 +83,14 @@ async function transitionSession(sessionId: string, newStatus: SessionStatus, ad
  * POST /api/session — Create a new session
  */
 export async function POST(req: NextRequest) {
+  // Initialize Firestore lazily — return 503 if not configured
+  if (!isFirebaseAdminReady()) {
+    return NextResponse.json({
+      error: 'Service temporarily unavailable. Please try again later.',
+    }, { status: 503 });
+  }
+  const db = getDb();
+
   try {
     const body = await req.json().catch(() => ({}));
     const result = createSessionSchema.safeParse(body);
@@ -101,20 +109,20 @@ export async function POST(req: NextRequest) {
     const roomName = `session-${sessionId}`;
     const now = new Date().toISOString();
 
-    const session: Phase5Session = {
+    const session = {
       id: sessionId,
-      status: 'pending',
+      status: 'pending' as const,
       createdAt: now,
       participantCount: 0,
       maxParticipants: maxParticipants as number,
       roomName,
       flagged: false,
       metadata: {
-        serviceType: serviceType as string,
-        facilitatorId: facilitatorId,
+        ...(serviceType ? { serviceType } : {}),
+        ...(facilitatorId ? { facilitatorId } : {}),
         ...(metadata || {}),
       },
-    };
+    } satisfies Phase5Session;
 
     // Store session in Firestore
     try {
@@ -153,6 +161,14 @@ export async function POST(req: NextRequest) {
  * GET /api/session — List sessions (with optional filters)
  */
 export async function GET(req: NextRequest) {
+  // Initialize Firestore lazily — return 503 if not configured
+  const db = getDb();
+  if (!db) {
+    return NextResponse.json({
+      error: 'Service temporarily unavailable. Please try again later.',
+    }, { status: 503 });
+  }
+
   try {
     const { searchParams } = new URL(req.url);
     const status = searchParams.get('status') as SessionStatus | null;

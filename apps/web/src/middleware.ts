@@ -2,10 +2,7 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next';
 import { jwtVerify, importX509 } from 'jose';
 import { ROLES } from '@/lib/roles';
-import { randomBytes } from 'crypto';
 import { getRedis } from '@/lib/redis';
-// NOTE: Requires `npm install ioredis` for production multi-instance deployments.
-/// <reference types="ioredis" />
 
 const FIREBASE_PUBLIC_KEYS_URL = 'https://www.googleapis.com/robot/v1/metadata/x509/securetoken@system.gserviceaccount.com';
 
@@ -28,6 +25,7 @@ const PUBLIC_PATTERNS = [
   '/api/auth',
   '/api/stripe/webhook',
   '/api/safety',
+  '/api/demo/token',
 ];
 
 // State-changing methods requiring CSRF
@@ -160,7 +158,9 @@ function isProtectedRoute(pathname: string): boolean {
 }
 
 function generateCSRFToken(): string {
-  return randomBytes(32).toString('hex');
+  const array = new Uint8Array(32);
+  crypto.getRandomValues(array);
+  return Array.from(array, (b) => b.toString(16).padStart(2, '0')).join('');
 }
 
 function verifyCSRF(req: NextRequest): boolean {

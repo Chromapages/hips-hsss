@@ -72,14 +72,18 @@ async function transitionSession(sessionId: string, newStatus: SessionStatus) {
 
 export async function POST(req: NextRequest) {
   try {
-    const apiKey = process.env.LIVEKIT_API_KEY;
-    const apiSecret = process.env.LIVEKIT_API_SECRET;
+    const apiKey = process.env.LIVEKIT_API_KEY || process.env.NEXT_PUBLIC_LIVEKIT_API_KEY || 'devkey';
+    const apiSecret = process.env.LIVEKIT_API_SECRET || process.env.NEXT_PUBLIC_LIVEKIT_API_SECRET || 'secret';
 
-    if (!apiKey || !apiSecret) {
-      console.error('[LiveKitAPI] MISSING CREDENTIALS', { apiKey: !!apiKey, apiSecret: !!apiSecret });
+    if (process.env.NODE_ENV === 'production' && (apiKey === 'devkey' || apiSecret === 'secret')) {
+      console.error('[LiveKitAPI] MISSING CREDENTIALS IN PRODUCTION', { apiKey: apiKey !== 'devkey', apiSecret: apiSecret !== 'secret' });
       return NextResponse.json({
         error: 'LiveKit credentials missing from server environment',
       }, { status: 500 });
+    }
+
+    if (!process.env.LIVEKIT_API_KEY || !process.env.LIVEKIT_API_SECRET) {
+      console.warn('[LiveKitAPI] Using development fallback credentials (devkey/secret).');
     }
 
     const authHeader = req.headers.get('authorization');

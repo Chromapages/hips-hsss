@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { Loader2 } from "lucide-react";
 import { format, parseISO } from "date-fns";
+import { useToast } from "@/components/polish/ToastProvider";
 
 export function BookingSummaryBar({
   serviceId,
@@ -20,6 +21,7 @@ export function BookingSummaryBar({
   const [isBooking, setIsBooking] = useState(false);
   const { getToken } = useAuth();
   const router = useRouter();
+  const toast = useToast();
 
   if (!date || !time) {
     return null;
@@ -42,19 +44,25 @@ export function BookingSummaryBar({
         },
         body: JSON.stringify({
           serviceId,
-          startsAt: time, // time is already ISO string from TimeSlotGrid
+          startsAt: time,
         }),
       });
 
       const data = await res.json();
+
+      if (!res.ok) {
+        toast("error", data.error || "Booking failed. Please try again.");
+        return;
+      }
+
       if (data.success) {
         router.push(`/checkout/${data.session.id}`);
       } else {
-        alert(data.error || "Booking failed");
+        toast("error", data.error || "Booking failed. Please try again.");
       }
     } catch (error) {
       console.error("Booking failed:", error);
-      alert("Failed to book session. Please try again.");
+      toast("error", "Failed to book session. Please try again.");
     } finally {
       setIsBooking(false);
     }

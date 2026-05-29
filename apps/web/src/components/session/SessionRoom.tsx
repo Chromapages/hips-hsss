@@ -55,7 +55,7 @@ type SessionControlMessage = {
 // For production: move room token generation server-side so URL doesn't need to be public.
 // Current mitigation: URL is only used for WebSocket connection, not for auth.
 // TODO [Phase 3]: Refactor to generate tokens server-side and remove NEXT_PUBLIC_LIVEKIT_URL.
-const liveKitUrl = process.env.NEXT_PUBLIC_LIVEKIT_URL || 'ws://localhost:7880';
+const liveKitUrl = process.env.NEXT_PUBLIC_LIVEKIT_URL || process.env.NEXT_PUBLIC_LIVEKIT_WS_URL || 'ws://localhost:7880';
 const textEncoder = new TextEncoder();
 
 function decodeControlMessage(payload: Uint8Array): SessionControlMessage | null {
@@ -409,7 +409,7 @@ function SessionContent({
     if (controlMessage) {
       applyControlMessage(controlMessage);
     }
-  });
+  }, [applyControlMessage]);
 
   const publishControlMessage = useCallback(
     async (message: SessionControlMessage) => {

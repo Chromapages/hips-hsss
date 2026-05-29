@@ -2,6 +2,12 @@
 
 import { useEffect, useState } from "react";
 import { format, parseISO } from "date-fns";
+import { Calendar, Moon } from "lucide-react";
+
+export interface TimeSlot {
+  startsAt: string;
+  endsAt: string;
+}
 
 export function TimeSlotGrid({
   date,
@@ -12,7 +18,7 @@ export function TimeSlotGrid({
   serviceId: string;
   onSelect: (slot: string) => void;
 }) {
-  const [slots, setSlots] = useState<any[]>([]);
+  const [slots, setSlots] = useState<TimeSlot[]>([]);
   const [loading, setLoading] = useState(false);
   const [selected, setSelected] = useState("");
 
@@ -26,7 +32,7 @@ export function TimeSlotGrid({
         const allSlots = await res.json();
         
         // Filter slots for the selected date (YYYY-MM-DD)
-        const filtered = allSlots.filter((s: any) => s.startsAt.startsWith(date));
+        const filtered = allSlots.filter((s: TimeSlot) => s.startsAt.startsWith(date));
         setSlots(filtered);
       } catch (error) {
         console.error('Failed to fetch slots:', error);
@@ -41,7 +47,7 @@ export function TimeSlotGrid({
     return (
       <section className="rounded-[2rem] border border-white/5 bg-zinc-950/50 p-10 flex flex-col items-center justify-center text-center min-h-[300px] border-dashed">
         <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center mb-4">
-          <span className="text-zinc-600">📅</span>
+          <Calendar className="w-6 h-6 text-zinc-600" />
         </div>
         <p className="text-sm font-bold uppercase tracking-widest text-zinc-600">
           Select a date to view<br />available session times
@@ -81,6 +87,7 @@ export function TimeSlotGrid({
               <button
                 key={slot.startsAt}
                 aria-pressed={isActive}
+                aria-label={`Select ${format(parseISO(slot.startsAt), 'EEEE, MMMM d \'at\' h:mm a')} ${isActive ? '(selected)' : ''}`}
                 onClick={() => {
                   setSelected(slot.startsAt);
                   onSelect(slot.startsAt);
@@ -99,7 +106,7 @@ export function TimeSlotGrid({
           })
         ) : (
           <div className="col-span-full py-12 flex flex-col items-center justify-center text-center opacity-50">
-            <span className="text-2xl mb-3">🌙</span>
+            <Moon className="w-8 h-8 text-zinc-600 mb-3" />
             <p className="text-xs font-bold uppercase tracking-widest text-zinc-500">Fully Booked</p>
           </div>
         )}

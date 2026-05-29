@@ -101,15 +101,15 @@ export default function SafetyMonitor({
     }
   };
 
+  // Check if participant has permission to send data (chat)
+  const canChat = localParticipant.permissions?.canPublishData !== false;
+
   const handleSend = () => {
     if (inputText.trim() && canChat) {
       send(inputText);
       setInputText('');
     }
   };
-
-  // Check if participant has permission to send data (chat)
-  const canChat = localParticipant.permissions?.canPublishData !== false;
 
   return (
     <div className="flex flex-col h-full bg-zinc-900 border-l border-zinc-800">

@@ -39,7 +39,7 @@ export default function SettingsPage() {
   const handleLogout = async () => {
     try {
       await logout();
-      window.location.href = '/login';
+      router.push('/login');
     } catch (error) {
       toast.error("Logout failed");
     }

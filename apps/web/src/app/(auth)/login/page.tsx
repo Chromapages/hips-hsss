@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { signInWithEmailAndPassword } from "firebase/auth";
-import { auth } from "@/lib/firebase-client";
+import { auth, isFirebaseClientReady } from "@/lib/firebase-client";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/components/auth/AuthProvider";
 import Link from "next/link";
@@ -10,7 +10,7 @@ import { Loader2, Mail, Lock, ArrowRight } from "lucide-react";
 
 export default function LoginPage() {
   const router = useRouter();
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading: authLoading, firebaseReady } = useAuth();
   const searchParams = useSearchParams();
   const from = searchParams.get("from") || "/dashboard";
 
@@ -31,20 +31,50 @@ export default function LoginPage() {
     setLoading(true);
     setError(null);
 
+    // Guard: Check Firebase is ready before attempting auth
+    if (!firebaseReady || !auth) {
+      console.error("[Login] Firebase not ready or auth is null");
+      setError("Authentication temporarily unavailable. Please try again.");
+      setLoading(false);
+      return;
+    }
+
     try {
       console.log("[Login] Attempting sign in with:", email);
       await signInWithEmailAndPassword(auth, email, password);
       console.log("[Login] Firebase auth success, wait for AuthProvider sync...");
-      // We don't necessarily need router.push here because the useEffect above 
-      // will handle the redirect once AuthProvider updates the user state.
-      // But we'll keep it as a fallback.
       router.push(from);
     } catch (err: any) {
-      console.error("Login error details:", err.code, err.message);
-      if (err.code === 'auth/invalid-credential') {
-        setError("Invalid email or password. Please check your credentials and try again.");
-      } else {
-        setError(`Auth Error: ${err.message}`);
+      console.error("[Login] Error details:", err?.code, err?.message);
+
+      // Halt on null app error - do not retry silently
+      if (!err?.code) {
+        setError("Authentication temporarily unavailable. Please try again.");
+        setLoading(false);
+        return;
+      }
+
+      // Handle specific Firebase error codes
+      switch (err.code) {
+        case 'auth/invalid-credential':
+        case 'auth/user-not-found':
+        case 'auth/wrong-password':
+          setError("Invalid email or password. Please check your credentials and try again.");
+          break;
+        case 'auth/network-request-failed':
+          setError("Connection error. Please check your internet and try again.");
+          break;
+        case 'auth/too-many-requests':
+          setError("Too many failed attempts. Please try again later.");
+          break;
+        case 'auth/user-disabled':
+          setError("This account has been disabled. Contact support for assistance.");
+          break;
+        case 'auth/unauthorized-domain':
+          setError("Sign-in is not available from this domain. Please try again later.");
+          break;
+        default:
+          setError(err.message || "An unexpected error occurred. Please try again.");
       }
       setLoading(false);
     }

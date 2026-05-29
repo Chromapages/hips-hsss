@@ -18,8 +18,8 @@ export function CrisisResourceOverlay({ onClose }: { onClose: () => void }) {
         );
         if (!focusable || focusable.length === 0) return;
 
-        const first = focusable[0];
-        const last = focusable[focusable.length - 1];
+        const first = focusable[0]!;
+        const last = focusable[focusable.length - 1]!;
 
         if (event.shiftKey) {
           if (document.activeElement === first) {
