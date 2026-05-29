@@ -40,7 +40,7 @@ model VaultAccessLog {
   purpose     VaultAccessPurpose
   actorRef    String
   action      String?
-  requestId   String?
+  requestId   String
   createdAt   DateTime           @default(now())
 
   @@index([subjectRef])

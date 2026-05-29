@@ -185,10 +185,28 @@ export class SafetyService implements OnModuleInit {
       assessment.severity
     );
 
-    // 3. Trigger Mitigation (Webhook to Web App)
+    // 3. Persist durable audit log for mitigation (Phase 5 requirement)
+    await this.prisma.safetyMitigation.create({
+      data: {
+        alertId: alert.id,
+        action: mitigationAction,
+        success: true,
+        metadata: {
+          assessment: {
+            severity: assessment.severity,
+            category: assessment.category,
+            reason: assessment.reason,
+          },
+          offenderId: offendingParticipantId,
+          transcriptChunk: transcriptChunk.slice(0, 500), // Truncate for storage
+        },
+      },
+    });
+
+    // 4. Trigger Mitigation (Webhook to Web App)
     const webhookUrl = this.configService.get<string>('WEB_APP_URL');
     const webhookSecret = this.configService.get<string>('WEBHOOK_SECRET');
-    
+
     if (webhookUrl) {
       try {
         await fetch(`${webhookUrl}/api/safety/mitigate`, {
@@ -202,14 +220,14 @@ export class SafetyService implements OnModuleInit {
             offenderId: offendingParticipantId,
             assessment,
             alertId: alert.id,
-            mitigationAction // New field
+            mitigationAction
           })
         });
       } catch {
         console.error('Failed to send safety webhook');
       }
     }
-    
+
     return alert;
   }
 
@@ -284,7 +302,18 @@ export class SafetyService implements OnModuleInit {
 
       const piiData = await response.json();
 
-      // 2. Mark alert as escalated
+      // 2. Create durable audit log for PII access (Phase 5 requirement)
+      await this.prisma.vaultAccessLog.create({
+        data: {
+          subjectRef,
+          actorId,
+          purpose: reason,
+          outcome: 'SUCCESS',
+          ipAddress: null, // Actor IP not available in this context
+        },
+      });
+
+      // 3. Mark alert as escalated
       await this.prisma.safetyAlert.update({
         where: { id: alertId },
         data: {

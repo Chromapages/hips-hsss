@@ -200,6 +200,14 @@ export class CommerceService {
     packageName: string,
     stripePaymentId: string,
   ) {
+    // Idempotency check: return existing package if this payment was already fulfilled
+    const existing = await this.prisma.package.findFirst({
+      where: { stripePaymentId },
+    });
+    if (existing) {
+      return existing;
+    }
+
     // Resolve the service ID for package fulfillment
     const serviceId = await this.getOrCreateGenericPackageService();
 
@@ -212,6 +220,7 @@ export class CommerceService {
         totalSessions: credits,
         usedSessions: 0,
         expiresAt: new Date(Date.now() + 180 * 24 * 60 * 60 * 1000),
+        stripePaymentId,
       },
     });
   }

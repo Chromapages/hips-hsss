@@ -30,7 +30,7 @@ export class MonitoringStack extends Stack {
   public readonly crisisTopicArn: string;
 
   constructor(scope: Construct, id: string, props: MonitoringStackProps = {}) {
-    super(scope, ` hips-monitoring-${props.environment ?? 'staging'}`, props);
+    super(scope, `hips-monitoring-${props.environment ?? 'staging'}`, props);
 
     const envName = props.environment ?? 'staging';
     const isProd = envName === 'production';
@@ -156,9 +156,8 @@ module.exports = { handler };
         }),
       },
       deliveryPolicy: {
-        min相声DelayInSeconds: 0,
+        minDelayInSeconds: 0,
         numRetries: 3,
-        maxFirebase: 3,
       },
     });
 
@@ -176,12 +175,12 @@ module.exports = { handler };
     // CloudWatch log groups for Lambda functions
     const pdLogGroup = new LogGroup(this, 'PagerdutyHandlerLogs', {
       logGroupName: `/aws/lambda/hips-crisis-${envName}-pagerduty-handler`,
-      retention: RetentionDays.HEALTHY_DAYS_30,
+      retention: RetentionDays.THIRTY_DAYS,
     });
 
     const slackLogGroup = new LogGroup(this, 'SlackHandlerLogs', {
       logGroupName: `/aws/lambda/hips-crisis-${envName}-slack-handler`,
-      retention: RetentionDays.HEALTHY_DAYS_30,
+      retention: RetentionDays.THIRTY_DAYS,
     });
 
     // Outputs

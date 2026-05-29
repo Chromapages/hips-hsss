@@ -32,19 +32,20 @@ export async function GET(req: NextRequest) {
     }
 
     // Aggregate stats from Firestore in parallel
+    // Use count() aggregation for large collections to avoid scanning all documents
     const [
-      sessionsSnapshot,
-      scholarshipsSnapshot,
-      inquiriesSnapshot,
-      usersSnapshot,
+      sessionsCount,
+      scholarshipsCount,
+      inquiriesCount,
+      usersCount,
       packagesSnapshot,
       alertsSnapshot,
     ] = await Promise.all([
-      db.collection('sessions').where('status', '==', 'SCHEDULED').get(),
-      db.collection('scholarships').where('status', '==', 'APPROVED').get(),
-      db.collection('inquiries').get(),
-      db.collection('users').get(),
-      db.collection('packages').get(),
+      db.collection('sessions').where('status', '==', 'SCHEDULED').count().get(),
+      db.collection('scholarships').where('status', '==', 'APPROVED').count().get(),
+      db.collection('inquiries').count().get(),
+      db.collection('users').count().get(),
+      db.collection('packages').select({ amount: true }).get(),
       db.collection('safetyAlerts').orderBy('createdAt', 'desc').limit(5).get(),
     ]);
 
@@ -54,10 +55,10 @@ export async function GET(req: NextRequest) {
     });
 
     return NextResponse.json({
-      activeSessions: sessionsSnapshot.size,
-      scholarships: scholarshipsSnapshot.size,
-      inquiries: inquiriesSnapshot.size,
-      totalUsers: usersSnapshot.size,
+      activeSessions: sessionsCount.data().count,
+      scholarships: scholarshipsCount.data().count,
+      inquiries: inquiriesCount.data().count,
+      totalUsers: usersCount.data().count,
       totalRevenue: totalRevenue.toFixed(2),
       recentAlerts: alertsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
     });

@@ -21,6 +21,23 @@ model SafetyAlert {
 
   mitigations      SafetyMitigation[]
   escalations      EscalationQueue[]
+
+  @@index([sessionId])
+  @@index([severity])
+  @@index([isResolved])
+  @@index([createdAt])
+}
+
+model KeywordRule {
+  id        String   @id @default(uuid()) @db.Uuid
+  term      String   @unique
+  severity  String
+  category  String
+  enabled   Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([enabled])
 }
 
 model SafetyMitigation {

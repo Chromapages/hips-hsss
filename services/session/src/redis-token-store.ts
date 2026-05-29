@@ -117,13 +117,20 @@ export class RedisSessionTokenStore {
     if (!redis) return;
 
     try {
-      const sessionKeys = await redis.keys('session:*:tokens');
-      for (const key of sessionKeys) {
-        const tokenIds = await redis.smembers(key);
-        for (const tokenId of tokenIds) {
-          const exists = await redis.exists(this.redisKey(tokenId));
-          if (!exists) {
-            await redis.srem(key, tokenId);
+      // Use SCAN instead of KEYS to avoid blocking Redis server in production
+      const stream = redis.scanStream({
+        match: 'session:*:tokens',
+        count: 100,
+      });
+
+      for await (const sessionKeys of stream) {
+        for (const key of sessionKeys) {
+          const tokenIds = await redis.smembers(key);
+          for (const tokenId of tokenIds) {
+            const exists = await redis.exists(this.redisKey(tokenId));
+            if (!exists) {
+              await redis.srem(key, tokenId);
+            }
           }
         }
       }

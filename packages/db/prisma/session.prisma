@@ -23,6 +23,7 @@ enum AuditEventType {
   SAFETY_FLAGGED
   SAFETY_MITIGATION
   SESSION_ENDED
+  FACILITATOR_FLAG
 }
 
 model SessionRecord {
