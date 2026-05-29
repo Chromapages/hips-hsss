@@ -55,7 +55,7 @@ export const auth: ReturnType<typeof getAuth> | null = (() => {
 
 // Analytics instance (conditional for SSR/Browser compatibility)
 export const analytics = typeof window !== 'undefined' && firebaseConfig.apiKey
-  ? isSupported().then(yes => yes ? getAnalytics(getFirebaseApp()) : null)
+  ? isSupported().then(yes => yes ? getAnalytics(getFirebaseApp()!) : null)
   : null;
 
 export const isFirebaseClientReady = () => _initialized && _app !== null && _auth !== null;
