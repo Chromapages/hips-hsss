@@ -105,11 +105,8 @@ export function useVoiceConnection() {
           audioContextRef.current.close();
           audioContextRef.current = null;
         }
-        const audioCtx = new AudioContext();
-        audioContextRef.current = audioCtx;
 
         const track = await createLocalAudioTrack({
-          audioContext: audioCtx,
           autoGainControl: true,
           echoCancellation: true,
           noiseSuppression: true,
