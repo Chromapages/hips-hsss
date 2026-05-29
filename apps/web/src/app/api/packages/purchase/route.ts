@@ -5,9 +5,14 @@ import { verifyFirebaseIdToken } from '@/lib/auth-edge';
 import { addMonths } from 'date-fns';
 import Stripe from 'stripe';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY ?? '', {
-  typescript: true,
-});
+function getStripe(): Stripe {
+  if (!process.env.STRIPE_SECRET_KEY) {
+    throw new Error('STRIPE_SECRET_KEY is not configured');
+  }
+  return new Stripe(process.env.STRIPE_SECRET_KEY, {
+    typescript: true,
+  });
+}
 
 const purchaseSchema = z.object({
   checkoutSessionId: z.string().min(1),
@@ -58,7 +63,7 @@ export async function POST(req: NextRequest) {
 
     let checkoutSession: Stripe.Checkout.Session;
     try {
-      checkoutSession = await stripe.checkout.sessions.retrieve(result.data.checkoutSessionId);
+      checkoutSession = await getStripe().checkout.sessions.retrieve(result.data.checkoutSessionId);
     } catch {
       return NextResponse.json({ error: 'Invalid checkout session' }, { status: 400 });
     }

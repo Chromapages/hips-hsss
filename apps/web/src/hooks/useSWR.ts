@@ -1,4 +1,4 @@
-import useSWR, { SWRConfiguration } from 'swr';
+import useSWR, { Fetcher, SWRConfiguration } from 'swr';
 
 const defaultFetcher = async (url: string) => {
   const res = await fetch(url);
@@ -6,11 +6,13 @@ const defaultFetcher = async (url: string) => {
   return res.json();
 };
 
-export function useSWRData<T>(key: string, options?: SWRConfiguration) {
-  return useSWR<T>(key, defaultFetcher, {
+export function useSWRData<T>(key: string, options?: SWRConfiguration<T>) {
+  const { fetcher, ...config } = options ?? {};
+
+  return useSWR<T>(key, (fetcher as Fetcher<T>) ?? defaultFetcher, {
     revalidateOnFocus: false,
     revalidateOnReconnect: true,
     dedupingInterval: 5000,
-    ...options,
+    ...config,
   });
 }

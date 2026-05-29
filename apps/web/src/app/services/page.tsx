@@ -1,14 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import dynamic from 'next/dynamic';
+import { Shield, Users, HeartPulse, Zap, CheckCircle2 } from 'lucide-react';
 
-export const dynamic = "force-dynamic";import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
+const DashboardLayout = dynamic(
+  () => import('@/components/dashboard/DashboardLayout'),
+  { ssr: false }
+);
 
-export const dynamic = "force-dynamic";import { PackageCheckout } from '@/components/checkout/PackageCheckout';
-
-export const dynamic = "force-dynamic";import { Shield, Users, HeartPulse, Zap, CheckCircle2 } from 'lucide-react';
-
-export const dynamic = "force-dynamic";
 const PACKAGES = [
   {
     id: 'SINGLE',
@@ -61,8 +60,6 @@ const SERVICES = [
 ];
 
 export default function ServicesPage() {
-  const [selectedPackage, setSelectedPackage] = useState<typeof PACKAGES[0] | null>(null);
-
   return (
     <DashboardLayout>
       <div className="mx-auto max-w-7xl px-6 py-12 lg:px-8">
@@ -89,16 +86,16 @@ export default function ServicesPage() {
                   Most Popular
                 </div>
               )}
-              
+
               <div className="flex items-center gap-x-4">
                 <div className={`rounded-xl bg-gradient-to-br ${pkg.color} p-3`}>
                   <pkg.icon className="h-6 w-6 text-white" />
                 </div>
                 <h3 className="text-lg font-bold text-white">{pkg.name}</h3>
               </div>
-              
+
               <p className="mt-4 text-sm leading-6 text-zinc-400">{pkg.description}</p>
-              
+
               <p className="mt-6 flex items-baseline gap-x-1">
                 <span className="text-4xl font-black tracking-tight text-white">${pkg.price}</span>
                 <span className="text-sm font-semibold leading-6 text-zinc-500">USD</span>
@@ -113,16 +110,9 @@ export default function ServicesPage() {
                 ))}
               </ul>
 
-              <button
-                onClick={() => setSelectedPackage(pkg)}
-                className={`mt-8 block rounded-xl px-3 py-3 text-center text-sm font-black transition-all ${
-                  pkg.popular
-                    ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20 hover:bg-indigo-500'
-                    : 'bg-white/10 text-white hover:bg-white/20'
-                }`}
-              >
+              <div className="mt-8 block rounded-xl px-3 py-3 text-center text-sm font-black transition-all bg-white/10 text-white">
                 Get Started
-              </button>
+              </div>
             </div>
           ))}
         </div>
@@ -144,12 +134,6 @@ export default function ServicesPage() {
         </div>
       </div>
 
-      {selectedPackage && (
-        <PackageCheckout 
-          packageId={selectedPackage.id as any}
-          onClose={() => setSelectedPackage(null)}
-        />
-      )}
-    </DashboardLayout>
+      </DashboardLayout>
   );
 }

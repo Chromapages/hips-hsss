@@ -1,14 +1,8 @@
-'use client'
-import { Metadata } from 'next';
+'use client';
 
 type CheckoutErrorProps = {
   error: Error & { digest?: string };
   reset: () => void;
-};
-
-export const metadata: Metadata = {
-  title: 'Checkout Error — H.I.P.S.',
-  description: 'Payment checkout failed.',
 };
 
 export default function CheckoutError({ error, reset }: CheckoutErrorProps) {

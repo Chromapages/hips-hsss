@@ -2,25 +2,23 @@
 
 import { useState } from "react";
 
-export const dynamic = "force-dynamic";import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
+export const dynamic = "force-dynamic";
 
-export const dynamic = "force-dynamic";import { useAuth } from "@/components/auth/AuthProvider";
-
-export const dynamic = "force-dynamic";import { 
-
-export const dynamic = "force-dynamic";  User, 
-  ShieldCheck, 
-  Lock, 
-  LogOut, 
-  RefreshCw, 
-  EyeOff, 
-  Bell, 
+import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
+import { useAuth } from "@/components/auth/AuthProvider";
+import {
+  User,
+  ShieldCheck,
+  Lock,
+  LogOut,
+  RefreshCw,
+  EyeOff,
+  Bell,
   MicOff,
   UserRound
 } from "lucide-react";
 import { toast } from "sonner";
-
-export const dynamic = "force-dynamic";
+import { useRouter } from "next/navigation";
 export default function SettingsPage() {
   const { user, role, logout } = useAuth();
   const [syncing, setSyncing] = useState(false);

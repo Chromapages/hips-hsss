@@ -2,17 +2,13 @@
 
 import { useState } from "react";
 
-export const dynamic = "force-dynamic";import { Button } from "@/components/ui/button"
-
-export const dynamic = "force-dynamic";import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card"
-
-export const dynamic = "force-dynamic";import { Loader2 } from "lucide-react";
-
-export const dynamic = "force-dynamic";import { useRouter } from "next/navigation";
-
-export const dynamic = "force-dynamic";import { useToast } from "@/components/polish/ToastProvider";
-
 export const dynamic = "force-dynamic";
+
+import { Button } from "@/components/ui/button"
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card"
+import { Loader2 } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useToast } from "@/components/polish/ToastProvider";
 const tiers = [
   { label: "$25", value: 2500, tier: 'SUPPORTER' },
   { label: "$50", value: 5000, tier: 'BUILDER' },

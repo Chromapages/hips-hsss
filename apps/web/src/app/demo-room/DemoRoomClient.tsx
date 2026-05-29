@@ -34,6 +34,9 @@ import type { AvatarGesture } from '@hips/types';
 // This is acceptable for demo mode as no real user data is involved.
 const liveKitUrl = process.env.NEXT_PUBLIC_LIVEKIT_URL || process.env.NEXT_PUBLIC_LIVEKIT_WS_URL || 'ws://localhost:7880';
 
+// Module-level TextEncoder to avoid SSR execution in Client Component render phase
+const textEncoder = new TextEncoder();
+
 type SessionControlMessage = {
   type: 'HAND_RAISED' | 'HAND_LOWERED';
   participantIdentity: string;
@@ -203,8 +206,6 @@ function DemoRoomContent({ roomName }: { roomName: string }) {
       return next;
     });
   }, []);
-
-  const textEncoder = new TextEncoder();
 
   const { send } = useDataChannel('session-control', (message) => {
     const controlMessage = decodeControlMessage(message.payload);

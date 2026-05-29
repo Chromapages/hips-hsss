@@ -1,13 +1,7 @@
 import type { Metadata } from 'next';
-import dynamic from 'next/dynamic';
 import { Suspense } from 'react';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { DirectJoinClient } from './DirectJoinClient';
-
-const OfficeRoomScene = dynamic(
-  () => import('@/components/session-ui/office/OfficeRoomScene'),
-  { ssr: false }
-);
 
 interface JoinPageProps {
   params: Promise<{ sessionId: string }>;

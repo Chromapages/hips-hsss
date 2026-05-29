@@ -1,28 +1,19 @@
 "use client";
 
-import Link from "next/link";
-
-export const dynamic = "force-dynamic";import { useRouter } from "next/navigation";
-
-export const dynamic = "force-dynamic";import type { LucideIcon } from "lucide-react";
-
-export const dynamic = "force-dynamic";import { AlertCircle, Download, Package, Timer, Loader2, RefreshCw, ArrowRight } from "lucide-react";
-
-export const dynamic = "force-dynamic";import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
-
-export const dynamic = "force-dynamic";import { PackageBalanceCard } from "@/components/dashboard/PackageBalanceCard";
-
-export const dynamic = "force-dynamic";import { SessionHistoryTable } from "@/components/dashboard/SessionHistoryTable";
-
-export const dynamic = "force-dynamic";import { useAuth } from "@/components/auth/AuthProvider";
-
-export const dynamic = "force-dynamic";import { useSWRData } from "@/hooks/useSWR";
-
-export const dynamic = "force-dynamic";import { format } from "date-fns";
-
-export const dynamic = "force-dynamic";import { toast } from "sonner";
-
 export const dynamic = "force-dynamic";
+
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import type { LucideIcon } from "lucide-react";
+import { AlertCircle, Download, Package, Timer, Loader2, RefreshCw, ArrowRight } from "lucide-react";
+import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
+import { PackageBalanceCard } from "@/components/dashboard/PackageBalanceCard";
+import { SessionHistoryTable } from "@/components/dashboard/SessionHistoryTable";
+import { useAuth } from "@/components/auth/AuthProvider";
+import { useSWRData } from "@/hooks/useSWR";
+import { format } from "date-fns";
+import { toast } from "sonner";
+
 type DashboardData = {
   stats: {
     upcoming: number;
@@ -45,11 +36,6 @@ type DashboardData = {
     remaining: number;
     total: number;
   }>;
-};
-
-type DashboardError = {
-  message: string;
-  setupUrl?: string;
 };
 
 const emptyDashboardData: DashboardData = {
@@ -83,7 +69,9 @@ export default function DashboardPage() {
       });
       if (!res.ok) {
         const json = await res.json().catch(() => ({}));
-        const err: any = new Error(json.details || json.error || 'Dashboard request failed');
+        const err = new Error(json.details || json.error || 'Dashboard request failed') as Error & {
+          setupUrl?: string;
+        };
         err.setupUrl = json.setupUrl;
         throw err;
       }
@@ -188,7 +176,7 @@ export default function DashboardPage() {
               <div className="absolute -top-10 -right-10 opacity-5 group-hover:opacity-10 transition-opacity pointer-events-none">
                 <Timer className="w-48 h-48" />
               </div>
-              
+
               <div className="relative z-10">
                 <div className="flex items-center gap-3 mb-8">
                   <span className="flex h-3 w-3 relative">
@@ -201,22 +189,22 @@ export default function DashboardPage() {
                 {dashboardData.nextSession ? (
                   <>
                     <h2 className="text-3xl font-black tracking-tighter text-white mb-4">
-                      {data.nextSession.serviceName}
+                      {dashboardData.nextSession.serviceName}
                     </h2>
                     <div className="flex items-center gap-3 text-sm text-indigo-200 mb-10">
                       <Timer className="w-4 h-4" />
                       <span>
-                        {data.nextSession.startsAt
-                          ? format(new Date(data.nextSession.startsAt), 'eeee, MMM d @ h:mm a')
+                        {dashboardData.nextSession.startsAt
+                          ? format(new Date(dashboardData.nextSession.startsAt), 'eeee, MMM d @ h:mm a')
                           : 'Time pending'}
                       </span>
                       <span>•</span>
                       <span>Anonymous Voice & Avatar Room</span>
                     </div>
-                    
+
                     <Link
                       className="inline-flex h-14 items-center justify-center rounded-2xl bg-indigo-600 px-8 text-base font-bold text-white transition-all hover:bg-indigo-500 shadow-xl shadow-indigo-900/40 hover:scale-[1.02] active:scale-95"
-                      href={`/session/${data.nextSession.id}`}
+                      href={`/session/${dashboardData.nextSession.id}`}
                     >
                       Enter Virtual Sanctuary
                     </Link>
@@ -256,7 +244,7 @@ export default function DashboardPage() {
             <article className="rounded-[2rem] border border-indigo-500/20 bg-indigo-500/5 p-8">
               <h3 className="text-lg font-bold tracking-tight text-white mb-2">Infrastructure Test</h3>
               <p className="text-[10px] text-zinc-500 mb-6 leading-relaxed uppercase tracking-widest font-bold">Signaling & Token Engine</p>
-              <button 
+              <button
                 onClick={async () => {
                   try {
                     const token = await getToken();
@@ -305,12 +293,12 @@ export default function DashboardPage() {
                 </Link>
                 {dashboardData.nextSession ? (
                   <Link
-                    href={`/session/${data.nextSession.id}`}
+                    href={`/session/${dashboardData.nextSession.id}`}
                     className="flex items-center justify-between p-4 rounded-2xl bg-indigo-600/20 border border-indigo-500/30 hover:bg-indigo-600/30 transition-all group"
                   >
                     <div className="flex flex-col">
                       <span className="text-sm font-medium text-indigo-200 group-hover:text-white transition-colors">Next Session</span>
-                      <span className="text-[10px] font-bold text-indigo-400/70 uppercase tracking-widest mt-1">{data.nextSession.serviceName}</span>
+                      <span className="text-[10px] font-bold text-indigo-400/70 uppercase tracking-widest mt-1">{dashboardData.nextSession.serviceName}</span>
                     </div>
                     <div className="h-8 w-8 rounded-full bg-indigo-500/30 flex items-center justify-center group-hover:bg-indigo-500/50 transition-all">
                       <ArrowRight className="w-4 h-4 text-indigo-300" />

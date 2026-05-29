@@ -2,11 +2,10 @@
 
 import { useState } from "react";
 
-export const dynamic = "force-dynamic";import { useRouter } from "next/navigation";
-
-export const dynamic = "force-dynamic";import { ArrowRight, Hash, Shield, Sparkles } from "lucide-react";
-
 export const dynamic = "force-dynamic";
+
+import { useRouter } from "next/navigation";
+import { ArrowRight, Hash, Shield, Sparkles } from "lucide-react";
 export default function JoinPage() {
   const router = useRouter();
   const [sessionId, setSessionId] = useState("");

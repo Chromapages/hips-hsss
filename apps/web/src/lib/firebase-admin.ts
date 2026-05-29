@@ -1,4 +1,5 @@
 import * as admin from 'firebase-admin';
+import * as fs from 'fs';
 
 type ServiceAccountJson = {
   project_id?: string;
@@ -17,20 +18,40 @@ function normalizePrivateKey(value?: string) {
   return cleaned.includes('\\n') ? cleaned.replace(/\\n/g, '\n') : cleaned;
 }
 
+function tryReadFile(filePath: string): string | null {
+  try {
+    return fs.readFileSync(filePath, 'utf8');
+  } catch {
+    return null;
+  }
+}
+
 function parseServiceAccountJson(value?: string): ServiceAccountJson | null {
   if (!value) return null;
 
   const cleaned = cleanEnvValue(value);
-  const candidates = [
-    cleaned,
+  const candidates: string[] = [];
+
+  // If the value looks like a file path, try to read and parse the file first
+  // (covers VPS deployments where FIREBASE_ADMIN_SDK_KEY=/home/deploy/.../firebase-admin.json)
+  if (cleaned.includes('/') && (cleaned.endsWith('.json') || cleaned.startsWith('/'))) {
+    const fileContents = tryReadFile(cleaned);
+    if (fileContents) {
+      candidates.push(fileContents);
+    }
+  }
+
+  // Then try the raw value and base64-decoded value
+  candidates.push(cleaned);
+  candidates.push(
     (() => {
       try {
         return Buffer.from(cleaned, 'base64').toString('utf8');
       } catch {
         return '';
       }
-    })(),
-  ];
+    })()
+  );
 
   for (const candidate of candidates) {
     if (!candidate.trim().startsWith('{')) continue;
@@ -55,7 +76,9 @@ function getServiceAccount() {
     process.env.FIREBASE_PROJECT_ID ||
     process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
   const clientEmail = jsonAccount?.client_email || process.env.FIREBASE_CLIENT_EMAIL;
-  const privateKey = normalizePrivateKey(jsonAccount?.private_key || process.env.FIREBASE_PRIVATE_KEY);
+  const privateKey = jsonAccount?.private_key
+    ? normalizePrivateKey(jsonAccount.private_key)
+    : normalizePrivateKey(process.env.FIREBASE_PRIVATE_KEY);
 
   if (!projectId || !clientEmail || !privateKey) {
     return null;
@@ -83,6 +106,8 @@ function initAdmin(): admin.app.App | null {
 
   const serviceAccount = getServiceAccount();
 
+  console.log('[FirebaseAdmin] getServiceAccount result:', serviceAccount ? { projectId: serviceAccount.projectId, clientEmail: serviceAccount.clientEmail, hasKey: !!serviceAccount.privateKey } : null);
+
   if (!serviceAccount) {
     console.warn(
       '[FirebaseAdmin] Credentials missing — Admin SDK not initialized. ' +
@@ -93,6 +118,13 @@ function initAdmin(): admin.app.App | null {
   }
 
   try {
+    console.log('[FirebaseAdmin] Attempting initializeApp with serviceAccount:', {
+      projectId: serviceAccount.projectId,
+      clientEmail: serviceAccount.clientEmail,
+      privateKeyLength: serviceAccount.privateKey.length,
+      privateKeySnippet: serviceAccount.privateKey.substring(0, 40) + '...',
+      hasLineBreaks: serviceAccount.privateKey.includes('\n'),
+    });
     _adminApp = admin.initializeApp({
       credential: admin.credential.cert(serviceAccount),
     });
@@ -158,4 +190,9 @@ export const adminAuth = {
 export const getAdminAuth = () => getAuth();
 export { getDb };
 
-export const isFirebaseAdminReady = () => _adminApp !== null;
+export const isFirebaseAdminReady = () => {
+  if (_adminApp !== null) return true;
+  // Try to initialize on demand — handles case where check is called before getAuth/getDb
+  initAdmin();
+  return _adminApp !== null;
+};

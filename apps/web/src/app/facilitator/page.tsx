@@ -2,15 +2,12 @@
 
 import { useState, useEffect } from 'react';
 
-export const dynamic = "force-dynamic";import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
-
-export const dynamic = "force-dynamic";import { useAuth } from '@/components/auth/AuthProvider';
-
-export const dynamic = "force-dynamic";import { Timer, Users, Shield, Zap, Loader2, CheckCircle, ArrowRight } from 'lucide-react';
-
-export const dynamic = "force-dynamic";import { toast } from 'sonner';
-
 export const dynamic = "force-dynamic";
+
+import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
+import { useAuth } from '@/components/auth/AuthProvider';
+import { Timer, Users, Shield, Zap, Loader2, CheckCircle, ArrowRight } from 'lucide-react';
+import { toast } from 'sonner';
 type QueueItem = {
   id: string;
   serviceName: string;
