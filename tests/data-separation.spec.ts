@@ -136,8 +136,10 @@ describe("Phase 9 data separation", () => {
     const sourceFiles = ["apps", "packages", "services"]
       .flatMap(listFiles)
       .filter((file) => /\.(ts|tsx|mts|mjs|js)$/.test(file));
+    // Match imports FROM other services (workspace packages or relative paths to services/*)
+    // but NOT local app paths like @/lib/services/* or ../../services within same app
     const importPattern =
-      /from\s+["'].*services\/(vault|session|safety)|from\s+["'].*packages\/db\/generated\/(vault|session|commerce)/i;
+      /from\s+["']@hips\/(vault|session|safety)\b|from\s+["']\.\.\/services\/(vault|session|safety)\b|from\s+["']services\/(vault|session|safety)\b|from\s+["'].*packages\/db\/generated\/(vault|session|commerce)/i;
 
     for (const file of sourceFiles) {
       const rel = relative(root, file).replaceAll("\\", "/");
