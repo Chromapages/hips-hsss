@@ -60,14 +60,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         displayName: user.displayName ?? undefined,
         provider: user.providerData[0]?.providerId === 'google.com' ? 'google' : 'email',
       }),
-    }).catch((err) => {
-      console.error('User provisioning error:', err)
-      throw err
     })
     provisioningRef.current.add(promise)
     provisioningRef.current.add(sessionPromise)
     try {
       await Promise.all([promise, sessionPromise])
+    } catch (err) {
+      console.error('User provisioning error:', err)
     } finally {
       provisioningRef.current.delete(promise)
       provisioningRef.current.delete(sessionPromise)
@@ -78,7 +77,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
         // Fire and forget, but track the promise
-        provisionUser(user)
+        void provisionUser(user)
       }
       if (mountedRef.current) {
         setUser(user)

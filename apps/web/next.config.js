@@ -1,3 +1,5 @@
+const isDev = process.env.NODE_ENV !== "production";
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   transpilePackages: ["@hips/ui", "@hips/types"],
@@ -22,7 +24,7 @@ const nextConfig = {
           "connect-src 'self' https://api.stripe.com https://*.firebaseio.com https://*.googleapis.com https://*.gstatic.com wss://*.firebaseio.com wss://session.hips.org",
           "frame-src https://js.stripe.com https://hooks.stripe.com",
           "form-action 'self'",
-          "upgrade-insecure-requests",
+          ...(isDev ? [] : ["upgrade-insecure-requests"]),
         ].join("; "),
       },
       { key: "Strict-Transport-Security", value: "max-age=31536000; includeSubDomains; preload" },
