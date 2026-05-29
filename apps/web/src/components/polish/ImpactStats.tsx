@@ -1,6 +1,7 @@
+import React, { memo } from "react";
 import { Users, Shield, Clock, Heart } from "lucide-react";
 
-export function ImpactStats() {
+export const ImpactStats = memo(function ImpactStats() {
   const stats = [
     { label: "Safe Sessions", value: "12,400+", icon: Shield },
     { label: "Active Participants", value: "8,200+", icon: Users },
@@ -24,4 +25,4 @@ export function ImpactStats() {
       ))}
     </div>
   );
-}
+});

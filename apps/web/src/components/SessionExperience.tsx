@@ -181,7 +181,7 @@ export function SessionExperience({ sessionId }: { sessionId: string }) {
         </footer>
       </div>
       
-      {showCrisis ? <CrisisEscalation region="State resources" country="United States" /> : null}
+      {showCrisis ? <CrisisEscalation region="State resources" country="United States" onStayInSession={() => setShowCrisis(false)} onEndSession={() => router.push('/dashboard')} /> : null}
     </main>
   );
 }

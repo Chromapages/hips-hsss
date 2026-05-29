@@ -50,7 +50,7 @@ export function ScholarshipForm() {
     },
   });
 
-  const watchAll = watch();
+  const watchAll = watch(["employmentStatus", "incomeRange", "serviceType", "personalStatement", "referralSource", "consentAcknowledged"]);
 
   const nextStep = async () => {
     let fieldsToValidate: (keyof ScholarshipValues)[] = [];

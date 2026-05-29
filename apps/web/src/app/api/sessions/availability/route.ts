@@ -54,7 +54,10 @@ export async function GET(req: NextRequest) {
       .get();
 
     const bookedTimestamps = new Set(
-      sessionsSnapshot.docs.map(doc => new Date(doc.data().startsAt).getTime())
+      sessionsSnapshot.docs.map(doc => {
+        const ts = doc.data().startsAt;
+        return ts ? new Date(ts).getTime() : null;
+      }).filter((ts): ts is number => ts !== null)
     );
 
     for (let i = 0; i < daysToCheck; i++) {

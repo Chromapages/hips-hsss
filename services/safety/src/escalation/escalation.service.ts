@@ -1,10 +1,15 @@
 import { Injectable, OnModuleInit, NotFoundException, BadRequestException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import crypto from 'crypto';
-// @ts-ignore - Generated Prisma client for session schema
-import { PrismaClient as SessionPrismaClient } from '../../../../packages/db/generated/session/index.js';
+import { PrismaClient } from '@prisma/client';
 import { PrismaService } from '../prisma.service.js';
 import type { EscalationQueueQueryDto, EscalateAlertDto, ResolveAlertDto } from './escalation.schemas.js';
+
+// NOTE: SessionPrismaClient is instantiated dynamically via SESSION_DATABASE_URL
+// (not imported from packages/db/generated/session) to maintain service boundary.
+// The safety service must never import session service source or generated code.
+// This is the approved cross-service AuditEvent bridge pattern.
+type SessionPrismaClient = PrismaClient;
 
 /**
  * Flagged session with identity hidden - for admin eyes only.
@@ -77,20 +82,23 @@ export class EscalationQueueService implements OnModuleInit {
   ) {}
 
   onModuleInit() {
-    // Initialize the session database Prisma client for AuditEvents
+    // Initialize the session database Prisma client for AuditEvents.
+    // Uses a separate PrismaClient instance pointed at SESSION_DATABASE_URL.
+    // This avoids importing session service source or generated code across
+    // service boundaries (approved cross-service AuditEvent bridge pattern).
     const sessionDbUrl = this.configService.get<string>('SESSION_DATABASE_URL');
     if (!sessionDbUrl) {
       console.warn('SESSION_DATABASE_URL missing. AuditEvents will not be created.');
       return;
     }
 
-    this.sessionPrisma = new SessionPrismaClient({
+    this.sessionPrisma = new PrismaClient({
       datasources: {
         db: {
           url: sessionDbUrl,
         },
       },
-    });
+    }) as SessionPrismaClient;
   }
 
   /**

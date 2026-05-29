@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, memo } from 'react';
 import { Lock, Unlock, Eye, Clock, ShieldCheck, ChevronRight, RefreshCw } from 'lucide-react';
 
 
@@ -23,10 +23,10 @@ function now() {
 }
 
 // ------------------------------------------------------------------
-// Sub-components
+// Sub-components (memoized to prevent re-renders on parent state changes)
 // ------------------------------------------------------------------
 
-function PhasePill({ label, active }: { label: string; active: boolean }) {
+const PhasePill = memo(function PhasePill({ label, active }: { label: string; active: boolean }) {
   return (
     <span
       className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold transition-all duration-300 ${
@@ -39,9 +39,9 @@ function PhasePill({ label, active }: { label: string; active: boolean }) {
       {label}
     </span>
   );
-}
+});
 
-function EncryptionIcon({ state }: { state: Phase }) {
+const EncryptionIcon = memo(function EncryptionIcon({ state }: { state: Phase }) {
   const sizes = 'w-16 h-16';
   if (state === 'encrypting' || state === 'decrypting') {
     return (
@@ -69,9 +69,9 @@ function EncryptionIcon({ state }: { state: Phase }) {
       <ShieldCheck className="w-7 h-7 text-[#EFEFED]/40" />
     </div>
   );
-}
+});
 
-function DataCard({ label, value, masked, accent }: { label: string; value: string; masked?: boolean; accent?: string }) {
+const DataCard = memo(function DataCard({ label, value, masked, accent }: { label: string; value: string; masked?: boolean; accent?: string }) {
   return (
     <div className={`rounded-xl border p-4 transition-all duration-300 ${accent ? `border-[${accent}]/40 bg-[${accent}]/5` : 'border-white/10 bg-white/5'}`}>
       <div className="flex items-start justify-between gap-2">
@@ -83,9 +83,9 @@ function DataCard({ label, value, masked, accent }: { label: string; value: stri
       </p>
     </div>
   );
-}
+});
 
-function LogEntry({ entry, index }: { entry: AuditEntry; index: number }) {
+const LogEntry = memo(function LogEntry({ entry, index }: { entry: AuditEntry; index: number }) {
   const colors = {
     encrypt: { border: 'border-[#2C3892]/40', bg: 'bg-[#2C3892]/10', dot: 'bg-[#2C3892]', label: 'text-[#2C3892]', icon: '🔐' },
     decrypt: { border: 'border-emerald-500/40', bg: 'bg-emerald-500/10', dot: 'bg-emerald-400', label: 'text-emerald-400', icon: '🔓' },
@@ -112,7 +112,7 @@ function LogEntry({ entry, index }: { entry: AuditEntry; index: number }) {
       </div>
     </div>
   );
-}
+});
 
 // ------------------------------------------------------------------
 // Main component

@@ -47,12 +47,27 @@ export function FacilitatorSessionView({
 
   const textEncoder = useRef(new TextEncoder());
 
-  // Session timer
+  // Session timer — pauses when tab is hidden to avoid drift
   useEffect(() => {
+    let lastTick = Date.now();
+    let paused = false;
+
     const interval = setInterval(() => {
-      setSessionSeconds((s) => s + 1);
+      if (paused) {
+        lastTick = Date.now();
+        return;
+      }
+      setSessionSeconds((s) => s + (Date.now() - lastTick));
+      lastTick = Date.now();
     }, 1000);
-    return () => clearInterval(interval);
+
+    const handleVisibility = () => { paused = document.hidden; };
+    document.addEventListener('visibilitychange', handleVisibility);
+
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener('visibilitychange', handleVisibility);
+    };
   }, []);
 
   // Task 5.10 — Active speaker detection from LiveKit

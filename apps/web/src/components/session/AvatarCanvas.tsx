@@ -1,6 +1,6 @@
 "use client";
 
-import { Canvas } from "@react-three/fiber";
+import { Canvas, useThree } from "@react-three/fiber";
 import { useParticipants } from "@livekit/components-react";
 import { ACESFilmicToneMapping } from "three";
 import { EffectComposer, Bloom, Vignette } from "@react-three/postprocessing";
@@ -12,6 +12,7 @@ import VirtualOfficeAvatar, {
   type AvatarGesture,
 } from "../session-ui/avatars/VirtualOfficeAvatar";
 import { OfficeRoomScene } from "../session-ui/office/OfficeRoomScene";
+import { useState, useCallback, useEffect, type ReactNode } from "react";
 
 // Task 5.13 — Audio-only fallback when WebGL is unavailable
 function AudioOnlyFallback({ roomName }: { avatar: AvatarProfile; roomName: string }) {
@@ -47,6 +48,50 @@ function isWebGLAvailable(): boolean {
   }
 }
 
+// Context loss handler — lives inside Canvas so it has access to the R3F state
+function WebGLContextHandler({
+  onContextLost,
+}: {
+  onContextLost: () => void;
+}) {
+  const { gl } = useThree();
+
+  useEffect(() => {
+    const canvas = gl.domElement;
+
+    const handleContextLost = (event: Event) => {
+      event.preventDefault();
+      onContextLost();
+    };
+
+    const handleContextRestored = () => {
+      // R3F's Canvas re-creates the renderer on context restore automatically
+      // We just need to trigger a re-render to re-initialize the scene
+    };
+
+    canvas.addEventListener("webglcontextlost", handleContextLost, { passive: false });
+    canvas.addEventListener("webglcontextrestored", handleContextRestored, { passive: false });
+
+    return () => {
+      canvas.removeEventListener("webglcontextlost", handleContextLost);
+      canvas.removeEventListener("webglcontextrestored", handleContextRestored);
+    };
+  }, [gl, onContextLost]);
+
+  return null;
+}
+
+// GuardedEffectComposer — wraps EffectComposer with null context check
+function GuardedEffectComposer({ children }: { children: ReactNode }) {
+  const { gl } = useThree();
+
+  if (!gl || !gl.context) {
+    return null;
+  }
+
+  return <EffectComposer>{children}</EffectComposer>;
+}
+
 interface AvatarCanvasProps {
   avatar: AvatarProfile;
   localIdentity: string;
@@ -66,7 +111,14 @@ export default function AvatarCanvas({
 
   const webglAvailable = isWebGLAvailable();
 
-  if (!webglAvailable) {
+  // Track WebGL context loss — when true, show fallback UI instead of crashing
+  const [contextLost, setContextLost] = useState(false);
+
+  const handleContextLost = useCallback(() => {
+    setContextLost(true);
+  }, []);
+
+  if (!webglAvailable || contextLost) {
     return <AudioOnlyFallback avatar={avatar} roomName={localIdentity} />;
   }
 
@@ -81,7 +133,16 @@ export default function AvatarCanvas({
         toneMappingExposure: 1.15,
         antialias: true,
       }}
+      onCreated={({ gl: renderer }) => {
+        // Ensure renderer is valid before any post-processing
+        if (!renderer.context) {
+          setContextLost(true);
+        }
+      }}
     >
+      {/* WebGL context loss listener */}
+      <WebGLContextHandler onContextLost={handleContextLost} />
+
       {/* Scene fog for depth */}
       <fog attach="fog" args={["#030712", 14, 38]} />
 
@@ -124,7 +185,7 @@ export default function AvatarCanvas({
         );
       })}
 
-      <EffectComposer>
+      <GuardedEffectComposer>
         <Bloom
           luminanceThreshold={0.05}
           luminanceSmoothing={0.85}
@@ -132,7 +193,7 @@ export default function AvatarCanvas({
           mipmapBlur
         />
         <Vignette eskil={false} offset={0.38} darkness={0.55} />
-      </EffectComposer>
+      </GuardedEffectComposer>
     </Canvas>
   );
 }

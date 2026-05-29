@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Suspense, useCallback, useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   LiveKitRoom,
@@ -270,7 +270,7 @@ export default function SessionRoom({
         isReconnecting={isReconnecting}
         roomName={liveKitToken.roomName}
       />
-      {isCrisis ? <CrisisEscalation reason={crisisReason} /> : null}
+      {isCrisis ? <CrisisEscalation reason={crisisReason} onStayInSession={() => setIsCrisis(false)} onEndSession={() => router.push('/dashboard')} /> : null}
       <RoomAudioRenderer />
     </LiveKitRoom>
   );
@@ -571,13 +571,14 @@ function SessionContent({
       <section className="grid min-h-0 grid-cols-[1fr_360px]">
         <div className="relative min-w-0 overflow-hidden bg-[radial-gradient(circle_at_50%_20%,rgba(99,102,241,0.16),transparent_45%),black]">
           {webGLSupported ? (
-            <AvatarCanvas
-              avatar={avatar}
-              localIdentity={localParticipant.identity}
-              raisedHands={raisedHands}
-              isLocalFacilitator={canFacilitate}
-              gesture={gesture}
-            />
+            <Suspense fallback={<div className="flex h-full items-center justify-center"><div className="h-8 w-8 animate-spin rounded-full border-2 border-indigo-500 border-t-transparent" /></div>}>
+              <AvatarCanvas
+                avatar={avatar}
+                localIdentity={localParticipant.identity}
+                raisedHands={raisedHands}
+                gesture={gesture}
+              />
+            </Suspense>
           ) : (
             <WebGLFallback avatar={avatar} roomName={localParticipant.identity} />
           )}

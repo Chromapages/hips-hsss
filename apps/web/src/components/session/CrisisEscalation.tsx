@@ -1,17 +1,29 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import { ShieldAlert, Phone, Heart, Lock } from "lucide-react";
 
 interface CrisisEscalationProps {
-  reason: string;
+  reason?: string;
+  region?: string;
+  country?: string;
+  onStayInSession?: () => void;
+  onEndSession?: () => void;
 }
 
-export const CrisisEscalation: React.FC<CrisisEscalationProps> = ({ reason }) => {
+export const CrisisEscalation: React.FC<CrisisEscalationProps> = ({
+  reason,
+  region = "your area",
+  country = "United States",
+  onStayInSession,
+  onEndSession,
+}) => {
   const [breathStage, setBreathStage] = useState<"Inhale" | "Hold" | "Exhale" | "HoldOut">("Inhale");
   const [countdown, setCountdown] = useState(4);
+  const overlayRef = useRef<HTMLDivElement>(null);
 
+  // Breathing timer
   useEffect(() => {
     const timer = setInterval(() => {
       setCountdown((prev) => {
@@ -33,15 +45,59 @@ export const CrisisEscalation: React.FC<CrisisEscalationProps> = ({ reason }) =>
     return () => clearInterval(timer);
   }, []);
 
+  // Focus trap — Tab cycles within overlay, Escape does NOT close (safety)
+  useEffect(() => {
+    const overlay = overlayRef.current;
+    if (!overlay) return;
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        return;
+      }
+      if (event.key !== "Tab" || !overlay) return;
+
+      const controls = Array.from(
+        overlay.querySelectorAll<HTMLElement>('a[href], button:not([disabled]), [tabindex="0"]'),
+      );
+      if (controls.length === 0) return;
+
+      const first = controls[0]!;
+      const last = controls[controls.length - 1]!;
+
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    }
+
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    document.addEventListener("keydown", handleKeyDown);
+
+    // Focus first element on mount
+    const focusable = overlay.querySelector<HTMLElement>('a[href], button:not([disabled])');
+    focusable?.focus();
+
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+      document.body.style.overflow = originalOverflow;
+    };
+  }, []);
+
   return (
     <div
+      ref={overlayRef}
       className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/90 backdrop-blur-2xl overflow-hidden"
       role="alertdialog"
       aria-modal="true"
       aria-labelledby="crisis-title"
       aria-describedby="crisis-desc"
     >
-      {/* Background image with explicit dimensions to prevent CLS */}
+      {/* Background image */}
       <div className="absolute inset-0 w-full h-full">
         <Image
           src="/crisis-bg.png"
@@ -70,9 +126,9 @@ export const CrisisEscalation: React.FC<CrisisEscalationProps> = ({ reason }) =>
             <p id="crisis-desc" className="text-zinc-400 text-lg">
               A serious safety concern was detected. This session is currently paused for your well-being.
             </p>
-            {reason ? (
+            {reason && (
               <p className="text-sm text-red-200/80">Reason: {reason}</p>
-            ) : null}
+            )}
           </div>
 
           {/* Breathing Exercise */}
@@ -124,7 +180,24 @@ export const CrisisEscalation: React.FC<CrisisEscalationProps> = ({ reason }) =>
 
           <div className="flex items-center gap-2 text-xs text-zinc-500">
             <Lock className="w-3 h-3" />
-            Your safety is our priority. This support state is non-dismissible for your protection.
+            <span>Your safety is our priority. This support state is non-dismissible for your protection.</span>
+          </div>
+
+          <div className="flex flex-col gap-3 w-full pt-2 border-t border-white/10">
+            <button
+              className="h-12 rounded-xl border border-white/10 bg-transparent px-6 font-bold text-white transition-all hover:bg-white/5 focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-black"
+              onClick={onStayInSession}
+              type="button"
+            >
+              Stay in session
+            </button>
+            <button
+              className="h-12 rounded-xl bg-red-600 px-6 font-bold text-white transition-all hover:bg-red-500 shadow-lg shadow-red-900/40"
+              onClick={onEndSession}
+              type="button"
+            >
+              End session safely
+            </button>
           </div>
         </div>
       </div>

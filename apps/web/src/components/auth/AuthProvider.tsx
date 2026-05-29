@@ -52,6 +52,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       return;
     }
 
+    let syncDebounce: ReturnType<typeof setTimeout>;
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
         // Force refresh token to get latest custom claims
@@ -59,20 +60,23 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setRole((idTokenResult.claims.role as string) || 'PARTICIPANT');
         setUser(user);
 
-        // Synchronize cookie for middleware
+        // Synchronize cookie for middleware (debounced to avoid rapid re-syncs)
         setAuthCookie(idTokenResult.token);
 
-        // Sync user with Commerce DB if needed
-        try {
-          await fetch('/api/auth/sync', {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${idTokenResult.token}`,
-            },
-          });
-        } catch (error) {
-          console.error('Auth sync failed:', error);
-        }
+        // Sync user with Commerce DB if needed (debounced)
+        clearTimeout(syncDebounce);
+        syncDebounce = setTimeout(async () => {
+          try {
+            await fetch('/api/auth/sync', {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${idTokenResult.token}`,
+              },
+            });
+          } catch (error) {
+            console.error('Auth sync failed:', error);
+          }
+        }, 2000);
       } else {
         setUser(null);
         setRole(null);
@@ -81,7 +85,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setLoading(false);
     });
 
-    return () => unsubscribe();
+    return () => {
+      unsubscribe();
+      clearTimeout(syncDebounce);
+    };
   }, []);
 
   const getToken = async () => {

@@ -17,6 +17,8 @@ import {
 } from 'lucide-react';
 import { createLocalAudioTrack, LocalAudioTrack } from 'livekit-client';
 import { DemoBanner } from '@/components/demo/demo-banner';
+import { AudioAvatar } from '@/components/demo/audio-avatar';
+import { ConnectingOverlay } from '@/components/demo/connecting-overlay';
 import { DemoModeProvider } from '@/contexts/DemoModeContext';
 import { SessionHeader } from '@/components/session-ui/SessionHeader';
 import { VoiceControlsBar } from '@/components/session-ui/VoiceControlsBar';
@@ -26,9 +28,7 @@ import { useMediaDevices } from '@/hooks/useMediaDevices';
 import { useVoiceEffects } from '@/hooks/useVoiceEffects';
 import type { VoicePreset } from '@/lib/voice-mask-presets';
 import { createVoiceMaskProcessor } from '@/lib/voice-mask-processor';
-import type { AvatarGesture } from '@/components/session-ui/avatars/VirtualOfficeAvatar';
-import AvatarCanvas from '@/components/session/AvatarCanvas';
-import { WebGLFallback } from '@/components/session-ui/WebGLFallback';
+import type { AvatarGesture } from '@hips/types';
 
 // SECURITY NOTE: NEXT_PUBLIC_LIVEKIT_URL exposes internal infrastructure for WebSocket connections.
 // This is acceptable for demo mode as no real user data is involved.
@@ -56,7 +56,7 @@ function decodeControlMessage(payload: Uint8Array): SessionControlMessage | null
   return null;
 }
 
-function DemoLobby({ onEnter }: { onEnter: () => void }) {
+function DemoLobby({ onEnter, error, loading }: { onEnter: () => void; error: string | null; loading: boolean }) {
   return (
     <div className="min-h-screen bg-black text-white flex items-center justify-center p-4">
       <div className="w-full max-w-md space-y-8 text-center">
@@ -93,13 +93,20 @@ function DemoLobby({ onEnter }: { onEnter: () => void }) {
           </ul>
         </div>
 
+        {error && (
+          <div className="rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+            {error}
+          </div>
+        )}
+
         <button
           onClick={onEnter}
-          className="w-full h-14 items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 font-bold text-white transition-all hover:from-emerald-500 hover:to-teal-500"
+          disabled={loading}
+          className="w-full h-14 items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 font-bold text-white transition-all hover:from-emerald-500 hover:to-teal-500 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <span className="flex items-center justify-center gap-2">
-            <Sparkles className="w-4 h-4" />
-            Enter Demo Room
+            <Sparkles className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+            {loading ? 'Preparing Demo...' : 'Enter Demo Room'}
           </span>
         </button>
 
@@ -121,7 +128,6 @@ function DemoRoomContent({ roomName }: { roomName: string }) {
   const [micBusy, setMicBusy] = useState(false);
   const [voiceMaskWarning, setVoiceMaskWarning] = useState<string | null>(null);
   const [sessionSeconds, setSessionSeconds] = useState(0);
-  const [webGLSupported, setWebGLSupported] = useState(true);
   const [gesture, setGesture] = useState<AvatarGesture>('idle');
   const [cameraEnabled, setCameraEnabled] = useState(false);
   const [isReconnecting, setIsReconnecting] = useState(false);
@@ -136,19 +142,6 @@ function DemoRoomContent({ roomName }: { roomName: string }) {
     selectAudioInput,
     selectAudioOutput,
   } = useMediaDevices();
-
-  useEffect(() => {
-    try {
-      const canvas = document.createElement('canvas');
-      const supported = !!(
-        window.WebGLRenderingContext &&
-        (canvas.getContext('webgl') || canvas.getContext('experimental-webgl'))
-      );
-      setWebGLSupported(supported);
-    } catch {
-      setWebGLSupported(false);
-    }
-  }, []);
 
   useEffect(() => {
     const handleReconnecting = () => setIsReconnecting(true);
@@ -347,16 +340,7 @@ function DemoRoomContent({ roomName }: { roomName: string }) {
 
       <section className="grid min-h-0 grid-cols-[1fr_360px]">
         <div className="relative min-w-0 overflow-hidden bg-[radial-gradient(circle_at_50%_20%,rgba(99,102,241,0.16),transparent_45%),black]">
-          {webGLSupported ? (
-            <AvatarCanvas
-              avatar={{ style: 1, palette: 'coastal', gesture: 'idle', locked: true }}
-              localIdentity={localParticipant.identity}
-              raisedHands={raisedHands}
-              gesture={gesture}
-            />
-          ) : (
-            <WebGLFallback avatar={{ style: 1, palette: 'coastal', gesture: 'idle', locked: true }} roomName={localParticipant.identity} />
-          )}
+          <AudioAvatar localIdentity={localParticipant.identity} micEnabled={micEnabled} gesture={gesture} />
           {voiceMaskWarning ? (
             <div className="absolute left-6 top-6 max-w-md rounded-2xl border border-amber-500/20 bg-amber-500/10 px-4 py-3 text-sm text-amber-100 backdrop-blur-xl">
               {voiceMaskWarning}
@@ -385,17 +369,10 @@ function DemoRoomContent({ roomName }: { roomName: string }) {
         </aside>
       </section>
 
-      {isReconnecting ? (
-        <div className="pointer-events-none fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-          <div className="flex items-center gap-4 rounded-2xl border border-indigo-500/20 bg-black/80 px-8 py-5 shadow-2xl">
-            <Loader2 className="h-6 w-6 animate-spin text-indigo-300" />
-            <div>
-              <p className="font-bold text-white">Reconnecting to session...</p>
-              <p className="mt-0.5 text-sm text-zinc-400">Please wait, your connection will restore shortly.</p>
-            </div>
-          </div>
-        </div>
-      ) : null}
+      <ConnectingOverlay
+          connectionQuality={connectionQuality}
+          connectionLabel={connectionLabel}
+        />
 
       <MediaToolbar
         micEnabled={micEnabled}
@@ -453,7 +430,7 @@ function DemoRoomInner({ roomName }: { token?: string; roomName: string }) {
   };
 
   if (!hasEntered) {
-    return <DemoLobby onEnter={handleEnter} />;
+    return <DemoLobby onEnter={handleEnter} error={error} loading={loading} />;
   }
 
   if (!token) {

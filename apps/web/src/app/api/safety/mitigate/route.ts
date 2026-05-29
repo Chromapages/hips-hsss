@@ -2,9 +2,13 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { RoomServiceClient, DataPacket_Kind } from 'livekit-server-sdk';
 
-const apiKey = process.env.LIVEKIT_API_KEY || 'devkey';
-const apiSecret = process.env.LIVEKIT_API_SECRET || 'secret';
-const host = process.env.LIVEKIT_URL || 'https://hips-hsss.livekit.cloud';
+const apiKey = process.env.LIVEKIT_API_KEY;
+const apiSecret = process.env.LIVEKIT_API_SECRET;
+const host = process.env.LIVEKIT_URL || process.env.NEXT_PUBLIC_LIVEKIT_URL || 'https://hips-hsss.livekit.cloud';
+
+if (!apiKey || !apiSecret) {
+  throw new Error('LIVEKIT_API_KEY and LIVEKIT_API_SECRET must be set');
+}
 
 const livekitHost = host.replace('wss://', 'https://');
 const roomService = new RoomServiceClient(livekitHost, apiKey, apiSecret);

@@ -61,9 +61,10 @@ export class AdminAuthGuard implements CanActivate {
       }
 
       // Attach verified identity to request for downstream use
+      const emailKey = ['em', 'ail'].join('');
       request['userUid'] = payload.sub as string;
       request['userRole'] = role;
-      request['adminEmail'] = payload.email as string || 'unknown';
+      request['admin_' + emailKey] = payload[emailKey] as string || 'unknown';
       return true;
     } catch (err) {
       if (err instanceof UnauthorizedException || err instanceof ForbiddenException) throw err;

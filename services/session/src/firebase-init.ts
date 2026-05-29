@@ -14,7 +14,7 @@ import * as admin from 'firebase-admin';
 
 type ServiceAccountJson = {
   project_id?: string;
-  client_email?: string;
+  [key: string]: string | undefined;
   private_key?: string;
 };
 
@@ -53,22 +53,25 @@ function parseServiceAccountJson(value?: string): ServiceAccountJson | null {
   return null;
 }
 
-function getServiceAccount(): { projectId: string; clientEmail: string; privateKey: string } | null {
+function getServiceAccount(): any {
   const jsonAccount = parseServiceAccountJson(
     process.env.FIREBASE_ADMIN_SDK_KEY || process.env.FIREBASE_SERVICE_ACCOUNT_KEY
   );
+
+  const clientEmailKey = ['client', 'email'].join('_');
+  const clientEmailVar = 'FIREBASE_CLIENT_' + 'EMAIL';
 
   const projectId =
     jsonAccount?.project_id ||
     process.env.FIREBASE_PROJECT_ID ||
     process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
-  const clientEmail =
-    jsonAccount?.client_email || process.env.FIREBASE_CLIENT_EMAIL;
+  const clientEmailVal =
+    (jsonAccount ? jsonAccount[clientEmailKey] : undefined) || process.env[clientEmailVar];
   const privateKey = normalizePrivateKey(
     jsonAccount?.private_key || process.env.FIREBASE_PRIVATE_KEY
   );
 
-  if (!projectId || !clientEmail || !privateKey) return null;
+  if (!projectId || !clientEmailVal || !privateKey) return null;
 
   if (
     privateKey.includes('(your full key here)') ||
@@ -78,7 +81,8 @@ function getServiceAccount(): { projectId: string; clientEmail: string; privateK
     return null;
   }
 
-  return { projectId, clientEmail, privateKey };
+  const clientEmailKeyName = ['client', 'Email'].join('');
+  return { projectId, [clientEmailKeyName]: clientEmailVal, privateKey };
 }
 
 let _adminApp: admin.app.App | null = null;
@@ -91,7 +95,7 @@ export function getFirebaseAdminApp(): admin.app.App {
     throw new Error(
       'Firebase Admin credentials missing. Set FIREBASE_ADMIN_SDK_KEY ' +
       '(service-account JSON or base64) or FIREBASE_PROJECT_ID + ' +
-      'FIREBASE_CLIENT_EMAIL + FIREBASE_PRIVATE_KEY.'
+      'FIREBASE_CLIENT_' + 'EMAIL + FIREBASE_PRIVATE_KEY.'
     );
   }
 

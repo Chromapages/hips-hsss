@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { Mic, MicOff, Video, VideoOff, Volume2, Settings } from 'lucide-react';
 
 interface MediaToolbarProps {
@@ -33,6 +33,28 @@ export function MediaToolbar({
   const [openMicMenu, setOpenMicMenu] = useState(false);
   const [openSpeakerMenu, setOpenSpeakerMenu] = useState(false);
 
+  const handleMicKeyDown = useCallback((e: React.KeyboardEvent) => {
+    if (!openMicMenu) return;
+    if (e.key === 'Escape') {
+      setOpenMicMenu(false);
+    }
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      e.preventDefault();
+      setOpenMicMenu(false);
+    }
+  }, [openMicMenu]);
+
+  const handleSpeakerKeyDown = useCallback((e: React.KeyboardEvent) => {
+    if (!openSpeakerMenu) return;
+    if (e.key === 'Escape') {
+      setOpenSpeakerMenu(false);
+    }
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      e.preventDefault();
+      setOpenSpeakerMenu(false);
+    }
+  }, [openSpeakerMenu]);
+
   return (
     <div className="absolute top-4 left-1/2 z-30 flex -translate-x-1/2 items-center gap-2 rounded-full border border-white/10 bg-black/80 px-3 py-2 shadow-[0_0_30px_rgba(0,0,0,0.6)] backdrop-blur-xl">
       {/* Mic toggle */}
@@ -56,13 +78,21 @@ export function MediaToolbar({
         <div className="relative">
           <button
             onClick={() => setOpenMicMenu(!openMicMenu)}
+            onKeyDown={handleMicKeyDown}
             className="flex h-9 items-center gap-1.5 rounded-full border border-white/5 bg-white/5 px-3 text-sm text-white hover:bg-white/10 transition-all"
+            aria-haspopup="true"
+            aria-expanded={openMicMenu}
+            aria-label="Select microphone"
           >
             <Settings className="h-3.5 w-3.5 text-zinc-400" />
           </button>
 
           {openMicMenu && (
-            <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 w-64 rounded-xl border border-white/10 bg-zinc-950 p-3 shadow-xl">
+            <div
+              className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 w-64 rounded-xl border border-white/10 bg-zinc-950 p-3 shadow-xl"
+              role="menu"
+              aria-label="Microphone selection"
+            >
               <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-zinc-500">
                 Microphone
               </p>
@@ -70,6 +100,7 @@ export function MediaToolbar({
                 {audioInputs.map((d) => (
                   <button
                     key={d.deviceId}
+                    role="menuitem"
                     onClick={() => {
                       onSelectAudioInput(d.deviceId);
                       setOpenMicMenu(false);
@@ -111,13 +142,21 @@ export function MediaToolbar({
         <div className="relative">
           <button
             onClick={() => setOpenSpeakerMenu(!openSpeakerMenu)}
+            onKeyDown={handleSpeakerKeyDown}
             className="flex h-9 items-center gap-1.5 rounded-full border border-white/5 bg-white/5 px-3 text-sm text-white hover:bg-white/10 transition-all"
+            aria-haspopup="true"
+            aria-expanded={openSpeakerMenu}
+            aria-label="Select speaker output"
           >
             <Volume2 className="h-4 w-4" />
           </button>
 
           {openSpeakerMenu && (
-            <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 w-64 rounded-xl border border-white/10 bg-zinc-950 p-3 shadow-xl">
+            <div
+              className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 w-64 rounded-xl border border-white/10 bg-zinc-950 p-3 shadow-xl"
+              role="menu"
+              aria-label="Speaker output selection"
+            >
               <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-zinc-500">
                 Speaker Output
               </p>
@@ -125,6 +164,7 @@ export function MediaToolbar({
                 {audioOutputs.map((d) => (
                   <button
                     key={d.deviceId}
+                    role="menuitem"
                     onClick={() => {
                       onSelectAudioOutput(d.deviceId);
                       setOpenSpeakerMenu(false);

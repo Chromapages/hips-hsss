@@ -56,7 +56,7 @@ export function VoiceEffectsPanel({
       {/* Semitone slider */}
       <div className="space-y-2">
         <div className="flex items-center justify-between">
-          <label className="text-[10px] font-semibold uppercase tracking-widest text-zinc-500">
+          <label htmlFor="pitch-shift" className="text-[10px] font-semibold uppercase tracking-widest text-zinc-500">
             Pitch Shift
           </label>
           <span className="font-mono text-xs text-indigo-300">
@@ -65,11 +65,17 @@ export function VoiceEffectsPanel({
         </div>
         <input
           type="range"
+          id="pitch-shift"
           min="-5"
           max="5"
           step="1"
           value={semitones}
           onChange={(e) => onSemitoneChange(Number(e.target.value))}
+          aria-label="Pitch shift amount"
+          aria-valuemin={-5 as const}
+          aria-valuemax={5 as const}
+          aria-valuenow={semitones}
+          aria-valuetext={`${semitones > 0 ? '+' : ''}${semitones} semitones`}
           className="h-2 w-full appearance-none rounded-full bg-white/10 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-indigo-500 [&::-webkit-slider-thumb]:shadow-lg [&::-webkit-slider-thumb]:shadow-indigo-500/30"
         />
         <div className="flex justify-between text-[9px] text-zinc-600">
