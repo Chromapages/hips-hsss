@@ -1,68 +1,250 @@
 @import "tailwindcss";
 
 :root {
-  --background: #000000;
-  --foreground: #FFFFFF;
-  --color-brand-primary: #6366F1;
-  --color-brand-secondary: #9333EA;
-  --color-brand-accent: #10B981;
-  --color-brand-warm: #FBBF24;
-  --color-brand-deep: #1A3A5C;
-  
-  /* Semantic */
-  --color-success: #10B981;
-  --color-warning: #FBBF24;
-  --color-error: #EF4444;
-  --color-crisis: #7F1D1D;
-  --color-info: #6366F1;
+  /* HIPS Foundation Brand Colors */
+  --color-primary: #213d53;
+  --color-primary-dark: #1A3244;
+  --color-primary-soft: #2A5576;
+  --color-accent: #C59A35;
+  --color-accent-dark: #A67F28;
+  --color-accent-soft: #DFC06A;
 
-  /* Glassmorphism */
-  --glass-bg: rgba(255, 255, 255, 0.03);
-  --glass-border: rgba(255, 255, 255, 0.08);
-  --glass-blur: 16px;
+  /* Background & Surface */
+  --background: #FFFFFF;
+  --surface: #F6F8FA;
+  --surface-alt: #EEF3F6;
+
+  /* Border */
+  --border: #D6E0E8;
+
+  /* Text Colors */
+  --text-primary: #213d53;
+  --text-secondary: #445A6C;
+  --text-muted: #6F8291;
+
+  /* Semantic Colors */
+  --color-success: #2F7A5F;
+  --color-warning: #A06A18;
+  --color-danger: #9C3E3E;
 
   /* shadcn/ui-compatible semantic tokens */
-  --primary: #6366F1;
+  --primary: #213d53;
   --primary-foreground: #FFFFFF;
-  --secondary: #18181B;
-  --secondary-foreground: #FFFFFF;
-  --destructive: #EF4444;
-  --destructive-foreground: #FFFFFF;
-  --muted: #18181B;
-  --muted-foreground: #A1A1AA;
-  --accent: #6366F1;
+  --secondary: #F6F8FA;
+  --secondary-foreground: #213d53;
+  --muted: #F6F8FA;
+  --muted-foreground: #6F8291;
+  --accent: #C59A35;
   --accent-foreground: #FFFFFF;
-  --border: rgba(255, 255, 255, 0.08);
-  --input: rgba(255, 255, 255, 0.05);
-  --ring: #6366F1;
-  --radius: 0.75rem;
+  --destructive: #9C3E3E;
+  --destructive-foreground: #FFFFFF;
+  --ring: #213d53;
+  --border: #D6E0E8;
+  --input: #D6E0E8;
+  --radius: 0.5rem;
+
+  /* Typography - Font Families */
+  --font-heading: var(--font-dm-sans), "Helvetica Neue", Arial, sans-serif;
+  --font-display: var(--font-dm-sans), "Helvetica Neue", Arial, sans-serif;
+  --font-body: "Source Sans 3", Arial, sans-serif;
+  --font-ui: "Montserrat", Arial, sans-serif;
+
+  /* Typography - Font Sizes with Line Heights */
+  --text-xs: 0.75rem;
+  --text-xs-leading: 1.65;
+  --text-sm: 0.875rem;
+  --text-sm-leading: 1.65;
+  --text-base: 1rem;
+  --text-base-leading: 1.65;
+  --text-md: 1.125rem;
+  --text-md-leading: 1.65;
+  --text-lg: 1.25rem;
+  --text-lg-leading: 1.15;
+  --text-xl: 1.5rem;
+  --text-xl-leading: 1.15;
+  --text-2xl: 2rem;
+  --text-2xl-leading: 1.15;
+  --text-3xl: 2.75rem;
+  --text-3xl-leading: 1.15;
+  --text-4xl: 3.5rem;
+  --text-4xl-leading: 1.1;
+  --text-5xl: 4.5rem;
+  --text-5xl-leading: 1.1;
+
+  /* Typography - Font Weights */
+  --font-regular: 400;
+  --font-medium: 500;
+  --font-semibold: 600;
+  --font-bold: 700;
+
+  /* Typography - Letter Spacing */
+  --tracking-tight: -0.02em;
+  --tracking-normal: 0;
+  --tracking-wide: 0.12em;
+  --tracking-brand: 0.22em;
+
+  /* Layout */
+  --navbar-height: 5rem;
+
+  /* Fluid Section Spacing Tokens */
+  --section-lg: clamp(3rem, 5vw, 7rem);
+  --section-md: clamp(2rem, 3.5vw, 5rem);
+  --section-sm: clamp(1.5rem, 3vw, 4rem);
+
+  /* Fluid Typography Tokens */
+  --heading-xl: clamp(2rem, 4vw + 1rem, 4.5rem);
+  --heading-lg: clamp(1.5rem, 3vw + 0.5rem, 3rem);
+
+  /* Typography - Line Heights */
+  --leading-tight: 1.1;
+  --leading-heading: 1.15;
+  --leading-body: 1.65;
+  --leading-relaxed: 1.8;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
+/* Base Typography Styles */
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
-  overflow-x: hidden;
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  line-height: var(--leading-body);
+  letter-spacing: var(--tracking-normal);
+  color: var(--text-primary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-/* Ensure mobile viewport height works properly */
-@supports (height: 100dvh) {
-  body {
-    min-height: 100dvh;
-  }
+/* Heading base styles - use DM Sans Bold */
+h1, h2, h3, h4, h5, h6,
+.font-heading {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  line-height: var(--leading-heading);
+  letter-spacing: var(--tracking-tight);
+  color: var(--text-primary);
 }
 
-/* Prevent horizontal overflow on all containers */
-#content,
-main,
-section,
-article {
-  overflow-x: hidden;
+/* H1, H2, H3 explicitly default to Bold (700) */
+h1, h2, h3 {
+  font-weight: 700;
+}
+
+/* Hero display headlines render at ExtraBold (800) */
+.font-display,
+.hero-display,
+.display-heading,
+.heading-fluid-xl {
+  font-family: var(--font-display);
+  font-weight: 800;
+}
+
+/* H1 - ceremonial and stable */
+h1, .h1 {
+  font-size: var(--text-4xl);
+  line-height: var(--leading-tight);
+}
+
+/* H2 - tighter and more practical */
+h2, .h2 {
+  font-size: var(--text-3xl);
+  line-height: var(--leading-heading);
+}
+
+/* H3 - serif but practical */
+h3, .h3 {
+  font-size: var(--text-2xl);
+  line-height: var(--leading-heading);
+}
+
+/* H4 */
+h4, .h4 {
+  font-size: var(--text-xl);
+  line-height: var(--leading-heading);
+}
+
+/* UI Labels - use Montserrat uppercase with tracking */
+.font-ui,
+.ui-label {
+  font-family: var(--font-ui);
+  font-weight: var(--font-semibold);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-wide);
+}
+
+/* Brand caps - FOUNDATION-style tracking */
+.brand-caps {
+  font-family: var(--font-ui);
+  font-weight: var(--font-bold);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-brand);
+}
+
+/* Body text styles */
+.body-lg {
+  font-size: var(--text-md);
+  line-height: var(--leading-body);
+}
+
+.body-base {
+  font-size: var(--text-base);
+  line-height: var(--leading-body);
+}
+
+.body-sm {
+  font-size: var(--text-sm);
+  line-height: var(--leading-body);
+}
+
+/* Fluid Spacing Utility Classes */
+.section-spacing-lg { padding-top: var(--section-lg); padding-bottom: var(--section-lg); }
+.section-spacing-md { padding-top: var(--section-md); padding-bottom: var(--section-md); }
+.section-spacing-sm { padding-top: var(--section-sm); padding-bottom: var(--section-sm); }
+
+/* Fluid Typography Utility Classes */
+.heading-fluid-xl { font-size: var(--heading-xl); line-height: var(--leading-tight); }
+.heading-fluid-lg { font-size: var(--heading-lg); line-height: var(--leading-heading); }
+
+/* Scrolling marquee animations */
+@keyframes marquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+@keyframes marquee-reverse {
+  0% { transform: translateX(-50%); }
+  100% { transform: translateX(0); }
+}
+.animate-marquee { animation: marquee 25s linear infinite; }
+.animate-marquee-reverse { animation: marquee-reverse 25s linear infinite; }
+
+/* Marquee mask fade edges */
+.marquee-mask-left {
+  position: relative;
+}
+.marquee-mask-left::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 80px;
+  background: linear-gradient(to right, var(--background), transparent);
+  z-index: 10;
+  pointer-events: none;
+}
+.marquee-mask-right {
+  position: relative;
+}
+.marquee-mask-right::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 80px;
+  background: linear-gradient(to left, var(--background), transparent);
+  z-index: 10;
+  pointer-events: none;
+}
+.marquee-inner {
+  display: flex;
+  width: max-content;
 }

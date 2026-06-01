@@ -166,7 +166,10 @@ export async function POST(req: NextRequest) {
       sessionActive = sessionDoc.exists && sessionDoc.data()?.status === 'active';
     } catch (err) {
       console.warn('[SessionReconnect] Could not verify session:', err);
-      sessionActive = true; // Assume active if we can't check
+      return NextResponse.json(
+        { error: 'Unable to verify session state. Please try again later.' },
+        { status: 503 }
+      );
     }
 
     if (!sessionActive) {

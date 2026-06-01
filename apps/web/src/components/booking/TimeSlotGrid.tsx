@@ -71,10 +71,10 @@ export function TimeSlotGrid({
 
   return (
     <section className="rounded-[2rem] border border-white/5 bg-zinc-950 p-8 shadow-2xl relative overflow-hidden group">
-      <div className="absolute -top-12 -right-12 w-32 h-32 bg-purple-500/10 rounded-full blur-[40px]" />
+      <div className="absolute -top-12 -right-12 w-32 h-32 bg-Gold-500/10 rounded-full blur-[40px]" />
       
       <div className="flex items-center justify-between mb-8 relative z-10">
-        <h2 className="text-2xl font-black tracking-tighter text-white">Select Time</h2>
+        <h2 className="font-heading text-2xl font-bold tracking-tighter text-white">Select Time</h2>
         <p className="text-xs font-bold text-zinc-500">{slots.length} Slots</p>
       </div>
 
@@ -95,8 +95,8 @@ export function TimeSlotGrid({
                 className={[
                   "flex items-center justify-center h-14 rounded-2xl border font-bold text-sm transition-all duration-300",
                   isActive 
-                    ? "bg-indigo-600 border-indigo-400 text-white shadow-lg shadow-indigo-900/40 scale-105" 
-                    : "bg-white/5 border-white/5 text-zinc-400 hover:border-indigo-500/50 hover:bg-white/10"
+                    ? "bg-[#173B57] border-[#173B57] text-white shadow-lg shadow-[#173B57]/40 scale-105" 
+                    : "bg-white/5 border-white/5 text-zinc-400 hover:border-[#173B57]/50 hover:bg-white/10"
                 ].join(" ")}
                 type="button"
               >

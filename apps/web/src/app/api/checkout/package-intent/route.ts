@@ -54,6 +54,8 @@ export async function POST(req: NextRequest) {
         credits: pkg.credits.toString(),
         packageName: pkg.name,
       },
+    }, {
+      idempotencyKey: `${firebaseUid}:${packageId}:${Date.now()}`,
     });
 
     console.log(`[Stripe Intent] Created package intent for ${firebaseUid}: ${packageId}`);

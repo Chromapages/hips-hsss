@@ -62,20 +62,34 @@ export default function DashboardPage() {
     dedupingInterval: 10_000,
     refreshInterval: 30_000,
     fetcher: async (key: string) => {
-      const token = await getToken();
-      if (!token) throw new Error('Unauthorized');
-      const res = await fetch(`/api/${key}`, {
-        headers: { 'Authorization': `Bearer ${token}` },
-      });
-      if (!res.ok) {
-        const json = await res.json().catch(() => ({}));
-        const err = new Error(json.details || json.error || 'Dashboard request failed') as Error & {
-          setupUrl?: string;
-        };
-        err.setupUrl = json.setupUrl;
-        throw err;
+      // 10s hard cap on the entire fetch operation. Without this, a hung
+      // backend or network blackhole would leave isLoading=true forever.
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10_000);
+      try {
+        const token = await getToken();
+        if (!token) throw new Error('Unauthorized');
+        const res = await fetch(`/api/${key}`, {
+          headers: { 'Authorization': `Bearer ${token}` },
+          signal: controller.signal,
+        });
+        if (!res.ok) {
+          const json = await res.json().catch(() => ({}));
+          const err = new Error(json.details || json.error || 'Dashboard request failed') as Error & {
+            setupUrl?: string;
+          };
+          err.setupUrl = json.setupUrl;
+          throw err;
+        }
+        return res.json();
+      } catch (error) {
+        if (error instanceof Error && error.name === 'AbortError') {
+          throw new Error('Dashboard request timed out. Please refresh.');
+        }
+        throw error;
+      } finally {
+        clearTimeout(timeoutId);
       }
-      return res.json();
     },
   });
 
@@ -83,7 +97,7 @@ export default function DashboardPage() {
     return (
       <DashboardLayout>
         <div className="flex h-[60vh] items-center justify-center">
-          <Loader2 className="h-8 w-8 animate-spin text-indigo-500" />
+          <Loader2 className="h-8 w-8 animate-spin text-[#173B57]" />
         </div>
       </DashboardLayout>
     );
@@ -111,10 +125,10 @@ export default function DashboardPage() {
         <header className="mb-12 flex flex-col md:flex-row md:items-end justify-between gap-6">
           <div>
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-[10px] font-bold uppercase tracking-widest text-zinc-400 mb-6">
-              <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse" />
+              <span className="w-1.5 h-1.5 rounded-full bg-[#173B57] animate-pulse" />
               Mission Control
             </div>
-            <h1 className="text-4xl md:text-5xl font-black tracking-tighter text-white">Your anonymous hub.</h1>
+            <h1 className="font-heading text-4xl md:text-5xl font-extrabold tracking-tighter text-white">Your anonymous hub.</h1>
             <p className="mt-4 max-w-2xl text-zinc-500 leading-relaxed">
               Manage your upcoming sessions, package balances, and support resources with complete privacy.
             </p>
@@ -126,14 +140,14 @@ export default function DashboardPage() {
         </header>
 
         {error ? (
-          <div className="mb-8 flex items-start gap-3 rounded-2xl border border-amber-500/20 bg-amber-500/10 p-5 text-amber-100">
-            <AlertCircle className="mt-0.5 h-5 w-5 shrink-0" />
+          <div className="mb-8 flex items-start gap-3 rounded-2xl border border-amber-500/20 bg-amber-500/10 p-5 text-amber-900">
+            <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" />
             <div>
               <p className="font-bold">Dashboard data could not load.</p>
-              <p className="mt-1 text-sm text-amber-100/75">{error.message}</p>
+              <p className="mt-1 text-sm text-amber-700">{error.message}</p>
               {error.setupUrl ? (
                 <a
-                  className="mt-3 inline-flex text-sm font-bold text-amber-50 underline decoration-amber-200/50 underline-offset-4 hover:text-white"
+                  className="mt-3 inline-flex text-sm font-bold text-amber-800 underline decoration-amber-500/30 underline-offset-4 hover:text-amber-950"
                   href={error.setupUrl}
                   rel="noreferrer"
                   target="_blank"
@@ -153,14 +167,14 @@ export default function DashboardPage() {
               key={label}
               onClick={action}
             >
-              <div className="absolute -top-12 -right-12 w-32 h-32 bg-indigo-500/10 rounded-full blur-[40px] group-hover:bg-indigo-500/20 transition-colors" />
+              <div className="absolute -top-12 -right-12 w-32 h-32 bg-[#173B57]/10 rounded-full blur-[40px] group-hover:bg-[#173B57]/20 transition-colors" />
               <div className="flex items-center justify-between mb-6 relative z-10">
-                <div className="h-12 w-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center group-hover:scale-110 group-hover:bg-indigo-600/10 group-hover:border-indigo-500/20 transition-all">
-                  <Icon className="h-6 w-6 text-zinc-400 group-hover:text-indigo-400 transition-colors" />
+                <div className="h-12 w-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center group-hover:scale-110 group-hover:bg-[#173B57]/10 group-hover:border-[#173B57]/20 transition-all">
+                  <Icon className="h-6 w-6 text-zinc-400 group-hover:text-[#173B57] transition-colors" />
                 </div>
               </div>
               <div className="relative z-10">
-                <p className="text-4xl font-black tracking-tighter text-white mb-2">{value}</p>
+                <p className="text-4xl font-bold tracking-tighter text-white mb-2">{value}</p>
                 <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">{label}</p>
               </div>
             </article>
@@ -171,7 +185,7 @@ export default function DashboardPage() {
           {/* Main Column */}
           <div className="space-y-8">
             {/* Next Session Hero Card */}
-            <article className="relative overflow-hidden rounded-[2.5rem] border border-indigo-500/20 bg-gradient-to-br from-indigo-950/40 to-black p-10 group">
+            <article className="relative overflow-hidden rounded-[2.5rem] border border-[#173B57]/20 bg-gradient-to-br from-#173B57/40 to-black p-10 group">
               <div className="absolute top-0 right-0 w-full h-full bg-[radial-gradient(circle_at_100%_0%,rgba(99,102,241,0.15)_0%,transparent_50%)] pointer-events-none" />
               <div className="absolute -top-10 -right-10 opacity-5 group-hover:opacity-10 transition-opacity pointer-events-none">
                 <Timer className="w-48 h-48" />
@@ -188,10 +202,10 @@ export default function DashboardPage() {
 
                 {dashboardData.nextSession ? (
                   <>
-                    <h2 className="text-3xl font-black tracking-tighter text-white mb-4">
+                    <h2 className="font-heading text-3xl font-bold tracking-tighter text-white mb-4">
                       {dashboardData.nextSession.serviceName}
                     </h2>
-                    <div className="flex items-center gap-3 text-sm text-indigo-200 mb-10">
+                    <div className="flex items-center gap-3 text-sm text-[#173B57] mb-10">
                       <Timer className="w-4 h-4" />
                       <span>
                         {dashboardData.nextSession.startsAt
@@ -203,7 +217,7 @@ export default function DashboardPage() {
                     </div>
 
                     <Link
-                      className="inline-flex h-14 items-center justify-center rounded-2xl bg-indigo-600 px-8 text-base font-bold text-white transition-all hover:bg-indigo-500 shadow-xl shadow-indigo-900/40 hover:scale-[1.02] active:scale-95"
+                      className="inline-flex h-14 items-center justify-center rounded-2xl bg-[#173B57] px-8 text-base font-bold text-white transition-all hover:bg-[#173B57] shadow-xl shadow-[#173B57]/40 hover:scale-[1.02] active:scale-95"
                       href={`/session/${dashboardData.nextSession.id}`}
                     >
                       Enter Virtual Sanctuary
@@ -211,14 +225,14 @@ export default function DashboardPage() {
                   </>
                 ) : (
                   <>
-                    <h2 className="text-3xl font-black tracking-tighter text-white mb-4">
+                    <h2 className="font-heading text-3xl font-bold tracking-tighter text-white mb-4">
                       No upcoming sessions
                     </h2>
                     <p className="text-zinc-400 mb-10">
                       You don&apos;t have any sessions scheduled. Browse our catalog to book your next support session.
                     </p>
                     <Link
-                      className="inline-flex h-14 items-center justify-center rounded-2xl bg-white text-black px-8 text-base font-bold transition-all hover:bg-zinc-200 shadow-xl shadow-white/5 hover:scale-[1.02] active:scale-95"
+                      className="inline-flex h-14 items-center justify-center rounded-2xl bg-[#173B57] text-white px-8 text-base font-bold transition-all hover:bg-[#173B57]/90 shadow-xl shadow-[#173B57]/20 hover:scale-[1.02] active:scale-95"
                       href="/services"
                     >
                       Browse Services
@@ -232,7 +246,7 @@ export default function DashboardPage() {
             <div className="space-y-6">
               <div className="flex items-center justify-between px-2">
                 <h3 className="text-xl font-bold tracking-tight text-white">Session History</h3>
-                <Link href="/dashboard/sessions" className="text-xs font-bold uppercase tracking-widest text-indigo-400 hover:text-indigo-300">View All</Link>
+                <Link href="/dashboard/sessions" className="text-xs font-bold uppercase tracking-widest text-[#173B57] hover:text-[#173B57]">View All</Link>
               </div>
               <SessionHistoryTable sessions={dashboardData.sessions} />
             </div>
@@ -241,7 +255,7 @@ export default function DashboardPage() {
           {/* Sidebar Column */}
           <aside className="space-y-8">
             {/* LiveKit System Test (Temporary) */}
-            <article className="rounded-[2rem] border border-indigo-500/20 bg-indigo-500/5 p-8">
+            <article className="rounded-[2rem] border border-[#173B57]/20 bg-[#173B57]/5 p-8">
               <h3 className="text-lg font-bold tracking-tight text-white mb-2">Infrastructure Test</h3>
               <p className="text-[10px] text-zinc-500 mb-6 leading-relaxed uppercase tracking-widest font-bold">Signaling & Token Engine</p>
               <button
@@ -265,7 +279,7 @@ export default function DashboardPage() {
                     toast.error("Connection test error: " + (e instanceof Error ? e.message : "Unknown error"));
                   }
                 }}
-                className="w-full flex items-center justify-center gap-2 h-12 rounded-2xl bg-indigo-600 text-xs font-bold text-white hover:bg-indigo-500 transition-all active:scale-95"
+                className="w-full flex items-center justify-center gap-2 h-12 rounded-2xl bg-[#173B57] text-xs font-bold text-white hover:bg-[#173B57] transition-all active:scale-95"
               >
                 <RefreshCw className="w-3.5 h-3.5" />
                 Run Connection Test
@@ -275,33 +289,33 @@ export default function DashboardPage() {
             <PackageBalanceCard packages={dashboardData.packages} />
 
             {/* Session Lobby Quick Access */}
-            <article className="rounded-[2rem] border border-indigo-500/20 bg-indigo-500/5 p-8">
+            <article className="rounded-[2rem] border border-[#173B57]/20 bg-[#173B57]/5 p-8">
               <h3 className="text-lg font-bold tracking-tight text-white mb-2">Session Lobby</h3>
               <p className="text-[10px] text-zinc-500 mb-6 leading-relaxed uppercase tracking-widest font-bold">Direct Session Access</p>
               <div className="space-y-3">
                 <Link
                   href="/join"
-                  className="flex items-center justify-between p-4 rounded-2xl bg-white/5 border border-white/5 hover:bg-white/10 hover:border-indigo-500/20 transition-all group"
+                  className="flex items-center justify-between p-4 rounded-2xl bg-white/5 border border-white/5 hover:bg-white/10 hover:border-[#173B57]/20 transition-all group"
                 >
                   <div className="flex flex-col">
                     <span className="text-sm font-medium text-zinc-300 group-hover:text-white transition-colors">Enter a Session</span>
                     <span className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest mt-1">With Session ID</span>
                   </div>
-                  <div className="h-8 w-8 rounded-full bg-indigo-500/20 flex items-center justify-center group-hover:bg-indigo-500/40 transition-all">
-                    <ArrowRight className="w-4 h-4 text-indigo-400" />
+                  <div className="h-8 w-8 rounded-full bg-[#173B57]/20 flex items-center justify-center group-hover:bg-[#173B57]/40 transition-all">
+                    <ArrowRight className="w-4 h-4 text-[#173B57]" />
                   </div>
                 </Link>
                 {dashboardData.nextSession ? (
                   <Link
                     href={`/session/${dashboardData.nextSession.id}`}
-                    className="flex items-center justify-between p-4 rounded-2xl bg-indigo-600/20 border border-indigo-500/30 hover:bg-indigo-600/30 transition-all group"
+                    className="flex items-center justify-between p-4 rounded-2xl bg-[#173B57]/20 border border-[#173B57]/30 hover:bg-[#173B57]/30 transition-all group"
                   >
                     <div className="flex flex-col">
-                      <span className="text-sm font-medium text-indigo-200 group-hover:text-white transition-colors">Next Session</span>
-                      <span className="text-[10px] font-bold text-indigo-400/70 uppercase tracking-widest mt-1">{dashboardData.nextSession.serviceName}</span>
+                      <span className="text-sm font-medium text-[#173B57] group-hover:text-white transition-colors">Next Session</span>
+                      <span className="text-[10px] font-bold text-[#173B57]/70 uppercase tracking-widest mt-1">{dashboardData.nextSession.serviceName}</span>
                     </div>
-                    <div className="h-8 w-8 rounded-full bg-indigo-500/30 flex items-center justify-center group-hover:bg-indigo-500/50 transition-all">
-                      <ArrowRight className="w-4 h-4 text-indigo-300" />
+                    <div className="h-8 w-8 rounded-full bg-[#173B57]/30 flex items-center justify-center group-hover:bg-[#173B57]/50 transition-all">
+                      <ArrowRight className="w-4 h-4 text-[#173B57]" />
                     </div>
                   </Link>
                 ) : null}
@@ -313,7 +327,7 @@ export default function DashboardPage() {
                     <span className="text-sm font-medium text-zinc-300 group-hover:text-white transition-colors">Browse Services</span>
                     <span className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest mt-1">Book a Session</span>
                   </div>
-                  <div className="h-8 w-8 rounded-full bg-white/5 flex items-center justify-center group-hover:bg-indigo-500/20 group-hover:text-indigo-400 transition-all">
+                  <div className="h-8 w-8 rounded-full bg-white/5 flex items-center justify-center group-hover:bg-[#173B57]/20 group-hover:text-[#173B57] transition-all">
                     <ArrowRight className="w-4 h-4 text-zinc-500" />
                   </div>
                 </Link>
@@ -333,8 +347,8 @@ export default function DashboardPage() {
                       <span className="text-sm font-medium text-zinc-300 group-hover:text-white transition-colors">{res.label}</span>
                       <span className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest mt-1">{res.type} Document</span>
                     </div>
-                    <div className="h-8 w-8 rounded-full bg-white/5 flex items-center justify-center group-hover:bg-indigo-500/20 group-hover:text-indigo-400 transition-all">
-                      <Download className="w-4 h-4 text-zinc-500 group-hover:text-indigo-400" />
+                    <div className="h-8 w-8 rounded-full bg-white/5 flex items-center justify-center group-hover:bg-[#173B57]/20 group-hover:text-[#173B57] transition-all">
+                      <Download className="w-4 h-4 text-zinc-500 group-hover:text-[#173B57]" />
                     </div>
                   </Link>
                 ))}

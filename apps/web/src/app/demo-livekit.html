@@ -212,11 +212,11 @@
   <div id="screen-landing" class="screen active flex-col items-center justify-center min-h-screen px-4 sm:px-6 text-center">
     <div class="fade-in max-w-2xl">
       <div class="flex items-center justify-center gap-3 mb-8">
-        <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-2xl font-black">H</div>
-        <span class="text-2xl font-black tracking-tight">H.I.P.S.</span>
+        <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-2xl font-extrabold">H</div>
+        <span class="text-2xl font-extrabold tracking-tight">H.I.P.S.</span>
       </div>
       <p class="text-xs font-bold uppercase tracking-widest text-indigo-300 mb-4">Anonymous Peer Support</p>
-      <h1 class="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black leading-tight mb-6">
+      <h1 class="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold leading-tight mb-6">
         Your voice will be masked.<br>Your identity stays hidden.
       </h1>
       <p class="text-base sm:text-lg text-slate-400 mb-10 max-w-lg mx-auto leading-relaxed">
@@ -238,7 +238,7 @@
   <div id="screen-mic" class="screen flex-col items-center justify-center min-h-screen px-4 sm:px-6">
     <div class="fade-in max-w-xl w-full">
       <p class="text-xs font-bold uppercase tracking-widest text-indigo-300 mb-4 text-center">Step 1 of 2</p>
-      <h2 class="text-2xl sm:text-3xl md:text-4xl font-black mb-2 text-center">Set up your microphone</h2>
+      <h2 class="text-2xl sm:text-3xl md:text-4xl font-extrabold mb-2 text-center">Set up your microphone</h2>
       <p class="text-slate-400 text-center mb-8 text-sm sm:text-base">We need microphone access to connect you to the session with voice masking enabled.</p>
 
       <!-- Audio visualizer placeholder -->
@@ -285,7 +285,7 @@
   <div id="screen-connecting" class="screen flex-col items-center justify-center min-h-screen px-4 sm:px-6">
     <div class="fade-in text-center">
       <div class="w-16 h-16 border-4 border-indigo-500/30 border-t-indigo-500 rounded-full spin mx-auto mb-6"></div>
-      <h2 class="text-2xl sm:text-3xl font-black mb-3">Preparing your anonymous room...</h2>
+      <h2 class="text-2xl sm:text-3xl font-extrabold mb-3">Preparing your anonymous room...</h2>
       <p class="text-slate-400 mb-4 text-sm sm:text-base">Connecting to LiveKit servers</p>
       <p class="font-mono text-sm text-indigo-300">Room: demo-room-hips</p>
       <p id="connecting-anon-id" class="font-mono text-xs text-slate-500 mt-2"></p>
@@ -317,7 +317,7 @@
         <!-- Your avatar -->
         <div class="flex flex-col items-center mb-6 sm:mb-8">
           <div id="your-avatar" class="avatar-ring w-24 h-24 sm:w-32 sm:h-32 rounded-full border-4 border-indigo-500 bg-gradient-to-br from-indigo-600 to-purple-700 flex items-center justify-center mb-3 relative">
-            <span class="text-3xl sm:text-4xl font-black">👤</span>
+            <span class="text-3xl sm:text-4xl font-extrabold">👤</span>
             <div id="your-speaking-ring" class="absolute inset-0 rounded-full border-2 border-indigo-400 opacity-0 transition-opacity"></div>
           </div>
           <p id="your-anon-label" class="font-mono text-sm text-indigo-300">anon_xxxx</p>
@@ -327,7 +327,7 @@
         <!-- Peer avatar -->
         <div id="peer-section" class="flex flex-col sm:flex-col items-center opacity-0 transition-opacity duration-700">
           <div class="w-20 h-20 sm:w-24 sm:h-24 rounded-full border-4 border-slate-500 bg-gradient-to-br from-slate-600 to-slate-700 flex items-center justify-center mb-3 relative">
-            <span class="text-2xl sm:text-3xl font-black">👤</span>
+            <span class="text-2xl sm:text-3xl font-extrabold">👤</span>
             <div id="peer-speaking-ring" class="absolute inset-0 rounded-full border-2 border-slate-400 opacity-0 transition-opacity"></div>
           </div>
           <p id="peer-anon-label" class="font-mono text-sm text-slate-400">anon_xxxx</p>
@@ -407,7 +407,7 @@
   <div id="screen-summary" class="screen flex-col items-center justify-center min-h-screen px-4 sm:px-6">
     <div class="fade-in max-w-md text-center">
       <div class="text-5xl sm:text-6xl mb-6">✅</div>
-      <h2 class="text-3xl sm:text-4xl font-black mb-3">Session Complete</h2>
+      <h2 class="text-3xl sm:text-4xl font-extrabold mb-3">Session Complete</h2>
       <p class="text-slate-400 mb-8 text-sm sm:text-base">Your session has ended. Here's what happened:</p>
 
       <div class="text-left rounded-2xl border border-white/10 bg-white/[0.03] p-4 sm:p-6 space-y-4 mb-8">
@@ -442,7 +442,7 @@
   <!-- FLAG MODAL -->
   <div id="flag-modal" role="dialog" aria-modal="true" aria-labelledby="flag-modal-title" class="modal fixed inset-0 z-50 items-center justify-center bg-black/80 backdrop-blur-xl px-4 sm:px-6">
     <div class="w-full max-w-md rounded-xl border border-white/10 bg-zinc-950 p-6 sm:p-8" role="document">
-      <h3 id="flag-modal-title" class="text-xl sm:text-2xl font-black mb-2">🚨 Flag Safety Concern</h3>
+      <h3 id="flag-modal-title" class="text-xl sm:text-2xl font-extrabold mb-2">🚨 Flag Safety Concern</h3>
       <p class="text-sm text-slate-400 mb-6">Describe what's happening. A facilitator will be notified immediately.</p>
       <label for="flag-reason" class="sr-only">Describe the safety concern</label>
       <textarea id="flag-reason" aria-describedby="flag-reason-desc" class="w-full h-32 bg-white/5 border border-white/10 rounded-xl p-4 text-white placeholder-slate-500 mb-4" placeholder="Describe the safety concern..."></textarea>
@@ -457,7 +457,7 @@
   <!-- LEAVE CONFIRM MODAL -->
   <div id="leave-modal" role="dialog" aria-modal="true" aria-labelledby="leave-modal-title" class="modal fixed inset-0 z-50 items-center justify-center bg-black/80 backdrop-blur-xl px-4 sm:px-6">
     <div class="w-full max-w-md rounded-xl border border-white/10 bg-zinc-950 p-6 sm:p-8" role="document">
-      <h3 id="leave-modal-title" class="text-xl sm:text-2xl font-black mb-2">Leave this session?</h3>
+      <h3 id="leave-modal-title" class="text-xl sm:text-2xl font-extrabold mb-2">Leave this session?</h3>
       <p class="text-sm text-slate-400 mb-6">Your audio will stop and you'll return to the dashboard.</p>
       <div class="flex gap-3">
         <button onclick="closeLeaveModal()" aria-label="Cancel and stay in session" class="flex-1 py-3 rounded-xl border border-white/10 font-bold hover:bg-white/5 focus:outline-none focus:ring-2 focus:ring-indigo-500">Cancel</button>

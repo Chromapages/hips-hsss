@@ -83,6 +83,8 @@ export async function POST(req: NextRequest) {
         userId: firebaseUid,
         serviceId: session?.serviceId,
       },
+    }, {
+      idempotencyKey: `checkout:${firebaseUid}:${sessionId}:${Date.now()}`,
     });
 
     return NextResponse.json({

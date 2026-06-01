@@ -56,7 +56,7 @@ export const avatarGestures: AvatarGesture[] = [
 
 // Fallback colors for non-local participants
 const fallbackColors = [
-  "#6366f1",
+  "#173B57",
   "#a78bfa",
   "#f43f5e",
   "#f59e0b",
@@ -167,7 +167,7 @@ export default function VirtualOfficeAvatar({
       {/* Raised-hand badge */}
       {raisedHand ? (
         <Html center position={[0, 2.1, 0]}>
-          <div className="rounded-full border border-amber-300/40 bg-amber-400/15 px-3 py-1 text-xs font-black text-amber-100 shadow-xl backdrop-blur-xl">
+          <div className="rounded-full border border-amber-300/40 bg-amber-400/15 px-3 py-1 text-xs font-bold text-amber-100 shadow-xl backdrop-blur-xl">
             ✋ Hand raised
           </div>
         </Html>

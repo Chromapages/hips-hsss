@@ -1,147 +1,199 @@
 'use client';
 
-import { useState } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { EyeOff, Menu, X, Shield, LogOut, UserCircle } from 'lucide-react';
+import Image from 'next/image';
+import { usePathname } from 'next/navigation';
+import { Menu, X, LogOut, UserCircle } from 'lucide-react';
 import { useAuth } from '@/components/auth/AuthProvider';
 
-export function Navbar() {
+// Stable nav links defined outside component to prevent recreation on re-renders
+const navLinks: ReadonlyArray<{ href: string; label: string }> = [
+  { href: '/services', label: 'Services' },
+  { href: '/organizations', label: 'Organizations' },
+  { href: '/donate', label: 'Donate' },
+];
+
+// Human-readable role labels
+const roleLabels: Record<string, string> = {
+  ORGBUYER: 'Partner',
+  ADMIN: 'Admin',
+  FACILITATOR: 'Facilitator',
+  COORDINATOR: 'Coordinator',
+};
+
+export const Navbar = React.memo(function Navbar() {
+  const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
   const { user, role, logout } = useAuth();
+  const menuRef = useRef<HTMLDivElement>(null);
+  const toggleRef = useRef<HTMLButtonElement>(null);
 
-  const navLinks = [
-    { href: '/services', label: 'Services' },
-    { href: '/organizations', label: 'Organizations' },
-    { href: '/donate', label: 'Donate' },
-  ];
+  // Close mobile menu on Escape key
+  const handleKeyDown = useCallback((e: KeyboardEvent) => {
+    if (e.key === 'Escape' && isOpen) {
+      setIsOpen(false);
+      toggleRef.current?.focus();
+    }
+  }, [isOpen]);
+
+  // Add/remove Escape listener
+  useEffect(() => {
+    if (isOpen) {
+      document.addEventListener('keydown', handleKeyDown);
+      // Prevent body scroll when menu is open
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.removeEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = '';
+    };
+  }, [isOpen, handleKeyDown]);
+
+  // Focus trap for mobile menu
+  useEffect(() => {
+    if (!isOpen || !menuRef.current) return;
+
+    const menu = menuRef.current;
+    const focusableElements = menu.querySelectorAll<HTMLElement>(
+      'a[href], button:not([disabled])'
+    );
+    const firstElement = focusableElements[0];
+    const lastElement = focusableElements[focusableElements.length - 1];
+
+    const handleTabKey = (e: KeyboardEvent) => {
+      if (e.key !== 'Tab') return;
+
+      if (e.shiftKey) {
+        if (document.activeElement === firstElement) {
+          e.preventDefault();
+          lastElement?.focus();
+        }
+      } else {
+        if (document.activeElement === lastElement) {
+          e.preventDefault();
+          firstElement?.focus();
+        }
+      }
+    };
+
+    menu.addEventListener('keydown', handleTabKey as EventListener);
+    firstElement?.focus();
+
+    return () => {
+      menu.removeEventListener('keydown', handleTabKey as EventListener);
+    };
+  }, [isOpen]);
+
+  const handleToggle = useCallback(() => {
+    setIsOpen(prev => !prev);
+  }, []);
+
+  const handleLinkClick = useCallback(() => {
+    setIsOpen(false);
+  }, []);
+
+  const handleLogout = useCallback(() => {
+    logout();
+    setIsOpen(false);
+  }, [logout]);
+
+  const isActive = useCallback((href: string) => pathname === href, [pathname]);
 
   return (
-    <nav className="border-b border-white/5 bg-black/40 backdrop-blur-3xl sticky top-0 z-50 transition-all pt-[env(safe-area-inset-top)]">
-      <div className="container mx-auto px-6 h-20 flex items-center justify-between">
-        {/* Logo */}
-        <Link href="/" className="flex items-center space-x-3 group">
-          <div className="w-10 h-10 rounded-2xl bg-indigo-600/10 border border-indigo-500/20 flex items-center justify-center transition-all group-hover:rotate-6 group-hover:bg-indigo-600/20">
-            <EyeOff className="w-5 h-5 text-indigo-400" />
-          </div>
-          <div className="flex flex-col -space-y-1">
-            <div className="flex items-center gap-2">
-              <span className="font-black tracking-tighter text-2xl text-white">HSSS</span>
-              {role && role !== 'PARTICIPANT' && (
-                <span className="bg-indigo-500/10 border border-indigo-500/20 px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-widest text-indigo-400">
-                  {role}
-                </span>
-              )}
-            </div>
-            <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-indigo-500/80">Foundation</span>
-          </div>
-        </Link>
+    <>
+      {/* Skip to content link for keyboard accessibility */}
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-primary focus:text-white focus:font-bold focus:rounded-lg"
+      >
+        Skip to main content
+      </a>
 
-        {/* Desktop Nav */}
-        <div className="hidden md:flex items-center space-x-10 text-[13px] font-bold uppercase tracking-wider">
-          {navLinks.map(link => (
-            <Link 
-              key={link.href} 
-              href={link.href} 
-              className="text-zinc-500 hover:text-white transition-all hover:tracking-[0.1em]"
-            >
-              {link.label}
-            </Link>
-          ))}
-          <div className="flex items-center space-x-4 pl-8 border-l border-white/5">
-            {user ? (
-              <div className="flex items-center gap-4">
-                <Link
-                  href="/dashboard"
-                  className="h-10 inline-flex items-center justify-center rounded-full px-6 text-zinc-400 hover:text-white hover:bg-white/5 transition-all gap-2"
-                >
-                  <UserCircle className="w-4 h-4" />
-                  Dashboard
-                </Link>
-                <button
-                  onClick={() => logout()}
-                  className="w-10 h-10 inline-flex items-center justify-center rounded-full bg-white/5 border border-white/5 text-zinc-500 hover:text-red-400 hover:bg-red-500/5 hover:border-red-500/20 transition-all"
-                  title="Logout"
-                >
-                  <LogOut className="w-4 h-4" />
-                </button>
-              </div>
-            ) : (
-              <>
-                <Link
-                  className="h-10 inline-flex items-center justify-center rounded-full px-6 text-zinc-400 hover:text-white hover:bg-white/5 transition-all"
-                  href="/login"
-                >
-                  Login
-                </Link>
-                <Link
-                  className="h-11 inline-flex items-center justify-center rounded-full bg-indigo-600 px-8 text-white hover:bg-indigo-500 shadow-xl shadow-indigo-900/20 transition-all active:scale-95 active:bg-indigo-700"
-                  href="/services"
-                >
-                  Get Support
-                </Link>
-              </>
+      <nav
+        role="navigation"
+        aria-label="Main navigation"
+        className="fixed left-0 right-0 z-40 bg-white border-b border-zinc-200 pt-[env(safe-area-inset-top)] backdrop-blur-2xl shadow-sm transition-all"
+        style={{ top: "var(--global-disclaimer-height, 0px)" }}
+      >
+        <div className="max-w-[1200px] mx-auto px-6 h-20 flex items-center justify-between">
+          {/* Logo */}
+          <Link
+            href="/"
+            className="relative flex items-center space-x-3 group"
+            aria-label="H.I.P.S. Foundation - Return to homepage"
+          >
+            <Image
+              src="/hipslogo.png"
+              alt="H.I.P.S. Logo"
+              width={220}
+              height={220}
+              className="object-contain transition-all duration-200 ease-in-out group-hover:opacity-80 group-hover:scale-[1.02]"
+              quality={85}
+            />
+            {role && role !== 'PARTICIPANT' && (
+              <span className="bg-primary/10 border border-primary/20 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-widest text-primary brand-caps transition-all group-hover:bg-primary/20">
+                {roleLabels[role] ?? role}
+              </span>
             )}
-          </div>
-        </div>
+          </Link>
 
-        {/* Mobile Toggle */}
-        <button 
-          className="md:hidden p-2 text-zinc-400 hover:text-white transition-colors"
-          onClick={() => setIsOpen(!isOpen)}
-          aria-expanded={isOpen}
-          aria-label="Toggle navigation menu"
-        >
-          {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-        </button>
-      </div>
-
-      {/* Mobile Menu */}
-      {isOpen && (
-        <div className="md:hidden border-t border-white/5 bg-black/95 backdrop-blur-2xl animate-in slide-in-from-top-4 duration-300 pb-[env(safe-area-inset-bottom)]">
-          <div className="container mx-auto px-6 py-8 flex flex-col gap-6">
+          {/* Desktop Nav - uppercase with tracking per design.md */}
+          <div
+            className="hidden md:flex items-center space-x-10 font-bold uppercase tracking-[0.2em] font-ui text-sm"
+            aria-label="Desktop navigation"
+          >
             {navLinks.map(link => (
-              <Link 
-                key={link.href} 
-                href={link.href} 
-                onClick={() => setIsOpen(false)}
-                className="text-lg font-medium text-zinc-300 hover:text-white transition-colors"
+              <Link
+                key={link.href}
+                href={link.href}
+                aria-current={isActive(link.href) ? 'page' : undefined}
+                className="relative text-[#173B57] hover:text-[#102A3D] transition-colors duration-200 ease-in-out group"
               >
                 {link.label}
+                <span
+                  className={`
+                    absolute -bottom-1 left-0 h-0.5 bg-[#C59A35] transition-all duration-200 ease-in-out
+                    ${isActive(link.href) ? 'w-full' : 'w-0 group-hover:w-full'}
+                  `}
+                  aria-hidden="true"
+                />
               </Link>
             ))}
-            <div className="grid gap-3 pt-6 border-t border-white/10">
+            <div className="flex items-center space-x-4 pl-8 border-l border-zinc-200">
               {user ? (
-                <>
+                <div className="flex items-center gap-4">
                   <Link
-                    className="h-12 w-full inline-flex items-center justify-center rounded-md border border-white/10 text-base font-medium text-white hover:bg-white/10"
                     href="/dashboard"
-                    onClick={() => setIsOpen(false)}
+                    aria-current={isActive('/dashboard') ? 'page' : undefined}
+                    className="h-10 inline-flex items-center justify-center rounded-full px-6 text-primary hover:text-white hover:bg-primary transition-all duration-200 ease-in-out gap-2 font-ui text-sm uppercase tracking-[0.15em]"
                   >
+                    <UserCircle className="w-4 h-4" aria-hidden="true" />
                     Dashboard
                   </Link>
                   <button
-                    className="h-12 w-full inline-flex items-center justify-center rounded-md bg-red-500/10 border border-red-500/20 text-base font-medium text-red-400"
-                    onClick={() => {
-                      logout();
-                      setIsOpen(false);
-                    }}
+                    onClick={logout}
+                    className="w-10 h-10 inline-flex items-center justify-center rounded-full bg-zinc-100 border border-zinc-200 text-zinc-500 hover:text-red-600 hover:bg-red-50 hover:border-red-200 transition-all duration-200 ease-in-out focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                    title="Logout"
+                    aria-label="Logout from your account"
                   >
-                    Logout
+                    <LogOut className="w-4 h-4" aria-hidden="true" />
                   </button>
-                </>
+                </div>
               ) : (
                 <>
                   <Link
-                    className="h-12 w-full inline-flex items-center justify-center rounded-md border border-white/10 text-base font-medium text-white hover:bg-white/10"
                     href="/login"
-                    onClick={() => setIsOpen(false)}
+                    className="h-10 inline-flex items-center justify-center rounded-full px-6 text-primary hover:text-white hover:bg-primary transition-all duration-200 ease-in-out font-ui text-sm uppercase tracking-[0.15em] focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
                   >
-                    Sign In
+                    Login
                   </Link>
                   <Link
-                    className="h-12 w-full inline-flex items-center justify-center rounded-md bg-indigo-600 text-base font-medium text-white hover:bg-indigo-500"
                     href="/services"
-                    onClick={() => setIsOpen(false)}
+                    className="h-11 inline-flex items-center justify-center rounded-full bg-[#173B57] px-8 text-white hover:bg-[#bb9644] shadow-xl shadow-[#173B57]/20 transition-all duration-200 ease-in-out active:scale-95 font-ui text-[10px] font-bold uppercase tracking-[0.15em] focus-visible:ring-2 focus-visible:ring-[#173B57] focus-visible:ring-offset-2"
                   >
                     Get Support
                   </Link>
@@ -149,8 +201,97 @@ export function Navbar() {
               )}
             </div>
           </div>
+
+          {/* Mobile Toggle */}
+          <button
+            ref={toggleRef}
+            className="md:hidden p-2 text-zinc-500 hover:text-primary transition-colors duration-200 ease-in-out focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 rounded-lg"
+            onClick={handleToggle}
+            aria-expanded={isOpen}
+            aria-controls="mobile-menu"
+            aria-label={isOpen ? 'Close navigation menu' : 'Open navigation menu'}
+          >
+            {isOpen ? (
+              <X className="w-6 h-6" aria-hidden="true" />
+            ) : (
+              <Menu className="w-6 h-6" aria-hidden="true" />
+            )}
+          </button>
         </div>
-      )}
-    </nav>
+
+        {/* Mobile Menu */}
+        {isOpen && (
+          <div
+            id="mobile-menu"
+            ref={menuRef}
+            className="md:hidden border-t border-zinc-100 bg-white backdrop-blur-2xl animate-in slide-in-from-top-4 duration-300 pb-[env(safe-area-inset-bottom)]"
+            role="menu"
+            aria-label="Mobile navigation"
+          >
+            <div className="max-w-[1200px] mx-auto px-6 py-8 flex flex-col gap-6">
+              {navLinks.map(link => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  onClick={handleLinkClick}
+                  role="menuitem"
+                  aria-current={isActive(link.href) ? 'page' : undefined}
+                  className="text-base font-medium text-primary hover:text-accent hover:underline underline-offset-4 transition-all duration-200 ease-in-out font-ui uppercase tracking-[0.15em]"
+                >
+                  {link.label}
+                </Link>
+              ))}
+              <div className="grid gap-3 pt-6 border-t border-zinc-100">
+                {user ? (
+                  <>
+                    <Link
+                      role="menuitem"
+                      className="h-12 w-full inline-flex items-center justify-center rounded-lg border border-zinc-200 text-base font-medium text-primary hover:text-white hover:bg-primary transition-all duration-200 ease-in-out font-ui uppercase tracking-[0.15em]"
+                      href="/dashboard"
+                      onClick={handleLinkClick}
+                    >
+                      Dashboard
+                    </Link>
+                    <button
+                      role="menuitem"
+                      className="h-12 w-full inline-flex items-center justify-center rounded-lg bg-red-50 border border-red-200 text-base font-medium text-red-600 hover:bg-red-100 hover:border-red-300 transition-all duration-200 ease-in-out font-ui uppercase tracking-[0.15em] focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2"
+                      onClick={handleLogout}
+                    >
+                      Logout
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <Link
+                      role="menuitem"
+                      className="h-12 w-full inline-flex items-center justify-center rounded-lg border border-zinc-200 text-base font-medium text-primary hover:text-white hover:bg-primary transition-all duration-200 ease-in-out font-ui uppercase tracking-[0.15em]"
+                      href="/login"
+                      onClick={handleLinkClick}
+                    >
+                      Sign In
+                    </Link>
+                    <Link
+                      role="menuitem"
+                      className="h-12 w-full inline-flex items-center justify-center rounded-lg bg-[#173B57] text-base font-medium text-white hover:bg-[#bb9644] transition-all duration-200 ease-in-out font-ui text-[10px] font-bold uppercase tracking-[0.15em] focus-visible:ring-2 focus-visible:ring-[#173B57] focus-visible:ring-offset-2"
+                      href="/services"
+                      onClick={handleLinkClick}
+                    >
+                      Get Support
+                    </Link>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+      </nav>
+
+      {/* Spacer div - height must match navbar height */}
+      <div
+        aria-hidden="true"
+        className="h-[var(--navbar-height,5rem)]"
+        style={{ paddingTop: 'env(safe-area-inset-top)' }}
+      />
+    </>
   );
-}
+});

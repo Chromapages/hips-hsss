@@ -22,7 +22,14 @@ function getFirebaseApp() {
     if (!firebaseConfig.apiKey) {
       console.warn("Firebase API Key is missing. Ensure NEXT_PUBLIC_FIREBASE_API_KEY is set in .env.local");
     }
-    _app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
+    try {
+      _app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
+    } catch (e) {
+      // Surface the init failure in the browser console so a malformed
+      // NEXT_PUBLIC_FIREBASE_* env var is never silently blocking the page.
+      console.error("[firebase-client] initializeApp threw:", e);
+      _app = null;
+    }
     _initialized = true;
   }
   return _app;

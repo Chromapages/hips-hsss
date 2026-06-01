@@ -12,7 +12,7 @@ export default function DashboardDownloadsPage() {
         <div className="mt-8 grid gap-4 md:grid-cols-3">
           {downloads.map((download) => (
             <article className="rounded-lg border border-white/10 bg-zinc-950 p-5" key={download}>
-              <FileText className="h-8 w-8 text-indigo-300" />
+              <FileText className="h-8 w-8 text-[#173B57]" />
               <h2 className="mt-4 text-xl font-semibold">{download}</h2>
               <button className="mt-5 min-h-11 rounded-xl border border-white/10 px-4 text-sm font-semibold transition hover:bg-white/10">
                 Download

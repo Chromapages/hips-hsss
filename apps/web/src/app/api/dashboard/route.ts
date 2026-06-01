@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { adminAuth } from '@/lib/firebase-admin';
 
 // Lazy import to avoid initialization at module load time
-import { getDb, isFirebaseAdminReady } from '@/lib/firebase-admin';
+import { getDb } from '@/lib/firebase-admin';
 
 type DashboardSession = {
   id: string;
@@ -54,10 +54,31 @@ function isFirestoreApiDisabled(error: unknown) {
   );
 }
 
+function createEmptyDashboardPayload(warning?: string) {
+  return {
+    stats: {
+      upcoming: 0,
+      packages: 0,
+    },
+    nextSession: null,
+    sessions: [],
+    packages: [],
+    ...(warning ? { warning } : {}),
+  };
+}
+
 export async function GET(req: NextRequest) {
   // Initialize Firestore lazily — return 503 if not configured
   const db = getDb();
   if (!db) {
+    if (process.env.NODE_ENV !== 'production') {
+      return NextResponse.json(
+        createEmptyDashboardPayload(
+          'Firebase Admin credentials are not configured in this local environment.'
+        )
+      );
+    }
+
     return NextResponse.json({
       error: 'Firestore is not configured. Please set up Firebase Admin credentials.',
       setupUrl: 'https://console.firebase.google.com/project/_/settings/serviceaccounts/adminsdk',
@@ -79,7 +100,7 @@ export async function GET(req: NextRequest) {
       db.collection('sessions').where('userId', '==', userId)
         .orderBy('startsAt', 'desc').limit(50).get(),
       db.collection('packages').where('userId', '==', userId)
-        .orderBy('id').limit(50).get(),
+        .orderBy('createdAt', 'desc').limit(50).get(),
     ]);
 
     if (!userDoc.exists) return NextResponse.json({ error: 'User not found' }, { status: 404 });
@@ -124,10 +145,11 @@ export async function GET(req: NextRequest) {
         startsAt: serializeDate(nextSession.startsAt),
       } : null,
       sessions: sortedSessions.map(s => ({
-        id: s.id.substring(0, 8),
+        id: s.id,
         service: s.serviceName || 'Session',
         date: serializeDate(s.startsAt),
         status: s.status,
+        duration: (s as Record<string, unknown>).duration as number | undefined,
       })),
       packages: packages.map(p => ({
         id: p.id,

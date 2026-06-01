@@ -18,18 +18,20 @@ export default function PackagesPage() {
         <div className="mt-10 grid gap-4 md:grid-cols-3">
           {packages.map((item) => (
             <article
-              className="rounded-lg border border-[var(--color-neutral-200)] bg-white p-6"
+              className="rounded-lg border border-border bg-white p-6"
               key={item.name}
             >
-              <h2 className="text-2xl font-bold">{item.name}</h2>
-              <p className="mt-3 text-[var(--color-neutral-600)]">
+              {/* H2 - serif heading */}
+              <h2 className="text-2xl font-bold font-heading text-primary">{item.name}</h2>
+              <p className="mt-3 text-secondary font-body">
                 {item.sessions}
               </p>
-              <p className="mt-6 text-4xl font-bold">{item.price}</p>
-              <p className="mt-2 text-sm text-[var(--color-success)]">
+              {/* Price - large serif */}
+              <p className="mt-6 text-4xl font-bold font-heading text-primary">{item.price}</p>
+              <p className="mt-2 text-sm text-success font-body">
                 Saves {item.savings}
               </p>
-              <button className="mt-6 min-h-11 rounded-xl bg-[var(--color-brand-primary)] px-4 font-semibold text-white">
+              <button className="mt-6 min-h-11 rounded-xl bg-primary px-4 font-semibold text-white font-ui uppercase tracking-wide">
                 Select package
               </button>
             </article>

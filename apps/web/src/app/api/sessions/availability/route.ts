@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getDb } from '@/lib/firebase-admin';
 import { addDays, startOfDay, addHours, isAfter } from 'date-fns';
 import { verifyFirebaseIdToken } from '@/lib/auth-edge';
+import { checkRateLimit, getRateLimitHeaders } from '@/lib/rate-limit';
 
 // In-memory cache with 1-minute TTL
 const cache = new Map<string, { data: unknown; expiresAt: number }>();
@@ -10,6 +11,17 @@ export async function GET(req: NextRequest) {
   const db = getDb();
   if (!db) {
     return NextResponse.json({ error: 'Service temporarily unavailable' }, { status: 503 });
+  }
+
+  // Rate limit: 30 requests per minute per IP
+  const forwarded = req.headers.get('x-forwarded-for');
+  const ip = forwarded?.split(',')[0]?.trim() ?? 'unknown';
+  const rateLimitResult = checkRateLimit(ip, 30, 60_000);
+  if (!rateLimitResult.allowed) {
+    return NextResponse.json(
+      { error: 'Too many requests' },
+      { status: 429, headers: getRateLimitHeaders(rateLimitResult.resetAt, 0, 30) }
+    );
   }
 
   try {
@@ -30,6 +42,11 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const serviceId = searchParams.get('serviceId');
     const date = searchParams.get('date') || new Date().toISOString().slice(0, 10);
+
+    if (!serviceId) {
+      return NextResponse.json({ error: 'serviceId query parameter is required' }, { status: 400 });
+    }
+
     const cacheKey = `${serviceId}:${date}`;
     const now = Date.now();
 

@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { getDb } from '@/lib/firebase-admin';
 import type { QueryDocumentSnapshot } from 'firebase-admin/firestore';
 import { sendPackageExpiryWarningEmail } from '@/emails';
@@ -10,20 +10,20 @@ import { sendPackageExpiryWarningEmail } from '@/emails';
  * Finds packages where usedSessions/totalSessions >= 0.75 and sends expiry warning.
  * Idempotent: skips packages notified within last 7 days.
  */
-export async function GET() {
+export async function GET(req: NextRequest) {
   const db = getDb();
   if (!db) {
     return NextResponse.json({ error: 'Service temporarily unavailable' }, { status: 503 });
   }
 
   const cronSecret = process.env.CRON_SECRET;
-  if (cronSecret) {
-    const url = new URL(req.url);
-    if (url.searchParams.get('secret') !== cronSecret) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-    }
-  } else if (process.env.NODE_ENV === 'production') {
-    return NextResponse.json({ error: 'CRON_SECRET not configured' }, { status: 500 });
+  if (!cronSecret) {
+    console.error('[Cron Expiry] CRON_SECRET not configured');
+    return NextResponse.json({ error: 'Cron secret not configured' }, { status: 500 });
+  }
+  const url = new URL(req.url);
+  if (url.searchParams.get('secret') !== cronSecret) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 
   try {

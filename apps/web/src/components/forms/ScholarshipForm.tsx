@@ -123,7 +123,7 @@ export function ScholarshipForm() {
               className={cn(
                 "w-10 h-10 rounded-full flex items-center justify-center border transition-all duration-300",
                 currentStep === index 
-                  ? "bg-indigo-600 border-indigo-500 shadow-[0_0_20px_rgba(99,102,241,0.3)]" 
+                  ? "bg-[#173B57] border-[#173B57] shadow-[0_0_20px_rgba(99,102,241,0.3)]" 
                   : currentStep > index
                     ? "bg-emerald-500/20 border-emerald-500/50"
                     : "bg-black border-white/10"
@@ -139,7 +139,7 @@ export function ScholarshipForm() {
             </div>
             <span className={cn(
               "text-[10px] uppercase tracking-widest font-bold",
-              currentStep === index ? "text-indigo-400" : "text-zinc-600"
+              currentStep === index ? "text-[#173B57]" : "text-zinc-600"
             )}>
               {label}
             </span>
@@ -155,7 +155,7 @@ export function ScholarshipForm() {
               <select
                 id="employmentStatus"
                 {...register("employmentStatus")}
-                className="w-full h-12 rounded-2xl border border-white/5 bg-white/5 px-4 text-sm text-white focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500/50 outline-none transition-all appearance-none"
+                className="w-full h-12 rounded-2xl border border-white/5 bg-white/5 px-4 text-sm text-white focus:ring-1 focus:ring-[#173B57] focus:border-[#173B57]/50 outline-none transition-all appearance-none"
               >
                 <option value="" className="bg-zinc-900">Select your status</option>
                 <option value="employed" className="bg-zinc-900">Employed</option>
@@ -180,7 +180,7 @@ export function ScholarshipForm() {
               <select
                 id="serviceType"
                 {...register("serviceType")}
-                className="w-full h-12 rounded-2xl border border-white/5 bg-white/5 px-4 text-sm text-white focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500/50 outline-none transition-all appearance-none"
+                className="w-full h-12 rounded-2xl border border-white/5 bg-white/5 px-4 text-sm text-white focus:ring-1 focus:ring-[#173B57] focus:border-[#173B57]/50 outline-none transition-all appearance-none"
               >
                 <option value="" className="bg-zinc-900">Select a service</option>
                 <option value="peer-support" className="bg-zinc-900">1:1 Peer Support</option>
@@ -243,7 +243,7 @@ export function ScholarshipForm() {
               <label className="flex gap-3 cursor-pointer group">
                 <input 
                   type="checkbox" 
-                  className="mt-1 h-4 w-4 rounded border-zinc-800 bg-zinc-950 text-indigo-600 focus:ring-indigo-500 focus:ring-offset-black"
+                  className="mt-1 h-4 w-4 rounded border-zinc-800 bg-zinc-950 text-[#173B57] focus:ring-[#173B57] focus:ring-offset-black"
                   {...register("consentAcknowledged")}
                 />
                 <span className="text-xs text-zinc-400 leading-relaxed group-hover:text-zinc-300 transition-colors">
@@ -272,7 +272,7 @@ export function ScholarshipForm() {
             <Button 
               type="button" 
               onClick={nextStep}
-              className="flex-1 h-12 rounded-2xl bg-indigo-600 hover:bg-indigo-500 shadow-lg shadow-indigo-900/20"
+              className="flex-1 h-12 rounded-2xl bg-[#173B57] hover:bg-[#173B57] shadow-lg shadow-[#173B57]/20"
             >
               Continue
               <ChevronRight className="w-4 h-4 ml-2" />
@@ -281,7 +281,7 @@ export function ScholarshipForm() {
             <Button 
               type="submit" 
               isLoading={isSubmitting}
-              className="flex-1 h-12 rounded-2xl bg-indigo-600 hover:bg-indigo-500 shadow-lg shadow-indigo-900/20"
+              className="flex-1 h-12 rounded-2xl bg-[#173B57] hover:bg-[#173B57] shadow-lg shadow-[#173B57]/20"
             >
               Submit Application
             </Button>

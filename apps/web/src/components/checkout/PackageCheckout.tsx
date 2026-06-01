@@ -64,7 +64,7 @@ function CheckoutForm({ amount, packageName, onClose }: { amount: number, packag
         <button
           type="submit"
           disabled={!stripe || isProcessing}
-          className="w-full bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white font-black py-4 rounded-xl transition-all shadow-lg shadow-indigo-500/20 flex items-center justify-center gap-2"
+          className="w-full bg-[#173B57] hover:bg-[#173B57] disabled:opacity-50 text-white font-bold py-4 rounded-xl transition-all shadow-lg shadow-[#173B57]/20 flex items-center justify-center gap-2"
         >
           {isProcessing ? (
             <>
@@ -100,6 +100,11 @@ export function PackageCheckout({ packageId, onClose }: { packageId: 'SINGLE' | 
     async function initializeCheckout() {
       try {
         const token = await getToken();
+        if (!token) {
+          toast.error('Please sign in to continue.');
+          onClose();
+          return;
+        }
         const response = await fetch('/api/checkout/package-intent', {
           method: 'POST',
           headers: {
@@ -110,7 +115,11 @@ export function PackageCheckout({ packageId, onClose }: { packageId: 'SINGLE' | 
         });
 
         const data = await response.json();
-        if (data.error) throw new Error(data.error);
+        if (data.error) {
+          toast.error(data.error);
+          onClose();
+          return;
+        }
 
         setClientSecret(data.clientSecret);
         setPackageInfo({ name: data.packageName, amount: data.amount });
@@ -127,7 +136,7 @@ export function PackageCheckout({ packageId, onClose }: { packageId: 'SINGLE' | 
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
         <div className="flex flex-col items-center gap-4">
-          <Loader2 className="h-10 w-10 animate-spin text-indigo-500" />
+          <Loader2 className="h-10 w-10 animate-spin text-[#173B57]" />
           <p className="text-white font-medium">Securing connection to Stripe...</p>
         </div>
       </div>

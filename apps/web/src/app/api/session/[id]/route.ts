@@ -87,28 +87,31 @@ export async function GET(
       return NextResponse.json({ error: 'Session ID required' }, { status: 400 });
     }
 
-    // Auth: verify caller is authorized for this session
+    // Auth: require token first — reject before any Firestore reads
     const authHeader = req.headers.get('authorization');
     const token = authHeader?.startsWith('Bearer ') ? authHeader.split(' ')[1] : null;
 
+    if (!token) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     let authorized = false;
-    if (token) {
-      try {
-        const payload = await verifyFirebaseIdToken(token);
-        const firebaseUid = payload.sub;
-        const sessionDoc = await getSessionRef(id).get();
-        if (sessionDoc.exists) {
-          const sessionData = sessionDoc.data();
-          authorized = firebaseUid === sessionData?.userId ||
-            firebaseUid === sessionData?.facilitatorId ||
-            sessionData?.participantIdentities?.includes(firebaseUid);
-        }
-      } catch {
-        // try session token
-        const sessionPayload = await verifySessionToken(token);
-        if (sessionPayload) {
-          authorized = sessionPayload.ref === id;
-        }
+    let firebaseUid: string | null = null;
+    try {
+      const payload = await verifyFirebaseIdToken(token);
+      firebaseUid = payload.sub as string;
+      const sessionDoc = await getSessionRef(id).get();
+      if (sessionDoc.exists) {
+        const sessionData = sessionDoc.data();
+        authorized = firebaseUid === sessionData?.userId ||
+          firebaseUid === sessionData?.facilitatorId ||
+          (Array.isArray(sessionData?.participantIdentities) &&
+            sessionData.participantIdentities.includes(firebaseUid));
+      }
+    } catch {
+      const sessionPayload = await verifySessionToken(token);
+      if (sessionPayload && sessionPayload.ref === id) {
+        authorized = true;
       }
     }
 
@@ -243,7 +246,7 @@ export async function PATCH(
           if (session.status === 'active') {
             finalStatus = 'flagged';
             updateData.flagged = true;
-            if (flaggedBy !== undefined) if (flaggedBy !== undefined) updateData.flaggedBy = flaggedBy;
+            if (flaggedBy !== undefined) updateData.flaggedBy = flaggedBy;
             if (flaggedReason !== undefined) updateData.flaggedReason = flaggedReason;
             updateData.flaggedAt = now;
           }

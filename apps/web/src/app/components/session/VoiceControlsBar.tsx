@@ -31,7 +31,7 @@ export function VoiceControlsBar({
           className={`
             flex items-center gap-2 sm:gap-3 px-4 sm:px-6 py-3 sm:py-4 
             rounded-2xl border border-white/10 font-bold transition-all 
-            hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-indigo-500
+            hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-[#173B57]
             ${isMuted 
               ? 'bg-red-500/10 border-red-500/30 text-red-300' 
               : 'border-white/10 text-white hover:bg-white/10'
@@ -55,7 +55,7 @@ export function VoiceControlsBar({
           className={`
             flex items-center gap-2 sm:gap-3 px-4 sm:px-6 py-3 sm:py-4 
             rounded-2xl border font-bold transition-all 
-            hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-indigo-500
+            hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-[#173B57]
             ${isHandRaised 
               ? 'bg-amber-500/15 border-amber-500/50 text-amber-200' 
               : 'border-white/10 text-white hover:bg-white/10'
@@ -74,7 +74,7 @@ export function VoiceControlsBar({
           aria-label="Flag a safety concern"
           className="flex items-center gap-2 sm:gap-3 px-4 sm:px-6 py-3 sm:py-4 
             rounded-xl border border-white/10 font-bold transition-all 
-            hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-indigo-500
+            hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-[#173B57]
             text-white"
         >
           <span className="text-lg sm:text-xl">🚨</span>

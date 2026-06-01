@@ -11,7 +11,7 @@ export function MobileBlockPage({ onDismiss }: MobileBlockPageProps) {
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black px-4 sm:hidden">
       <div className="max-w-sm text-center">
         <div className="mb-6 text-5xl">📱</div>
-        <h2 className="mb-3 text-2xl font-black text-white">
+        <h2 className="mb-3 text-2xl font-extrabold text-white">
           Desktop Required
         </h2>
         <p className="mb-6 text-sm text-slate-400">
@@ -41,9 +41,9 @@ export function MobileBlockPage({ onDismiss }: MobileBlockPageProps) {
         {onDismiss && (
           <button
             onClick={onDismiss}
-            className="w-full rounded-xl bg-indigo-600 py-3 font-bold text-white 
-              transition-all hover:bg-indigo-500 active:scale-[0.97]
-              focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="w-full rounded-xl bg-[#173B57] py-3 font-bold text-white 
+              transition-all hover:bg-[#173B57] active:scale-[0.97]
+              focus:outline-none focus:ring-2 focus:ring-[#173B57]"
           >
             Return to Dashboard
           </button>

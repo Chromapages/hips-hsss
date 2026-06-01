@@ -50,6 +50,8 @@ export async function POST(req: NextRequest) {
         tier,
         userId: userId || '',
       },
+    }, {
+      idempotencyKey: `donation:${userId || 'anonymous'}:${Date.now()}`,
     });
 
     return NextResponse.json({

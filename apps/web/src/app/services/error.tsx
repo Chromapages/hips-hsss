@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import { useEffect } from "react";
 import { ErrorState } from "@/components/ui/error-state";
@@ -15,11 +15,12 @@ export default function ServicesError({
   }, [error]);
 
   return (
-    <main className="grid min-h-screen place-items-center bg-black p-6">
+    <main className="grid min-h-screen place-items-center bg-background p-6">
       <ErrorState
         title="Services Error"
         error="The services page could not be loaded. Please try again."
         onRetry={reset}
+        digest={error.digest}
       />
     </main>
   );

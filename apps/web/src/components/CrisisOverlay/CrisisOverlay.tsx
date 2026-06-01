@@ -104,7 +104,7 @@ export function CrisisOverlay({
           <div className="w-20 h-20 rounded-full bg-amber-500/10 border border-amber-500/20 flex items-center justify-center mb-6 shadow-[0_0_50px_rgba(245,158,11,0.2)] animate-pulse">
             <ShieldAlert className="w-10 h-10 text-amber-500" aria-hidden="true" />
           </div>
-          <h1 id="crisis-title" className="text-4xl md:text-5xl font-black tracking-tighter text-white mb-4">
+          <h1 id="crisis-title" className="font-heading text-4xl md:text-5xl font-extrabold tracking-tighter text-white mb-4">
             You are not alone.
           </h1>
           <p className="text-xl text-zinc-400">

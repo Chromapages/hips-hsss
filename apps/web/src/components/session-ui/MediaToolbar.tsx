@@ -56,7 +56,7 @@ export function MediaToolbar({
   }, [openSpeakerMenu]);
 
   return (
-    <div className="absolute top-4 left-1/2 z-30 flex -translate-x-1/2 items-center gap-2 rounded-full border border-white/10 bg-black/80 px-3 py-2 shadow-[0_0_30px_rgba(0,0,0,0.6)] backdrop-blur-xl">
+    <div className="absolute top-4 left-1/2 z-30 flex -translate-x-1/2 items-center gap-2 rounded-full border border-zinc-200 bg-white/90 px-3 py-2 shadow-lg backdrop-blur-xl">
       {/* Mic toggle */}
       <button
         aria-label={micEnabled ? 'Mute microphone' : 'Unmute microphone'}
@@ -66,8 +66,8 @@ export function MediaToolbar({
           micBusy
             ? 'cursor-wait opacity-50'
             : micEnabled
-              ? 'border border-white/5 bg-white/5 text-white hover:bg-white/10'
-              : 'border border-red-500/20 bg-red-500/10 text-red-500',
+              ? 'border border-zinc-200 bg-zinc-100 text-zinc-900 hover:bg-zinc-200'
+              : 'border border-red-200 bg-red-50 text-red-600',
         ].join(' ')}
       >
         {micEnabled ? <Mic className="h-4 w-4" /> : <MicOff className="h-4 w-4" />}
@@ -79,17 +79,17 @@ export function MediaToolbar({
           <button
             onClick={() => setOpenMicMenu(!openMicMenu)}
             onKeyDown={handleMicKeyDown}
-            className="flex h-9 items-center gap-1.5 rounded-full border border-white/5 bg-white/5 px-3 text-sm text-white hover:bg-white/10 transition-all"
+            className="flex h-9 items-center gap-1.5 rounded-full border border-zinc-200 bg-zinc-100 px-3 text-sm text-zinc-700 hover:bg-zinc-200 transition-all"
             aria-haspopup="true"
             aria-expanded={openMicMenu}
             aria-label="Select microphone"
           >
-            <Settings className="h-3.5 w-3.5 text-zinc-400" />
+            <Settings className="h-3.5 w-3.5 text-zinc-500" />
           </button>
 
           {openMicMenu && (
             <div
-              className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 w-64 rounded-xl border border-white/10 bg-zinc-950 p-3 shadow-xl"
+              className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 w-64 rounded-xl border border-zinc-200 bg-white p-3 shadow-lg"
               role="menu"
               aria-label="Microphone selection"
             >
@@ -108,8 +108,8 @@ export function MediaToolbar({
                     className={[
                       'flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm transition-all',
                       selectedAudioInput === d.deviceId
-                        ? 'bg-indigo-600/20 text-indigo-300'
-                        : 'text-zinc-300 hover:bg-white/5',
+                        ? 'bg-[#173B57] text-white'
+                        : 'text-zinc-700 hover:bg-zinc-100',
                     ].join(' ')}
                   >
                     {d.label || `Mic ${d.deviceId.slice(0, 8)}`}
@@ -121,7 +121,7 @@ export function MediaToolbar({
         </div>
       )}
 
-      <div className="h-5 w-px bg-white/10" />
+      <div className="h-5 w-px bg-zinc-200" />
 
       {/* Camera toggle */}
       <button
@@ -130,8 +130,8 @@ export function MediaToolbar({
         className={[
           'flex h-9 w-9 items-center justify-center rounded-full transition-all',
           cameraEnabled
-            ? 'border border-white/5 bg-white/5 text-white hover:bg-white/10'
-            : 'border border-white/5 bg-white/5 text-zinc-500',
+            ? 'border border-zinc-200 bg-zinc-100 text-zinc-900 hover:bg-zinc-200'
+            : 'border border-zinc-200 bg-zinc-100 text-zinc-500',
         ].join(' ')}
       >
         {cameraEnabled ? <Video className="h-4 w-4" /> : <VideoOff className="h-4 w-4" />}
@@ -143,7 +143,7 @@ export function MediaToolbar({
           <button
             onClick={() => setOpenSpeakerMenu(!openSpeakerMenu)}
             onKeyDown={handleSpeakerKeyDown}
-            className="flex h-9 items-center gap-1.5 rounded-full border border-white/5 bg-white/5 px-3 text-sm text-white hover:bg-white/10 transition-all"
+            className="flex h-9 items-center gap-1.5 rounded-full border border-zinc-200 bg-zinc-100 px-3 text-sm text-zinc-700 hover:bg-zinc-200 transition-all"
             aria-haspopup="true"
             aria-expanded={openSpeakerMenu}
             aria-label="Select speaker output"
@@ -153,7 +153,7 @@ export function MediaToolbar({
 
           {openSpeakerMenu && (
             <div
-              className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 w-64 rounded-xl border border-white/10 bg-zinc-950 p-3 shadow-xl"
+              className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 w-64 rounded-xl border border-zinc-200 bg-white p-3 shadow-lg"
               role="menu"
               aria-label="Speaker output selection"
             >
@@ -172,8 +172,8 @@ export function MediaToolbar({
                     className={[
                       'flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm transition-all',
                       selectedAudioOutput === d.deviceId
-                        ? 'bg-indigo-600/20 text-indigo-300'
-                        : 'text-zinc-300 hover:bg-white/5',
+                        ? 'bg-[#173B57] text-white'
+                        : 'text-zinc-700 hover:bg-zinc-100',
                     ].join(' ')}
                   >
                     {d.label || `Speaker ${d.deviceId.slice(0, 8)}`}

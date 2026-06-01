@@ -140,7 +140,7 @@ export function OrganizationIntakeForm() {
             <label className="flex items-center gap-3 cursor-pointer group">
               <input 
                 type="checkbox" 
-                className="h-5 w-5 rounded-lg border-zinc-800 bg-zinc-950 text-indigo-600 focus:ring-indigo-500 focus:ring-offset-black transition-all"
+                className="h-5 w-5 rounded-lg border-zinc-800 bg-zinc-950 text-[#173B57] focus:ring-[#173B57] focus:ring-offset-black transition-all"
                 {...register("isNonprofit")}
               />
               <span className="text-sm text-zinc-400 group-hover:text-zinc-200 transition-colors">This is a 501(c)(3) nonprofit organization</span>
@@ -163,7 +163,7 @@ export function OrganizationIntakeForm() {
             <select
               id="eventType"
               {...register("eventType")}
-              className="w-full h-12 rounded-2xl border border-white/5 bg-white/5 px-4 text-sm text-white focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500/50 outline-none transition-all appearance-none"
+              className="w-full h-12 rounded-2xl border border-white/5 bg-white/5 px-4 text-sm text-white focus:ring-1 focus:ring-[#173B57] focus:border-[#173B57]/50 outline-none transition-all appearance-none"
             >
               <option value="" className="bg-zinc-900">Select event type</option>
               <option value="workshop" className="bg-zinc-900">Interactive Workshop</option>
@@ -212,7 +212,7 @@ export function OrganizationIntakeForm() {
       <Button 
         type="submit" 
         isLoading={isSubmitting}
-        className="w-full h-14 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-base font-bold shadow-xl shadow-indigo-900/20 group"
+        className="w-full h-14 rounded-2xl bg-[#173B57] hover:bg-[#173B57] text-base font-bold shadow-xl shadow-[#173B57]/20 group"
       >
         Send Partnership Inquiry
         <Send className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />

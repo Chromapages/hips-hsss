@@ -7,10 +7,11 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { format } from "date-fns";
 
 const badgeClass = {
-  UPCOMING: "bg-indigo-500/15 text-indigo-200 border-indigo-500/30",
+  UPCOMING: "bg-primary/15 text-primary border-primary/30",
   COMPLETED: "bg-emerald-500/15 text-emerald-200 border-emerald-500/30",
   CANCELLED: "bg-zinc-500/15 text-zinc-300 border-zinc-500/30",
-  SCHEDULED: "bg-indigo-500/15 text-indigo-200 border-indigo-500/30",
+  SCHEDULED: "bg-primary/15 text-primary border-primary/30",
+  ARCHIVED: "bg-zinc-600/15 text-zinc-400 border-zinc-600/30",
 } as const;
 
 type SessionHistoryRow = {
@@ -18,7 +19,10 @@ type SessionHistoryRow = {
   service: string;
   date: string | null;
   status?: keyof typeof badgeClass | string;
+  duration?: number;
 };
+
+const displayId = (id: string) => id.length > 8 ? id.substring(0, 8) : id;
 
 export function SessionHistoryTable({ sessions = [] }: { sessions?: SessionHistoryRow[] }) {
   const [page, setPage] = useState(0);
@@ -39,7 +43,7 @@ export function SessionHistoryTable({ sessions = [] }: { sessions?: SessionHisto
   }
 
   return (
-    <div className="overflow-hidden rounded-lg border border-white/10 bg-zinc-950">
+    <div className="overflow-x-auto rounded-lg border border-white/10 bg-zinc-950">
       <table className="w-full text-left text-sm">
         <thead className="bg-white/5 text-zinc-400">
           <tr>
@@ -54,25 +58,25 @@ export function SessionHistoryTable({ sessions = [] }: { sessions?: SessionHisto
         </thead>
         <tbody>
           {visible.map((row) => (
-            <tr className="border-t border-white/10" key={row.id}>
-              <td className="px-4 py-4 font-mono text-zinc-300">{row.id}</td>
+            <tr className="border-t border-white/10 hover:bg-white/5 transition-colors" key={row.id}>
+              <td className="px-4 py-4 font-mono text-zinc-300">{displayId(row.id)}</td>
               <td className="px-4 py-4 text-white">{row.service}</td>
               <td className="px-4 py-4 text-zinc-300">
                 {row.date ? format(new Date(row.date), 'MMM d, yyyy') : 'Pending'}
               </td>
               <td className="px-4 py-4">
                 <span
-                  className={`rounded-full border px-2.5 py-1 text-xs ${badgeClass[row.status as keyof typeof badgeClass] || badgeClass.COMPLETED}`}
+                  className={`rounded-full border px-2.5 py-1 text-xs ${badgeClass[row.status as keyof typeof badgeClass] || 'bg-zinc-500/15 text-zinc-300 border-zinc-500/30'}`}
                 >
                   {row.status}
                 </span>
               </td>
-              <td className="px-4 py-4 text-zinc-300">60 min</td>
+              <td className="px-4 py-4 text-zinc-300">{row.duration ?? 60} min</td>
               <td className="px-4 py-4">
                 {(row.status === 'SCHEDULED' || row.status === 'UPCOMING') ? (
                   <Link
                     href={`/session/${row.id}`}
-                    className="inline-flex h-8 items-center justify-center rounded-xl bg-indigo-600/20 border border-indigo-500/30 px-3 text-xs font-bold text-indigo-300 hover:bg-indigo-600/40 transition-all"
+                    className="inline-flex h-8 items-center justify-center rounded-xl bg-primary/20 border border-primary/30 px-3 text-xs font-bold text-primary hover:bg-primary/40 transition-all"
                   >
                     Join
                   </Link>
@@ -90,7 +94,7 @@ export function SessionHistoryTable({ sessions = [] }: { sessions?: SessionHisto
         </span>
         <div className="flex gap-2">
           <button
-            className="min-h-11 rounded-md border border-white/10 px-3 transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-50"
+            className="min-h-11 rounded-md border border-white/10 px-3 transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
             disabled={page === 0}
             onClick={() => setPage((value) => Math.max(0, value - 1))}
             type="button"
@@ -98,7 +102,7 @@ export function SessionHistoryTable({ sessions = [] }: { sessions?: SessionHisto
             Previous
           </button>
           <button
-            className="min-h-11 rounded-md border border-white/10 px-3 transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-50"
+            className="min-h-11 rounded-md border border-white/10 px-3 transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
             disabled={(page + 1) * pageSize >= sessions.length}
             onClick={() => setPage((value) => value + 1)}
             type="button"

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
+import crypto from 'crypto';
 import { RoomServiceClient, DataPacket_Kind } from 'livekit-server-sdk';
 
 const apiKey = process.env.LIVEKIT_API_KEY;
@@ -62,6 +63,9 @@ export async function POST(req: NextRequest) {
     
     const { sessionId, offenderId, assessment, alertId, mitigationAction } = body;
 
+    // Null-guard offenderId for targeted LiveKit operations
+    const targets = offenderId ? [offenderId] : undefined;
+
     // Validate assessment structure
     if (!assessment.category || !assessment.severity) {
       return NextResponse.json({ error: 'Invalid assessment structure' }, { status: 400 });
@@ -69,7 +73,7 @@ export async function POST(req: NextRequest) {
 
     console.warn(`[SafetyMitigation] ALERT in session ${sessionId}: ${assessment.category} (${assessment.severity}) -> Action: ${mitigationAction}`);
 
-    // 1. Broadcast Safety Signal to all participants in the room
+    // 1. Broadcast Safety Signal to all participants (or targeted participant)
     const encoder = new TextEncoder();
     const signalData = encoder.encode(JSON.stringify({
       type: 'SAFETY_EVENT',
@@ -82,16 +86,16 @@ export async function POST(req: NextRequest) {
     }));
 
     try {
-      await roomService.sendData(sessionId, signalData, DataPacket_Kind.RELIABLE, [offenderId]);
+      await roomService.sendData(sessionId, signalData, DataPacket_Kind.RELIABLE, targets);
     } catch (err) {
       console.error('[SafetyMitigation] Failed to send targeted signal:', err);
     }
 
-    // 2. Perform LiveKit action (kick/mute) - this is correctly here
+    // 2. Perform LiveKit action (kick/mute) — guard on offenderId presence
     let success = true;
     let actionTaken = mitigationAction || 'SIGNAL_ONLY';
 
-    if (mitigationAction === 'KICK') {
+    if (mitigationAction === 'KICK' && offenderId) {
       try {
         await roomService.removeParticipant(sessionId, offenderId);
         console.log(`[SafetyMitigation] Kicked participant ${offenderId} from room ${sessionId}.`);
@@ -99,7 +103,7 @@ export async function POST(req: NextRequest) {
         console.error('[SafetyMitigation] Failed to kick participant:', err);
         success = false;
       }
-    } else if (mitigationAction === 'MUTE') {
+    } else if (mitigationAction === 'MUTE' && offenderId) {
       try {
         await roomService.updateParticipant(sessionId, offenderId, {
           permission: {

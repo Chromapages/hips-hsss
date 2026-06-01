@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 
-const colors = ["#6366F1", "#9333EA", "#10B981", "#FBBF24", "#EF4444", "#06B6D4"];
+const colors = ["#173B57", "#C59A35", "#10B981", "#FBBF24", "#EF4444", "#06B6D4"];
 
 export function AvatarSelectorModal() {
   const [open, setOpen] = useState(
@@ -10,7 +10,7 @@ export function AvatarSelectorModal() {
       typeof window !== "undefined" &&
       sessionStorage.getItem("hips-avatar-color") === null,
   );
-  const [selected, setSelected] = useState(colors[0] ?? "#6366F1");
+  const [selected, setSelected] = useState(colors[0] ?? "#173B57");
   const wrapperRef = useRef<HTMLDivElement>(null);
   const firstFocusRef = useRef<HTMLButtonElement>(null);
 
@@ -69,7 +69,7 @@ export function AvatarSelectorModal() {
           ))}
         </div>
         <button
-          className="mt-8 min-h-11 w-full rounded-xl bg-indigo-500 px-4 font-semibold transition hover:bg-indigo-400"
+          className="mt-8 min-h-11 w-full rounded-xl bg-[#173B57] px-4 font-semibold transition hover:bg-[#173B57]"
           onClick={() => {
             sessionStorage.setItem("hips-avatar-color", selected);
             setOpen(false);

@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import type { LucideIcon } from "lucide-react";
@@ -220,30 +221,30 @@ function getRoleColors(role: UserRole): {
   switch (role) {
     case "ADMIN":
       return {
-        accent: "text-indigo-400",
-        bgAccent: "bg-indigo-500/10 border-indigo-500/20",
-        glow: "bg-[radial-gradient(circle_at_50%_0%,rgba(99,102,241,0.08)_0%,transparent_70%)]",
+        accent: "text-[#173B57]",
+        bgAccent: "bg-[#173B57] border-[#173B57]",
+        glow: "bg-[radial-gradient(circle_at_50%_0%,rgba(23,59,87,0.08)_0%,transparent_70%)]",
         label: "Platform Admin",
         sublabel: "System Root",
-        indicator: "bg-indigo-500",
+        indicator: "bg-[#173B57]",
       };
     case "FACILITATOR":
       return {
-        accent: "text-emerald-400",
-        bgAccent: "bg-emerald-500/10 border-emerald-500/20",
-        glow: "bg-[radial-gradient(circle_at_50%_0%,rgba(16,185,129,0.05)_0%,transparent_70%)]",
+        accent: "text-[#C59A35]",
+        bgAccent: "bg-[#C59A35]/10 border-[#C59A35]/30",
+        glow: "bg-[radial-gradient(circle_at_50%_0%,rgba(197,154,53,0.05)_0%,transparent_70%)]",
         label: "Lead Agent",
         sublabel: "Verified Facilitator",
-        indicator: "bg-emerald-500",
+        indicator: "bg-[#C59A35]",
       };
     default:
       return {
-        accent: "text-indigo-400",
-        bgAccent: "bg-indigo-500/10 border-indigo-500/20",
-        glow: "bg-[radial-gradient(circle_at_50%_0%,rgba(99,102,241,0.05)_0%,transparent_70%)]",
+        accent: "text-[#173B57]",
+        bgAccent: "bg-[#173B57] border-[#173B57]",
+        glow: "bg-[radial-gradient(circle_at_50%_0%,rgba(23,59,87,0.05)_0%,transparent_70%)]",
         label: "Participant",
         sublabel: "Protected User",
-        indicator: "bg-indigo-500",
+        indicator: "bg-[#173B57]",
       };
   }
 }
@@ -271,17 +272,16 @@ export function SidebarHeader({ role, isCollapsed }: SidebarHeaderProps) {
   return (
     <div className="flex items-center space-x-3 group mb-12 xl:px-2">
       <Link href={logoHref} className="flex items-center gap-3">
-        <div
-          className={cn(
-            "w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 transition-all border group-hover:rotate-6",
-            colors.bgAccent
-          )}
-        >
-          <EyeOff className={cn("w-5 h-5", colors.accent)} />
-        </div>
+        <Image
+          src="/hipslogo.png"
+          alt="HIPS Logo"
+          width={240}
+          height={240}
+          className="object-contain"
+          quality={85}
+        />
         {!isCollapsed && (
           <div className="flex flex-col -space-y-1">
-            <span className="font-black tracking-tighter text-2xl text-white">HSSS</span>
             <span className={cn("text-[9px] font-bold uppercase tracking-[0.2em]", colors.accent)}>
               {roleLabel}
             </span>
@@ -308,10 +308,10 @@ export function SidebarNavItem({ item, isActive, role, isCollapsed }: SidebarNav
       href={item.href}
       aria-current={isActive ? "page" : undefined}
       className={cn(
-        "group relative flex min-h-12 w-12 items-center justify-center rounded-2xl transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 focus-visible:ring-offset-black xl:w-full xl:justify-start xl:px-4",
+        "group relative flex min-h-12 w-12 items-center justify-center rounded-2xl transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#173B57] focus-visible:ring-offset-2 focus-visible:ring-offset-white xl:w-full xl:justify-start xl:px-4",
         isActive
-          ? "bg-white/10 text-white shadow-[0_0_20px_rgba(255,255,255,0.05)]"
-          : "text-zinc-500 hover:bg-white/5 hover:text-white"
+          ? "bg-[#173B57] text-white shadow-[0_0_20px_rgba(23,59,87,0.15)]"
+          : "text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900"
       )}
     >
       {isActive && (
@@ -326,15 +326,15 @@ export function SidebarNavItem({ item, isActive, role, isCollapsed }: SidebarNav
         className={cn(
           "h-5 w-5 shrink-0 transition-all group-hover:scale-110",
           isActive && (role === "FACILITATOR"
-            ? "text-emerald-400 drop-shadow-[0_0_8px_rgba(16,185,129,0.5)]"
-            : "text-indigo-400 drop-shadow-[0_0_8px_rgba(129,140,248,0.5)]")
+            ? "text-[#C59A35]"
+            : "text-white")
         )}
       />
       {!isCollapsed && (
         <>
           <span className="hidden ms-4 font-bold text-sm xl:block">{item.label}</span>
           {item.badge && (
-            <span className="ml-auto hidden xl:flex h-5 min-w-5 items-center justify-center rounded-full bg-indigo-500/20 px-1.5 text-xs font-bold text-indigo-400">
+            <span className="ml-auto hidden xl:flex h-5 min-w-5 items-center justify-center rounded-full bg-[#E8EEF3] px-1.5 text-xs font-bold text-[#173B57]">
               {item.badge}
             </span>
           )}
@@ -391,7 +391,7 @@ export function SidebarFooter({ role, user, isCollapsed }: SidebarFooterProps) {
   const colors = getRoleColors(role);
 
   return (
-    <div className="mt-auto hidden xl:block pt-8 border-t border-white/5 px-2">
+    <div className="mt-auto hidden xl:block pt-8 border-t border-zinc-200 px-2">
       <div className="flex items-center gap-3">
         <div
           className={cn(
@@ -403,7 +403,7 @@ export function SidebarFooter({ role, user, isCollapsed }: SidebarFooterProps) {
         </div>
         {!isCollapsed && (
           <div className="flex flex-col">
-            <span className="text-xs font-bold text-white">
+            <span className="text-xs font-bold text-zinc-900">
               {user?.email ? user.email.split("@")[0] : colors.label}
             </span>
             <span className="text-[10px] text-zinc-500 uppercase tracking-widest">
@@ -439,7 +439,7 @@ export function AppSidebar({ user, className }: AppSidebarProps) {
       {/* Desktop Sidebar */}
       <aside
         className={cn(
-          "sticky top-0 hidden h-screen flex-col items-center border-e border-white/5 bg-black/40 backdrop-blur-3xl py-8 md:flex z-40 transition-all",
+          "sticky top-0 hidden h-screen flex-col items-center border-e border-zinc-200 bg-white backdrop-blur-3xl py-8 md:flex z-40 transition-all",
           isCollapsed ? "w-20" : "w-72 xl:items-stretch xl:px-6",
           className
         )}
@@ -447,7 +447,7 @@ export function AppSidebar({ user, className }: AppSidebarProps) {
         {/* Toggle Button */}
         <button
           onClick={toggle}
-          className="absolute top-8 right-4 p-2 rounded-lg text-zinc-500 hover:text-white hover:bg-white/5 transition-colors"
+          className="absolute top-8 right-4 p-2 rounded-lg text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100 transition-colors"
           aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
           title={isCollapsed ? "Expand sidebar (Cmd+B)" : "Collapse sidebar (Cmd+B)"}
         >
@@ -496,7 +496,7 @@ function MobileNav({ navGroups, pathname, role }: MobileNavProps) {
   };
 
   return (
-    <nav aria-label="Mobile navigation" className="fixed bottom-0 start-0 end-0 z-50 flex h-20 items-center justify-around border-t border-white/5 bg-black/80 backdrop-blur-3xl md:hidden px-4">
+    <nav aria-label="Mobile navigation" className="fixed bottom-0 start-0 end-0 z-50 flex h-20 items-center justify-around border-t border-zinc-200 bg-white/95 backdrop-blur-3xl md:hidden px-4">
       {allItems.slice(0, 4).map((item) => {
         const Icon = item.icon;
         const isActive = isActiveHref(item.href);
@@ -508,12 +508,12 @@ function MobileNav({ navGroups, pathname, role }: MobileNavProps) {
             aria-label={item.label}
             aria-current={isActive ? "page" : undefined}
             className={cn(
-              "flex flex-col items-center justify-center gap-1.5 w-16 h-16 rounded-2xl transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 focus-visible:ring-offset-black",
+              "flex flex-col items-center justify-center gap-1.5 w-16 h-16 rounded-2xl transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#173B57] focus-visible:ring-offset-2 focus-visible:ring-offset-white",
               isActive
                 ? role === "FACILITATOR"
-                  ? "text-emerald-400"
-                  : "text-indigo-400"
-                : "text-zinc-500 hover:text-white"
+                  ? "text-[#C59A35]"
+                  : "text-[#173B57]"
+                : "text-zinc-500 hover:text-zinc-900"
             )}
           >
             <Icon
@@ -521,8 +521,8 @@ function MobileNav({ navGroups, pathname, role }: MobileNavProps) {
                 "h-6 w-6",
                 isActive &&
                   (role === "FACILITATOR"
-                    ? "drop-shadow-[0_0_8px_rgba(16,185,129,0.5)]"
-                    : "drop-shadow-[0_0_8px_rgba(129,140,248,0.5)]")
+                    ? "text-[#C59A35]"
+                    : "text-[#173B57]")
               )}
             />
             <span className="text-[9px] font-bold uppercase tracking-widest">{item.label}</span>

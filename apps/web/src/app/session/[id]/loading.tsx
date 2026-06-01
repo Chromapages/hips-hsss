@@ -33,20 +33,20 @@ export default function SessionLoading() {
       <div className="relative flex items-center justify-center">
         {/* Outer expanding ring */}
         <div
-          className="breathe-ring absolute h-32 w-32 rounded-full border border-indigo-500/30"
+          className="breathe-ring absolute h-32 w-32 rounded-full border border-[#173B57]/30"
           style={{ animationDelay: '0s' }}
         />
         <div
-          className="breathe-ring absolute h-24 w-24 rounded-full border border-indigo-400/20"
+          className="breathe-ring absolute h-24 w-24 rounded-full border border-[#173B57]/20"
           style={{ animationDelay: '0.4s' }}
         />
         {/* Inner glowing dot */}
-        <div className="pulse-dot h-10 w-10 rounded-full bg-indigo-500/70 shadow-[0_0_28px_8px_rgba(99,102,241,0.35)]" />
+        <div className="pulse-dot h-10 w-10 rounded-full bg-[#173B57]/70 shadow-[0_0_28px_8px_rgba(99,102,241,0.35)]" />
       </div>
 
       {/* Text */}
       <div className="fade-in flex flex-col items-center gap-2 text-center">
-        <p className="text-base font-bold tracking-widest text-indigo-300 uppercase">
+        <p className="text-base font-bold tracking-widest text-[#173B57] uppercase">
           Entering your sanctuary
         </p>
       </div>

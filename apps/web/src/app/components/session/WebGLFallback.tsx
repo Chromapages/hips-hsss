@@ -19,7 +19,7 @@ export function WebGLFallback({ reason }: WebGLFallbackProps) {
         </div>
 
         {/* Title */}
-        <h2 className="mb-3 text-2xl font-black text-white">
+        <h2 className="mb-3 text-2xl font-extrabold text-white">
           Graphics Support Required
         </h2>
 
@@ -63,8 +63,8 @@ export function WebGLFallback({ reason }: WebGLFallbackProps) {
         </div>
 
         {/* Support Link */}
-        <div className="rounded-xl border border-indigo-500/20 bg-indigo-500/5 p-4">
-          <p className="text-sm text-indigo-200">
+        <div className="rounded-xl border border-[#173B57]/20 bg-[#173B57]/5 p-4">
+          <p className="text-sm text-[#173B57]">
             🛡️ Your safety and privacy are still protected. Voice masking can still 
             work with fallback audio-only mode on supported devices.
           </p>
@@ -76,7 +76,7 @@ export function WebGLFallback({ reason }: WebGLFallbackProps) {
             Need help?{' '}
             <a 
               href="mailto:support@hips.foundation" 
-              className="text-indigo-400 hover:text-indigo-300 hover:underline"
+              className="text-[#173B57] hover:text-[#173B57] hover:underline"
             >
               Contact support@hips.foundation
             </a>

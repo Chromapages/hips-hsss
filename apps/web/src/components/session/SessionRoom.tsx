@@ -177,7 +177,7 @@ export default function SessionRoom({
           Your device screen is too small for the 3D session environment.
         </p>
         <button
-          className="mt-8 rounded-xl bg-indigo-600 px-8 py-3 font-medium text-white shadow-lg shadow-indigo-900/20 transition-all hover:bg-indigo-500"
+          className="mt-8 rounded-xl bg-[#173B57] px-8 py-3 font-medium text-white shadow-lg shadow-[#173B57]/20 transition-all hover:bg-[#173B57]"
           onClick={() => router.push('/dashboard')}
           type="button"
         >
@@ -235,7 +235,7 @@ export default function SessionRoom({
     return (
       <div className="flex h-screen items-center justify-center bg-black text-white">
         <div className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.03] px-5 py-4">
-          <Loader2 className="h-5 w-5 animate-spin text-indigo-300" />
+          <Loader2 className="h-5 w-5 animate-spin text-[#173B57]" />
           <span className="text-sm font-bold uppercase tracking-widest text-zinc-400">
             Preparing anonymous room
           </span>
@@ -571,7 +571,7 @@ function SessionContent({
       <section className="grid min-h-0 grid-cols-[1fr_360px]">
         <div className="relative min-w-0 overflow-hidden bg-[radial-gradient(circle_at_50%_20%,rgba(99,102,241,0.16),transparent_45%),black]">
           {webGLSupported ? (
-            <Suspense fallback={<div className="flex h-full items-center justify-center"><div className="h-8 w-8 animate-spin rounded-full border-2 border-indigo-500 border-t-transparent" /></div>}>
+            <Suspense fallback={<div className="flex h-full items-center justify-center"><div className="h-8 w-8 animate-spin rounded-full border-2 border-[#173B57] border-t-transparent" /></div>}>
               <AvatarCanvas
                 avatar={avatar}
                 localIdentity={localParticipant.identity}
@@ -605,7 +605,7 @@ function SessionContent({
             <div className="border-t border-white/10 p-4">
               <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Facilitator Notes</p>
               <textarea
-                className="mt-2 w-full resize-none rounded-xl border border-white/10 bg-white/5 p-3 text-sm text-zinc-200 placeholder-zinc-500 focus:border-indigo-500/50 focus:outline-none focus:ring-1 focus:ring-indigo-500/20"
+                className="mt-2 w-full resize-none rounded-xl border border-white/10 bg-white/5 p-3 text-sm text-zinc-200 placeholder-zinc-500 focus:border-[#173B57]/50 focus:outline-none focus:ring-1 focus:ring-[#173B57]/20"
                 placeholder="Session notes (not persisted)..."
                 rows={3}
                 value={facilitatorNotes}
@@ -619,8 +619,8 @@ function SessionContent({
       {/* Task 5.14 — Reconnecting overlay (non-blocking) */}
       {isReconnecting ? (
         <div className="pointer-events-none fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-          <div className="flex items-center gap-4 rounded-2xl border border-indigo-500/20 bg-black/80 px-8 py-5 shadow-2xl">
-            <Loader2 className="h-6 w-6 animate-spin text-indigo-300" />
+          <div className="flex items-center gap-4 rounded-2xl border border-[#173B57]/20 bg-black/80 px-8 py-5 shadow-2xl">
+            <Loader2 className="h-6 w-6 animate-spin text-[#173B57]" />
             <div>
               <p className="font-bold text-white">Reconnecting to session...</p>
               <p className="mt-0.5 text-sm text-zinc-400">Please wait, your connection will restore shortly.</p>

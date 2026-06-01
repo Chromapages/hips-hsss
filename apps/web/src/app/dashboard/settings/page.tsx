@@ -52,11 +52,11 @@ export default function SettingsPage() {
     <DashboardLayout>
       <section className="mx-auto max-w-4xl px-6 py-12 pb-32">
         <header className="mb-12">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-[10px] font-bold uppercase tracking-widest text-indigo-400 mb-6">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#173B57]/10 border border-[#173B57]/20 text-[10px] font-bold uppercase tracking-widest text-[#173B57] mb-6">
             <ShieldCheck className="w-3 h-3" />
             Privacy Integrity: Active
           </div>
-          <h1 className="text-4xl md:text-5xl font-black tracking-tighter text-white">System Settings.</h1>
+          <h1 className="font-heading text-4xl md:text-5xl font-extrabold tracking-tighter text-white">System Settings.</h1>
           <p className="mt-4 text-zinc-500 max-w-xl">
             Configure your anonymity preferences and manage your secure connection to the Hard Anonymity Protocol.
           </p>
@@ -68,12 +68,12 @@ export default function SettingsPage() {
             <h3 className="text-sm font-bold uppercase tracking-[0.3em] text-zinc-600 px-2">Identity Guard</h3>
             <div className="rounded-[2rem] border border-white/5 bg-zinc-950 p-8">
               <div className="flex flex-col md:flex-row gap-8 items-start md:items-center">
-                <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center shadow-2xl shadow-indigo-500/20">
+                <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-#173B57 to-Gold-600 flex items-center justify-center shadow-2xl shadow-[#173B57]/20">
                   <UserRound className="w-10 h-10 text-white" />
                 </div>
                 <div className="flex-1 space-y-1">
                   <p className="text-xl font-bold text-white">{user?.email}</p>
-                  <p className="text-sm text-zinc-500">Protocol Assigned Role: <span className="text-indigo-400 font-mono">{role || 'PARTICIPANT'}</span></p>
+                  <p className="text-sm text-zinc-500">Protocol Assigned Role: <span className="text-[#173B57] font-mono">{role || 'PARTICIPANT'}</span></p>
                   <div className="flex items-center gap-2 mt-4 text-[10px] font-bold text-emerald-500 uppercase tracking-widest">
                     <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                     Encrypted Session Link Active
@@ -123,10 +123,10 @@ export default function SettingsPage() {
               ].map((protocol) => (
                 <div key={protocol.title} className="group p-6 rounded-3xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.05] hover:border-white/10 transition-all">
                   <div className="flex items-start justify-between mb-4">
-                    <div className={`p-3 rounded-2xl ${protocol.active ? 'bg-indigo-500/10 text-indigo-400' : 'bg-zinc-800/50 text-zinc-600'}`}>
+                    <div className={`p-3 rounded-2xl ${protocol.active ? 'bg-[#173B57]/10 text-[#173B57]' : 'bg-zinc-800/50 text-zinc-600'}`}>
                       <protocol.icon className="w-5 h-5" />
                     </div>
-                    <div className={`h-6 w-10 rounded-full border border-white/10 relative cursor-pointer p-1 transition-colors ${protocol.active ? 'bg-indigo-600 border-indigo-400' : 'bg-zinc-900'}`}>
+                    <div className={`h-6 w-10 rounded-full border border-white/10 relative cursor-pointer p-1 transition-colors ${protocol.active ? 'bg-[#173B57] border-[#173B57]' : 'bg-zinc-900'}`}>
                       <div className={`h-full aspect-square rounded-full bg-white shadow-sm transition-transform ${protocol.active ? 'translate-x-4' : 'translate-x-0'}`} />
                     </div>
                   </div>

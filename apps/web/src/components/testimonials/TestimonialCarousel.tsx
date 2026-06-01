@@ -110,7 +110,7 @@ export default function TestimonialCarousel({ className }: TestimonialCarouselPr
     >
       {/* Section header */}
       <div className="max-w-4xl mx-auto text-center mb-12 px-6">
-        <span className="inline-flex items-center rounded-full bg-white/10 border border-white/20 px-4 py-1 text-[10px] font-black uppercase tracking-brand text-accent font-ui mb-6">
+        <span className="inline-flex items-center rounded-full bg-white/10 border border-white/20 px-4 py-1 text-[10px] font-bold uppercase tracking-brand text-accent font-ui mb-6">
           Member Stories
         </span>
         <h2 className="font-heading text-2xl md:text-3xl font-bold text-white mb-2">

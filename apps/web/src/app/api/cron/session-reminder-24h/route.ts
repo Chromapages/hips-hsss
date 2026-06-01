@@ -18,13 +18,13 @@ export async function GET(req: NextRequest) {
   }
 
   const cronSecret = process.env.CRON_SECRET;
-  if (cronSecret) {
-    const url = new URL(req.url);
-    if (url.searchParams.get('secret') !== cronSecret) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-    }
-  } else if (process.env.NODE_ENV === 'production') {
-    return NextResponse.json({ error: 'CRON_SECRET not configured' }, { status: 500 });
+  if (!cronSecret) {
+    console.error('[Cron 24h] CRON_SECRET not configured');
+    return NextResponse.json({ error: 'Cron secret not configured' }, { status: 500 });
+  }
+  const url = new URL(req.url);
+  if (url.searchParams.get('secret') !== cronSecret) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 
   try {

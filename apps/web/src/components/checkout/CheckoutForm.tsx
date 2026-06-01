@@ -63,7 +63,7 @@ export function CheckoutForm({ amount }: { amount: number }) {
           <ShieldCheck className="w-5 h-5 text-emerald-500" />
         </div>
         <div>
-          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-400 mb-1">Encrypted Gateway</p>
+          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-emerald-400 mb-1">Encrypted Gateway</p>
           <p className="text-xs text-zinc-500 leading-relaxed font-medium">
             Your connection is secured with 256-bit encryption. Payment details are handled exclusively by Stripe.
           </p>
@@ -72,9 +72,9 @@ export function CheckoutForm({ amount }: { amount: number }) {
 
       <button
         disabled={isLoading || !stripe || !elements}
-        className="group relative w-full h-16 items-center justify-center overflow-hidden rounded-[1.5rem] bg-white font-black tracking-tighter text-black transition-all hover:scale-[1.01] active:scale-[0.99] disabled:opacity-30 disabled:hover:scale-100"
+        className="group relative w-full h-16 items-center justify-center overflow-hidden rounded-[1.5rem] bg-white font-bold tracking-tighter text-black transition-all hover:scale-[1.01] active:scale-[0.99] disabled:opacity-30 disabled:hover:scale-100"
       >
-        <div className="absolute inset-0 bg-gradient-to-r from-indigo-500 to-purple-500 opacity-0 transition-opacity group-hover:opacity-10" />
+        <div className="absolute inset-0 bg-gradient-to-r from-#173B57 to-Gold-500 opacity-0 transition-opacity group-hover:opacity-10" />
         {isLoading ? (
           <div className="flex items-center justify-center gap-3">
             <Loader2 className="w-5 h-5 animate-spin" />

@@ -19,12 +19,12 @@ export function ConnectingOverlay({ connectionQuality, connectionLabel }: Connec
 
   return (
     <div className="pointer-events-none fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
-      <div className="flex flex-col items-center gap-6 rounded-2xl border border-indigo-500/20 bg-black/80 px-10 py-8 shadow-2xl">
+      <div className="flex flex-col items-center gap-6 rounded-2xl border border-[#173B57]/20 bg-black/80 px-10 py-8 shadow-2xl">
         {/* Animated loader */}
         <div className="relative">
-          <Loader2 className="h-12 w-12 animate-spin text-indigo-300" />
+          <Loader2 className="h-12 w-12 animate-spin text-[#173B57]" />
           <div className="absolute inset-0 flex items-center justify-center">
-            <div className="h-3 w-3 rounded-full bg-indigo-400 opacity-60" />
+            <div className="h-3 w-3 rounded-full bg-[#173B57] opacity-60" />
           </div>
         </div>
 

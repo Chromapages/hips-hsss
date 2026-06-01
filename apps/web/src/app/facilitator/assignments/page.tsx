@@ -33,7 +33,7 @@ export default function AssignmentsPage() {
     <DashboardLayout>
       <div className="mx-auto max-w-7xl px-6 py-12 lg:px-8">
         <header className="mb-12">
-          <h1 className="text-4xl font-black text-white">My <span className="text-emerald-500">Assignments</span></h1>
+          <h1 className="font-heading text-4xl font-extrabold text-white">My <span className="text-emerald-500">Assignments</span></h1>
           <p className="mt-4 text-zinc-400">Sessions you are scheduled to lead.</p>
         </header>
 

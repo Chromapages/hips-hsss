@@ -1,39 +1,26 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useAuth } from "@/components/auth/AuthProvider";
+import { useFetchWithTimeout } from "@/hooks/useFetchWithTimeout";
 import { ShieldAlert, Loader2, AlertCircle, Eye } from "lucide-react";
 import { format } from "date-fns";
 
+type SafetyAlert = {
+  id: string;
+  sessionId: string;
+  severity?: 'CRITICAL' | 'HIGH' | string;
+  category?: string;
+  createdAt: string;
+};
+
 export default function AdminSafetyQueuePage() {
-  const [alerts, setAlerts] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const { getToken } = useAuth();
+  const { data, isLoading } = useFetchWithTimeout<SafetyAlert[]>('/api/admin/safety-alerts');
 
-  const loadAlerts = async () => {
-    setLoading(true);
-    try {
-      const token = await getToken();
-      const res = await fetch('/api/admin/safety-alerts', {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      const data = await res.json();
-      setAlerts(Array.isArray(data) ? data : []);
-    } catch (error) {
-      console.error('Failed to load safety alerts:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    loadAlerts();
-  }, [getToken]);
+  const alerts = Array.isArray(data) ? data : [];
 
   return (
     <div className="p-8">
       <header className="mb-8">
-        <p className="text-sm font-semibold uppercase tracking-wide text-indigo-400">
+        <p className="text-sm font-semibold uppercase tracking-wide text-[#173B57]">
           Safety
         </p>
         <h1 className="mt-2 text-3xl font-bold text-white">
@@ -45,9 +32,9 @@ export default function AdminSafetyQueuePage() {
         </p>
       </header>
 
-      {loading ? (
+      {isLoading ? (
         <div className="flex justify-center py-20">
-          <Loader2 className="h-8 w-8 animate-spin text-indigo-500" />
+          <Loader2 className="h-8 w-8 animate-spin text-[#173B57]" />
         </div>
       ) : (
         <div className="overflow-hidden rounded-xl border border-white/10 bg-zinc-900 shadow-2xl">

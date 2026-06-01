@@ -33,6 +33,7 @@ interface Phase5Session {
   startsAt?: string;
   endsAt?: string;
   participantCount: number;
+  participantIdentities?: string[];
   flagged: boolean;
   flaggedBy?: string;
   flaggedReason?: string;
@@ -52,6 +53,7 @@ async function getOrCreateSession(sessionId: string): Promise<Phase5Session> {
     status: 'pending',
     createdAt: new Date().toISOString(),
     participantCount: 0,
+    participantIdentities: [],
     flagged: false,
   };
 
@@ -74,18 +76,20 @@ async function transitionSession(sessionId: string, newStatus: SessionStatus) {
 
 export async function POST(req: NextRequest) {
   try {
-    const apiKey = process.env.LIVEKIT_API_KEY || process.env.NEXT_PUBLIC_LIVEKIT_API_KEY || 'devkey';
-    const apiSecret = process.env.LIVEKIT_API_SECRET || process.env.NEXT_PUBLIC_LIVEKIT_API_SECRET || 'secret';
+    const apiKey = process.env.LIVEKIT_API_KEY || process.env.NEXT_PUBLIC_LIVEKIT_API_KEY || '';
+    const apiSecret = process.env.LIVEKIT_API_SECRET || process.env.NEXT_PUBLIC_LIVEKIT_API_SECRET || '';
 
-    if (process.env.NODE_ENV === 'production' && (apiKey === 'devkey' || apiSecret === 'secret')) {
-      console.error('[LiveKitAPI] MISSING CREDENTIALS IN PRODUCTION', { apiKey: apiKey !== 'devkey', apiSecret: apiSecret !== 'secret' });
+    const isMissingOrPlaceholder = !apiKey || !apiSecret || apiKey === 'devkey' || apiSecret === 'secret';
+
+    if (process.env.NODE_ENV === 'production' && isMissingOrPlaceholder) {
+      console.error('[LiveKitAPI] MISSING CREDENTIALS IN PRODUCTION');
       return NextResponse.json({
         error: 'LiveKit credentials missing from server environment',
       }, { status: 500 });
     }
 
-    if (!process.env.LIVEKIT_API_KEY || !process.env.LIVEKIT_API_SECRET) {
-      console.warn('[LiveKitAPI] Using development fallback credentials (devkey/secret).');
+    if (isMissingOrPlaceholder) {
+      console.warn('[LiveKitAPI] Using development fallback credentials.');
     }
 
     const authHeader = req.headers.get('authorization');
@@ -215,6 +219,20 @@ export async function POST(req: NextRequest) {
     });
 
     const tokenJwt = await at.toJwt();
+
+    // Record participant identity for future authorization checks
+    if (body.sessionId && anonymousIdentity) {
+      try {
+        const sessionRef = db.collection('phase5_sessions').doc(body.sessionId);
+        await sessionRef.update({
+          participantIdentities: admin.firestore.FieldValue.arrayUnion(anonymousIdentity),
+          lastActivityAt: new Date().toISOString(),
+        });
+      } catch (err) {
+        console.warn('[LiveKitAPI] Could not update participantIdentities:', err);
+        // Non-fatal — token already issued
+      }
+    }
 
     return NextResponse.json({
       token: tokenJwt,

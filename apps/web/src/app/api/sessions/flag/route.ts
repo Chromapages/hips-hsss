@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getDb } from '@/lib/firebase-admin';
 import { ROLES } from '@/lib/roles';
 import { verifyFirebaseIdToken } from '@/lib/auth-edge';
+import { checkRateLimit, getRateLimitHeaders } from '@/lib/rate-limit';
 import crypto from 'crypto';
 
 /**
@@ -28,6 +29,17 @@ export async function POST(req: NextRequest) {
   const db = getDb();
   if (!db) {
     return NextResponse.json({ error: 'Service temporarily unavailable' }, { status: 503 });
+  }
+
+  // Rate limit: 5 submissions per minute per IP
+  const forwarded = req.headers.get('x-forwarded-for');
+  const ip = forwarded?.split(',')[0]?.trim() ?? 'unknown';
+  const rateLimitResult = checkRateLimit(ip, 5, 60_000);
+  if (!rateLimitResult.allowed) {
+    return NextResponse.json(
+      { error: 'Too many flag submissions. Please slow down.' },
+      { status: 429, headers: getRateLimitHeaders(rateLimitResult.resetAt, 0, 5) }
+    );
   }
 
   try {
@@ -59,6 +71,15 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Optional Firebase auth — if token provided, use Firebase UID as reporterIdentity
+    const authHeader = req.headers.get('authorization');
+    const token = authHeader?.startsWith('Bearer ') ? authHeader.split(' ')[1] : null;
+    let firebaseUid: string | null = null;
+    if (token) {
+      try { firebaseUid = (await verifyFirebaseIdToken(token))?.sub ?? null; } catch { /* ignore */ }
+    }
+    const resolvedReporterIdentity = firebaseUid || reporterIdentity;
+
     // Get session context for metadata
     let sessionActive = false;
     let participantCount = 0;
@@ -75,7 +96,7 @@ export async function POST(req: NextRequest) {
         // Mark session as flagged
         await sessionRef.update({
           flagged: true,
-          flaggedBy: reporterIdentity,
+          flaggedBy: resolvedReporterIdentity,
           flaggedReason: reason,
           flaggedAt: new Date().toISOString(),
         });
@@ -88,7 +109,7 @@ export async function POST(req: NextRequest) {
     const flagReport: FlagReport = {
       id: crypto.randomUUID(),
       sessionId,
-      reporterIdentity, // Anonymous identity, not Firebase UID
+      reporterIdentity: resolvedReporterIdentity,
       reason: reason.trim(),
       severity,
       createdAt: new Date().toISOString(),

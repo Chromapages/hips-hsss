@@ -117,7 +117,7 @@ export function VoiceControlsBar({
                 className={[
                   "flex h-10 w-10 items-center justify-center rounded-lg text-lg transition-all",
                   gesture === opt.value
-                    ? "border border-indigo-500/30 bg-indigo-500/20 text-indigo-300"
+                    ? "border border-[#173B57]/30 bg-[#173B57]/20 text-[#173B57]"
                     : "text-zinc-400 hover:bg-white/5 hover:text-white",
                 ].join(" ")}
                 onClick={() => onGestureChange(opt.value)}
@@ -142,7 +142,7 @@ export function VoiceControlsBar({
               className={[
                 "flex h-14 w-14 items-center justify-center rounded-full transition-all group",
                 showFxPanel
-                  ? "border border-indigo-500/40 bg-indigo-500/20 text-indigo-300"
+                  ? "border border-[#173B57]/40 bg-[#173B57]/20 text-[#173B57]"
                   : "border border-white/5 bg-white/5 text-white hover:bg-white/10",
               ].join(" ")}
             >
@@ -201,7 +201,7 @@ export function VoiceControlsBar({
             <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-full border border-red-500/20 bg-red-500/10">
               <PhoneOff className="h-8 w-8 text-red-500" />
             </div>
-            <h2 className="mb-4 text-3xl font-black tracking-tighter" id="leave-modal-title">
+            <h2 className="font-heading mb-4 text-3xl font-extrabold tracking-tighter" id="leave-modal-title">
               End this session?
             </h2>
             <p className="leading-relaxed text-zinc-400">

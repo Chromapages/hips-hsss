@@ -73,11 +73,11 @@ export default function FacilitatorDashboard() {
       <div className="mx-auto max-w-7xl px-6 py-12 lg:px-8">
         <header>
           <div className="flex items-center gap-3 mb-4">
-            <div className="px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] font-black uppercase tracking-widest">
+            <div className="px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] font-bold uppercase tracking-widest">
               Live Console
             </div>
           </div>
-          <h1 className="text-4xl font-black tracking-tight text-white sm:text-5xl">
+          <h1 className="font-heading text-4xl font-extrabold tracking-tight text-white sm:text-5xl">
             Lead <span className="text-emerald-500">Dispatch</span>
           </h1>
           <p className="mt-4 text-lg text-zinc-400 max-w-2xl">
@@ -94,7 +94,7 @@ export default function FacilitatorDashboard() {
                 </div>
                 <div>
                    <p className="text-[10px] uppercase tracking-widest text-zinc-500 font-bold">Active Queue</p>
-                   <p className="text-2xl font-black text-white">{queue.length}</p>
+                   <p className="text-2xl font-bold text-white">{queue.length}</p>
                 </div>
               </div>
            </div>
@@ -105,7 +105,7 @@ export default function FacilitatorDashboard() {
                 </div>
                 <div>
                    <p className="text-[10px] uppercase tracking-widest text-zinc-500 font-bold">Total Led</p>
-                   <p className="text-2xl font-black text-white">0</p>
+                   <p className="text-2xl font-bold text-white">0</p>
                 </div>
               </div>
            </div>
@@ -116,7 +116,7 @@ export default function FacilitatorDashboard() {
                 </div>
                 <div>
                    <p className="text-[10px] uppercase tracking-widest text-zinc-500 font-bold">Rating</p>
-                   <p className="text-2xl font-black text-white">5.0</p>
+                   <p className="text-2xl font-bold text-white">5.0</p>
                 </div>
               </div>
            </div>
@@ -150,7 +150,7 @@ export default function FacilitatorDashboard() {
                   className="group relative flex items-center justify-between p-6 rounded-2xl border border-white/5 bg-zinc-900/50 hover:bg-zinc-900 transition-all hover:border-emerald-500/30"
                 >
                   <div className="flex items-center gap-6">
-                    <div className="hidden sm:flex h-12 w-12 items-center justify-center rounded-xl bg-white/5 text-zinc-400 font-black text-xs uppercase group-hover:bg-emerald-500/10 group-hover:text-emerald-400 transition-colors">
+                    <div className="hidden sm:flex h-12 w-12 items-center justify-center rounded-xl bg-white/5 text-zinc-400 font-bold text-xs uppercase group-hover:bg-emerald-500/10 group-hover:text-emerald-400 transition-colors">
                       {session.id.substring(0, 4)}
                     </div>
                     <div>
@@ -173,7 +173,7 @@ export default function FacilitatorDashboard() {
                   <button
                     disabled={isClaiming === session.id}
                     onClick={() => handleClaim(session.id)}
-                    className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white px-6 py-2.5 rounded-xl font-black text-sm transition-all shadow-lg shadow-emerald-500/10"
+                    className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white px-6 py-2.5 rounded-xl font-bold text-sm transition-all shadow-lg shadow-emerald-500/10"
                   >
                     {isClaiming === session.id ? (
                       <Loader2 className="h-4 w-4 animate-spin" />

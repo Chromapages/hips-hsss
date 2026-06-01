@@ -3,16 +3,23 @@
 import { useState, useEffect } from "react";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "@/lib/firebase-client";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { useAuth } from "@/components/auth/AuthProvider";
 import Link from "next/link";
 import { Loader2, Mail, Lock, ArrowRight } from "lucide-react";
 
 export default function LoginPage() {
   const router = useRouter();
+  const pathname = usePathname();
   const { user, loading: authLoading, firebaseReady } = useAuth();
   const searchParams = useSearchParams();
   const from = searchParams.get("from") || "/dashboard";
+
+  // CRITICAL: On /login, render the form immediately even while AuthProvider is still
+  // resolving onAuthStateChanged. Gating the form behind authLoading causes a permanent
+  // loading spinner if Firebase's first auth-state callback is delayed or blocked.
+  // The auto-redirect useEffect below still handles the "already signed in" case.
+  const showForm = pathname === "/login" || pathname === "/signup";
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -84,10 +91,10 @@ export default function LoginPage() {
     }
   };
 
-  if (authLoading) {
+  if (authLoading && !showForm) {
     return (
       <div className="flex min-h-72 items-center justify-center">
-        <Loader2 className="h-6 w-6 animate-spin text-indigo-500" />
+        <Loader2 className="h-6 w-6 animate-spin text-primary" />
       </div>
     );
   }
@@ -95,15 +102,16 @@ export default function LoginPage() {
   return (
     <div className="space-y-8">
       <div className="space-y-2">
-        <h1 className="text-3xl md:text-4xl font-black tracking-tighter text-white">Welcome back.</h1>
-        <p className="text-sm font-medium text-zinc-500">Enter your credentials to access your sanctuary.</p>
+        {/* H1 - serif heading */}
+        <h1 className="font-heading text-3xl md:text-4xl font-bold tracking-tight text-white">Welcome back.</h1>
+        <p className="text-sm font-medium text-zinc-500 font-body">Enter your credentials to access your sanctuary.</p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-5">
         <div className="space-y-2">
-          <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-500 ml-1" htmlFor="login-email">Email Address</label>
+          <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-500 ml-1 font-ui" htmlFor="login-email">Email Address</label>
           <div className="relative group">
-            <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-600 group-focus-within:text-indigo-500 transition-colors" />
+            <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-600 group-focus-within:text-primary transition-colors" />
             <input
               id="login-email"
               type="email"
@@ -111,20 +119,20 @@ export default function LoginPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="name@example.com"
-              className="w-full h-14 bg-white/5 border border-white/5 rounded-2xl pl-12 pr-4 text-sm font-medium focus:outline-none focus:border-indigo-500/50 focus:bg-white/10 transition-all placeholder:text-zinc-700"
+              className="w-full h-14 bg-white/5 border border-white/5 rounded-2xl pl-12 pr-4 text-sm font-medium focus:outline-none focus:border-primary/50 focus:bg-white/10 transition-all placeholder:text-zinc-700 font-body"
             />
           </div>
         </div>
 
         <div className="space-y-2">
           <div className="flex justify-between items-center px-1">
-            <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-500" htmlFor="login-password">Password</label>
-            <Link href="/forgot-password" className="text-[10px] font-bold uppercase tracking-[0.2em] text-indigo-400 hover:text-indigo-300">
+            <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-500 font-ui" htmlFor="login-password">Password</label>
+            <Link href="/forgot-password" className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary hover:text-primary font-ui">
               Forgot?
             </Link>
           </div>
           <div className="relative group">
-            <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-600 group-focus-within:text-indigo-500 transition-colors" />
+            <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-600 group-focus-within:text-primary transition-colors" />
             <input
               id="login-password"
               type="password"
@@ -132,13 +140,13 @@ export default function LoginPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
-              className="w-full h-14 bg-white/5 border border-white/5 rounded-2xl pl-12 pr-4 text-sm font-medium focus:outline-none focus:border-indigo-500/50 focus:bg-white/10 transition-all placeholder:text-zinc-700"
+              className="w-full h-14 bg-white/5 border border-white/5 rounded-2xl pl-12 pr-4 text-sm font-medium focus:outline-none focus:border-primary/50 focus:bg-white/10 transition-all placeholder:text-zinc-700 font-body"
             />
           </div>
         </div>
 
         {error && (
-          <div className="p-4 rounded-xl bg-red-500/5 border border-red-500/10 text-red-400 text-[10px] font-bold uppercase tracking-widest text-center animate-in shake-in duration-300">
+          <div className="p-4 rounded-xl bg-red-500/5 border border-red-500/10 text-red-400 text-[10px] font-bold uppercase tracking-widest text-center animate-in shake-in duration-300 font-ui">
             {error}
           </div>
         )}
@@ -146,9 +154,9 @@ export default function LoginPage() {
         <button
           type="submit"
           disabled={loading}
-          className="group relative w-full h-16 items-center justify-center overflow-hidden rounded-[1.5rem] bg-white font-black tracking-tighter text-black transition-all hover:scale-[1.01] active:scale-[0.99] disabled:opacity-30 disabled:hover:scale-100"
+          className="group relative w-full h-16 items-center justify-center overflow-hidden rounded-[1.5rem] bg-white font-bold tracking-tighter text-black transition-all hover:scale-[1.01] active:scale-[0.99] disabled:opacity-30 disabled:hover:scale-100 font-ui uppercase"
         >
-          <div className="absolute inset-0 bg-gradient-to-r from-indigo-500 to-purple-500 opacity-0 transition-opacity group-hover:opacity-10" />
+          <div className="absolute inset-0 bg-gradient-to-r from-primary to-accent opacity-0 transition-opacity group-hover:opacity-10" />
           {loading ? (
             <Loader2 className="w-5 h-5 animate-spin mx-auto" />
           ) : (
@@ -161,9 +169,9 @@ export default function LoginPage() {
       </form>
 
       <div className="pt-4 text-center">
-        <p className="text-xs font-medium text-zinc-500">
+        <p className="text-xs font-medium text-zinc-500 font-body">
           Don&apos;t have an account?{" "}
-          <Link href="/signup" className="text-white font-bold hover:text-indigo-400 transition-colors">
+          <Link href="/signup" className="text-white font-bold hover:text-primary transition-colors">
             Create Sanctuary
           </Link>
         </p>

@@ -1,53 +1,47 @@
 'use client';
 
-import { useEffect, useState } from "react";
-import { useAuth } from "@/components/auth/AuthProvider";
+import { useFetchWithTimeout } from "@/hooks/useFetchWithTimeout";
 import { DollarSign, Users, Activity, ShieldAlert, Loader2, TrendingUp, BarChart3, Globe } from "lucide-react";
 import { format } from "date-fns";
 
+type AdminStats = {
+  totalRevenue?: number | string;
+  activeSessions?: number;
+  totalUsers?: number;
+  recentAlerts?: Array<{
+    id: string;
+    severity?: string;
+    category?: string;
+    createdAt: string;
+    sessionId: string;
+  }>;
+};
+
 export default function AdminDashboardPage() {
-  const [stats, setStats] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-  const { getToken } = useAuth();
+  const { data: stats, isLoading } = useFetchWithTimeout<AdminStats>('/api/admin/stats');
 
-  useEffect(() => {
-    async function loadStats() {
-      try {
-        const token = await getToken();
-        const res = await fetch('/api/admin/stats', {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        const data = await res.json();
-        setStats(data);
-      } catch (error) {
-        console.error('Failed to load admin stats:', error);
-      } finally {
-        setLoading(false);
-      }
-    }
-    loadStats();
-  }, [getToken]);
-
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
-        <Loader2 className="w-10 h-10 animate-spin text-indigo-500" />
+        <Loader2 className="w-10 h-10 animate-spin text-[#173B57]" />
       </div>
     );
   }
 
   const cards = [
     { label: 'Total Revenue', value: `$${stats?.totalRevenue || '0.00'}`, change: 'Gross', icon: DollarSign, color: 'text-emerald-400' },
-    { label: 'Active Sessions', value: stats?.activeSessions || 0, change: 'Live Now', icon: Activity, color: 'text-indigo-400' },
+    { label: 'Active Sessions', value: stats?.activeSessions || 0, change: 'Live Now', icon: Activity, color: 'text-[#173B57]' },
     { label: 'Platform Users', value: stats?.totalUsers || 0, change: 'Total', icon: Users, color: 'text-blue-400' },
     { label: 'Safety Alerts', value: stats?.recentAlerts?.length || 0, change: 'Critical Priority', icon: ShieldAlert, color: 'text-rose-400' },
   ];
+
+  const recentAlerts = stats?.recentAlerts ?? [];
 
   return (
     <div className="mx-auto max-w-7xl px-6 py-12 lg:px-8">
       <header className="mb-12">
         <div className="flex items-center gap-3 mb-4">
-           <div className="px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-[10px] font-black uppercase tracking-widest">
+           <div className="px-3 py-1 rounded-full bg-[#173B57]/10 border border-[#173B57]/20 text-[#173B57] text-[10px] font-black uppercase tracking-widest">
              System Monitor
            </div>
            <div className="flex items-center gap-1.5">
@@ -55,8 +49,8 @@ export default function AdminDashboardPage() {
              <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Nodes Online</span>
            </div>
         </div>
-        <h1 className="text-4xl font-black tracking-tight text-white sm:text-5xl">
-          Control <span className="text-indigo-500">Plane</span>
+        <h1 className="font-heading text-4xl font-extrabold tracking-tight text-white sm:text-5xl">
+          Control <span className="text-[#173B57]">Plane</span>
         </h1>
         <p className="mt-4 text-lg text-zinc-400 max-w-2xl">
           Global platform oversight. Monitor commerce flow, safety incidents, and infrastructure health in real-time.
@@ -88,12 +82,12 @@ export default function AdminDashboardPage() {
         <div className="lg:col-span-2 rounded-3xl border border-white/5 bg-zinc-900/50 p-8 h-[400px] flex flex-col">
           <div className="flex items-center justify-between mb-8">
             <h3 className="font-bold text-white flex items-center gap-2">
-              <TrendingUp className="h-4 w-4 text-indigo-400" />
+              <TrendingUp className="h-4 w-4 text-[#173B57]" />
               Growth Velocity
             </h3>
             <div className="flex gap-2">
               <div className="px-3 py-1 rounded-lg bg-white/5 text-[10px] font-bold text-zinc-400">7D</div>
-              <div className="px-3 py-1 rounded-lg bg-indigo-500/20 text-[10px] font-bold text-indigo-400 border border-indigo-500/20">30D</div>
+              <div className="px-3 py-1 rounded-lg bg-[#173B57]/20 text-[10px] font-bold text-[#173B57] border border-[#173B57]/20">30D</div>
             </div>
           </div>
           <div className="flex-1 flex items-center justify-center border border-dashed border-white/5 rounded-2xl bg-black/20">
@@ -108,8 +102,8 @@ export default function AdminDashboardPage() {
             Live Safety Feed
           </h3>
           <div className="space-y-6 flex-1 overflow-y-auto">
-             {stats?.recentAlerts?.length > 0 ? (
-               stats.recentAlerts.map((alert: any) => (
+             {recentAlerts.length > 0 ? (
+               recentAlerts.map((alert) => (
                  <div key={alert.id} className="flex flex-col gap-1 pb-4 border-b border-white/5 last:border-0">
                    <div className="flex items-center justify-between">
                      <span className={`text-[10px] font-black uppercase tracking-widest ${

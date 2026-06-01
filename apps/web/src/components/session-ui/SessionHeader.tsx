@@ -83,14 +83,14 @@ export function SessionHeader({
         <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">
           Anonymous Room
         </p>
-        <p className="font-mono text-sm font-bold text-indigo-300">
+        <p className="font-mono text-sm font-bold text-[#173B57]">
           anon-{anonymousHandle.slice(0, 8)}
         </p>
       </div>
 
       {/* Center: Timer + Safety status */}
       <div className="flex flex-col items-center gap-1">
-        <p className="font-mono text-2xl font-black tracking-widest text-white">
+        <p className="font-mono text-2xl font-bold tracking-widest text-white">
           {formatTime(sessionSeconds)}
         </p>
         <div className="flex items-center gap-3">

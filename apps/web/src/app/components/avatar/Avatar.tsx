@@ -63,7 +63,7 @@ export const Avatar: React.FC<AvatarConfig> = ({
   const paletteData = useMemo(
     () => {
       const found = AVATAR_PALETTES.find((p) => p.id === palette);
-      return found ?? { id: 'midnight', name: 'Midnight', primary: '#1E293B', secondary: '#334155', accent: '#6366F1', emissive: '#818CF8' } as unknown as ColorPalette;
+      return found ?? { id: 'midnight', name: 'Midnight', primary: '#1E293B', secondary: '#334155', accent: '#173B57', emissive: '#173B57' } as unknown as ColorPalette;
     },
     [palette]
   );
@@ -153,7 +153,7 @@ export const AvatarRing: React.FC<AvatarRingProps> = ({
   isPeer = false,
 }) => {
   const size = config.size ?? 128;
-  const ringColor = isPeer ? '#6B7280' : '#6366F1';
+  const ringColor = isPeer ? '#6B7280' : '#173B57';
 
   return (
     <div
@@ -178,7 +178,7 @@ export const AvatarRing: React.FC<AvatarRingProps> = ({
       {label && (
         <span
           className="absolute -bottom-6 left-1/2 -translate-x-1/2 font-mono text-xs"
-          style={{ color: isPeer ? '#9CA3AF' : '#A5B4FC' }}
+          style={{ color: isPeer ? '#9CA3AF' : '#173B57' }}
         >
           {label}
         </span>

@@ -14,7 +14,7 @@ export function SessionHeader({ sessionId, anonId }: SessionHeaderProps) {
         <p className="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-slate-500">
           Anonymous Room
         </p>
-        <p id="session-anon-id" className="font-mono text-sm text-indigo-300">
+        <p id="session-anon-id" className="font-mono text-sm text-[#173B57]">
           {anonId}
         </p>
       </div>

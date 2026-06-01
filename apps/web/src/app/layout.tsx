@@ -1,23 +1,45 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { DM_Sans, Source_Sans_3, Montserrat } from "next/font/google";
 import { ToastProvider } from "@/components/polish/ToastProvider";
 import { AuthProvider } from "@/components/auth/AuthProvider";
 import { GlobalDisclaimerBanner } from "@/components/polish/GlobalDisclaimerBanner";
+import { AnalyticsTracker } from "@/components/analytics/AnalyticsTracker";
 import "./globals.css";
+import "./trust-strip-animations.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const dmSans = DM_Sans({
+  variable: "--font-dm-sans",
   subsets: ["latin"],
+  weight: ["700", "800"],
+  display: "swap",
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const sourceSans3 = Source_Sans_3({
+  variable: "--font-body",
   subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  display: "swap",
+});
+
+const montserrat = Montserrat({
+  variable: "--font-ui",
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  display: "swap",
 });
 
 export const metadata: Metadata = {
   title: "H.I.P.S. Foundation Platform",
   description: "Anonymous peer support with hard anonymity boundaries.",
+  icons: {
+    icon: '/favicon.png',
+    shortcut: '/favicon.ico',
+    apple: '/apple-touch-icon.png',
+    other: [
+      { rel: 'icon', type: 'image/png', sizes: '32x32', url: '/favicon-32x32.png' },
+      { rel: 'icon', type: 'image/png', sizes: '16x16', url: '/favicon-16x16.png' },
+    ],
+  },
 };
 
 export default function RootLayout({
@@ -28,13 +50,14 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${dmSans.variable} ${sourceSans3.variable} ${montserrat.variable} h-full antialiased`}
       suppressHydrationWarning
     >
-      <body className="min-h-full flex flex-col pb-[env(safe-area-inset-bottom)]" suppressHydrationWarning>
+      <body className="min-h-full flex flex-col pb-[env(safe-area-inset-bottom)] font-body text-text-primary" suppressHydrationWarning>
         <AuthProvider>
           <ToastProvider>
             <GlobalDisclaimerBanner />
+            <AnalyticsTracker />
             {children}
           </ToastProvider>
         </AuthProvider>

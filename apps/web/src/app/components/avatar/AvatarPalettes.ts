@@ -18,8 +18,8 @@ export const AVATAR_PALETTES: ColorPalette[] = [
     name: 'Midnight',
     primary: '#1E293B',   // Slate 800
     secondary: '#334155', // Slate 700
-    accent: '#6366F1',    // Indigo 500
-    emissive: '#818CF8',   // Indigo 400
+    accent: '#173B57',    // Indigo 500
+    emissive: '#173B57',   // Indigo 400
   },
   {
     id: 'forest',

@@ -15,7 +15,7 @@ export default function JoinError({
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <button
             onClick={reset}
-            className="px-6 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 font-bold text-white transition-colors"
+            className="px-6 py-3 rounded-xl bg-[#173B57] hover:bg-[#173B57] font-bold text-white transition-colors"
           >
             Try Again
           </button>

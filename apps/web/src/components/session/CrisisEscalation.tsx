@@ -101,12 +101,13 @@ export const CrisisEscalation: React.FC<CrisisEscalationProps> = ({
       <div className="absolute inset-0 w-full h-full">
         <Image
           src="/crisis-bg.png"
-          alt=""
+          alt="Crisis support background — confidential and secure"
           fill
           className="object-cover opacity-40"
           aria-hidden="true"
           sizes="100vw"
           priority
+          quality={75}
         />
       </div>
 

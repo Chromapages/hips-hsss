@@ -100,7 +100,7 @@ export function FlagModal({ onClose, onSubmit }: FlagModalProps) {
       }}
     >
       <div className="w-full max-w-md rounded-xl border border-white/10 bg-zinc-950 p-6 sm:p-8">
-        <h3 id="flag-modal-title" className="text-xl sm:text-2xl font-black mb-2">
+        <h3 id="flag-modal-title" className="font-heading text-xl sm:text-2xl font-extrabold mb-2">
           🚨 Flag Safety Concern
         </h3>
         <p className="text-sm text-slate-400 mb-6">
@@ -116,7 +116,7 @@ export function FlagModal({ onClose, onSubmit }: FlagModalProps) {
         <div className="flex gap-3">
           <button
             onClick={onClose}
-            className="flex-1 py-3 rounded-xl border border-white/10 font-bold hover:bg-white/5 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="flex-1 py-3 rounded-xl border border-white/10 font-bold hover:bg-white/5 focus:outline-none focus:ring-2 focus:ring-[#173B57]"
           >
             Cancel
           </button>
@@ -149,7 +149,7 @@ export function LeaveModal({ onClose, onConfirm }: LeaveModalProps) {
       }}
     >
       <div className="w-full max-w-md rounded-xl border border-white/10 bg-zinc-950 p-6 sm:p-8">
-        <h3 id="leave-modal-title" className="text-xl sm:text-2xl font-black mb-2">
+        <h3 id="leave-modal-title" className="font-heading text-xl sm:text-2xl font-extrabold mb-2">
           Leave this session?
         </h3>
         <p className="text-sm text-slate-400 mb-6">
@@ -158,7 +158,7 @@ export function LeaveModal({ onClose, onConfirm }: LeaveModalProps) {
         <div className="flex gap-3">
           <button
             onClick={onClose}
-            className="flex-1 py-3 rounded-xl border border-white/10 font-bold hover:bg-white/5 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="flex-1 py-3 rounded-xl border border-white/10 font-bold hover:bg-white/5 focus:outline-none focus:ring-2 focus:ring-[#173B57]"
           >
             Cancel
           </button>
@@ -185,7 +185,7 @@ export function SummaryScreen({ anonId, duration, onReset }: SummaryScreenProps)
     <div className="screen flex-col items-center justify-center min-h-screen px-4 sm:px-6 active">
       <div className="fade-in max-w-md text-center">
         <div className="text-5xl sm:text-6xl mb-6">✅</div>
-        <h2 className="text-3xl sm:text-4xl font-black mb-3">Session Complete</h2>
+        <h2 className="font-heading text-3xl sm:text-4xl font-extrabold mb-3">Session Complete</h2>
         <p className="text-slate-400 mb-8 text-sm sm:text-base">
           Your session has ended. Here is what happened:
         </p>
@@ -193,7 +193,7 @@ export function SummaryScreen({ anonId, duration, onReset }: SummaryScreenProps)
         <div className="text-left rounded-2xl border border-white/10 bg-white/[0.03] p-4 sm:p-6 space-y-4 mb-8">
           <div className="flex justify-between">
             <span className="text-slate-400 text-sm">Anonymous ID</span>
-            <span className="font-mono text-indigo-300">{anonId}</span>
+            <span className="font-mono text-[#173B57]">{anonId}</span>
           </div>
           <div className="flex justify-between">
             <span className="text-slate-400 text-sm">Duration</span>
@@ -209,8 +209,8 @@ export function SummaryScreen({ anonId, duration, onReset }: SummaryScreenProps)
           </div>
         </div>
 
-        <div className="rounded-xl border border-indigo-500/20 bg-indigo-500/5 p-4 mb-8">
-          <p className="text-sm text-indigo-200">
+        <div className="rounded-xl border border-[#173B57]/20 bg-[#173B57]/5 p-4 mb-8">
+          <p className="text-sm text-[#173B57]">
             🛡️ Your identity was never stored with your voice. The session DB
             only knew your anonymous token — never your billing identity.
           </p>
@@ -236,14 +236,14 @@ export function ConnectingScreen({ anonId }: ConnectingScreenProps) {
   return (
     <div className="screen flex-col items-center justify-center min-h-screen px-4 sm:px-6">
       <div className="fade-in text-center">
-        <div className="w-16 h-16 border-4 border-indigo-500/30 border-t-indigo-500 rounded-full spin mx-auto mb-6" />
-        <h2 className="text-2xl sm:text-3xl font-black mb-3">
+        <div className="w-16 h-16 border-4 border-[#173B57]/30 border-t-#173B57 rounded-full spin mx-auto mb-6" />
+        <h2 className="font-heading text-2xl sm:text-3xl font-extrabold mb-3">
           Preparing your anonymous room...
         </h2>
         <p className="text-slate-400 mb-4 text-sm sm:text-base">
           Connecting to LiveKit servers
         </p>
-        <p className="font-mono text-sm text-indigo-300">Room: demo-room-hips</p>
+        <p className="font-mono text-sm text-[#173B57]">Room: demo-room-hips</p>
         <p className="font-mono text-xs text-slate-500 mt-2">{anonId}</p>
       </div>
     </div>
@@ -272,10 +272,10 @@ export function MicSetupScreen({ onBack, onMicReady }: MicSetupScreenProps) {
   return (
     <div className="screen flex-col items-center justify-center min-h-screen px-4 sm:px-6">
       <div className="fade-in max-w-xl w-full">
-        <p className="text-xs font-bold uppercase tracking-widest text-indigo-300 mb-4 text-center">
+        <p className="text-xs font-bold uppercase tracking-widest text-[#173B57] mb-4 text-center">
           Step 1 of 2
         </p>
-        <h2 className="text-2xl sm:text-3xl md:text-4xl font-black mb-2 text-center">
+        <h2 className="font-heading text-2xl sm:text-3xl md:text-4xl font-extrabold mb-2 text-center">
           Set up your microphone
         </h2>
         <p className="text-slate-400 text-center mb-8 text-sm sm:text-base">
@@ -284,7 +284,7 @@ export function MicSetupScreen({ onBack, onMicReady }: MicSetupScreenProps) {
         </p>
 
         <div className="rounded-xl border border-white/10 bg-white/[0.02] p-4 sm:p-6 mb-8">
-          <h3 className="font-semibold text-indigo-200 mb-2">
+          <h3 className="font-semibold text-[#173B57] mb-2">
             🎭 Voice Masking Preview
           </h3>
           <p className="text-sm text-slate-400 mb-4">
@@ -339,15 +339,15 @@ export function LandingScreen({ onStart }: LandingScreenProps) {
     <div className="screen active flex-col items-center justify-center min-h-screen px-4 sm:px-6 text-center">
       <div className="fade-in max-w-2xl">
         <div className="flex items-center justify-center gap-3 mb-8">
-          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-2xl font-black">
+          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-#173B57 to-Gold-600 flex items-center justify-center text-2xl font-bold">
             H
           </div>
-          <span className="text-2xl font-black tracking-tight">H.I.P.S.</span>
+          <span className="text-2xl font-bold tracking-tight">H.I.P.S.</span>
         </div>
-        <p className="text-xs font-bold uppercase tracking-widest text-indigo-300 mb-4">
+        <p className="text-xs font-bold uppercase tracking-widest text-[#173B57] mb-4">
           Anonymous Peer Support
         </p>
-        <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black leading-tight mb-6">
+        <h1 className="font-heading text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold leading-tight mb-6">
           Your voice will be masked.<br />Your identity stays hidden.
         </h1>
         <p className="text-base sm:text-lg text-slate-400 mb-10 max-w-lg mx-auto leading-relaxed">

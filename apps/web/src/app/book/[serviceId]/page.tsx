@@ -20,16 +20,16 @@ export default function BookServicePage({
   return (
     <>
       <Navbar />
-      <main className="min-h-screen bg-black pb-40 text-white selection:bg-indigo-500/30">
+      <main className="min-h-screen bg-black pb-40 text-white selection:bg-[#173B57]/30">
         {/* Ambient Glow */}
-        <div className="fixed top-0 left-1/4 w-[500px] h-[500px] bg-indigo-600/5 rounded-full blur-[120px] pointer-events-none" />
+        <div className="fixed top-0 left-1/4 w-[500px] h-[500px] bg-[#173B57]/5 rounded-full blur-[120px] pointer-events-none" />
         
         <section className="relative z-10 mx-auto max-w-7xl px-6 pt-32 pb-12">
           <div className="max-w-3xl">
-            <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-indigo-400 mb-4 animate-in fade-in slide-in-from-bottom-2 duration-700">
+            <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-[#173B57] mb-4 animate-in fade-in slide-in-from-bottom-2 duration-700">
               Session Reservation
             </p>
-            <h1 className="text-4xl md:text-7xl font-black tracking-tighter leading-[0.9] mb-8 animate-in fade-in slide-in-from-bottom-4 duration-1000">
+            <h1 className="font-heading text-4xl md:text-7xl font-extrabold tracking-tighter leading-[0.9] mb-8 animate-in fade-in slide-in-from-bottom-4 duration-1000">
               Find a time that <br />
               <span className="text-zinc-600">works for you.</span>
             </h1>

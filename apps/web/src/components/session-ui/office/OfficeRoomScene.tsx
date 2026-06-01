@@ -38,14 +38,14 @@ export function OfficeRoomScene({ maxDrawCalls = 50 }: OfficeRoomProps) {
 
       {/* Cool indigo fill from left */}
       <directionalLight
-        color="#818cf8"
+        color="#173B57"
         intensity={0.35}
         position={[-6, 4, -4]}
       />
 
       {/* Central indigo point — drives avatar glow */}
       <pointLight
-        color="#6366f1"
+        color="#173B57"
         intensity={18}
         position={[0, 2.5, 0]}
         distance={18}
@@ -65,7 +65,7 @@ function GroundPlane() {
       <circleGeometry args={[6.5, 96]} />
       <meshStandardMaterial
         color="#060614"
-        emissive="#1e1b4b"
+        emissive="#173B57"
         emissiveIntensity={0.25}
         transparent
         opacity={0.75}
@@ -89,8 +89,8 @@ function MandalaRings() {
       <mesh position={[0, -1.16, 0]} rotation={[-Math.PI / 2, 0, 0]}>
         <ringGeometry args={[2.1, 2.18, 128]} />
         <meshStandardMaterial
-          color="#6366f1"
-          emissive="#6366f1"
+          color="#173B57"
+          emissive="#173B57"
           emissiveIntensity={1.4}
           transparent
           opacity={0.65}
@@ -113,8 +113,8 @@ function MandalaRings() {
       <mesh position={[0, -1.18, 0]} rotation={[-Math.PI / 2, 0, 0]} ref={outerRef}>
         <ringGeometry args={[5.0, 5.06, 128]} />
         <meshStandardMaterial
-          color="#818cf8"
-          emissive="#818cf8"
+          color="#173B57"
+          emissive="#173B57"
           emissiveIntensity={0.5}
           transparent
           opacity={0.2}
@@ -141,7 +141,7 @@ function Starfield() {
         <bufferAttribute attach="attributes-position" args={[positions, 3]} />
       </bufferGeometry>
       <pointsMaterial
-        color="#a5b4fc"
+        color="#173B57"
         size={0.06}
         sizeAttenuation
         transparent

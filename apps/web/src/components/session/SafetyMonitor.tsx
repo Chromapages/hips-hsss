@@ -115,7 +115,7 @@ export default function SafetyMonitor({
     <div className="flex flex-col h-full bg-zinc-900 border-l border-zinc-800">
       <div className="p-4 border-b border-zinc-800 flex items-center justify-between bg-zinc-900/50 backdrop-blur-md sticky top-0 z-10">
         <div className="flex items-center gap-2">
-          <MessageSquare className="w-4 h-4 text-indigo-400" />
+          <MessageSquare className="w-4 h-4 text-[#173B57]" />
           <span className="text-zinc-300 font-medium">Session Chat</span>
         </div>
         <div className="flex items-center gap-2">
@@ -126,9 +126,9 @@ export default function SafetyMonitor({
           >
             <AlertTriangle className="w-4 h-4" />
           </button>
-          <div className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20">
-            <div className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse" />
-            <span className="text-[10px] uppercase tracking-wider text-indigo-400 font-bold">Safety Active</span>
+          <div className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-[#173B57]/10 border border-[#173B57]/20">
+            <div className="w-2 h-2 rounded-full bg-[#173B57] animate-pulse" />
+            <span className="text-[10px] uppercase tracking-wider text-[#173B57] font-bold">Safety Active</span>
           </div>
         </div>
       </div>
@@ -141,7 +141,7 @@ export default function SafetyMonitor({
             </span>
             <div className={`max-w-[85%] px-3 py-2 rounded-2xl text-sm ${
               msg.from?.identity === localParticipant.identity 
-                ? 'bg-indigo-600 text-white rounded-tr-none shadow-lg shadow-indigo-900/20' 
+                ? 'bg-[#173B57] text-white rounded-tr-none shadow-lg shadow-[#173B57]/20' 
                 : 'bg-zinc-800 text-zinc-200 rounded-tl-none border border-zinc-700'
             }`}>
               {msg.message}
@@ -177,12 +177,12 @@ export default function SafetyMonitor({
                onChange={(e) => setInputText(e.target.value)}
                onKeyDown={(e) => e.key === 'Enter' && handleSend()}
                placeholder="Type a supportive message..." 
-               className="flex-1 bg-zinc-800 text-white rounded-xl px-4 py-2.5 text-sm border border-zinc-700 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all placeholder:text-zinc-500" 
+               className="flex-1 bg-zinc-800 text-white rounded-xl px-4 py-2.5 text-sm border border-zinc-700 focus:outline-none focus:border-[#173B57] focus:ring-1 focus:ring-[#173B57] transition-all placeholder:text-zinc-500" 
              />
              <button 
                onClick={handleSend} 
                disabled={!inputText.trim()}
-               className="bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 disabled:hover:bg-indigo-600 text-white px-4 py-2 rounded-xl transition-colors flex items-center justify-center"
+               className="bg-[#173B57] hover:bg-[#173B57] disabled:opacity-50 disabled:hover:bg-[#173B57] text-white px-4 py-2 rounded-xl transition-colors flex items-center justify-center"
              >
                <MessageSquare className="w-4 h-4" />
              </button>

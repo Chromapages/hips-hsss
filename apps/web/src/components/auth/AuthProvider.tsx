@@ -26,21 +26,49 @@ const AuthContext = createContext<AuthContextType>({
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [role, setRole] = useState<string | null>(null);
-  const [loading, setLoading] = useState(() => !!auth);
+  // Initialize to true unconditionally so the server-rendered HTML matches
+  // the client hydration. The 3s setTimeout inside the effect (or the
+  // listener firing) will resolve loading. Previously `!!auth` caused a
+  // hydration mismatch when auth was null on the server and truthy on
+  // the client, producing a brief "spinner → empty → spinner" flicker.
+  const [loading, setLoading] = useState<boolean>(true);
   const firebaseReady = !!auth;
 
   useEffect(() => {
     if (!auth) {
-      console.error("[AuthProvider] Auth instance is null");
+      setLoading(false);
       return;
     }
+
+    // Defensive hard timeout: if onAuthStateChanged never fires or its
+    // internal network call to securetoken.googleapis.com hangs (CSP block,
+    // network failure, broken session), the loading spinner would otherwise
+    // persist forever. Force-resolve after 3s so the dashboard can render
+    // the unauthenticated fallback path.
+    const loadingTimeout = setTimeout(() => {
+      setLoading((current) => {
+        if (current) {
+          console.warn(
+            '[AuthProvider] Auth state did not resolve within 3s — forcing loading=false. ' +
+            'This usually means securetoken.googleapis.com is unreachable or CSP-blocked.'
+          );
+        }
+        return false;
+      });
+    }, 3000);
 
     let syncDebounce: ReturnType<typeof setTimeout> | undefined;
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       try {
         if (user) {
-          // Force refresh token to get latest custom claims
-          const idTokenResult = await user.getIdTokenResult(true);
+          // Force refresh token to get latest custom claims (wrapped in
+          // timeout so a hung token refresh cannot block the loading state)
+          const idTokenResult = await Promise.race([
+            user.getIdTokenResult(true),
+            new Promise<never>((_, reject) =>
+              setTimeout(() => reject(new Error('getIdTokenResult timed out after 3s')), 3000)
+            ),
+          ]);
           setRole((idTokenResult.claims.role as string) || 'PARTICIPANT');
           setUser(user);
 
@@ -79,12 +107,25 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     return () => {
       unsubscribe();
       if (syncDebounce) clearTimeout(syncDebounce);
+      clearTimeout(loadingTimeout);
     };
   }, []);
 
-  const getToken = async () => {
+  const getToken = async (): Promise<string | null> => {
     if (!auth?.currentUser) return null;
-    return auth.currentUser.getIdToken();
+    // Bound token retrieval so a hung Firebase SDK call cannot deadlock
+    // any consumer (e.g., dashboard SWR fetcher) waiting on this promise.
+    try {
+      return await Promise.race([
+        auth.currentUser.getIdToken(),
+        new Promise<null>((_, reject) =>
+          setTimeout(() => reject(new Error('getIdToken timed out after 5s')), 5000)
+        ),
+      ]);
+    } catch (error) {
+      console.error('[AuthProvider] getToken failed:', error);
+      return null;
+    }
   };
 
   const logout = async () => {

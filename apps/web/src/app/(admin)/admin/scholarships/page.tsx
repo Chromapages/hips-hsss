@@ -1,53 +1,53 @@
 "use client";
 
-import { useEffect, useState } from "react";
-
 export const dynamic = "force-dynamic";
 
+import { useState } from "react";
 import { useAuth } from "@/components/auth/AuthProvider";
+import { useFetchWithTimeout } from "@/hooks/useFetchWithTimeout";
 import { Check, X, Loader2, AlertCircle } from "lucide-react";
 import { format } from "date-fns";
+
+type Scholarship = {
+  id: string;
+  status: 'PENDING' | 'APPROVED' | 'DENIED' | string;
+  requestedCents: number;
+  note?: string;
+  createdAt: string;
+  user: { email: string };
+};
+
 export default function AdminScholarshipsPage() {
-  const [scholarships, setScholarships] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data, isLoading, refetch } = useFetchWithTimeout<Scholarship[]>('/api/admin/scholarships');
   const { getToken } = useAuth();
+  const [updatingId, setUpdatingId] = useState<string | null>(null);
 
-  const loadScholarships = async () => {
-    setLoading(true);
-    try {
-      const token = await getToken();
-      const res = await fetch('/api/admin/scholarships', {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      const data = await res.json();
-      setScholarships(Array.isArray(data) ? data : []);
-    } catch (error) {
-      console.error('Failed to load scholarships:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    loadScholarships();
-  }, [getToken]);
+  const scholarships = Array.isArray(data) ? data : [];
 
   const handleUpdateStatus = async (id: string, status: 'APPROVED' | 'DENIED', approvedCents?: number) => {
+    setUpdatingId(id);
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10_000);
     try {
       const token = await getToken();
+      if (!token) throw new Error('Unauthorized');
       const res = await fetch(`/api/admin/scholarships/${id}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify({ status, approvedCents }),
+        signal: controller.signal,
       });
       if (res.ok) {
-        loadScholarships(); // Refresh list
+        refetch();
       }
     } catch (error) {
       console.error('Update failed:', error);
+    } finally {
+      clearTimeout(timeoutId);
+      setUpdatingId(null);
     }
   };
 
@@ -58,9 +58,9 @@ export default function AdminScholarshipsPage() {
         <p className="text-sm text-zinc-400 mt-2">Review and process financial assistance requests.</p>
       </header>
 
-      {loading ? (
+      {isLoading ? (
         <div className="flex justify-center py-20">
-          <Loader2 className="h-8 w-8 animate-spin text-indigo-500" />
+          <Loader2 className="h-8 w-8 animate-spin text-[#173B57]" />
         </div>
       ) : (
         <div className="overflow-hidden rounded-xl border border-white/10 bg-zinc-900 shadow-2xl">
@@ -99,16 +99,18 @@ export default function AdminScholarshipsPage() {
                   <td className="px-6 py-4">
                     {s.status === 'PENDING' ? (
                       <div className="flex gap-2">
-                        <button 
+                        <button
                           onClick={() => handleUpdateStatus(s.id, 'APPROVED', s.requestedCents)}
-                          className="p-2 rounded-lg bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500 hover:text-white transition-all"
+                          disabled={updatingId === s.id}
+                          className="p-2 rounded-lg bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500 hover:text-white transition-all disabled:opacity-50"
                           title="Approve Full Amount"
                         >
                           <Check className="w-4 h-4" />
                         </button>
-                        <button 
+                        <button
                           onClick={() => handleUpdateStatus(s.id, 'DENIED')}
-                          className="p-2 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white transition-all"
+                          disabled={updatingId === s.id}
+                          className="p-2 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white transition-all disabled:opacity-50"
                           title="Deny"
                         >
                           <X className="w-4 h-4" />

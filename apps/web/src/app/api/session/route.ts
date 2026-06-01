@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { db, getDb, isFirebaseAdminReady } from '@/lib/firebase-admin';
+import { verifyFirebaseIdToken } from '@/lib/auth-edge';
 import crypto from 'crypto';
 
 /**
@@ -167,6 +168,20 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({
       error: 'Service temporarily unavailable. Please try again later.',
     }, { status: 503 });
+  }
+
+  // Authenticate caller — unauthenticated requests are rejected
+  const authHeader = req.headers.get('authorization');
+  const token = authHeader?.startsWith('Bearer ') ? authHeader.split(' ')[1] : null;
+
+  if (!token) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  try {
+    await verifyFirebaseIdToken(token);
+  } catch {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
   try {

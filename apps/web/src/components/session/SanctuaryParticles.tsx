@@ -4,7 +4,7 @@ import { useMemo, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Points, BufferAttribute } from 'three';
 
-const INDIGO = '#818cf8';
+const INDIGO = '#173B57';
 const AMBER = '#fbbf24';
 
 function ParticleLayer({ count, color, speed, spread }: {

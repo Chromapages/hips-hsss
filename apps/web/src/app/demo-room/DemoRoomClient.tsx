@@ -68,7 +68,7 @@ function DemoLobby({ onEnter, error, loading }: { onEnter: () => void; error: st
             <Sparkles className="w-3 h-3" />
             Demo Mode
           </div>
-          <h1 className="text-3xl font-black tracking-tight">Welcome to the Demo</h1>
+          <h1 className="font-heading text-3xl font-extrabold tracking-tight">Welcome to the Demo</h1>
           <p className="text-sm text-zinc-500">
             This is a sandboxed environment where you can explore the session features without joining a real session.
           </p>
@@ -447,7 +447,7 @@ function DemoRoomInner({ roomName }: { token?: string; roomName: string }) {
               <p className="text-sm text-zinc-400">{error}</p>
               <button
                 onClick={handleEnter}
-                className="w-full h-12 rounded-xl bg-indigo-600 font-bold text-white hover:bg-indigo-500 transition-colors"
+                className="w-full h-12 rounded-xl bg-[#173B57] font-bold text-white hover:bg-[#173B57] transition-colors"
               >
                 Try Again
               </button>

@@ -6,11 +6,16 @@ export const dynamic = "force-dynamic";
 
 import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 import { auth } from "@/lib/firebase-client";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import { Loader2, Mail, Lock, User, ArrowRight, ShieldCheck } from "lucide-react";
 export default function SignupPage() {
   const router = useRouter();
+  const pathname = usePathname();
+  // CRITICAL: Render the form immediately on /signup even if AuthProvider is still
+  // resolving — gating the form behind authLoading causes a permanent spinner if
+  // the first onAuthStateChanged callback is delayed or blocked.
+  const showForm = pathname === "/login" || pathname === "/signup";
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -58,23 +63,23 @@ export default function SignupPage() {
   return (
     <div className="space-y-8">
       <div className="space-y-2">
-        <h1 className="text-3xl md:text-4xl font-black tracking-tighter text-white">New Sanctuary.</h1>
+        <h1 className="font-heading text-3xl md:text-4xl font-extrabold tracking-tighter text-white">New Sanctuary.</h1>
         <p className="text-sm font-medium text-zinc-500">Begin your journey with hard anonymity protection.</p>
       </div>
 
       <div className="flex p-1 rounded-2xl bg-white/5 border border-white/5">
         <button
           onClick={() => setRole("PARTICIPANT")}
-          className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
-            role === "PARTICIPANT" ? "bg-white text-black shadow-lg" : "text-zinc-500 hover:text-white"
+          className={`flex-1 py-3 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all ${
+            role === "PARTICIPANT" ? "bg-[#173B57] text-white shadow-lg" : "text-zinc-500 hover:text-white"
           }`}
         >
           Participant
         </button>
         <button
           onClick={() => setRole("ORGBUYER")}
-          className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
-            role === "ORGBUYER" ? "bg-white text-black shadow-lg" : "text-zinc-500 hover:text-white"
+          className={`flex-1 py-3 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all ${
+            role === "ORGBUYER" ? "bg-[#173B57] text-white shadow-lg" : "text-zinc-500 hover:text-white"
           }`}
         >
           Partner/Org
@@ -85,7 +90,7 @@ export default function SignupPage() {
         <div className="space-y-2">
           <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-500 ml-1" htmlFor="signup-display-name">Display Name</label>
           <div className="relative group">
-            <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-600 group-focus-within:text-indigo-500 transition-colors" />
+            <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-600 group-focus-within:text-[#173B57] transition-colors" />
             <input
               id="signup-display-name"
               type="text"
@@ -93,7 +98,7 @@ export default function SignupPage() {
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Anonymous Voyager"
-              className="w-full h-14 bg-white/5 border border-white/5 rounded-2xl pl-12 pr-4 text-sm font-medium focus:outline-none focus:border-indigo-500/50 focus:bg-white/10 transition-all placeholder:text-zinc-700"
+              className="w-full h-14 bg-white/5 border border-white/5 rounded-2xl pl-12 pr-4 text-sm font-medium focus:outline-none focus:border-[#173B57]/50 focus:bg-white/10 transition-all placeholder:text-zinc-700"
             />
           </div>
         </div>
@@ -101,7 +106,7 @@ export default function SignupPage() {
         <div className="space-y-2">
           <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-500 ml-1" htmlFor="signup-email">Email Address</label>
           <div className="relative group">
-            <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-600 group-focus-within:text-indigo-500 transition-colors" />
+            <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-600 group-focus-within:text-[#173B57] transition-colors" />
             <input
               id="signup-email"
               type="email"
@@ -109,7 +114,7 @@ export default function SignupPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="name@example.com"
-              className="w-full h-14 bg-white/5 border border-white/5 rounded-2xl pl-12 pr-4 text-sm font-medium focus:outline-none focus:border-indigo-500/50 focus:bg-white/10 transition-all placeholder:text-zinc-700"
+              className="w-full h-14 bg-white/5 border border-white/5 rounded-2xl pl-12 pr-4 text-sm font-medium focus:outline-none focus:border-[#173B57]/50 focus:bg-white/10 transition-all placeholder:text-zinc-700"
             />
           </div>
         </div>
@@ -117,7 +122,7 @@ export default function SignupPage() {
         <div className="space-y-2">
           <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-500 ml-1" htmlFor="signup-password">Password</label>
           <div className="relative group">
-            <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-600 group-focus-within:text-indigo-500 transition-colors" />
+            <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-600 group-focus-within:text-[#173B57] transition-colors" />
             <input
               id="signup-password"
               type="password"
@@ -126,13 +131,13 @@ export default function SignupPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
-              className="w-full h-14 bg-white/5 border border-white/5 rounded-2xl pl-12 pr-4 text-sm font-medium focus:outline-none focus:border-indigo-500/50 focus:bg-white/10 transition-all placeholder:text-zinc-700"
+              className="w-full h-14 bg-white/5 border border-white/5 rounded-2xl pl-12 pr-4 text-sm font-medium focus:outline-none focus:border-[#173B57]/50 focus:bg-white/10 transition-all placeholder:text-zinc-700"
             />
           </div>
         </div>
 
-        <div className="p-4 rounded-2xl bg-indigo-500/5 border border-indigo-500/10 flex items-start gap-4">
-          <ShieldCheck className="w-5 h-5 text-indigo-400 shrink-0 mt-0.5" />
+        <div className="p-4 rounded-2xl bg-[#173B57]/5 border border-[#173B57]/10 flex items-start gap-4">
+          <ShieldCheck className="w-5 h-5 text-[#173B57] shrink-0 mt-0.5" />
           <p className="text-[10px] text-zinc-500 leading-relaxed font-medium">
             Your credentials are used solely for billing and account management. 
             Session data remains strictly decoupled and anonymous.
@@ -147,9 +152,9 @@ export default function SignupPage() {
 
         <button
           disabled={loading}
-          className="group relative w-full h-16 items-center justify-center overflow-hidden rounded-[1.5rem] bg-white font-black tracking-tighter text-black transition-all hover:scale-[1.01] active:scale-[0.99] disabled:opacity-30 disabled:hover:scale-100"
+          className="group relative w-full h-16 items-center justify-center overflow-hidden rounded-[1.5rem] bg-white font-bold tracking-tighter text-black transition-all hover:scale-[1.01] active:scale-[0.99] disabled:opacity-30 disabled:hover:scale-100"
         >
-          <div className="absolute inset-0 bg-gradient-to-r from-indigo-500 to-purple-500 opacity-0 transition-opacity group-hover:opacity-10" />
+          <div className="absolute inset-0 bg-gradient-to-r from-#173B57 to-Gold-500 opacity-0 transition-opacity group-hover:opacity-10" />
           {loading ? (
             <Loader2 className="w-5 h-5 animate-spin mx-auto" />
           ) : (
@@ -164,7 +169,7 @@ export default function SignupPage() {
       <div className="pt-4 text-center">
         <p className="text-xs font-medium text-zinc-500">
           Already have a sanctuary?{" "}
-          <Link href="/login" className="text-white font-bold hover:text-indigo-400 transition-colors">
+          <Link href="/login" className="text-white font-bold hover:text-[#173B57] transition-colors">
             Sign In
           </Link>
         </p>

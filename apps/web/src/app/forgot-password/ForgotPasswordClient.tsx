@@ -57,7 +57,7 @@ export default function ForgotPasswordClient() {
           </div>
           <button
             onClick={() => router.push("/login")}
-            className="text-indigo-400 hover:text-indigo-300 text-sm font-medium"
+            className="text-[#173B57] hover:text-[#173B57] text-sm font-medium"
           >
             Return to sign in
           </button>
@@ -87,7 +87,7 @@ export default function ForgotPasswordClient() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="w-full px-4 py-3 bg-zinc-900 border border-zinc-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500/50 text-white placeholder:text-zinc-500"
+              className="w-full px-4 py-3 bg-zinc-900 border border-zinc-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#173B57] focus:border-[#173B57]/50 text-white placeholder:text-zinc-500"
               placeholder="you@example.com"
             />
           </div>
@@ -99,7 +99,7 @@ export default function ForgotPasswordClient() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white font-semibold py-3 rounded-lg transition-colors flex items-center justify-center gap-2"
+            className="w-full bg-[#173B57] hover:bg-[#173B57] disabled:opacity-50 text-white font-semibold py-3 rounded-lg transition-colors flex items-center justify-center gap-2"
           >
             {loading ? (
               <>
@@ -113,7 +113,7 @@ export default function ForgotPasswordClient() {
         </form>
         <p className="text-center mt-6 text-gray-400 text-sm">
           Remember your password?{" "}
-          <a href="/login" className="text-indigo-400 hover:text-indigo-300 font-medium">
+          <a href="/login" className="text-[#173B57] hover:text-[#173B57] font-medium">
             Sign in
           </a>
         </p>

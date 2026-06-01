@@ -6,35 +6,40 @@ interface ErrorStateProps {
   title?: string
   error: Error | string
   onRetry?: () => void
+  digest?: string | undefined
 }
 
-export function ErrorState({ title = "Something went wrong", error, onRetry }: ErrorStateProps) {
+export function ErrorState({ title = "Something went wrong", error, onRetry, digest }: ErrorStateProps) {
   const errorMessage = typeof error === 'string' ? error : error.message;
 
   return (
-    <div className="flex flex-col items-center justify-center p-12 text-center animate-in fade-in zoom-in-95 duration-500 bg-white/5 border border-white/10 rounded-[2.5rem] backdrop-blur-xl max-w-lg mx-auto shadow-2xl shadow-black/50">
-      <div className="flex h-24 w-24 items-center justify-center rounded-full bg-red-500/10 text-red-500 mb-6 ring-1 ring-red-500/20 shadow-[0_0_30px_rgba(239,68,68,0.15)]">
-        <AlertTriangle className="h-12 w-12" />
+    <div
+      role="alert"
+      className="flex flex-col items-center justify-center p-12 text-center motion-safe:animate-in motion-safe:fade-in motion-safe:zoom-in-95 duration-500 bg-surface border border-border rounded-3xl max-w-lg mx-auto shadow-card"
+    >
+      <div className="flex h-24 w-24 items-center justify-center rounded-full bg-destructive/10 text-destructive mb-6 border border-destructive/20">
+        <AlertTriangle className="h-12 w-12" aria-hidden="true" />
       </div>
-      <h3 className="text-2xl font-bold text-white tracking-tight">{title}</h3>
-      <p className="mt-4 text-zinc-400 leading-relaxed">{errorMessage}</p>
-      {onRetry && (
+      <h2 className="text-2xl font-semibold text-text-primary tracking-tight">{title}</h2>
+      <p className="mt-4 text-text-muted leading-relaxed">{errorMessage}</p>
+      {digest ? (
+        <p className="mt-2 text-xs text-text-muted font-mono">Reference: {digest}</p>
+      ) : null}
+      {onRetry ? (
         <div className="mt-8 flex gap-3">
-          <Button 
-            onClick={onRetry} 
-            className="px-8 h-12 bg-red-600 hover:bg-red-500 text-white rounded-2xl transition-all font-semibold"
+          <Button
+            onClick={onRetry}
           >
             Try Again
           </Button>
-          <Button 
-            onClick={() => window.location.href = '/'} 
-            variant="ghost"
-            className="h-12 px-8 text-zinc-500 hover:text-white hover:bg-white/5 rounded-2xl transition-all"
+          <Button
+            onClick={() => window.location.href = '/'}
+            variant="outline"
           >
             Home
           </Button>
         </div>
-      )}
+      ) : null}
     </div>
   )
 }

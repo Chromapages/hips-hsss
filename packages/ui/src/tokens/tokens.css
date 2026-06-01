@@ -1,43 +1,93 @@
 :root {
-  /* Brand Palette */
-  --color-brand-primary: #6366F1; /* Indigo 500 */
-  --color-brand-secondary: #9333EA; /* Purple 600 */
-  --color-brand-accent: #10B981; /* Emerald 500 */
-  --color-brand-warm: #FBBF24; /* Amber 400 */
-  --color-brand-deep: #1A3A5C;
+  /* HIPS Foundation Brand Palette */
+  --color-primary: #173B57;
+  --color-primary-dark: #102A3D;
+  --color-primary-soft: #2A5576;
+  --color-accent: #C59A35;
+  --color-accent-dark: #A67F28;
+  --color-accent-soft: #DFC06A;
 
-  /* OLED Dark Neutrals */
-  --background: #000000;
-  --surface: #0A0A0A;
-  --elevated: #111111;
-  --border: rgba(255, 255, 255, 0.1);
-  
-  /* Neutral Palette Fallbacks */
-  --color-neutral-50: #000000;
-  --color-neutral-100: #0A0A0A;
-  --color-neutral-200: #111111;
-  --color-neutral-400: #9CA3AF;
-  --color-neutral-600: #4B5563;
-  --color-neutral-900: #FFFFFF;
+  /* Background & Surface */
+  --background: #FFFFFF;
+  --surface: #F6F8FA;
+  --surface-alt: #EEF3F6;
 
-  /* Semantic Palette */
-  --color-success: #10B981;
-  --color-warning: #FBBF24;
-  --color-error: #EF4444;
-  --color-crisis: #7F1D1D;
-  --color-info: #6366F1;
+  /* Border */
+  --border: #D6E0E8;
 
-  /* Glassmorphism Utilities */
-  --glass-bg: rgba(255, 255, 255, 0.05);
-  --glass-border: rgba(255, 255, 255, 0.1);
-  --glass-blur: blur(12px);
+  /* Text Colors */
+  --text-primary: #173B57;
+  --text-secondary: #445A6C;
+  --text-muted: #6F8291;
 
-  /* Session Layer */
-  --session-bg: #000000;
-  --session-floor: #0A0A0A;
-  --session-wall: #111111;
-  --session-ambient: #4A7FA5;
-  --session-avatar-ring: #10B981;
-  --session-muted-overlay: rgba(0, 0, 0, 0.6);
-  --session-controls-bg: rgba(0, 0, 0, 0.8);
+  /* Semantic Colors */
+  --color-success: #2F7A5F;
+  --color-warning: #A06A18;
+  --color-danger: #9C3E3E;
+
+  /* shadcn/ui-compatible semantic tokens */
+  --primary: #173B57;
+  --primary-foreground: #FFFFFF;
+  --secondary: #F6F8FA;
+  --secondary-foreground: #173B57;
+  --muted: #F6F8FA;
+  --muted-foreground: #6F8291;
+  --accent: #C59A35;
+  --accent-foreground: #FFFFFF;
+  --destructive: #9C3E3E;
+  --destructive-foreground: #FFFFFF;
+  --ring: #173B57;
+  --input: #D6E0E8;
+  --radius: 0.5rem;
+
+  /* Spacing Scale */
+  --spacing-0: 0;
+  --spacing-1: 0.25rem;
+  --spacing-2: 0.5rem;
+  --spacing-3: 0.75rem;
+  --spacing-4: 1rem;
+  --spacing-5: 1.25rem;
+  --spacing-6: 1.5rem;
+  --spacing-8: 2rem;
+  --spacing-10: 2.5rem;
+  --spacing-12: 3rem;
+  --spacing-16: 4rem;
+  --spacing-20: 5rem;
+  --spacing-24: 6rem;
+  --spacing-32: 8rem;
+
+  /* Border Radius */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --radius-pill: 9999px;
+
+  /* Shadows */
+  --shadow-soft: 0 4px 18px rgba(23, 59, 87, 0.08);
+  --shadow-card: 0 10px 30px rgba(23, 59, 87, 0.10);
+  --shadow-elevated: 0 18px 50px rgba(23, 59, 87, 0.16);
+
+  /* Typography */
+  --font-display: "Cormorant Garamond", Georgia, serif;
+  --font-body: "Source Sans 3", Arial, sans-serif;
+  --font-ui: "Montserrat", Arial, sans-serif;
+
+  /* Font Sizes */
+  --font-size-xs: 0.75rem;
+  --font-size-sm: 0.875rem;
+  --font-size-base: 1rem;
+  --font-size-md: 1.125rem;
+  --font-size-lg: 1.25rem;
+  --font-size-xl: 1.5rem;
+  --font-size-2xl: 2rem;
+  --font-size-3xl: 2.75rem;
+  --font-size-4xl: 3.5rem;
+  --font-size-5xl: 4.5rem;
+
+  /* Layout */
+  --content-max: 1200px;
+  --text-measure: 68ch;
+  --section-padding-desktop: 6rem;
+  --section-padding-mobile: 4rem;
 }

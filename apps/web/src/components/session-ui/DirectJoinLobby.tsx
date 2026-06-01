@@ -39,28 +39,28 @@ export function DirectJoinLobby({
     <div className="space-y-6">
       {/* Header */}
       <div className="text-center">
-        <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-indigo-500/20 bg-indigo-500/10 px-3 py-1">
-          <Lock className="h-3 w-3 text-indigo-400" />
-          <span className="font-mono text-[10px] uppercase tracking-widest text-indigo-300">
+        <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-[#173B57]/20 bg-[#173B57]/10 px-3 py-1">
+          <Lock className="h-3 w-3 text-[#173B57]" />
+          <span className="font-mono text-[10px] uppercase tracking-widest text-[#173B57]">
             Secure Entry Point
           </span>
         </div>
         <h2 className="text-2xl font-bold text-white">Ready to Enter</h2>
         <p className="mt-1 font-mono text-xs text-zinc-500">
-          Session: <span className="text-indigo-300">{sessionId}</span>
+          Session: <span className="text-[#173B57]">{sessionId}</span>
         </p>
       </div>
 
       {/* Display name + avatar */}
       <div className="flex items-center gap-4">
         <div className="group relative">
-          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-600 to-purple-600 font-black text-2xl text-white">
+          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-#173B57 to-Gold-600 font-bold text-2xl text-white">
             {avatarSeed ? avatarSeed.slice(0, 2).toUpperCase() : '??'}
           </div>
           {onAvatarRefresh && (
             <button
               onClick={onAvatarRefresh}
-              className="absolute -bottom-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full bg-zinc-800 text-zinc-400 ring-1 ring-white/10 hover:bg-indigo-600 hover:text-white"
+              className="absolute -bottom-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full bg-zinc-800 text-zinc-400 ring-1 ring-white/10 hover:bg-[#173B57] hover:text-white"
               aria-label="Randomise avatar"
             >
               <Shuffle className="h-3 w-3" />
@@ -77,7 +77,7 @@ export function DirectJoinLobby({
             onChange={(e) => setDisplayName(e.target.value)}
             placeholder="Anonymous handle..."
             maxLength={32}
-            className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder:text-zinc-600 focus:border-indigo-500/50 focus:bg-white/10 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 Transition-all"
+            className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder:text-zinc-600 focus:border-[#173B57]/50 focus:bg-white/10 focus:outline-none focus:ring-2 focus:ring-[#173B57]/20 Transition-all"
           />
         </div>
       </div>
@@ -122,7 +122,7 @@ export function DirectJoinLobby({
       {allChecked ? (
         <button
           onClick={handleJoin}
-          className="flex min-h-14 w-full items-center justify-center rounded-xl bg-indigo-600 font-bold text-white shadow-lg shadow-indigo-500/20 transition-all hover:bg-indigo-500 active:scale-[0.98]"
+          className="flex min-h-14 w-full items-center justify-center rounded-xl bg-[#173B57] font-bold text-white shadow-lg shadow-[#173B57]/20 transition-all hover:bg-[#173B57] active:scale-[0.98]"
           type="button"
         >
           Join Session Room
@@ -155,7 +155,7 @@ function ProtocolCheckbox({
         type="checkbox"
         checked={checked}
         onChange={onChange}
-        className="mt-1 h-4 w-4 rounded border-white/10 bg-black text-indigo-600 focus:ring-indigo-500"
+        className="mt-1 h-4 w-4 rounded border-white/10 bg-black text-[#173B57] focus:ring-[#173B57]"
       />
       <div className="flex-1 space-y-1">
         <div className="flex items-center gap-2">

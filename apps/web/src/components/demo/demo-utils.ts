@@ -28,9 +28,9 @@ export const voiceMaskActiveStyle = {
 };
 
 export const brandColors = {
-  indigo: '#6366F1',
-  indigoDark: '#4F46E5',
-  purple: '#9333EA',
+  indigo: '#173B57',
+  indigoDark: '#173B57',
+  Gold: '#C59A35',
   emerald: '#10B981',
   amber: '#F59E0B',
   red: '#EF4444',

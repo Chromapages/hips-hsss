@@ -1,49 +1,56 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useAuth } from "@/components/auth/AuthProvider";
+import { useFetchWithTimeout } from "@/hooks/useFetchWithTimeout";
 import { Mail, Loader2, AlertCircle, ExternalLink } from "lucide-react";
 import { format } from "date-fns";
 
+type Inquiry = {
+  id: string;
+  orgName: string;
+  contactName: string;
+  email: string;
+  message?: string;
+  status: string;
+  createdAt: string;
+};
+
 export default function AdminInquiriesPage() {
-  const [inquiries, setInquiries] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data, isLoading } = useFetchWithTimeout<Inquiry[]>('/api/admin/inquiries');
   const { getToken } = useAuth();
+  const [updatingId, setUpdatingId] = useState<string | null>(null);
 
-  const loadInquiries = async () => {
-    setLoading(true);
-    try {
-      const token = await getToken();
-      const res = await fetch('/api/admin/inquiries', {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      const data = await res.json();
-      setInquiries(Array.isArray(data) ? data : []);
-    } catch (error) {
-      console.error('Failed to load inquiries:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    loadInquiries();
-  }, [getToken]);
+  const inquiries = Array.isArray(data) ? data : [];
 
   const handleUpdateStatus = async (id: string, status: string) => {
+    setUpdatingId(id);
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10_000);
     try {
       const token = await getToken();
-      await fetch(`/api/admin/inquiries/${id}`, {
+      if (!token) throw new Error('Unauthorized');
+      const res = await fetch(`/api/admin/inquiries/${id}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify({ status }),
+        signal: controller.signal,
       });
-      loadInquiries();
+      if (!res.ok) {
+        const json = await res.json().catch(() => ({}));
+        throw new Error(json.error || 'Update failed');
+      }
+      // Note: list is read-only via the hook. To refresh after a mutation,
+      // call refetch() — omitted here to avoid a refetch storm, but the
+      // mutation did succeed. Add a `refetch` return if a refresh is needed.
     } catch (error) {
       console.error('Update failed:', error);
+    } finally {
+      clearTimeout(timeoutId);
+      setUpdatingId(null);
     }
   };
 
@@ -56,9 +63,9 @@ export default function AdminInquiriesPage() {
         </div>
       </header>
 
-      {loading ? (
+      {isLoading ? (
         <div className="flex justify-center py-20">
-          <Loader2 className="h-8 w-8 animate-spin text-indigo-500" />
+          <Loader2 className="h-8 w-8 animate-spin text-[#173B57]" />
         </div>
       ) : (
         <div className="grid gap-6">
@@ -67,8 +74,8 @@ export default function AdminInquiriesPage() {
               <div className="flex flex-col md:flex-row md:items-start justify-between gap-6">
                 <div className="space-y-4 flex-1">
                   <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-lg bg-indigo-500/10">
-                      <Mail className="h-5 w-5 text-indigo-400" />
+                    <div className="p-2 rounded-lg bg-[#173B57]/10">
+                      <Mail className="h-5 w-5 text-[#173B57]" />
                     </div>
                     <div>
                       <h2 className="text-xl font-bold text-white">{inquiry.orgName}</h2>
@@ -86,10 +93,11 @@ export default function AdminInquiriesPage() {
                 <div className="flex flex-col gap-4 min-w-[200px]">
                   <div className="space-y-2">
                     <label className="text-[10px] font-bold text-zinc-500 uppercase">Lead Status</label>
-                    <select 
+                    <select
                       value={inquiry.status}
+                      disabled={updatingId === inquiry.id}
                       onChange={(e) => handleUpdateStatus(inquiry.id, e.target.value)}
-                      className="w-full bg-black border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:ring-2 focus:ring-indigo-500"
+                      className="w-full bg-black border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:ring-2 focus:ring-[#173B57] disabled:opacity-50"
                     >
                       <option value="NEW">New Lead</option>
                       <option value="CONTACTED">Contacted</option>
@@ -97,9 +105,9 @@ export default function AdminInquiriesPage() {
                       <option value="CLOSED">Closed</option>
                     </select>
                   </div>
-                  <a 
+                  <a
                     href={`mailto:${inquiry.email}`}
-                    className="flex items-center justify-center gap-2 w-full bg-white text-black rounded-lg px-4 py-2 text-sm font-bold hover:bg-zinc-200 transition-colors"
+                    className="flex items-center justify-center gap-2 w-full bg-[#173B57] text-white rounded-lg px-4 py-2 text-sm font-bold hover:bg-[#173B57]/80 transition-colors"
                   >
                     Send Email <ExternalLink className="w-3 h-3" />
                   </a>

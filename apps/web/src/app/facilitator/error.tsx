@@ -13,7 +13,7 @@ export default function FacilitatorError({
         <p className="text-zinc-400 mb-6">Something went wrong in the facilitator dashboard.</p>
         <button
           onClick={reset}
-          className="px-6 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 font-bold text-white transition-colors"
+          className="px-6 py-3 rounded-xl bg-[#173B57] hover:bg-[#173B57] font-bold text-white transition-colors"
         >
           Try Again
         </button>

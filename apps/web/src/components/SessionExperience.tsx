@@ -31,15 +31,15 @@ export function SessionExperience({ sessionId }: { sessionId: string }) {
     <main data-layer="session" className="min-h-screen bg-black text-white overflow-hidden relative">
       {/* Background Ambient Layers */}
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(99,102,241,0.08)_0%,transparent_70%)]" />
-      <div className="absolute top-[20%] left-[20%] w-[500px] h-[500px] bg-indigo-500/10 rounded-full blur-[120px] mix-blend-screen animate-pulse" />
-      <div className="absolute bottom-[10%] right-[10%] w-[600px] h-[600px] bg-purple-500/10 rounded-full blur-[150px] mix-blend-screen" />
+      <div className="absolute top-[20%] left-[20%] w-[500px] h-[500px] bg-[#173B57]/10 rounded-full blur-[120px] mix-blend-screen animate-pulse" />
+      <div className="absolute bottom-[10%] right-[10%] w-[600px] h-[600px] bg-Gold-500/10 rounded-full blur-[150px] mix-blend-screen" />
 
       <div className="lg:hidden flex min-h-screen items-center justify-center p-6 text-center relative z-20">
         <section className="max-w-md rounded-3xl border border-white/10 bg-black/60 p-10 backdrop-blur-3xl shadow-2xl">
           <div className="w-16 h-16 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center mx-auto mb-6">
             <span className="text-2xl">💻</span>
           </div>
-          <h1 className="text-2xl font-black tracking-tight mb-4">Wider screen required</h1>
+          <h1 className="font-heading text-2xl font-extrabold tracking-tight mb-4">Wider screen required</h1>
           <p className="text-zinc-400 leading-relaxed">
             For your security and immersion, the Virtual Sanctuary requires a desktop or laptop screen.
           </p>
@@ -50,7 +50,7 @@ export function SessionExperience({ sessionId }: { sessionId: string }) {
         <header className="grid grid-cols-3 items-center border-b border-white/5 bg-black/40 backdrop-blur-2xl px-8 py-4 z-20">
           <div className="flex flex-col">
             <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Session Token</p>
-            <p className="font-mono text-sm font-bold text-indigo-400">
+            <p className="font-mono text-sm font-bold text-[#173B57]">
               anon-{sessionId.slice(0, 6)}
             </p>
           </div>
@@ -78,7 +78,7 @@ export function SessionExperience({ sessionId }: { sessionId: string }) {
           <div className="relative w-full max-w-5xl aspect-video flex items-center justify-center">
             {/* The "Table" / Center piece */}
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[300px] rounded-[100%] border border-white/5 bg-white/[0.01] shadow-[inset_0_0_100px_rgba(255,255,255,0.02)] rotate-x-[60deg]" />
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[200px] rounded-[100%] border border-indigo-500/10 bg-indigo-500/[0.02] shadow-[0_0_50px_rgba(99,102,241,0.1)] rotate-x-[60deg]" />
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[200px] rounded-[100%] border border-[#173B57]/10 bg-[#173B57]/[0.02] shadow-[0_0_50px_rgba(99,102,241,0.1)] rotate-x-[60deg]" />
             
             {/* Participants */}
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-[40%] w-[800px] flex justify-between items-center px-12 z-10">
@@ -87,7 +87,7 @@ export function SessionExperience({ sessionId }: { sessionId: string }) {
                   <div className="relative mb-6">
                     {/* Active Speaker Ring */}
                     {index === 0 && (
-                      <div className="absolute -inset-4 rounded-full border border-indigo-500/30 animate-ping opacity-50" />
+                      <div className="absolute -inset-4 rounded-full border border-[#173B57]/30 animate-ping opacity-50" />
                     )}
                     
                     <div
@@ -110,9 +110,9 @@ export function SessionExperience({ sessionId }: { sessionId: string }) {
                   <div className="mt-3">
                     {index === 0 ? (
                       <div className="flex gap-1 h-3 items-end">
-                        <span className="w-1 rounded-sm bg-indigo-400 animate-[bounce_1s_infinite_100ms] h-2" />
-                        <span className="w-1 rounded-sm bg-indigo-400 animate-[bounce_1s_infinite_200ms] h-3" />
-                        <span className="w-1 rounded-sm bg-indigo-400 animate-[bounce_1s_infinite_300ms] h-1.5" />
+                        <span className="w-1 rounded-sm bg-[#173B57] animate-[bounce_1s_infinite_100ms] h-2" />
+                        <span className="w-1 rounded-sm bg-[#173B57] animate-[bounce_1s_infinite_200ms] h-3" />
+                        <span className="w-1 rounded-sm bg-[#173B57] animate-[bounce_1s_infinite_300ms] h-1.5" />
                       </div>
                     ) : (
                       <div className="w-4 h-4 rounded-full bg-white/10 flex items-center justify-center">
@@ -152,7 +152,7 @@ export function SessionExperience({ sessionId }: { sessionId: string }) {
             
             <select
               aria-label="Gesture"
-              className="h-14 rounded-2xl border border-white/5 bg-white/5 px-6 font-bold text-sm text-white focus:ring-1 focus:ring-indigo-500 focus:outline-none appearance-none hover:bg-white/10 transition-colors cursor-pointer"
+              className="h-14 rounded-2xl border border-white/5 bg-white/5 px-6 font-bold text-sm text-white focus:ring-1 focus:ring-[#173B57] focus:outline-none appearance-none hover:bg-white/10 transition-colors cursor-pointer"
               value={gesture}
               onChange={(event) => setGesture(event.target.value as AvatarGesture)}
             >

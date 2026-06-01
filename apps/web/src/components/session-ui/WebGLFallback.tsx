@@ -7,8 +7,8 @@ import type { AvatarProfile } from "@hips/types";
 export function WebGLFallback({ avatar, roomName }: { avatar: AvatarProfile; roomName: string }) {
   return (
     <div className="flex h-full flex-col items-center justify-center bg-[radial-gradient(circle_at_50%_20%,rgba(99,102,241,0.16),transparent_45%),black] p-8 text-center">
-      <div className="mb-5 flex h-16 w-16 items-center justify-center rounded-full border border-indigo-500/20 bg-indigo-500/10">
-        <Monitor className="h-8 w-8 text-indigo-300" />
+      <div className="mb-5 flex h-16 w-16 items-center justify-center rounded-full border border-[#173B57]/20 bg-[#173B57]/10">
+        <Monitor className="h-8 w-8 text-[#173B57]" />
       </div>
       <h2 className="text-xl font-bold text-white">3D Avatars Unavailable</h2>
       <p className="mt-2 max-w-xs text-sm text-zinc-400">
@@ -22,7 +22,7 @@ export function WebGLFallback({ avatar, roomName }: { avatar: AvatarProfile; roo
             Audio Active
           </p>
         </div>
-        <p className="font-mono text-sm text-indigo-300">anon-{roomName.slice(0, 8)}</p>
+        <p className="font-mono text-sm text-[#173B57]">anon-{roomName.slice(0, 8)}</p>
       </div>
       <div className="mt-8 rounded-xl border border-amber-500/20 bg-amber-500/10 px-4 py-3">
         <p className="text-xs text-amber-200">

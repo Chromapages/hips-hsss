@@ -15,18 +15,13 @@ import {
  */
 export async function GET(req: NextRequest) {
   const cronSecret = process.env.CRON_SECRET;
-  const isProduction = process.env.NODE_ENV === 'production';
-
-  // In production, CRON_SECRET must be configured
-  if (isProduction && !cronSecret) {
-    return NextResponse.json({ error: 'Service Unavailable: CRON_SECRET not configured' }, { status: 503 });
+  if (!cronSecret) {
+    console.error('[Cron] CRON_SECRET not configured');
+    return NextResponse.json({ error: 'Cron secret not configured' }, { status: 500 });
   }
-
-  if (cronSecret) {
-    const requestUrl = new URL(req.url);
-    if (requestUrl.searchParams.get('secret') !== cronSecret) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-    }
+  const requestUrl = new URL(req.url);
+  if (requestUrl.searchParams.get('secret') !== cronSecret) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 
   try {

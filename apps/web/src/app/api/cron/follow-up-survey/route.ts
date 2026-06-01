@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/firebase-admin';
 import type { QueryDocumentSnapshot } from 'firebase-admin/firestore';
 import { sendFollowUpSurveyEmail } from '@/emails';
@@ -13,13 +13,15 @@ const SURVEY_URL = process.env.SURVEY_URL || 'https://hips.foundation/feedback';
  * Finds sessions completed ~48h ago and sends FOLLOW_UP_SURVEY email.
  * Idempotent via surveySent flag on the session document.
  */
-export async function GET() {
+export async function GET(req: NextRequest) {
   const cronSecret = process.env.CRON_SECRET;
-  if (cronSecret) {
-    const url = new URL(process.env.FILES_HOST || 'http://localhost');
-    if (url.searchParams.get('secret') !== cronSecret) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-    }
+  if (!cronSecret) {
+    console.error('[Cron Survey] CRON_SECRET not configured');
+    return NextResponse.json({ error: 'Cron secret not configured' }, { status: 500 });
+  }
+  const url = new URL(req.url);
+  if (url.searchParams.get('secret') !== cronSecret) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 
   try {

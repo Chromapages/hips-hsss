@@ -151,7 +151,7 @@ export function FacilitatorSessionView({
 
   const connectionQuality: "good" | "fair" | "poor" = "good";
 
-  const fallbackColors = ["#6366f1", "#a78bfa", "#f43f5e", "#f59e0b", "#34d399", "#38bdf8"];
+  const fallbackColors = ["#173B57", "#a78bfa", "#f43f5e", "#f59e0b", "#34d399", "#38bdf8"];
   const paletteColors = {
     coastal: "#06b6d4",
     sunrise: "#f59e0b",
@@ -165,7 +165,7 @@ export function FacilitatorSessionView({
         isSpeaking: p.isSpeaking,
         color: p.identity === room.localParticipant.identity
           ? paletteColors[avatar.palette]
-          : fallbackColors[index % fallbackColors.length] ?? "#6366f1",
+          : fallbackColors[index % fallbackColors.length] ?? "#173B57",
         styleIndex: p.identity === room.localParticipant.identity
           ? avatar.style
           : index + 1,
@@ -192,7 +192,7 @@ export function FacilitatorSessionView({
           <div className="flex h-full items-center justify-center">
             <div className="text-center text-zinc-500">
               <p className="text-sm">Virtual Sanctuary</p>
-              <p className="mt-2 font-mono text-xs text-indigo-300">
+              <p className="mt-2 font-mono text-xs text-[#173B57]">
                 {participants.length} participant{participants.length !== 1 ? "s" : ""}
               </p>
             </div>
@@ -201,7 +201,7 @@ export function FacilitatorSessionView({
           {/* Task 5.10 — Active speaker ring overlay */}
           {activeSpeakerIdentity && (
             <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-              <div className="h-64 w-64 animate-pulse rounded-full border-2 border-indigo-500/30 opacity-50" />
+              <div className="h-64 w-64 animate-pulse rounded-full border-2 border-[#173B57]/30 opacity-50" />
             </div>
           )}
         </div>
@@ -281,9 +281,9 @@ export function FacilitatorSessionView({
                   </div>
                   {p.isSpeaking && (
                     <div className="flex h-3 items-end gap-0.5">
-                      <span className="h-2 w-1 animate-bounce rounded-sm bg-indigo-400" style={{ animationDelay: "0ms" }} />
-                      <span className="h-3 w-1 animate-bounce rounded-sm bg-indigo-400" style={{ animationDelay: "100ms" }} />
-                      <span className="h-1.5 w-1 animate-bounce rounded-sm bg-indigo-400" style={{ animationDelay: "200ms" }} />
+                      <span className="h-2 w-1 animate-bounce rounded-sm bg-[#173B57]" style={{ animationDelay: "0ms" }} />
+                      <span className="h-3 w-1 animate-bounce rounded-sm bg-[#173B57]" style={{ animationDelay: "100ms" }} />
+                      <span className="h-1.5 w-1 animate-bounce rounded-sm bg-[#173B57]" style={{ animationDelay: "200ms" }} />
                     </div>
                   )}
                 </div>
@@ -301,7 +301,7 @@ export function FacilitatorSessionView({
                 </p>
               </div>
               <textarea
-                className="w-full resize-none rounded-xl border border-white/10 bg-white/5 p-3 text-sm text-zinc-200 placeholder-zinc-500 focus:border-indigo-500/50 focus:outline-none focus:ring-1 focus:ring-indigo-500/20"
+                className="w-full resize-none rounded-xl border border-white/10 bg-white/5 p-3 text-sm text-zinc-200 placeholder-zinc-500 focus:border-[#173B57]/50 focus:outline-none focus:ring-1 focus:ring-[#173B57]/20"
                 placeholder="Notes for this session (not persisted)..."
                 rows={3}
                 value={facilitatorNotes}
@@ -333,7 +333,7 @@ export function FacilitatorSessionView({
           aria-modal="true"
         >
           <section className="w-full max-w-md rounded-[2rem] border border-white/10 bg-zinc-950 p-10">
-            <h2 className="mb-4 text-2xl font-black tracking-tighter">
+            <h2 className="font-heading mb-4 text-2xl font-bold tracking-tighter">
               Leave this session?
             </h2>
             <p className="leading-relaxed text-zinc-400">
