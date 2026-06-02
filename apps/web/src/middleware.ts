@@ -1,5 +1,4 @@
-import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next';
+import { NextResponse, NextRequest } from 'next/server';
 import { jwtVerify, importX509 } from 'jose';
 import { ROLES } from '@/lib/roles';
 import { getRedis } from '@/lib/redis';
@@ -11,11 +10,21 @@ const PROTECTED_PATTERNS = [
   '/api/dashboard',
   '/api/admin',
   '/api/checkout',
+  '/api/session',
   '/api/sessions/book',
   '/api/sessions/cancel',
   '/api/sessions/flag',
   '/api/scholarships',
   '/api/facilitator',
+];
+
+// Protected page route configs (role requirements)
+const PROTECTED_PAGES = [
+  { prefix: '/dashboard', roles: [] },
+  { prefix: '/checkout', roles: [] },
+  { prefix: '/session', roles: [] },
+  { prefix: '/facilitator', roles: [ROLES.FACILITATOR, ROLES.ADMIN] },
+  { prefix: '/admin', roles: [ROLES.ADMIN] },
 ];
 
 // Public routes (no auth required)
@@ -184,6 +193,29 @@ export async function middleware(request: NextRequest) {
   }
 
   if (!pathname.startsWith('/api/')) {
+    const protectedPage = PROTECTED_PAGES.find(p => pathname.startsWith(p.prefix));
+    if (protectedPage) {
+      const token = request.cookies.get('hips-auth-token')?.value;
+      if (!token) {
+        const loginUrl = new URL('/login', request.url);
+        loginUrl.searchParams.set('from', pathname);
+        return NextResponse.redirect(loginUrl);
+      }
+
+      const payload = await verifyToken(token);
+      if (!payload) {
+        const loginUrl = new URL('/login', request.url);
+        loginUrl.searchParams.set('from', pathname);
+        return NextResponse.redirect(loginUrl);
+      }
+
+      if (protectedPage.roles.length > 0) {
+        if (!payload.role || !protectedPage.roles.includes(payload.role)) {
+          return NextResponse.redirect(new URL('/dashboard', request.url));
+        }
+      }
+    }
+
     return NextResponse.next();
   }
 
@@ -248,5 +280,12 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: '/api/:path*',
+  matcher: [
+    '/api/:path*',
+    '/dashboard/:path*',
+    '/checkout/:path*',
+    '/session/:path*',
+    '/facilitator/:path*',
+    '/admin/:path*',
+  ],
 };

@@ -1,6 +1,6 @@
 "use client";
 
-import { Shield, ShieldAlert } from "lucide-react";
+import { ShieldAlert } from "lucide-react";
 
 interface SessionHeaderProps {
   anonymousHandle: string;
@@ -8,6 +8,12 @@ interface SessionHeaderProps {
   connectionQuality: "good" | "fair" | "poor";
   connectionLabel?: string;
   roomName?: string;
+  /**
+   * Visual variant. `'dark'` (default) is the immersive stage chrome used by
+   * the live `/session/[id]` room. `'light'` re-themes the header for surfaces
+   * that sit on a light page — currently the demo-room.
+   */
+  variant?: "light" | "dark";
 }
 
 function formatTime(seconds: number): string {
@@ -23,12 +29,21 @@ function formatTime(seconds: number): string {
 
 function QualityIndicator({
   quality,
+  variant,
 }: {
   quality: "good" | "fair" | "poor";
+  variant: "light" | "dark";
 }) {
+  const idleColor = variant === "light" ? "bg-border" : "bg-zinc-700";
   return (
     <div className="flex items-center gap-2">
-      <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">
+      <span
+        className={
+          variant === "light"
+            ? "text-[10px] font-bold uppercase tracking-widest text-text-muted"
+            : "text-[10px] font-bold uppercase tracking-widest text-zinc-500"
+        }
+      >
         Network
       </span>
       <span
@@ -52,15 +67,13 @@ function QualityIndicator({
               ? "bg-emerald-500"
               : quality === "fair"
                 ? "bg-amber-500"
-                : "bg-zinc-700",
+                : idleColor,
           ].join(" ")}
         />
         <span
           className={[
             "h-5 w-1.5 rounded-sm",
-            quality === "good"
-              ? "bg-emerald-500"
-              : "bg-zinc-700",
+            quality === "good" ? "bg-emerald-500" : idleColor,
           ].join(" ")}
         />
       </span>
@@ -75,22 +88,38 @@ export function SessionHeader({
   connectionQuality,
   connectionLabel = "Connected",
   roomName,
+  variant = "dark",
 }: SessionHeaderProps) {
+  const isLight = variant === "light";
+  const wrapperClass = isLight
+    ? "flex items-center justify-between border-b border-border bg-background/80 px-6 py-4 backdrop-blur-2xl"
+    : "flex items-center justify-between border-b border-white/10 bg-black/70 px-6 py-4 backdrop-blur-2xl";
+  const mutedLabel = isLight ? "text-text-muted" : "text-zinc-500";
+  const primaryText = isLight ? "text-primary" : "text-white";
+  const secondaryText = isLight ? "text-text-secondary" : "text-zinc-400";
+  const safetyText = isLight ? "text-success" : "text-emerald-300";
+
   return (
-    <header className="flex items-center justify-between border-b border-white/10 bg-black/70 px-6 py-4 backdrop-blur-2xl">
+    <header className={wrapperClass}>
       {/* Left: Anonymous handle */}
       <div className="flex flex-col">
-        <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">
+        <p
+          className={`text-[10px] font-bold uppercase tracking-widest ${mutedLabel}`}
+        >
           Anonymous Room
         </p>
-        <p className="font-mono text-sm font-bold text-[#173B57]">
+        <p
+          className={`font-mono text-sm font-bold ${
+            isLight ? "text-accent" : "text-[#173B57]"
+          }`}
+        >
           anon-{anonymousHandle.slice(0, 8)}
         </p>
       </div>
 
       {/* Center: Timer + Safety status */}
       <div className="flex flex-col items-center gap-1">
-        <p className="font-mono text-2xl font-bold tracking-widest text-white">
+        <p className={`font-mono text-2xl font-bold tracking-widest ${primaryText}`}>
           {formatTime(sessionSeconds)}
         </p>
         <div className="flex items-center gap-3">
@@ -105,9 +134,15 @@ export function SessionHeader({
                     : "bg-red-400",
               ].join(" ")}
             />
-            <span className="text-xs font-bold text-zinc-400">{connectionLabel}</span>
+            <span
+              className={`text-xs font-bold ${
+                isLight ? "text-text-secondary" : "text-zinc-400"
+              }`}
+            >
+              {connectionLabel}
+            </span>
           </div>
-          <div className="flex items-center gap-2 text-sm font-bold text-emerald-300">
+          <div className={`flex items-center gap-2 text-sm font-bold ${safetyText}`}>
             <ShieldAlert className="h-4 w-4" />
             Safety Engine Active
           </div>
@@ -117,12 +152,24 @@ export function SessionHeader({
       {/* Right: Room hash */}
       {roomName && (
         <div className="flex flex-col items-end">
-          <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">
+          <p
+            className={`text-[10px] font-bold uppercase tracking-widest ${mutedLabel}`}
+          >
             Room Hash
           </p>
-          <p className="font-mono text-xs text-zinc-400">{roomName.slice(0, 12)}</p>
+          <p
+            className={`font-mono text-xs ${
+              isLight ? "text-text-muted" : "text-zinc-400"
+            }`}
+          >
+            {roomName.slice(0, 12)}
+          </p>
         </div>
       )}
+
+      <span className="sr-only">
+        <QualityIndicator quality={connectionQuality} variant={variant} />
+      </span>
     </header>
   );
 }

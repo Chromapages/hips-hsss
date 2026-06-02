@@ -80,7 +80,7 @@ export async function generateMetadata(
       "anonymous peer support",
       `${service.category} session`,
       "online support",
-      "camera-free therapy alternative",
+      "camera-free support alternative",
     ],
     alternates: { canonical: url },
     openGraph: {

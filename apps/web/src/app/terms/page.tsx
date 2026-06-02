@@ -19,7 +19,7 @@ export default function TermsPage() {
           {/* H2 - serif heading */}
           <h2 className="font-heading text-xl font-semibold text-primary mt-8">Peer Support Services</h2>
           <p>
-            H.I.P.S. provides peer support sessions facilitated by trained peer supporters. These are not clinical mental health services and should not replace professional care.
+            H.I.P.S. provides peer support sessions facilitated by trained peer supporters. These are not licensed mental health services and should not replace professional care.
           </p>
           {/* H2 - serif heading */}
           <h2 className="font-heading text-xl font-semibold text-primary mt-8">Anonymity</h2>

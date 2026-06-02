@@ -1,5 +1,51 @@
 @import "tailwindcss";
 
+@theme {
+  --color-primary: #213d53;
+  --color-primary-dark: #1A3244;
+  --color-primary-soft: #2A5576;
+  --color-primary-foreground: #FFFFFF;
+  --color-accent: #C59A35;
+  --color-accent-dark: #A67F28;
+  --color-accent-soft: #DFC06A;
+  --color-accent-foreground: #FFFFFF;
+  --color-background: #FFFFFF;
+  --color-foreground: #213d53;
+  --color-surface: #F6F8FA;
+  --color-surface-alt: #EEF3F6;
+  --color-border: #D6E0E8;
+  --color-input: #D6E0E8;
+  --color-ring: #213d53;
+  --color-text-primary: #213d53;
+  --color-text-secondary: #445A6C;
+  --color-text-muted: #6F8291;
+  --color-muted: #F6F8FA;
+  --color-muted-foreground: #6F8291;
+  --color-secondary: #F6F8FA;
+  --color-secondary-foreground: #213d53;
+  --color-success: #2F7A5F;
+  --color-warning: #A06A18;
+  --color-destructive: #9C3E3E;
+  --color-destructive-foreground: #FFFFFF;
+  --color-danger: #9C3E3E;
+  --color-popover: #FFFFFF;
+  --color-popover-foreground: #213d53;
+  --color-card: #FFFFFF;
+  --color-card-foreground: #213d53;
+  --color-sidebar: hsl(var(--sidebar-background));
+  --color-sidebar-foreground: hsl(var(--sidebar-foreground));
+  --color-sidebar-primary: hsl(var(--sidebar-primary));
+  --color-sidebar-primary-foreground: hsl(var(--sidebar-primary-foreground));
+  --color-sidebar-accent: hsl(var(--sidebar-accent));
+  --color-sidebar-accent-foreground: hsl(var(--sidebar-accent-foreground));
+  --color-sidebar-border: hsl(var(--sidebar-border));
+  --color-sidebar-ring: hsl(var(--sidebar-ring));
+  --font-heading: var(--font-dm-sans), "Helvetica Neue", Arial, sans-serif;
+  --font-display: var(--font-dm-sans), "Helvetica Neue", Arial, sans-serif;
+  --font-body: "Source Sans 3", Arial, sans-serif;
+  --font-ui: "Montserrat", Arial, sans-serif;
+}
+
 :root {
   /* HIPS Foundation Brand Colors */
   --color-primary: #213d53;
@@ -86,6 +132,27 @@
   /* Layout */
   --navbar-height: 5rem;
 
+  /* shadcn Sidebar — HSL triples consumed as hsl(var(--sidebar-*)) */
+  --sidebar-background: 206 58% 22%;
+  --sidebar-foreground: 0 0% 100%;
+  --sidebar-primary: 42 58% 49%;
+  --sidebar-primary-foreground: 206 58% 22%;
+  --sidebar-accent: 42 58% 49% / 0.1;
+  --sidebar-accent-foreground: 0 0% 100%;
+  --sidebar-border: 0 0% 100% / 0.1;
+  --sidebar-ring: 42 58% 49%;
+
+  /* Tailwind v4 theme bridge — auto-discovered by the `--color-*` prefix.
+     Without these, bg-sidebar / text-sidebar-foreground etc. resolve to nothing. */
+  --color-sidebar: hsl(var(--sidebar-background));
+  --color-sidebar-foreground: hsl(var(--sidebar-foreground));
+  --color-sidebar-primary: hsl(var(--sidebar-primary));
+  --color-sidebar-primary-foreground: hsl(var(--sidebar-primary-foreground));
+  --color-sidebar-accent: hsl(var(--sidebar-accent));
+  --color-sidebar-accent-foreground: hsl(var(--sidebar-accent-foreground));
+  --color-sidebar-border: hsl(var(--sidebar-border));
+  --color-sidebar-ring: hsl(var(--sidebar-ring));
+
   /* Fluid Section Spacing Tokens */
   --section-lg: clamp(3rem, 5vw, 7rem);
   --section-md: clamp(2rem, 3.5vw, 5rem);
@@ -137,28 +204,30 @@ h1, h2, h3 {
   font-weight: 800;
 }
 
-/* H1 - ceremonial and stable */
-h1, .h1 {
-  font-size: var(--text-4xl);
-  line-height: var(--leading-tight);
-}
+@layer base {
+  /* H1 - ceremonial and stable */
+  h1, .h1 {
+    font-size: var(--text-4xl);
+    line-height: var(--leading-tight);
+  }
 
-/* H2 - tighter and more practical */
-h2, .h2 {
-  font-size: var(--text-3xl);
-  line-height: var(--leading-heading);
-}
+  /* H2 - tighter and more practical */
+  h2, .h2 {
+    font-size: var(--text-3xl);
+    line-height: var(--leading-heading);
+  }
 
-/* H3 - serif but practical */
-h3, .h3 {
-  font-size: var(--text-2xl);
-  line-height: var(--leading-heading);
-}
+  /* H3 - serif but practical */
+  h3, .h3 {
+    font-size: var(--text-2xl);
+    line-height: var(--leading-heading);
+  }
 
-/* H4 */
-h4, .h4 {
-  font-size: var(--text-xl);
-  line-height: var(--leading-heading);
+  /* H4 */
+  h4, .h4 {
+    font-size: var(--text-xl);
+    line-height: var(--leading-heading);
+  }
 }
 
 /* UI Labels - use Montserrat uppercase with tracking */
@@ -247,4 +316,65 @@ h4, .h4 {
 .marquee-inner {
   display: flex;
   width: max-content;
+}
+
+/* =========================================================================
+   Sidebar Navigation — Animation & Interaction Tokens
+   ========================================================================= */
+
+/* Badge pulse ring — used for safety-critical nav items (e.g., Safety Feed) */
+@keyframes sidebar-badge-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(156, 62, 62, 0.5);
+  }
+  50% {
+    box-shadow: 0 0 0 4px rgba(156, 62, 62, 0);
+  }
+}
+
+.sidebar-badge-pulse {
+  animation: sidebar-badge-pulse 2s ease-in-out infinite;
+}
+
+/* Sidebar item — fade-in-up on mount */
+@keyframes sidebar-item-enter {
+  from {
+    opacity: 0;
+    transform: translateX(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.sidebar-item-enter {
+  animation: sidebar-item-enter 220ms ease-out both;
+}
+
+/* =========================================================================
+   Reduced Motion — Sidebar overrides
+   ========================================================================= */
+@media (prefers-reduced-motion: reduce) {
+  .sidebar-badge-pulse {
+    animation: none;
+  }
+  .sidebar-item-enter {
+    animation: none;
+  }
+}
+
+/* =========================================================================
+   Sidebar Layout Fixes — Prevent main content overlap
+   ========================================================================= */
+.peer[data-state="expanded"] {
+  width: var(--sidebar-width, 260px) !important;
+  flex-shrink: 0 !important;
+  transition: width 200ms ease-linear;
+}
+
+.peer[data-state="collapsed"] {
+  width: var(--sidebar-width-icon, 48px) !important;
+  flex-shrink: 0 !important;
+  transition: width 200ms ease-linear;
 }

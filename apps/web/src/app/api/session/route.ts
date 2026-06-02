@@ -7,7 +7,7 @@ import crypto from 'crypto';
 /**
  * Phase 5 — Session Lifecycle Manager (5.3)
  * Handles session creation → active → end state machine.
- * 
+ *
  * State transitions:
  *   pending → active (when first participant joins)
  *   active → ended (when session ends)
@@ -29,25 +29,34 @@ interface Phase5Session {
   flaggedBy?: string;
   flaggedReason?: string;
   flaggedAt?: string;
+  createdBy: string;
   metadata?: {
     serviceType?: string;
     facilitatorId?: string;
   };
 }
 
+// Whitelist of allowed metadata keys — any unrecognised key is dropped.
+// This prevents callers from smuggling facilitatorId or other privileged
+// fields into a session they did not start.
+const metadataSchema = z
+  .object({
+    serviceType: z.string().max(64).optional(),
+    topic: z.string().max(128).optional(),
+    notes: z.string().max(512).optional(),
+  })
+  .strict();
+
 const createSessionSchema = z.object({
-  serviceType: z.string().optional().default('peer-support'),
+  serviceType: z.string().max(64).optional().default('peer-support'),
   maxParticipants: z.number().int().min(2).max(10).optional().default(2),
-  facilitatorId: z.string().optional(),
-  metadata: z.record(z.unknown()).optional(),
+  metadata: metadataSchema.optional(),
 });
 
-// Helper to get session document reference
 function getSessionRef(sessionId: string) {
   return db.collection('phase5_sessions').doc(sessionId);
 }
 
-// Helper to get session with error handling
 async function getSession(sessionId: string): Promise<Phase5Session | null> {
   try {
     const sessionRef = getSessionRef(sessionId);
@@ -55,12 +64,11 @@ async function getSession(sessionId: string): Promise<Phase5Session | null> {
     if (!doc.exists) return null;
     return doc.data() as Phase5Session;
   } catch (err) {
-    console.warn('[SessionLifecycle] Could not read session:', err);
+    console.warn('[SessionLifecycle] Could not read session');
     return null;
   }
 }
 
-// Transition session to new status
 async function transitionSession(sessionId: string, newStatus: SessionStatus, additionalData?: Partial<Phase5Session>): Promise<boolean> {
   try {
     const sessionRef = getSessionRef(sessionId);
@@ -75,22 +83,43 @@ async function transitionSession(sessionId: string, newStatus: SessionStatus, ad
     await sessionRef.update(update);
     return true;
   } catch (err) {
-    console.error('[SessionLifecycle] Transition failed:', err);
+    console.error('[SessionLifecycle] Transition failed');
     return false;
   }
 }
 
 /**
  * POST /api/session — Create a new session
+ *
+ * Auth: requires a Firebase ID token. The caller's UID becomes `createdBy`
+ * and is the only authorized facilitator for the session — the body
+ * cannot override this. The previous version accepted unauthenticated POSTs
+ * with arbitrary facilitatorId values, which let any caller spawn a session
+ * impersonating another user. See audit finding A3.
  */
 export async function POST(req: NextRequest) {
-  // Initialize Firestore lazily — return 503 if not configured
   if (!isFirebaseAdminReady()) {
     return NextResponse.json({
       error: 'Service temporarily unavailable. Please try again later.',
     }, { status: 503 });
   }
-  const db = getDb();
+
+  const authHeader = req.headers.get('authorization');
+  const token = authHeader?.startsWith('Bearer ') ? authHeader.split(' ')[1] : null;
+  if (!token) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  let callerUid: string;
+  try {
+    const payload = await verifyFirebaseIdToken(token);
+    callerUid = payload.sub;
+    if (!callerUid) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+  } catch {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
 
   try {
     const body = await req.json().catch(() => ({}));
@@ -103,9 +132,8 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { serviceType, maxParticipants, facilitatorId, metadata } = result.data;
-    
-    // Generate session ID and room name
+    const { serviceType, maxParticipants, metadata } = result.data;
+
     const sessionId = crypto.randomUUID();
     const roomName = `session-${sessionId}`;
     const now = new Date().toISOString();
@@ -114,26 +142,25 @@ export async function POST(req: NextRequest) {
       id: sessionId,
       status: 'pending' as const,
       createdAt: now,
+      createdBy: callerUid,
       participantCount: 0,
       maxParticipants: maxParticipants as number,
       roomName,
       flagged: false,
       metadata: {
-        ...(serviceType ? { serviceType } : {}),
-        ...(facilitatorId ? { facilitatorId } : {}),
+        serviceType,
+        facilitatorId: callerUid,
         ...(metadata || {}),
       },
     } satisfies Phase5Session;
 
-    // Store session in Firestore
     try {
       const sessionRef = getSessionRef(sessionId);
       await sessionRef.set(session);
-      console.log(`[SessionLifecycle] Created session ${sessionId}`);
-    } catch (err) {
-      console.error('[SessionLifecycle] Failed to create session:', err);
+    } catch {
+      console.error('[SessionLifecycle] Failed to create session');
       return NextResponse.json(
-        { error: 'Failed to create session', details: 'Database unavailable' },
+        { error: 'Failed to create session' },
         { status: 503 }
       );
     }
@@ -148,11 +175,10 @@ export async function POST(req: NextRequest) {
         maxParticipants: session.maxParticipants,
       },
     }, { status: 201 });
-  } catch (error: unknown) {
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    console.error('[SessionLifecycle] POST Error:', errorMessage);
+  } catch {
+    console.error('[SessionLifecycle] POST Error');
     return NextResponse.json(
-      { error: 'Failed to create session', details: errorMessage },
+      { error: 'Failed to create session' },
       { status: 500 }
     );
   }
@@ -162,7 +188,6 @@ export async function POST(req: NextRequest) {
  * GET /api/session — List sessions (with optional filters)
  */
 export async function GET(req: NextRequest) {
-  // Initialize Firestore lazily — return 503 if not configured
   const db = getDb();
   if (!db) {
     return NextResponse.json({
@@ -170,7 +195,6 @@ export async function GET(req: NextRequest) {
     }, { status: 503 });
   }
 
-  // Authenticate caller — unauthenticated requests are rejected
   const authHeader = req.headers.get('authorization');
   const token = authHeader?.startsWith('Bearer ') ? authHeader.split(' ')[1] : null;
 
@@ -191,7 +215,7 @@ export async function GET(req: NextRequest) {
     const limitClamped = Math.min(Math.max(1, limit), 100);
 
     let query: FirebaseFirestore.Query = db.collection('phase5_sessions');
-    
+
     if (status && ['pending', 'active', 'ended', 'flagged'].includes(status)) {
       query = query.where('status', '==', status);
     }
@@ -203,8 +227,7 @@ export async function GET(req: NextRequest) {
       const snapshot = await query.get();
       sessions = snapshot.docs.map(doc => doc.data() as Phase5Session);
     } catch (err) {
-      console.warn('[SessionLifecycle] Could not query sessions:', err);
-      // Return empty list rather than error if DB unavailable
+      console.warn('[SessionLifecycle] Could not query sessions');
     }
 
     return NextResponse.json({
@@ -220,11 +243,10 @@ export async function GET(req: NextRequest) {
       })),
       count: sessions.length,
     });
-  } catch (error: unknown) {
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    console.error('[SessionLifecycle] GET Error:', errorMessage);
+  } catch {
+    console.error('[SessionLifecycle] GET Error');
     return NextResponse.json(
-      { error: 'Failed to list sessions', details: errorMessage },
+      { error: 'Failed to list sessions' },
       { status: 500 }
     );
   }

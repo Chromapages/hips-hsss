@@ -1,7 +1,6 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { GlobalDisclaimerBanner } from "./GlobalDisclaimerBanner";
 
 export function RouteChrome({
   children,
@@ -12,7 +11,6 @@ export function RouteChrome({
 }) {
   return (
     <>
-      {disclaimer ? <GlobalDisclaimerBanner /> : null}
       {children}
     </>
   );

@@ -291,9 +291,9 @@ export const INCLUDED_FEATURES: ServiceFeature[] = [
 
 export const SERVICES_FAQ: FAQ[] = [
   {
-    question: "Is this therapy or counseling?",
+    question: "Is this professional counseling?",
     answer:
-      "No. HSSS provides peer support, coaching, and support navigation. We do not provide psychiatric evaluation, clinical diagnosis, or medical advice. Our peer specialists are trained and supervised, but they are not licensed therapists.",
+      "No. HSSS provides peer support, coaching, and support navigation. We do not provide psychiatric evaluation, formal assessment, or medical advice. Our peer specialists are trained and supervised, but they are not licensed practitioners.",
   },
   {
     question: "What is the cancellation policy?",

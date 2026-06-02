@@ -109,6 +109,16 @@ const SidebarProvider = React.forwardRef<
           event.key === SIDEBAR_KEYBOARD_SHORTCUT &&
           (event.metaKey || event.ctrlKey)
         ) {
+          const target = event.target as HTMLElement | null
+          if (
+            target &&
+            (target.isContentEditable ||
+              target.tagName === "INPUT" ||
+              target.tagName === "TEXTAREA" ||
+              target.tagName === "SELECT")
+          ) {
+            return
+          }
           event.preventDefault()
           toggleSidebar()
         }
@@ -660,10 +670,7 @@ const SidebarMenuSkeleton = React.forwardRef<
     showIcon?: boolean
   }
 >(({ className, showIcon = false, ...props }, ref) => {
-  // Random width between 50 to 90%.
-  const width = React.useMemo(() => {
-    return `${Math.floor(Math.random() * 40) + 50}%`
-  }, [])
+  const width = "72%"
 
   return (
     <div

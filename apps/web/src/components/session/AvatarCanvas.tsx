@@ -82,10 +82,10 @@ function WebGLContextHandler({
 }
 
 // GuardedEffectComposer — wraps EffectComposer with null context check
-function GuardedEffectComposer({ children }: { children: ReactNode }) {
+function GuardedEffectComposer({ children }: { children: any }) {
   const { gl } = useThree();
 
-  if (!gl || !gl.context) {
+  if (!gl || !(gl as any).context) {
     return null;
   }
 
@@ -97,6 +97,7 @@ interface AvatarCanvasProps {
   localIdentity: string;
   raisedHands: Set<string>;
   activeSpeakerIdentity?: string | null;
+  gesture?: AvatarGesture;
 }
 
 // Task 5.5 — Three.js virtual office room scene (max 50 draw calls, 60fps on M1)
@@ -106,6 +107,7 @@ export default function AvatarCanvas({
   localIdentity,
   raisedHands,
   activeSpeakerIdentity,
+  gesture = "idle",
 }: AvatarCanvasProps) {
   const participants = useParticipants();
 
@@ -135,7 +137,7 @@ export default function AvatarCanvas({
       }}
       onCreated={({ gl: renderer }) => {
         // Ensure renderer is valid before any post-processing
-        if (!renderer.context) {
+        if (!(renderer as any).context) {
           setContextLost(true);
         }
       }}
@@ -180,7 +182,7 @@ export default function AvatarCanvas({
             position={[x, 0, z]}
             raisedHand={raisedHands.has(participant.identity)}
             styleIndex={isLocal ? avatar.style : index + 1}
-            gesture={isLocal ? ("idle" as AvatarGesture) : ("idle" as AvatarGesture)}
+            gesture={isLocal ? gesture : ("idle" as AvatarGesture)}
           />
         );
       })}

@@ -8,6 +8,7 @@ import {
   ConnectionState,
 } from "livekit-client";
 import { useRoomContext, useDataChannel, useParticipants } from "@livekit/components-react";
+import { toast } from "sonner";
 
 export type ConnectionQuality = "good" | "fair" | "poor";
 
@@ -98,6 +99,7 @@ export function useVoiceConnection() {
   const startMicrophone = useCallback(
     async (voiceMaskProcessor?: (track: MediaStreamTrack) => Promise<MediaStreamTrack>) => {
       setMicBusy(true);
+      let trackObj: LocalAudioTrack | null = null;
       try {
         // Close any existing AudioContext before creating a new one
         if (audioContextRef.current) {
@@ -105,18 +107,18 @@ export function useVoiceConnection() {
           audioContextRef.current = null;
         }
 
-        const track = await createLocalAudioTrack({
+        trackObj = await createLocalAudioTrack({
           autoGainControl: true,
           echoCancellation: true,
           noiseSuppression: true,
           voiceIsolation: true,
         });
 
-        let processedTrack: LocalAudioTrack = track;
+        let processedTrack: LocalAudioTrack = trackObj;
 
         if (voiceMaskProcessor) {
           try {
-            const processed = await voiceMaskProcessor(track.mediaStreamTrack);
+            const processed = await voiceMaskProcessor(trackObj.mediaStreamTrack);
             // Create a new LocalAudioTrack from the processed stream
             const newTrack = createLocalAudioTrack({
               channelCount: 1,
@@ -124,7 +126,7 @@ export function useVoiceConnection() {
               noiseSuppression: true,
             });
             // Note: In practice we'd need to replace the track
-            processedTrack = track;
+            processedTrack = trackObj;
           } catch {
             // Processor unavailable — continue with raw audio
           }
@@ -134,6 +136,20 @@ export function useVoiceConnection() {
         localAudioTrackRef.current = processedTrack;
         setLocalAudioTrack(processedTrack);
         setMicEnabled(true);
+      } catch (err) {
+        console.error('[useVoiceConnection] Microphone publication failed:', err);
+        if (trackObj) {
+          try {
+            trackObj.stop();
+          } catch (stopErr) {
+            console.warn('Failed to stop track on error:', stopErr);
+          }
+        }
+        localAudioTrackRef.current = null;
+        setLocalAudioTrack(null);
+        setMicEnabled(false);
+        const errMsg = err instanceof Error ? err.message : String(err);
+        toast.error(`Microphone failed to start: ${errMsg}`);
       } finally {
         setMicBusy(false);
       }

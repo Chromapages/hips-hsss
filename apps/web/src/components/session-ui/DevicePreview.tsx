@@ -32,8 +32,7 @@ export function DevicePreview({
 
   return (
     <div className="space-y-4">
-      {/* Camera preview */}
-      <div className="relative aspect-video w-full overflow-hidden rounded-2xl bg-zinc-900 ring-1 ring-white/10">
+      <div className="relative aspect-video w-full overflow-hidden rounded-2xl bg-zinc-900 ring-1 ring-border">
         {cameraPermissionGranted && cameraStream ? (
           <>
             <video
@@ -49,50 +48,51 @@ export function DevicePreview({
             </div>
           </>
         ) : (
-          <div className="flex h-full flex-col items-center justify-center gap-3">
-            <div className="rounded-full bg-zinc-800 p-4">
-              <Video className="h-8 w-8 text-zinc-600" />
+          <div className="flex h-full flex-col items-center justify-center gap-3 bg-surface-alt">
+            <div className="rounded-full bg-surface p-4 ring-1 ring-border">
+              <Video className="h-8 w-8 text-text-muted" />
             </div>
-            <p className="text-sm text-zinc-500">Camera not accessible</p>
+            <p className="text-sm text-text-muted">Camera not accessible</p>
+            <p className="text-xs text-text-muted/70">
+              Allow camera access in your browser to continue.
+            </p>
           </div>
         )}
       </div>
 
-      {/* Audio level meter */}
-      <div className="space-y-2 rounded-xl border border-white/5 bg-white/5 p-4">
+      <div className="space-y-2 rounded-xl border border-border bg-surface p-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div
               className={`rounded-lg p-1.5 ${
-                micPermissionGranted ? 'bg-emerald-500/20' : 'bg-red-500/20'
+                micPermissionGranted ? 'bg-success/15' : 'bg-destructive/15'
               }`}
             >
               <Mic
                 className={`h-4 w-4 ${
-                  micPermissionGranted ? 'text-emerald-400' : 'text-red-400'
+                  micPermissionGranted ? 'text-success' : 'text-destructive'
                 }`}
               />
             </div>
             <div>
-              <p className="text-sm font-medium text-white">
+              <p className="text-sm font-medium text-primary">
                 {audioInputLabel || 'Microphone'}
               </p>
-              <p className="text-xs text-zinc-500">
+              <p className="text-xs text-text-muted">
                 {micPermissionGranted ? 'Input detected' : 'Permission required'}
               </p>
             </div>
           </div>
           {micPermissionGranted ? (
-            <CheckCircle2 className="h-4 w-4 text-emerald-400" />
+            <CheckCircle2 className="h-4 w-4 text-success" />
           ) : (
-            <XCircle className="h-4 w-4 text-red-400" />
+            <XCircle className="h-4 w-4 text-destructive" />
           )}
         </div>
 
-        {/* Level meter */}
-        <div className="h-2 overflow-hidden rounded-full bg-white/10">
+        <div className="h-2 overflow-hidden rounded-full bg-surface-alt">
           <div
-            className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-cyan-400 transition-all duration-150"
+            className="h-full rounded-full bg-gradient-to-r from-success to-cyan-500 transition-all duration-150"
             style={{
               width: `${Math.min(100, audioLevel * 100)}%`,
             }}

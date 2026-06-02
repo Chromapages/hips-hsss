@@ -8,6 +8,33 @@ import { useAuth } from "@/components/auth/AuthProvider";
 import Link from "next/link";
 import { Loader2, Mail, Lock, ArrowRight } from "lucide-react";
 
+type FirebaseAuthError = Error & { code?: string };
+
+function getLoginErrorMessage(err: unknown) {
+  const authError = err instanceof Error
+    ? err as FirebaseAuthError
+    : null;
+
+  switch (authError?.code) {
+    case 'auth/invalid-credential':
+    case 'auth/user-not-found':
+    case 'auth/wrong-password':
+      return "Invalid email or password. Please check your credentials and try again.";
+    case 'auth/network-request-failed':
+      return "Connection error. Please check your internet and try again.";
+    case 'auth/too-many-requests':
+      return "Too many failed attempts. Please try again later.";
+    case 'auth/user-disabled':
+      return "This account has been disabled. Contact support for assistance.";
+    case 'auth/unauthorized-domain':
+      return "Sign-in is not available from this domain. Please try again later.";
+    default:
+      return authError?.code
+        ? authError.message || "An unexpected error occurred. Please try again."
+        : "Authentication temporarily unavailable. Please try again.";
+  }
+}
+
 export default function LoginPage() {
   const router = useRouter();
   const pathname = usePathname();
@@ -40,53 +67,17 @@ export default function LoginPage() {
 
     // Guard: Check Firebase is ready before attempting auth
     if (!firebaseReady || !auth) {
-      console.error("[Login] Firebase not ready or auth is null");
+      console.warn("[Login] Firebase not ready or auth is null");
       setError("Authentication temporarily unavailable. Please try again.");
       setLoading(false);
       return;
     }
 
     try {
-      console.log("[Login] Attempting sign in with:", email);
       await signInWithEmailAndPassword(auth, email, password);
-      console.log("[Login] Firebase auth success, wait for AuthProvider sync...");
       router.push(from);
     } catch (err: unknown) {
-      const authError = err instanceof Error
-        ? err as Error & { code?: string }
-        : { message: "An unexpected error occurred. Please try again." };
-
-      console.error("[Login] Error details:", authError.code, authError.message);
-
-      // Halt on null app error - do not retry silently
-      if (!authError.code) {
-        setError("Authentication temporarily unavailable. Please try again.");
-        setLoading(false);
-        return;
-      }
-
-      // Handle specific Firebase error codes
-      switch (authError.code) {
-        case 'auth/invalid-credential':
-        case 'auth/user-not-found':
-        case 'auth/wrong-password':
-          setError("Invalid email or password. Please check your credentials and try again.");
-          break;
-        case 'auth/network-request-failed':
-          setError("Connection error. Please check your internet and try again.");
-          break;
-        case 'auth/too-many-requests':
-          setError("Too many failed attempts. Please try again later.");
-          break;
-        case 'auth/user-disabled':
-          setError("This account has been disabled. Contact support for assistance.");
-          break;
-        case 'auth/unauthorized-domain':
-          setError("Sign-in is not available from this domain. Please try again later.");
-          break;
-        default:
-          setError(authError.message || "An unexpected error occurred. Please try again.");
-      }
+      setError(getLoginErrorMessage(err));
       setLoading(false);
     }
   };
@@ -103,13 +94,13 @@ export default function LoginPage() {
     <div className="space-y-8">
       <div className="space-y-2">
         {/* H1 - serif heading */}
-        <h1 className="font-heading text-3xl md:text-4xl font-bold tracking-tight text-white">Welcome back.</h1>
-        <p className="text-sm font-medium text-zinc-500 font-body">Enter your credentials to access your sanctuary.</p>
+        <h1 className="font-heading text-lg md:text-xl font-bold tracking-tight text-[#173B57] whitespace-nowrap text-center">Welcome back.</h1>
+        <p className="text-sm font-medium text-[#6F8291] font-body text-center">Enter your credentials to access your account.</p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-5">
         <div className="space-y-2">
-          <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-500 ml-1 font-ui" htmlFor="login-email">Email Address</label>
+          <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#6F8291] ml-1 font-ui" htmlFor="login-email">Email Address</label>
           <div className="relative group">
             <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-600 group-focus-within:text-primary transition-colors" />
             <input
@@ -119,14 +110,14 @@ export default function LoginPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="name@example.com"
-              className="w-full h-14 bg-white/5 border border-white/5 rounded-2xl pl-12 pr-4 text-sm font-medium focus:outline-none focus:border-primary/50 focus:bg-white/10 transition-all placeholder:text-zinc-700 font-body"
+              className="w-full h-14 bg-zinc-50 border border-zinc-200 rounded-2xl pl-12 pr-4 text-sm font-medium text-[#173B57] focus:outline-none focus:border-primary/50 focus:bg-white transition-all placeholder:text-zinc-400 font-body"
             />
           </div>
         </div>
 
         <div className="space-y-2">
           <div className="flex justify-between items-center px-1">
-            <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-500 font-ui" htmlFor="login-password">Password</label>
+            <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#6F8291] font-ui" htmlFor="login-password">Password</label>
             <Link href="/forgot-password" className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary hover:text-primary font-ui">
               Forgot?
             </Link>
@@ -140,13 +131,13 @@ export default function LoginPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
-              className="w-full h-14 bg-white/5 border border-white/5 rounded-2xl pl-12 pr-4 text-sm font-medium focus:outline-none focus:border-primary/50 focus:bg-white/10 transition-all placeholder:text-zinc-700 font-body"
+              className="w-full h-14 bg-zinc-50 border border-zinc-200 rounded-2xl pl-12 pr-4 text-sm font-medium text-[#173B57] focus:outline-none focus:border-primary/50 focus:bg-white transition-all placeholder:text-zinc-400 font-body"
             />
           </div>
         </div>
 
         {error && (
-          <div className="p-4 rounded-xl bg-red-500/5 border border-red-500/10 text-red-400 text-[10px] font-bold uppercase tracking-widest text-center animate-in shake-in duration-300 font-ui">
+          <div className="p-4 rounded-xl bg-red-50 border border-red-200 text-red-700 text-[10px] font-bold uppercase tracking-widest text-center animate-in shake-in duration-300 font-ui">
             {error}
           </div>
         )}
@@ -154,25 +145,24 @@ export default function LoginPage() {
         <button
           type="submit"
           disabled={loading}
-          className="group relative w-full h-16 items-center justify-center overflow-hidden rounded-[1.5rem] bg-white font-bold tracking-tighter text-black transition-all hover:scale-[1.01] active:scale-[0.99] disabled:opacity-30 disabled:hover:scale-100 font-ui uppercase"
+          className="group flex w-full h-16 items-center justify-center rounded-[1.5rem] border border-zinc-200 bg-white font-bold tracking-tighter text-black shadow-sm transition-all duration-200 ease-in-out hover:border-[#173B57] hover:bg-[#173B57] hover:text-white hover:shadow-xl hover:shadow-[#173B57]/25 active:scale-[0.99] disabled:opacity-30 disabled:hover:border-zinc-200 disabled:hover:bg-white disabled:hover:text-black disabled:hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#173B57] focus-visible:ring-offset-2 font-ui uppercase"
         >
-          <div className="absolute inset-0 bg-gradient-to-r from-primary to-accent opacity-0 transition-opacity group-hover:opacity-10" />
           {loading ? (
             <Loader2 className="w-5 h-5 animate-spin mx-auto" />
           ) : (
             <div className="flex items-center justify-center gap-2">
               <span className="text-lg">Sign In</span>
-              <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
+              <ArrowRight className="w-5 h-5 transition-transform duration-200 ease-in-out group-hover:translate-x-1" />
             </div>
           )}
         </button>
       </form>
 
       <div className="pt-4 text-center">
-        <p className="text-xs font-medium text-zinc-500 font-body">
+        <p className="text-xs font-medium text-[#6F8291] font-body">
           Don&apos;t have an account?{" "}
-          <Link href="/signup" className="text-white font-bold hover:text-primary transition-colors">
-            Create Sanctuary
+          <Link href="/signup" className="text-[#173B57] font-bold hover:text-[#bb9644] transition-colors">
+            Create Account
           </Link>
         </p>
       </div>

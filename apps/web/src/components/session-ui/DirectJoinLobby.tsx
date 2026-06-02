@@ -1,6 +1,6 @@
 'use client';
 
-import { Lock, ShieldCheck, Headphones, Shuffle } from 'lucide-react';
+import { Lock, ShieldCheck, Headphones, Shuffle, Loader2 } from 'lucide-react';
 import { useState, useCallback } from 'react';
 
 interface ChecklistState {
@@ -17,6 +17,8 @@ interface DirectJoinLobbyProps {
   onChecklistChange: (checklist: ChecklistState) => void;
   avatarSeed?: string;
   onAvatarRefresh?: () => void;
+  isJoining?: boolean;
+  isPreparing?: boolean;
 }
 
 export function DirectJoinLobby({
@@ -27,68 +29,75 @@ export function DirectJoinLobby({
   onChecklistChange,
   avatarSeed,
   onAvatarRefresh,
+  isJoining = false,
+  isPreparing = false,
 }: DirectJoinLobbyProps) {
   const [displayName, setDisplayName] = useState('');
 
   const handleJoin = useCallback(() => {
+    if (isJoining) return;
     const name = displayName.trim() || `anon-${Math.random().toString(36).slice(2, 8)}`;
     onJoin(name);
-  }, [displayName, onJoin]);
+  }, [displayName, onJoin, isJoining]);
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div className="text-center">
-        <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-[#173B57]/20 bg-[#173B57]/10 px-3 py-1">
-          <Lock className="h-3 w-3 text-[#173B57]" />
-          <span className="font-mono text-[10px] uppercase tracking-widest text-[#173B57]">
+        <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-accent/30 bg-accent/10 px-3 py-1">
+          <Lock className="h-3 w-3 text-accent" />
+          <span className="font-ui text-[10px] font-bold uppercase tracking-[0.18em] text-accent">
             Secure Entry Point
           </span>
         </div>
-        <h2 className="text-2xl font-bold text-white">Ready to Enter</h2>
-        <p className="mt-1 font-mono text-xs text-zinc-500">
-          Session: <span className="text-[#173B57]">{sessionId}</span>
+        <h2 className="text-2xl font-bold text-primary">Ready to Enter</h2>
+        <p className="mt-1 text-xs text-text-muted">
+          Session: <span className="font-mono text-accent">{sessionId}</span>
         </p>
       </div>
 
-      {/* Display name + avatar */}
       <div className="flex items-center gap-4">
         <div className="group relative">
-          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-#173B57 to-Gold-600 font-bold text-2xl text-white">
+          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-accent font-bold text-2xl text-primary-foreground shadow-sm shadow-primary/20">
             {avatarSeed ? avatarSeed.slice(0, 2).toUpperCase() : '??'}
           </div>
           {onAvatarRefresh && (
             <button
               onClick={onAvatarRefresh}
-              className="absolute -bottom-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full bg-zinc-800 text-zinc-400 ring-1 ring-white/10 hover:bg-[#173B57] hover:text-white"
+              className="absolute -bottom-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full bg-background text-text-secondary ring-1 ring-border transition-colors hover:bg-accent hover:text-primary-foreground"
               aria-label="Randomise avatar"
+              type="button"
             >
               <Shuffle className="h-3 w-3" />
             </button>
           )}
         </div>
         <div className="flex-1">
-          <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-zinc-500">
+          <label
+            htmlFor="display-handle"
+            className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-text-muted"
+          >
             Display Handle
           </label>
           <input
+            id="display-handle"
             type="text"
             value={displayName}
             onChange={(e) => setDisplayName(e.target.value)}
             placeholder="Anonymous handle..."
             maxLength={32}
-            className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder:text-zinc-600 focus:border-[#173B57]/50 focus:bg-white/10 focus:outline-none focus:ring-2 focus:ring-[#173B57]/20 Transition-all"
+            disabled={isJoining}
+            className="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm text-foreground transition-all placeholder:text-text-muted/60 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:opacity-50"
           />
         </div>
       </div>
 
-      {/* Privacy protocols */}
-      <div className="space-y-3">
-        <h3 className="text-xs font-semibold uppercase tracking-wider text-zinc-500">
+      <fieldset className="space-y-3">
+        <legend className="text-xs font-semibold uppercase tracking-wider text-text-muted">
           Privacy Protocols
-        </h3>
-        <div className="space-y-3 rounded-xl border border-white/5 bg-zinc-950 p-5">
+        </legend>
+        <div className="space-y-3 rounded-xl border border-border bg-background p-5">
           <ProtocolCheckbox
+            id="check-anonymous"
             checked={checklist.anonymous}
             onChange={() =>
               onChecklistChange({ ...checklist, anonymous: !checklist.anonymous })
@@ -98,6 +107,7 @@ export function DirectJoinLobby({
             description="I will not share my real name or physical location."
           />
           <ProtocolCheckbox
+            id="check-headphones"
             checked={checklist.headphones}
             onChange={() =>
               onChecklistChange({ ...checklist, headphones: !checklist.headphones })
@@ -107,6 +117,7 @@ export function DirectJoinLobby({
             description="I am wearing headphones to protect others' privacy."
           />
           <ProtocolCheckbox
+            id="check-safespace"
             checked={checklist.safeSpace}
             onChange={() =>
               onChecklistChange({ ...checklist, safeSpace: !checklist.safeSpace })
@@ -116,19 +127,27 @@ export function DirectJoinLobby({
             description="I am in a private space where I will not be overheard."
           />
         </div>
-      </div>
+      </fieldset>
 
-      {/* Join button */}
-      {allChecked ? (
+      {isJoining ? (
+        <div className="flex min-h-14 w-full items-center justify-center gap-2 rounded-xl bg-primary font-bold text-primary-foreground">
+          <Loader2 className="h-4 w-4 animate-spin" />
+          Entering the room…
+        </div>
+      ) : allChecked ? (
         <button
           onClick={handleJoin}
-          className="flex min-h-14 w-full items-center justify-center rounded-xl bg-[#173B57] font-bold text-white shadow-lg shadow-[#173B57]/20 transition-all hover:bg-[#173B57] active:scale-[0.98]"
+          disabled={isPreparing}
+          className="flex min-h-14 w-full items-center justify-center rounded-xl bg-primary font-bold text-primary-foreground shadow-sm shadow-primary/20 transition-all hover:bg-primary-dark active:scale-[0.98] disabled:opacity-60"
           type="button"
         >
-          Join Session Room
+          {isPreparing ? 'Preparing…' : 'Join Session Room'}
         </button>
       ) : (
-        <div className="flex min-h-14 w-full items-center justify-center rounded-xl border border-white/5 bg-white/5 text-sm font-bold text-zinc-500">
+        <div
+          role="status"
+          className="flex min-h-14 w-full items-center justify-center rounded-xl border border-dashed border-border bg-background text-sm font-bold text-text-muted"
+        >
           Complete all protocols to join
         </div>
       )}
@@ -137,12 +156,14 @@ export function DirectJoinLobby({
 }
 
 function ProtocolCheckbox({
+  id,
   checked,
   onChange,
   icon,
   label,
   description,
 }: {
+  id: string;
   checked: boolean;
   onChange: () => void;
   icon: React.ReactNode;
@@ -150,19 +171,20 @@ function ProtocolCheckbox({
   description: string;
 }) {
   return (
-    <label className="flex cursor-pointer items-start gap-3 group">
+    <label htmlFor={id} className="flex cursor-pointer items-start gap-3 group">
       <input
+        id={id}
         type="checkbox"
         checked={checked}
         onChange={onChange}
-        className="mt-1 h-4 w-4 rounded border-white/10 bg-black text-[#173B57] focus:ring-[#173B57]"
+        className="mt-1 h-4 w-4 rounded border-border bg-background text-accent focus:ring-accent"
       />
       <div className="flex-1 space-y-1">
         <div className="flex items-center gap-2">
-          <span className="text-zinc-500">{icon}</span>
-          <p className="text-sm font-medium text-zinc-200 group-hover:text-white">{label}</p>
+          <span className="text-text-muted">{icon}</span>
+          <p className="text-sm font-medium text-primary group-hover:text-primary-dark">{label}</p>
         </div>
-        <p className="text-xs italic text-zinc-500">{description}</p>
+        <p className="text-xs italic text-text-muted">{description}</p>
       </div>
     </label>
   );

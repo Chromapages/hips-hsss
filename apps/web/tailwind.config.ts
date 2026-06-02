@@ -36,6 +36,20 @@ const config: Config = {
         },
         input: "#D6E0E8",
         ring: "#173B57",
+        sidebar: {
+          DEFAULT: "hsl(var(--sidebar-background))",
+          foreground: "hsl(var(--sidebar-foreground))",
+          primary: {
+            DEFAULT: "hsl(var(--sidebar-primary))",
+            foreground: "hsl(var(--sidebar-primary-foreground))",
+          },
+          accent: {
+            DEFAULT: "hsl(var(--sidebar-accent))",
+            foreground: "hsl(var(--sidebar-accent-foreground))",
+          },
+          border: "hsl(var(--sidebar-border))",
+          ring: "hsl(var(--sidebar-ring))",
+        },
       },
       fontFamily: {
         display: ["var(--font-dm-sans)", "sans-serif"],

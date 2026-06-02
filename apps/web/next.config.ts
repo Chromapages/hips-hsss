@@ -5,25 +5,31 @@ import { fileURLToPath } from "node:url";
 
 function loadWorkspaceEnv() {
   const configDir = dirname(fileURLToPath(import.meta.url));
-  const envPath = resolve(configDir, "../../.env.local");
-  if (!existsSync(envPath)) {
-    return;
-  }
+  const envPaths = [
+    resolve(configDir, "../../.env"),
+    resolve(configDir, "../../.env.local"),
+  ];
 
-  for (const line of readFileSync(envPath, "utf8").split(/\r?\n/)) {
-    const trimmed = line.trim();
-    if (!trimmed || trimmed.startsWith("#")) {
+  for (const envPath of envPaths) {
+    if (!existsSync(envPath)) {
       continue;
     }
 
-    const separatorIndex = trimmed.indexOf("=");
-    if (separatorIndex === -1) {
-      continue;
-    }
+    for (const line of readFileSync(envPath, "utf8").split(/\r?\n/)) {
+      const trimmed = line.trim();
+      if (!trimmed || trimmed.startsWith("#")) {
+        continue;
+      }
 
-    const key = trimmed.slice(0, separatorIndex).trim();
-    const value = trimmed.slice(separatorIndex + 1).trim();
-    process.env[key] ??= value.replace(/^(['"])(.*)\1$/, "$2");
+      const separatorIndex = trimmed.indexOf("=");
+      if (separatorIndex === -1) {
+        continue;
+      }
+
+      const key = trimmed.slice(0, separatorIndex).trim();
+      const value = trimmed.slice(separatorIndex + 1).trim();
+      process.env[key] = value.replace(/^(['"])(.*)\1$/, "$2");
+    }
   }
 }
 
@@ -52,6 +58,7 @@ const cspDirectives = [
 ];
 
 const nextConfig: NextConfig = {
+  transpilePackages: ["@hips/types"],
   // Image optimization
   images: {
     formats: ['image/avif', 'image/webp'],

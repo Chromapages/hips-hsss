@@ -1,13 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { db, isFirebaseAdminReady } from '@/lib/firebase-admin';
-import { verifyFirebaseIdToken } from '@/lib/auth-edge';
-import { verifySessionToken } from '@/lib/session-auth';
+import { authorizeSessionAccess } from '@/lib/session-authz';
 
 /**
  * Phase 5 — Session Lifecycle Manager: Session Operations (5.3)
  * Handles get, update, and delete operations for individual sessions.
- * 
+ *
  * State transitions:
  *   pending → active (when first participant joins)
  *   active → ended (when session ends)
@@ -53,7 +52,6 @@ const VALID_TRANSITIONS: Record<SessionStatus, SessionStatus[]> = {
   'flagged': ['ended'],
 };
 
-// Helper to get session document reference
 function getSessionRef(sessionId: string) {
   if (!isFirebaseAdminReady()) {
     throw new Error('Firestore not initialized');
@@ -61,14 +59,13 @@ function getSessionRef(sessionId: string) {
   return db.collection('phase5_sessions').doc(sessionId);
 }
 
-// Helper to get session with error handling
 async function getSession(sessionId: string): Promise<Phase5Session | null> {
   try {
     const doc = await getSessionRef(sessionId).get();
     if (!doc.exists) return null;
     return doc.data() as Phase5Session;
   } catch (err) {
-    console.warn('[SessionOps] Could not read session:', err);
+    console.warn('[SessionOps] Could not read session');
     return null;
   }
 }
@@ -82,45 +79,20 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
-    
+
     if (!id) {
       return NextResponse.json({ error: 'Session ID required' }, { status: 400 });
     }
 
-    // Auth: require token first — reject before any Firestore reads
-    const authHeader = req.headers.get('authorization');
-    const token = authHeader?.startsWith('Bearer ') ? authHeader.split(' ')[1] : null;
-
-    if (!token) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    let authorized = false;
-    let firebaseUid: string | null = null;
-    try {
-      const payload = await verifyFirebaseIdToken(token);
-      firebaseUid = payload.sub as string;
-      const sessionDoc = await getSessionRef(id).get();
-      if (sessionDoc.exists) {
-        const sessionData = sessionDoc.data();
-        authorized = firebaseUid === sessionData?.userId ||
-          firebaseUid === sessionData?.facilitatorId ||
-          (Array.isArray(sessionData?.participantIdentities) &&
-            sessionData.participantIdentities.includes(firebaseUid));
-      }
-    } catch {
-      const sessionPayload = await verifySessionToken(token);
-      if (sessionPayload && sessionPayload.ref === id) {
-        authorized = true;
-      }
-    }
-
-    if (!authorized) {
+    const authKind = await authorizeSessionAccess(id, req.headers.get('authorization'));
+    if (!authKind) {
+      // Single 401 for both missing-session and unauthorized — closes the
+      // 401-vs-404 side channel that previously let unauthenticated callers
+      // enumerate session existence. See audit finding M1.
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const session = await getSession(id);
-
     if (!session) {
       return NextResponse.json({ error: 'Session not found' }, { status: 404 });
     }
@@ -140,9 +112,8 @@ export async function GET(
         metadata: session.metadata,
       },
     });
-  } catch (error: unknown) {
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    console.error('[SessionOps] GET Error:', errorMessage);
+  } catch {
+    console.error('[SessionOps] GET Error');
     return NextResponse.json(
       { error: 'Failed to get session' },
       { status: 500 }
@@ -164,31 +135,8 @@ export async function PATCH(
       return NextResponse.json({ error: 'Session ID required' }, { status: 400 });
     }
 
-    // Auth: verify caller is authorized for this session
-    const authHeader = req.headers.get('authorization');
-    const token = authHeader?.startsWith('Bearer ') ? authHeader.split(' ')[1] : null;
-
-    let authorized = false;
-    if (token) {
-      try {
-        const payload = await verifyFirebaseIdToken(token);
-        const firebaseUid = payload.sub;
-        const sessionDoc = await getSessionRef(id).get();
-        if (sessionDoc.exists) {
-          const sessionData = sessionDoc.data();
-          authorized = firebaseUid === sessionData?.userId ||
-            firebaseUid === sessionData?.facilitatorId ||
-            sessionData?.participantIdentities?.includes(firebaseUid);
-        }
-      } catch {
-        const sessionPayload = await verifySessionToken(token);
-        if (sessionPayload) {
-          authorized = sessionPayload.ref === id;
-        }
-      }
-    }
-
-    if (!authorized) {
+    const authKind = await authorizeSessionAccess(id, req.headers.get('authorization'));
+    if (!authKind) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -204,19 +152,37 @@ export async function PATCH(
 
     const { status: newStatus, action, participantCount, flaggedBy, flaggedReason, metadata } = result.data;
 
-    // Get current session state
     const session = await getSession(id);
-
     if (!session) {
       return NextResponse.json({ error: 'Session not found' }, { status: 404 });
     }
 
-    // Determine final status
+    // Determine if the caller is the owner/facilitator
+    const firebaseUid = authKind.kind === 'firebase' ? authKind.uid : null;
+    const isOwnerOrFacilitator =
+      firebaseUid &&
+      (session.metadata?.facilitatorId === firebaseUid ||
+        session.metadata?.userId === firebaseUid ||
+        session.metadata?.createdBy === firebaseUid ||
+        (session as any).userId === firebaseUid ||
+        (session as any).facilitatorId === firebaseUid ||
+        (session as any).createdBy === firebaseUid);
+
+    // H3: Restrict status/metadata modifications to owner/facilitator
+    const isModifyingState = newStatus !== undefined || action === 'end';
+    const isWritingMetadata = metadata !== undefined || flaggedBy !== undefined || flaggedReason !== undefined;
+
+    if ((isModifyingState || isWritingMetadata) && !isOwnerOrFacilitator) {
+      return NextResponse.json(
+        { error: 'Forbidden: only the session owner or facilitator can modify metadata or end the session' },
+        { status: 403 }
+      );
+    }
+
     let finalStatus = session.status;
     const now = new Date().toISOString();
     const updateData: Partial<Phase5Session> = {};
 
-    // Handle action-based transitions
     if (action) {
       switch (action) {
         case 'join':
@@ -236,7 +202,6 @@ export async function PATCH(
           } else {
             updateData.participantCount = Math.max(0, session.participantCount - 1);
           }
-          // Auto-end if last participant leaves
           if (updateData.participantCount === 0 && session.status === 'active') {
             finalStatus = 'ended';
             updateData.endedAt = now;
@@ -260,15 +225,7 @@ export async function PATCH(
       }
     }
 
-    // Handle direct status transition
     if (newStatus) {
-      const allowedTransitions = VALID_TRANSITIONS[session.status];
-      if (!allowedTransitions.includes(newStatus)) {
-        return NextResponse.json({
-          error: `Invalid status transition: ${session.status} → ${newStatus}`,
-          allowedTransitions,
-        }, { status: 400 });
-      }
       finalStatus = newStatus;
       if (newStatus === 'active' && !updateData.activeAt) {
         updateData.activeAt = now;
@@ -282,21 +239,29 @@ export async function PATCH(
       }
     }
 
-    // Apply metadata updates
+    // Generic double-state-transition guards (H2)
+    if (finalStatus !== session.status) {
+      const allowedTransitions = VALID_TRANSITIONS[session.status];
+      if (!allowedTransitions || !allowedTransitions.includes(finalStatus)) {
+        return NextResponse.json({
+          error: `Invalid status transition: ${session.status} → ${finalStatus}`,
+          allowedTransitions,
+        }, { status: 400 });
+      }
+    }
+
     if (metadata) {
       updateData.metadata = { ...session.metadata, ...metadata };
     }
 
     updateData.status = finalStatus;
 
-    // Persist changes
     try {
       await getSessionRef(id).update(updateData);
-      console.log(`[SessionOps] Updated session ${id}: ${session.status} → ${finalStatus}`);
-    } catch (err) {
-      console.error('[SessionOps] Update failed:', err);
+    } catch {
+      console.error('[SessionOps] Update failed');
       return NextResponse.json(
-        { error: 'Failed to update session', details: 'Database unavailable' },
+        { error: 'Failed to update session' },
         { status: 503 }
       );
     }
@@ -311,9 +276,8 @@ export async function PATCH(
         updatedAt: now,
       },
     });
-  } catch (error: unknown) {
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    console.error('[SessionOps] PATCH Error:', errorMessage);
+  } catch {
+    console.error('[SessionOps] PATCH Error');
     return NextResponse.json(
       { error: 'Failed to update session' },
       { status: 500 }
@@ -335,42 +299,34 @@ export async function DELETE(
       return NextResponse.json({ error: 'Session ID required' }, { status: 400 });
     }
 
-    // Auth: verify caller is authorized for this session
-    const authHeader = req.headers.get('authorization');
-    const token = authHeader?.startsWith('Bearer ') ? authHeader.split(' ')[1] : null;
-
-    let authorized = false;
-    if (token) {
-      try {
-        const payload = await verifyFirebaseIdToken(token);
-        const firebaseUid = payload.sub;
-        const sessionDoc = await getSessionRef(id).get();
-        if (sessionDoc.exists) {
-          const sessionData = sessionDoc.data();
-          authorized = firebaseUid === sessionData?.userId ||
-            firebaseUid === sessionData?.facilitatorId ||
-            sessionData?.participantIdentities?.includes(firebaseUid);
-        }
-      } catch {
-        const sessionPayload = await verifySessionToken(token);
-        if (sessionPayload) {
-          authorized = sessionPayload.ref === id;
-        }
-      }
-    }
-
-    if (!authorized) {
+    const authKind = await authorizeSessionAccess(id, req.headers.get('authorization'));
+    if (!authKind) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Get current session state
     const session = await getSession(id);
-
     if (!session) {
       return NextResponse.json({ error: 'Session not found' }, { status: 404 });
     }
 
-    // Can only delete active sessions
+    // Determine if the caller is the owner/facilitator
+    const firebaseUid = authKind.kind === 'firebase' ? authKind.uid : null;
+    const isOwnerOrFacilitator =
+      firebaseUid &&
+      (session.metadata?.facilitatorId === firebaseUid ||
+        session.metadata?.userId === firebaseUid ||
+        session.metadata?.createdBy === firebaseUid ||
+        (session as any).userId === firebaseUid ||
+        (session as any).facilitatorId === firebaseUid ||
+        (session as any).createdBy === firebaseUid);
+
+    if (!isOwnerOrFacilitator) {
+      return NextResponse.json(
+        { error: 'Forbidden: only the session owner or facilitator can end the session' },
+        { status: 403 }
+      );
+    }
+
     if (session.status === 'ended') {
       return NextResponse.json({
         error: 'Session already ended',
@@ -380,17 +336,15 @@ export async function DELETE(
 
     const now = new Date().toISOString();
 
-    // Transition to ended
     try {
       await getSessionRef(id).update({
         status: 'ended',
         endedAt: now,
       });
-      console.log(`[SessionOps] Ended session ${id}`);
-    } catch (err) {
-      console.error('[SessionOps] Delete failed:', err);
+    } catch {
+      console.error('[SessionOps] Delete failed');
       return NextResponse.json(
-        { error: 'Failed to end session', details: 'Database unavailable' },
+        { error: 'Failed to end session' },
         { status: 503 }
       );
     }
@@ -404,9 +358,8 @@ export async function DELETE(
         previousStatus: session.status,
       },
     });
-  } catch (error: unknown) {
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    console.error('[SessionOps] DELETE Error:', errorMessage);
+  } catch {
+    console.error('[SessionOps] DELETE Error');
     return NextResponse.json(
       { error: 'Failed to end session' },
       { status: 500 }

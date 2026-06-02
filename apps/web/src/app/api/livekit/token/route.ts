@@ -1,12 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { AccessToken } from 'livekit-server-sdk';
 import crypto from 'crypto';
+import { z } from 'zod';
+import * as admin from 'firebase-admin';
 import { db } from '@/lib/firebase-admin';
-import { verifyFirebaseIdToken } from '@/lib/auth-edge';
-import { verifySessionToken } from '@/lib/session-auth';
 import { checkRateLimit, getRateLimitHeaders } from '@/lib/rate-limit';
+import { authorizeSessionAccess } from '@/lib/session-authz';
 
 const palettes = ['coastal', 'sunrise', 'forest'] as const;
+
+const tokenRequestSchema = z.object({
+  sessionId: z.string().min(1).max(128),
+});
 
 // Phase 5 spec: avatar params lock on session start — never persist to identity
 function makeAvatar(seed: string) {
@@ -34,6 +39,7 @@ interface Phase5Session {
   endsAt?: string;
   participantCount: number;
   participantIdentities?: string[];
+  facilitatorId?: string;
   flagged: boolean;
   flaggedBy?: string;
   flaggedReason?: string;
@@ -76,8 +82,12 @@ async function transitionSession(sessionId: string, newStatus: SessionStatus) {
 
 export async function POST(req: NextRequest) {
   try {
-    const apiKey = process.env.LIVEKIT_API_KEY || process.env.NEXT_PUBLIC_LIVEKIT_API_KEY || '';
-    const apiSecret = process.env.LIVEKIT_API_SECRET || process.env.NEXT_PUBLIC_LIVEKIT_API_SECRET || '';
+    // Read credentials from server-only env vars. Do NOT fall back to
+    // NEXT_PUBLIC_LIVEKIT_API_* — those are intended to be bundled into the
+    // client, and falling back to them would ship the LiveKit signing secret
+    // to every browser. See H5 in the audit report.
+    const apiKey = process.env.LIVEKIT_API_KEY || '';
+    const apiSecret = process.env.LIVEKIT_API_SECRET || '';
 
     const isMissingOrPlaceholder = !apiKey || !apiSecret || apiKey === 'devkey' || apiSecret === 'secret';
 
@@ -113,88 +123,80 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Verify Firebase token first (preferred)
-    let sessionRef: string | null = null;
-    try {
-      const payload = await verifyFirebaseIdToken(token);
-      sessionRef = payload.sub || null;
-    } catch {
-      // Fallback: verify session token
-      const sessionPayload = await verifySessionToken(token);
-      if (sessionPayload) {
-        sessionRef = sessionPayload.ref;
-      }
-    }
-
-    if (!sessionRef) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
     const body = await req.json().catch(() => ({}));
+    const parsed = tokenRequestSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'sessionId is required' },
+        { status: 400 }
+      );
+    }
+    const { sessionId } = parsed.data;
     // Canonical room naming: always use `session-${sessionId}` format.
     // This normalizes the room name between /api/livekit/token and the session service's
     // livekit-token-service so both issue tokens for the same LiveKit room.
-    const roomName = body.sessionId
-      ? `session-${body.sessionId}`
-      : `session-${crypto.randomUUID()}`;
+    const roomName = `session-${sessionId}`;
 
-    // Authorize: fetch the session document and verify the caller is a legitimate participant.
-    // This prevents IDOR — callers cannot join sessions they are not recorded in.
-    if (body.sessionId) {
-      const sessionDoc = await db.collection('phase5_sessions').doc(body.sessionId).get();
-      if (!sessionDoc.exists) {
-        return NextResponse.json({ error: 'Session not found' }, { status: 404 });
-      }
-      const sessionData = sessionDoc.data() as Partial<Phase5Session>;
+    // Verify the session exists before any authz work — single 404 closes the
+    // session-existence oracle for unauthenticated callers.
+    const sessionDoc = await db.collection('phase5_sessions').doc(sessionId).get();
+    if (!sessionDoc.exists) {
+      return NextResponse.json({ error: 'Session not found' }, { status: 404 });
+    }
+    const sessionData = sessionDoc.data() as Partial<Phase5Session>;
 
-      const isAuthorized =
-        sessionData?.participantIdentities?.includes(sessionRef) ||
-        sessionData?.facilitatorId === sessionRef;
-      if (!isAuthorized) {
-        return NextResponse.json({ error: 'Forbidden: not authorized for this session' }, { status: 403 });
-      }
-
-      // Enforce booking status: only ACTIVE sessions can be joined
-      if (sessionData.status && sessionData.status !== 'active') {
-        return NextResponse.json(
-          { error: 'Session is not currently joinable', sessionStatus: sessionData.status },
-          { status: 403 }
-        );
-      }
-
-      // Enforce join window: current time must be within session start/end window
-      const now = Date.now();
-      if (sessionData.startsAt && now < new Date(sessionData.startsAt).getTime() - 5 * 60 * 1000) {
-        return NextResponse.json(
-          { error: 'Session has not started yet' },
-          { status: 403 }
-        );
-      }
-      if (sessionData.endsAt && now > new Date(sessionData.endsAt).getTime() + 15 * 60 * 1000) {
-        return NextResponse.json(
-          { error: 'Session has ended' },
-          { status: 403 }
-        );
-      }
+    // Authorize the caller. The helper accepts either a Firebase ID token (the
+    // session creator, the facilitator, or anyone previously recorded in
+    // `session_participants`) or an opaque session token whose `ref` matches
+    // the sessionId. The previous `participantIdentities.includes(sessionRef)`
+    // check was a category error: that field stores anonymous-identity UUIDs,
+    // not Firebase UIDs, so it could never match. See audit finding A2.
+    const principal = await authorizeSessionAccess(sessionId, req.headers.get('authorization'));
+    if (!principal) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Phase 5: Anonymous identity ONLY — no Firebase UID
-    const anonymousIdentity = crypto.randomUUID();
+    // Enforce booking status: only ACTIVE sessions can be joined
+    if (sessionData.status && sessionData.status !== 'active') {
+      return NextResponse.json(
+        { error: 'Session is not currently joinable', sessionStatus: sessionData.status },
+        { status: 403 }
+      );
+    }
+
+    // Enforce join window: current time must be within session start/end window
+    const now = Date.now();
+    if (sessionData.startsAt && now < new Date(sessionData.startsAt).getTime() - 5 * 60 * 1000) {
+      return NextResponse.json(
+        { error: 'Session has not started yet' },
+        { status: 403 }
+      );
+    }
+    if (sessionData.endsAt && now > new Date(sessionData.endsAt).getTime() + 15 * 60 * 1000) {
+      return NextResponse.json(
+        { error: 'Session has ended' },
+        { status: 403 }
+      );
+    }
+
+    // Phase 5: Stable pseudonymous identity hashed via HMAC-SHA256 with apiSecret
+    const uidToHash = principal.kind === 'firebase' ? principal.uid : principal.ref;
+    const anonymousIdentity = crypto.createHmac('sha256', apiSecret).update(uidToHash).digest('hex');
     const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour max
 
     // Session lifecycle — ensure session exists and transition to active
     let session: Phase5Session;
     try {
-      session = await getOrCreateSession(roomName);
+      session = await getOrCreateSession(sessionId);
       if (session.status === 'pending') {
-        await transitionSession(roomName, 'active');
+        await transitionSession(sessionId, 'active');
         session.status = 'active';
         session.activeAt = new Date().toISOString();
       }
     } catch (err) {
       // Non-fatal: continue with token issuance even if Firestore unavailable
       console.warn('[LiveKitAPI] Session lifecycle error:', err);
-      session = { id: roomName, status: 'active', createdAt: new Date().toISOString(), participantCount: 0, flagged: false };
+      session = { id: sessionId, status: 'active', createdAt: new Date().toISOString(), participantCount: 0, flagged: false };
     }
 
     console.log(`[LiveKitAPI] Issuing token for room: ${roomName}, identity: ${anonymousIdentity}`);
@@ -215,22 +217,46 @@ export async function POST(req: NextRequest) {
     // Add metadata forFacilitator identification
     at.metadata = JSON.stringify({
       joinedAt: new Date().toISOString(),
-      sessionId: roomName,
+      sessionId,
     });
 
     const tokenJwt = await at.toJwt();
 
-    // Record participant identity for future authorization checks
-    if (body.sessionId && anonymousIdentity) {
+    // Record participant identity for future authorization and reconnection.
+    // We persist the (sessionId, firebaseUid) → anonymousIdentity mapping
+    // explicitly so the reconnect endpoint can look up the original identity
+    // server-side without trusting client input. See H7 in the audit report.
+    if (anonymousIdentity) {
       try {
-        const sessionRef = db.collection('phase5_sessions').doc(body.sessionId);
-        await sessionRef.update({
+        const sessionDocRef = db.collection('phase5_sessions').doc(sessionId);
+        await sessionDocRef.update({
           participantIdentities: admin.firestore.FieldValue.arrayUnion(anonymousIdentity),
           lastActivityAt: new Date().toISOString(),
         });
       } catch (err) {
         console.warn('[LiveKitAPI] Could not update participantIdentities:', err);
         // Non-fatal — token already issued
+      }
+
+      if (principal.kind === 'firebase') {
+        try {
+          await db
+            .collection('session_participants')
+            .doc(`${sessionId}_${principal.uid}`)
+            .set(
+              {
+                sessionId,
+                firebaseUid: principal.uid,
+                anonymousIdentity,
+                joinedAt: new Date().toISOString(),
+                lastSeenAt: new Date().toISOString(),
+              },
+              { merge: true }
+            );
+        } catch {
+          console.warn('[LiveKitAPI] Could not record session_participants mapping');
+          // Non-fatal — token already issued
+        }
       }
     }
 

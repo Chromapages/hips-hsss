@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useState } from 'react';
-import type { VoicePreset } from '@/lib/voice-mask-presets';
+import { VOICE_PRESETS, type VoicePreset } from '@/lib/voice-mask-presets';
 import type { AudioProcessorOptions, TrackProcessor } from 'livekit-client';
 import { Track } from 'livekit-client';
 
@@ -45,8 +45,10 @@ export function useVoiceEffects(
   }, []);
 
   const setSemitones = useCallback((value: number) => {
-    setSemitonesState(Math.max(-5, Math.min(5, value)));
-  }, []);
+    const config = VOICE_PRESETS[activePreset];
+    const [min, max] = config ? config.semitoneRange : [-5, 5];
+    setSemitonesState(Math.max(min, Math.min(max, value)));
+  }, [activePreset]);
 
   const getProcessorOptions = useCallback(
     (): VoiceMaskProcessorOptions => ({

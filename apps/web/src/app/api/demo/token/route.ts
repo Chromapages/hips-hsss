@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { AccessToken, RoomServiceClient } from 'livekit-server-sdk';
 import { z } from 'zod';
+import crypto from 'crypto';
 import { checkRateLimit, getRateLimitHeaders } from '@/lib/rate-limit';
 
 const DemoTokenSchema = z.object({
@@ -65,8 +66,8 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const apiKey = process.env.LIVEKIT_API_KEY || process.env.NEXT_PUBLIC_LIVEKIT_API_KEY || 'devkey';
-    const apiSecret = process.env.LIVEKIT_API_SECRET || process.env.NEXT_PUBLIC_LIVEKIT_API_SECRET || 'secret';
+    const apiKey = process.env.LIVEKIT_API_KEY || 'devkey';
+    const apiSecret = process.env.LIVEKIT_API_SECRET || 'secret';
 
     if (process.env.NODE_ENV === 'production' && (apiKey === 'devkey' || apiSecret === 'secret')) {
       console.error('[DemoTokenAPI] MISSING CREDENTIALS IN PRODUCTION', {

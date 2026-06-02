@@ -6,7 +6,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { LucideIcon } from "lucide-react";
 import { AlertCircle, Download, Package, Timer, Loader2, RefreshCw, ArrowRight } from "lucide-react";
-import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { PackageBalanceCard } from "@/components/dashboard/PackageBalanceCard";
 import { SessionHistoryTable } from "@/components/dashboard/SessionHistoryTable";
 import { useAuth } from "@/components/auth/AuthProvider";
@@ -14,35 +13,40 @@ import { useSWRData } from "@/hooks/useSWR";
 import { format } from "date-fns";
 import { toast } from "sonner";
 
-type DashboardData = {
-  stats: {
-    upcoming: number;
-    packages: number;
-  };
-  nextSession: {
-    id: string;
-    serviceName: string;
-    startsAt: string | null;
-  } | null;
-  sessions: Array<{
-    id: string;
-    service: string;
-    date: string | null;
-    status?: string;
-  }>;
-  packages: Array<{
-    id: string;
-    service: string;
-    remaining: number;
-    total: number;
-  }>;
-};
+import { z } from "zod";
+
+const DashboardSessionSchema = z.object({
+  id: z.string(),
+  service: z.string(),
+  date: z.string().nullable(),
+  status: z.string().optional(),
+});
+
+const DashboardPackageSchema = z.object({
+  id: z.string(),
+  service: z.string(),
+  remaining: z.number(),
+  total: z.number(),
+});
+
+const DashboardDataSchema = z.object({
+  stats: z.object({
+    upcoming: z.number(),
+    packages: z.number(),
+  }),
+  nextSession: z.object({
+    id: z.string(),
+    serviceName: z.string(),
+    startsAt: z.string().nullable(),
+  }).nullable(),
+  sessions: z.array(DashboardSessionSchema),
+  packages: z.array(DashboardPackageSchema),
+});
+
+export type DashboardData = z.infer<typeof DashboardDataSchema>;
 
 const emptyDashboardData: DashboardData = {
-  stats: {
-    upcoming: 0,
-    packages: 0,
-  },
+  stats: { upcoming: 0, packages: 0 },
   nextSession: null,
   sessions: [],
   packages: [],
@@ -52,18 +56,11 @@ export default function DashboardPage() {
   const { getToken, loading: authLoading } = useAuth();
   const router = useRouter();
 
-  const { data, error, isLoading } = useSWRData<{
-    stats: { upcoming: number; packages: number };
-    nextSession: { id: string; serviceName: string; startsAt: string | null } | null;
-    sessions: Array<{ id: string; service: string; date: string | null; status?: string }>;
-    packages: Array<{ id: string; service: string; remaining: number; total: number }>;
-  }>(authLoading ? null : 'dashboard', {
+  const { data, error, isLoading } = useSWRData<DashboardData>(authLoading ? null : 'dashboard', {
     revalidateOnFocus: false,
     dedupingInterval: 10_000,
     refreshInterval: 30_000,
     fetcher: async (key: string) => {
-      // 10s hard cap on the entire fetch operation. Without this, a hung
-      // backend or network blackhole would leave isLoading=true forever.
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 10_000);
       try {
@@ -81,8 +78,14 @@ export default function DashboardPage() {
           err.setupUrl = json.setupUrl;
           throw err;
         }
-        return res.json();
+        const json = await res.json();
+        // Runtime validation to ensure data integrity
+        return DashboardDataSchema.parse(json);
       } catch (error) {
+        if (error instanceof z.ZodError) {
+          console.error('[Dashboard] Data validation failed:', error.errors);
+          throw new Error('Received invalid data from server.');
+        }
         if (error instanceof Error && error.name === 'AbortError') {
           throw new Error('Dashboard request timed out. Please refresh.');
         }
@@ -95,11 +98,9 @@ export default function DashboardPage() {
 
   if (authLoading || isLoading) {
     return (
-      <DashboardLayout>
-        <div className="flex h-[60vh] items-center justify-center">
-          <Loader2 className="h-8 w-8 animate-spin text-[#173B57]" />
-        </div>
-      </DashboardLayout>
+      <div className="flex h-[60vh] items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-[#173B57]" />
+      </div>
     );
   }
 
@@ -120,8 +121,7 @@ export default function DashboardPage() {
   ];
 
   return (
-    <DashboardLayout>
-      <section className="mx-auto max-w-6xl px-6 py-12">
+    <section className="mx-auto max-w-6xl px-6 py-12">
         <header className="mb-12 flex flex-col md:flex-row md:items-end justify-between gap-6">
           <div>
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-[10px] font-bold uppercase tracking-widest text-zinc-400 mb-6">
@@ -139,46 +139,40 @@ export default function DashboardPage() {
           </div>
         </header>
 
-        {error ? (
-          <div className="mb-8 flex items-start gap-3 rounded-2xl border border-amber-500/20 bg-amber-500/10 p-5 text-amber-900">
-            <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" />
-            <div>
-              <p className="font-bold">Dashboard data could not load.</p>
-              <p className="mt-1 text-sm text-amber-700">{error.message}</p>
-              {error.setupUrl ? (
-                <a
-                  className="mt-3 inline-flex text-sm font-bold text-amber-800 underline decoration-amber-500/30 underline-offset-4 hover:text-amber-950"
-                  href={error.setupUrl}
-                  rel="noreferrer"
-                  target="_blank"
-                >
-                  Enable Firestore API
-                </a>
-              ) : null}
-            </div>
-          </div>
-        ) : null}
+        {/* Errors are handled gracefully in the background by SWR retries, no intrusive banner shown. */}
 
         {/* Stats Grid */}
         <div className="grid gap-6 md:grid-cols-3 mb-10">
-          {statsList.map(({ label, value, icon: Icon, action }) => (
-            <article
-              className="relative overflow-hidden rounded-[2rem] border border-white/5 bg-zinc-950 p-8 group hover:border-white/10 transition-all duration-500 cursor-pointer"
-              key={label}
-              onClick={action}
-            >
-              <div className="absolute -top-12 -right-12 w-32 h-32 bg-[#173B57]/10 rounded-full blur-[40px] group-hover:bg-[#173B57]/20 transition-colors" />
-              <div className="flex items-center justify-between mb-6 relative z-10">
-                <div className="h-12 w-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center group-hover:scale-110 group-hover:bg-[#173B57]/10 group-hover:border-[#173B57]/20 transition-all">
-                  <Icon className="h-6 w-6 text-zinc-400 group-hover:text-[#173B57] transition-colors" />
+          {statsList.map(({ label, value, icon: Icon, action }) => {
+            const isInteractive = !!action;
+            return (
+              <article
+                className={`relative overflow-hidden rounded-[2rem] border border-white/5 bg-zinc-950 p-8 group transition-all duration-500 ${isInteractive ? 'cursor-pointer hover:border-white/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#173B57]' : ''}`}
+                key={label}
+                onClick={action}
+                role={isInteractive ? "button" : "region"}
+                tabIndex={isInteractive ? 0 : undefined}
+                aria-label={`${label} stat: ${value}${isInteractive ? '. Click to interact.' : ''}`}
+                onKeyDown={(e) => {
+                  if (isInteractive && (e.key === 'Enter' || e.key === ' ')) {
+                    e.preventDefault();
+                    action();
+                  }
+                }}
+              >
+                <div className="absolute -top-12 -right-12 w-32 h-32 bg-[#173B57]/10 rounded-full blur-[40px] group-hover:bg-[#173B57]/20 transition-colors" />
+                <div className="flex items-center justify-between mb-6 relative z-10">
+                  <div className="h-12 w-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center group-hover:scale-110 group-hover:bg-[#173B57]/10 group-hover:border-[#173B57]/20 transition-all">
+                    <Icon className="h-6 w-6 text-zinc-400 group-hover:text-[#173B57] transition-colors" aria-hidden="true" />
+                  </div>
                 </div>
-              </div>
-              <div className="relative z-10">
-                <p className="text-4xl font-bold tracking-tighter text-white mb-2">{value}</p>
-                <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">{label}</p>
-              </div>
-            </article>
-          ))}
+                <div className="relative z-10">
+                  <p className="text-4xl font-bold tracking-tighter text-white mb-2">{value}</p>
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">{label}</p>
+                </div>
+              </article>
+            );
+          })}
         </div>
 
         <div className="grid gap-8 lg:grid-cols-[1fr_380px]">
@@ -357,6 +351,5 @@ export default function DashboardPage() {
           </aside>
         </div>
       </section>
-    </DashboardLayout>
   );
 }

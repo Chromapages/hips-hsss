@@ -33,15 +33,15 @@ export class SessionTokenService {
   async issueToken(opts: SessionTokenOptions): Promise<SessionTokenResult> {
     const now = opts.now ?? new Date();
 
-    const session = await this.prismaService.session.findUnique({
-      where: { sessionTokenRef: opts.sessionId },
+    const session = await this.prismaService.sessionRecord.findUnique({
+      where: { sessionId: opts.sessionId },
     });
 
     if (!session) {
       throw new ForbiddenException('Session not found');
     }
 
-    if (session.userId !== opts.firebaseUid) {
+    if (session.anonymousParticipantId !== opts.firebaseUid) {
       throw new ForbiddenException('Caller does not own this session');
     }
 

@@ -3,11 +3,23 @@ import { z } from 'zod';
 import { getDb } from '@/lib/firebase-admin';
 import { verifyFirebaseIdToken } from '@/lib/auth-edge';
 import { sendSessionCancellationEmail } from '@/emails';
+import { getStripeServerClient } from '@/lib/stripe';
 
 const cancelSchema = z.object({
   sessionId: z.string(),
   reason: z.enum(['PARTICIPANT', 'PLATFORM']).optional().default('PLATFORM'),
+  reasonDetails: z.string().max(500).optional(),
 });
+
+function sanitizeInput(val: string): string {
+  return val
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#x27;')
+    .replace(/\//g, '&#x2F;');
+}
 
 export async function POST(req: NextRequest) {
   const db = getDb();
@@ -42,7 +54,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Invalid input', details: result.error.format() }, { status: 400 });
     }
 
-    const { sessionId, reason } = result.data;
+    const { sessionId, reason, reasonDetails } = result.data;
 
     try {
       const sessionRef = db.collection('sessions').doc(sessionId);
@@ -71,13 +83,42 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: 'Forbidden: not authorized to cancel this session' }, { status: 403 });
       }
 
+      const sanitizedDetails = reasonDetails ? sanitizeInput(reasonDetails) : '';
+
       // Cancel the session
       await sessionRef.update({
         status: 'CANCELLED',
         cancelledAt: new Date().toISOString(),
         cancelledBy: reason,
+        cancellationReason: sanitizedDetails,
         updatedAt: new Date().toISOString(),
       });
+
+      // Refund the participant when the cancellation is on them and a payment
+      // exists. Platform cancellations are no-refund by policy. Refund failures
+      // are logged but do not fail the cancel — a follow-up reconciliation
+      // job can pick up cancelled-but-not-refunded sessions.
+      const stripePaymentIntentId = session?.stripePaymentIntentId as string | undefined;
+      if (reason === 'PARTICIPANT' && stripePaymentIntentId) {
+        try {
+          const stripe = getStripeServerClient();
+          const refund = await stripe.refunds.create({
+            payment_intent: stripePaymentIntentId,
+            metadata: {
+              sessionId,
+              cancelledBy: reason,
+            },
+          });
+          await sessionRef.update({
+            stripeRefundId: refund.id,
+            refundedAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          });
+          console.log(`[Cancellation] Refund ${refund.id} issued for session ${sessionId}`);
+        } catch (refundErr) {
+          console.error('[Cancellation] Refund failed for session', sessionId, refundErr);
+        }
+      }
 
       // Send cancellation email
       if (user.email) {

@@ -11,9 +11,9 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import type { Request } from 'express';
-import { getAdminAuth } from '../../firebase-init.js';
-import { Roles, UserRole, RolesGuard } from '../../auth/roles.guard.js';
-import { PrismaService } from '../../prisma.service.js';
+import { getAdminAuth } from '../firebase-init.js';
+import { Roles, UserRole, RolesGuard } from '../auth/roles.guard.js';
+import { PrismaService } from '../prisma.service.js';
 import { z } from 'zod';
 
 const FacilitatorFlagSchema = z.object({
@@ -74,7 +74,7 @@ export class FacilitatorFlagController {
     await this.prisma.auditEvent.create({
       data: {
         id: auditEventId,
-        eventType: 'FACILITATOR_FLAG',
+        eventType: 'SAFETY_FLAGGED',
         subjectId: sessionId,
         metadata: {
           reason,

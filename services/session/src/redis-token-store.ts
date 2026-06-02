@@ -9,8 +9,8 @@
  *   session:{sessionId}:tokens — SET of tokenIds for active session tokens
  */
 import { randomBytes } from 'node:crypto';
-import { getRedis } from '@hips/web/src/lib/redis';
-import type { TokenRecord } from './session-token-store';
+import { getRedis } from './redis.js';
+import type { TokenRecord } from './session-token-store.js';
 
 export type { TokenRecord };
 
@@ -102,7 +102,7 @@ export class RedisSessionTokenStore {
 
     const tokenIds = await redis.smembers(this.sessionSetKey(sessionId));
     if (tokenIds.length > 0) {
-      const keysToDelete = tokenIds.map((id) => this.redisKey(id));
+      const keysToDelete = tokenIds.map((id: string) => this.redisKey(id));
       await redis.del(...keysToDelete);
       await redis.del(this.sessionSetKey(sessionId));
     }

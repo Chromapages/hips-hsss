@@ -162,7 +162,7 @@ export function AudioAvatar({ localIdentity, micEnabled, gesture }: AudioAvatarP
           // Calculate RMS amplitude
           let sum = 0;
           for (let i = 0; i < dataArray.length; i++) {
-            sum += dataArray[i];
+            sum += dataArray[i] ?? 0;
           }
           const avg = sum / dataArray.length;
           // Normalize to 0-1 range (analyser returns 0-255)

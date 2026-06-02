@@ -14,8 +14,9 @@ const FAKE_SESSION_ID = 'sess_abc123ref';
 
 const mockSession = {
   id: 'uuid-session-1',
-  sessionTokenRef: FAKE_SESSION_ID,
-  userId: FAKE_UID,
+  sessionId: FAKE_SESSION_ID,
+  anonymousParticipantId: FAKE_UID,
+  status: 'PENDING',
   startsAt: new Date('2026-05-26T12:00:00Z'),
   endsAt: new Date('2026-05-26T13:00:00Z'),
   createdAt: new Date(),
@@ -25,7 +26,7 @@ const mockSession = {
 // SessionTokenService is synchronous-logic-only, tested directly without NestJS DI
 function buildService(findUnique: ReturnType<typeof vi.fn>) {
   const tokenStore = new SessionTokenStore();
-  const prismaService = { session: { findUnique } };
+  const prismaService = { sessionRecord: { findUnique } };
   return { service: new SessionTokenService(tokenStore, prismaService as any), tokenStore };
 }
 
@@ -152,7 +153,7 @@ describe('SessionTokenController', () => {
 
   function buildController(findUnique: ReturnType<typeof vi.fn>) {
     const tokenStore = new SessionTokenStore();
-    const prismaService = { session: { findUnique } };
+    const prismaService = { sessionRecord: { findUnique } };
     const sessionTokenService = new SessionTokenService(tokenStore, prismaService as any);
     // Instantiate controller directly, bypassing NestJS DI
     const controller = new SessionTokenController(sessionTokenService);

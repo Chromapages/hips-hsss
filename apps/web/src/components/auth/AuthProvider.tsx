@@ -61,14 +61,21 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       try {
         if (user) {
-          // Force refresh token to get latest custom claims (wrapped in
-          // timeout so a hung token refresh cannot block the loading state)
-          const idTokenResult = await Promise.race([
-            user.getIdTokenResult(true),
-            new Promise<never>((_, reject) =>
-              setTimeout(() => reject(new Error('getIdTokenResult timed out after 3s')), 3000)
-            ),
-          ]);
+          // Attempt to force refresh token for latest claims, but fallback to cached token
+          // if it times out or fails (e.g. due to flaky network).
+          let idTokenResult;
+          try {
+            idTokenResult = await Promise.race([
+              user.getIdTokenResult(true),
+              new Promise<never>((_, reject) =>
+                setTimeout(() => reject(new Error('getIdTokenResult timed out after 3s')), 3000)
+              ),
+            ]);
+          } catch (refreshError) {
+            console.warn('[AuthProvider] Token force refresh failed, falling back to cached token:', refreshError);
+            idTokenResult = await user.getIdTokenResult(false);
+          }
+          
           setRole((idTokenResult.claims.role as string) || 'PARTICIPANT');
           setUser(user);
 
@@ -96,9 +103,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         }
       } catch (error) {
         console.error('Auth state initialization failed:', error);
-        setUser(null);
-        setRole(null);
-        removeAuthCookie();
+        // Do not clear user here unless we are sure they are logged out.
+        // If it's a completely fatal error, we might be in an inconsistent state,
+        // but it's better to stay logged in with default role.
+        if (user) {
+          setUser(user);
+          setRole('PARTICIPANT');
+        } else {
+          setUser(null);
+          setRole(null);
+          removeAuthCookie();
+        }
       } finally {
         setLoading(false);
       }

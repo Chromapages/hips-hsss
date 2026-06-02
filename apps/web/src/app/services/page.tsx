@@ -4,7 +4,6 @@ import { CheckCircle2 } from "lucide-react";
 
 import { PACKAGE_TIERS, INCLUDED_FEATURES, type PackageTier } from "@/lib/services-data";
 import { Button } from "@/components/ui/button";
-import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { PackageJsonLd } from "@/components/seo/PackageJsonLd";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://hips.foundation";
@@ -48,7 +47,7 @@ export const metadata: Metadata = {
 
 export default function ServicesPage() {
   return (
-    <DashboardLayout>
+    <>
       <PackageJsonLd packages={PACKAGE_TIERS} />
       <div
         id="main-content"
@@ -186,6 +185,6 @@ export default function ServicesPage() {
           </div>
         </section>
       </div>
-    </DashboardLayout>
+    </>
   );
 }

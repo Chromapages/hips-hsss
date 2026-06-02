@@ -125,7 +125,10 @@ export async function POST(req: NextRequest) {
       await db.collection('session_flags').add(flagReport);
     } catch (err) {
       console.error('[SessionFlag] Failed to store flag:', err);
-      // Non-fatal: still return success to client
+      return NextResponse.json(
+        { error: 'Failed to record safety flag report in database.' },
+        { status: 500 }
+      );
     }
 
     console.log(`[SessionFlag] Flag created for session ${sessionId}: ${severity} by ${reporterIdentity}`);
@@ -139,7 +142,10 @@ export async function POST(req: NextRequest) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     console.error('[SessionFlag] Error:', errorMessage);
     return NextResponse.json(
-      { error: 'Failed to submit report', details: errorMessage },
+      {
+        error: 'Failed to submit report',
+        details: process.env.NODE_ENV === 'development' ? errorMessage : undefined,
+      },
       { status: 500 }
     );
   }
@@ -170,9 +176,15 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const role = (payload.role as string) || null;
-    if (role !== ROLES.FACILITATOR && role !== ROLES.ADMIN) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    const userDoc = await db.collection('users').doc(payload.uid).get();
+    if (!userDoc.exists) {
+      return NextResponse.json({ error: 'Forbidden: User record not found' }, { status: 403 });
+    }
+    const userData = userDoc.data();
+    const userRole = userData?.role || null;
+
+    if (userRole !== ROLES.FACILITATOR && userRole !== ROLES.ADMIN) {
+      return NextResponse.json({ error: 'Forbidden: Insufficient privileges' }, { status: 403 });
     }
 
     const { searchParams } = new URL(req.url);

@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import type { AvatarGesture } from "@hips/types";
 import { CrisisEscalation } from "./CrisisEscalation";
+import { useRouter } from "next/navigation";
 
 const gestures: AvatarGesture[] = [
   "idle",
@@ -19,6 +20,7 @@ const participants = [
 ] as const;
 
 export function SessionExperience({ sessionId }: { sessionId: string }) {
+  const router = useRouter();
   const [muted, setMuted] = useState(false);
   const [gesture, setGesture] = useState<AvatarGesture>("idle");
   const [showCrisis, setShowCrisis] = useState(false);

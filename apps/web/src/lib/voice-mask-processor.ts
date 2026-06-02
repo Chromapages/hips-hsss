@@ -78,15 +78,24 @@ function createWorkletUrl(source: string) {
 
 // Programmatic reverb impulse response — decaying white noise, no external file needed
 function buildReverbIR(ctx: AudioContext, durationSec: number, decay: number): AudioBuffer {
-  const len = Math.floor(ctx.sampleRate * durationSec);
-  const ir = ctx.createBuffer(2, len, ctx.sampleRate);
-  for (let ch = 0; ch < 2; ch++) {
-    const data = ir.getChannelData(ch);
-    for (let i = 0; i < len; i++) {
-      data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, decay);
+  try {
+    const len = Math.max(1, Math.floor(ctx.sampleRate * durationSec));
+    const ir = ctx.createBuffer(2, len, ctx.sampleRate);
+    for (let ch = 0; ch < 2; ch++) {
+      const data = ir.getChannelData(ch);
+      for (let i = 0; i < len; i++) {
+        data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, decay);
+      }
+    }
+    return ir;
+  } catch (err) {
+    console.error('[VoiceMaskProcessor] buildReverbIR failed:', err);
+    try {
+      return ctx.createBuffer(1, 1, ctx.sampleRate);
+    } catch {
+      throw err;
     }
   }
-  return ir;
 }
 
 // Per-session semitone shift — randomised once, persisted in sessionStorage
@@ -103,14 +112,15 @@ function getSessionSemitones(): number {
   return pick;
 }
 
+const workletLoadingPromises = new WeakMap<AudioContext, Promise<void>>();
+
 export function createVoiceMaskProcessor(
   options: VoiceMaskProcessorOptions,
 ): TrackProcessor<Track.Kind.Audio, AudioProcessorOptions> {
-  void options;
-
   let source: MediaStreamAudioSourceNode | undefined;
   let highpass: BiquadFilterNode | undefined;
   let lowpass: BiquadFilterNode | undefined;
+  let ringmodGain: GainNode | undefined;
   let compressor: DynamicsCompressorNode | undefined;
   let pitchShift: AudioWorkletNode | undefined;
   let convolver: ConvolverNode | undefined;
@@ -118,15 +128,21 @@ export function createVoiceMaskProcessor(
   let wetGain: GainNode | undefined;
   let destination: MediaStreamAudioDestinationNode | undefined;
   let workletUrl: string | undefined;
+  let oscillator: OscillatorNode | undefined;
 
   const destroy = async () => {
-    [source, highpass, lowpass, compressor, pitchShift, convolver, dryGain, wetGain].forEach(
+    [source, highpass, lowpass, ringmodGain, compressor, pitchShift, convolver, dryGain, wetGain, oscillator].forEach(
       (n) => n?.disconnect(),
     );
+    if (oscillator) {
+      try {
+        oscillator.stop();
+      } catch {}
+    }
     destination?.stream.getTracks().forEach((t) => t.stop());
     destination?.disconnect();
     if (workletUrl) URL.revokeObjectURL(workletUrl);
-    source = highpass = lowpass = compressor = pitchShift = convolver = dryGain = wetGain = destination = workletUrl = undefined;
+    source = highpass = lowpass = ringmodGain = compressor = pitchShift = convolver = dryGain = wetGain = destination = workletUrl = oscillator = undefined;
   };
 
   const processor: TrackProcessor<Track.Kind.Audio, AudioProcessorOptions> = {
@@ -141,17 +157,50 @@ export function createVoiceMaskProcessor(
 
       const semitones = options.semitones ?? getSessionSemitones();
 
-      workletUrl = createWorkletUrl(pitchShiftWorkletSource);
-      await opts.audioContext.audioWorklet.addModule(workletUrl);
+      // Concurrency check & deduplication using WeakMap cached Promises.
+      // This prevents race condition double-load collisions on rapid settings switches.
+      let loadPromise = workletLoadingPromises.get(opts.audioContext);
+      if (!loadPromise) {
+        workletUrl = createWorkletUrl(pitchShiftWorkletSource);
+        loadPromise = opts.audioContext.audioWorklet.addModule(workletUrl).catch((err) => {
+          workletLoadingPromises.delete(opts.audioContext);
+          throw err;
+        });
+        workletLoadingPromises.set(opts.audioContext, loadPromise);
+      }
 
-      const inputStream = new MediaStream([opts.track]);
-      source    = opts.audioContext.createMediaStreamSource(inputStream);
+      let workletLoaded = false;
+      try {
+        await loadPromise;
+        workletLoaded = true;
+      } catch (err) {
+        console.warn('[VoiceMaskProcessor] AudioWorklet failed to load. Falling back to bypass mode:', err);
+      }
+
+      // Safe MediaStream capture wrapper
+      try {
+        const inputStream = new MediaStream([opts.track]);
+        source = opts.audioContext.createMediaStreamSource(inputStream);
+      } catch (err) {
+        console.error('[VoiceMaskProcessor] Failed to create MediaStreamAudioSourceNode:', err);
+        throw new Error('Failed to capture audio source track for anonymisation.');
+      }
+
       highpass  = opts.audioContext.createBiquadFilter();
       lowpass   = opts.audioContext.createBiquadFilter();
       compressor = opts.audioContext.createDynamicsCompressor();
-      pitchShift = new AudioWorkletNode(opts.audioContext, 'hips-pitch-shift', {
-        processorOptions: { semitones },
-      });
+
+      // Safe Worklet Node creation
+      if (workletLoaded) {
+        try {
+          pitchShift = new AudioWorkletNode(opts.audioContext, 'hips-pitch-shift', {
+            processorOptions: { semitones },
+          });
+        } catch (nodeError) {
+          console.error('[VoiceMaskProcessor] Failed to instantiate AudioWorkletNode, bypassing pitch shift:', nodeError);
+        }
+      }
+
       convolver  = opts.audioContext.createConvolver();
       dryGain    = opts.audioContext.createGain();
       wetGain    = opts.audioContext.createGain();
@@ -168,16 +217,67 @@ export function createVoiceMaskProcessor(
       compressor.attack.value    = 0.003;
       compressor.release.value   = 0.22;
 
-      convolver.buffer = buildReverbIR(opts.audioContext, 0.75, 2.8);
-      dryGain.gain.value = 0.78;
-      wetGain.gain.value = 0.22;
+      // Adjust parameters based on preset
+      let dryLevel = 0.78;
+      let wetLevel = 0.22;
+      let reverbDuration = 0.75;
+      let reverbDecay = 2.8;
 
-      // Chain: source → highpass → pitchShift → lowpass → compressor → dry → destination
-      //                                                              └→ reverb → wet → destination
+      if (options.preset === 'robotic') {
+        dryLevel = 0.5;
+        wetLevel = 0.5;
+        reverbDuration = 1.5;
+        reverbDecay = 1.2; // long metallic decay
+        
+        // Instantiate a sawtooth oscillator at 50Hz for ring modulation
+        ringmodGain = opts.audioContext.createGain();
+        ringmodGain.gain.value = 0.0; // Modulate around 0
+        oscillator = opts.audioContext.createOscillator();
+        oscillator.type = 'sawtooth';
+        oscillator.frequency.value = 50;
+        oscillator.connect(ringmodGain.gain);
+        oscillator.start();
+      } else if (options.preset === 'deep') {
+        dryLevel = 0.8;
+        wetLevel = 0.2;
+        lowpass.frequency.value = 5000; // roll off more highs
+      } else if (options.preset === 'high') {
+        dryLevel = 0.85;
+        wetLevel = 0.15;
+        highpass.frequency.value = 150; // roll off more lows
+      }
+
+      // Safe impulse response builder wrapper
+      try {
+        convolver.buffer = buildReverbIR(opts.audioContext, reverbDuration, reverbDecay);
+      } catch (err) {
+        console.warn('[VoiceMaskProcessor] Failed to set convolver buffer, skipping reverb:', err);
+        try {
+          convolver.buffer = opts.audioContext.createBuffer(1, 1, opts.audioContext.sampleRate);
+        } catch {}
+      }
+
+      dryGain.gain.value = dryLevel;
+      wetGain.gain.value = wetLevel;
+
+      // Chain: source → highpass → [pitchShift] → lowpass → [ringmod] → compressor → dry → destination
+      //                                                                          └→ reverb → wet → destination
       source.connect(highpass);
-      highpass.connect(pitchShift);
-      pitchShift.connect(lowpass);
-      lowpass.connect(compressor);
+      
+      if (pitchShift) {
+        highpass.connect(pitchShift);
+        pitchShift.connect(lowpass);
+      } else {
+        highpass.connect(lowpass);
+      }
+
+      if (ringmodGain) {
+        lowpass.connect(ringmodGain);
+        ringmodGain.connect(compressor);
+      } else {
+        lowpass.connect(compressor);
+      }
+      
       compressor.connect(dryGain);
       compressor.connect(convolver);
       dryGain.connect(destination);

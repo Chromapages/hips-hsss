@@ -7,6 +7,12 @@ type ServiceAccountJson = {
   private_key?: string;
 };
 
+type FirebaseAdminConfigStatus = {
+  hasConfig: boolean;
+  missing: string[];
+  source: 'service-account' | 'env' | 'none';
+};
+
 function cleanEnvValue(value: string) {
   return value.trim().replace(/^"|"$/g, '').replace(/^'|'$/g, '');
 }
@@ -95,6 +101,48 @@ function getServiceAccount() {
   return { projectId, clientEmail, privateKey };
 }
 
+export function getFirebaseAdminConfigStatus(): FirebaseAdminConfigStatus {
+  const hasServiceAccountSource = Boolean(
+    process.env.FIREBASE_ADMIN_SDK_KEY || process.env.FIREBASE_SERVICE_ACCOUNT_KEY
+  );
+  const jsonAccount = parseServiceAccountJson(
+    process.env.FIREBASE_ADMIN_SDK_KEY || process.env.FIREBASE_SERVICE_ACCOUNT_KEY
+  );
+
+  const projectId =
+    jsonAccount?.project_id ||
+    process.env.FIREBASE_PROJECT_ID ||
+    process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
+  const clientEmail = jsonAccount?.client_email || process.env.FIREBASE_CLIENT_EMAIL;
+  const privateKey = jsonAccount?.private_key
+    ? normalizePrivateKey(jsonAccount.private_key)
+    : normalizePrivateKey(process.env.FIREBASE_PRIVATE_KEY);
+
+  const missing: string[] = [];
+
+  if (!hasServiceAccountSource && !process.env.FIREBASE_PRIVATE_KEY) {
+    missing.push('FIREBASE_ADMIN_SDK_KEY / FIREBASE_SERVICE_ACCOUNT_KEY or FIREBASE_PRIVATE_KEY');
+  }
+
+  if (!projectId) {
+    missing.push('FIREBASE_PROJECT_ID / NEXT_PUBLIC_FIREBASE_PROJECT_ID');
+  }
+
+  if (!clientEmail) {
+    missing.push('FIREBASE_CLIENT_EMAIL');
+  }
+
+  if (!privateKey) {
+    missing.push('FIREBASE_PRIVATE_KEY or valid FIREBASE_ADMIN_SDK_KEY / FIREBASE_SERVICE_ACCOUNT_KEY');
+  }
+
+  return {
+    hasConfig: missing.length === 0,
+    missing,
+    source: jsonAccount ? 'service-account' : privateKey ? 'env' : 'none',
+  };
+}
+
 let _adminApp: admin.app.App | null = null;
 
 function initAdmin(): admin.app.App | null {
@@ -106,11 +154,11 @@ function initAdmin(): admin.app.App | null {
 
   const serviceAccount = getServiceAccount();
 
-  console.log('[FirebaseAdmin] getServiceAccount result:', serviceAccount ? { projectId: serviceAccount.projectId, clientEmail: serviceAccount.clientEmail, hasKey: !!serviceAccount.privateKey } : null);
-
   if (!serviceAccount) {
+    const status = getFirebaseAdminConfigStatus();
     console.warn(
       '[FirebaseAdmin] Credentials missing — Admin SDK not initialized. ' +
+      `Missing: ${status.missing.join(', ')}. ` +
       'Set FIREBASE_ADMIN_SDK_KEY or FIREBASE_PROJECT_ID + FIREBASE_CLIENT_EMAIL + FIREBASE_PRIVATE_KEY. ' +
       'Set NONE of these to skip initialization entirely for local development.'
     );
@@ -121,9 +169,7 @@ function initAdmin(): admin.app.App | null {
     console.log('[FirebaseAdmin] Attempting initializeApp with serviceAccount:', {
       projectId: serviceAccount.projectId,
       clientEmail: serviceAccount.clientEmail,
-      privateKeyLength: serviceAccount.privateKey.length,
-      privateKeySnippet: serviceAccount.privateKey.substring(0, 40) + '...',
-      hasLineBreaks: serviceAccount.privateKey.includes('\n'),
+      hasKey: serviceAccount.privateKey.length > 0,
     });
     _adminApp = admin.initializeApp({
       credential: admin.credential.cert(serviceAccount),

@@ -6,18 +6,16 @@ import {
   Param,
   Req,
   UnauthorizedException,
+  ForbiddenException,
   NotFoundException,
   HttpCode,
   UseGuards,
 } from '@nestjs/common';
 import type { Request } from 'express';
-import { getAdminAuth } from '../../firebase-init.js';
+import { getAdminAuth } from '../firebase-init.js';
 import { SessionService } from './session.service.js';
-import { SessionTokenService } from './session-token.service.js';
-import { SessionTokenStore } from '../../session-token-store.js';
-import { SessionGuard } from './session.guard.js';
-import { ConfigService } from '@nestjs/config';
-import { PrismaService } from '../../prisma.service.js';
+import { SessionTokenStore } from '../session-token-store.js';
+import { PrismaService } from '../prisma.service.js';
 
 /** Firebase-authenticated request */
 interface AuthRequest extends Request {
@@ -77,7 +75,6 @@ export class SessionController {
 
   constructor(
     private readonly sessionService: SessionService,
-    private readonly configService: ConfigService,
     private readonly prisma: PrismaService,
   ) {
     // SessionTokenStore is a singleton used across token + session ops
@@ -124,15 +121,8 @@ export class SessionController {
     @Param('id') id: string,
     @Req() req: AuthRequest,
   ): Promise<SessionResponse> {
-    await this.requireAuth(req);
-
-    const session = await this.prisma.sessionRecord.findUnique({
-      where: { id },
-    });
-
-    if (!session) {
-      throw new NotFoundException(`Session ${id} not found`);
-    }
+    const userId = await this.requireAuth(req);
+    const session = await this.loadAndAuthorize(id, userId);
 
     return {
       id: session.id,
@@ -153,18 +143,8 @@ export class SessionController {
     @Req() req: AuthRequest,
   ): Promise<LiveKitTokenResponse> {
     const userId = await this.requireAuth(req);
+    await this.loadAndAuthorize(sessionId, userId);
 
-    // Verify caller owns the session
-    const session = await this.prisma.sessionRecord.findUnique({
-      where: { id: sessionId },
-    });
-
-    if (!session) {
-      throw new NotFoundException(`Session ${sessionId} not found`);
-    }
-
-    // Use the session service to issue LiveKit token
-    // The session service uses LiveKitTokenService internally
     const token = await this.sessionService.issueLiveKitToken(sessionId);
 
     return {
@@ -191,16 +171,14 @@ export class SessionController {
     @Req() req: AuthRequest,
   ): Promise<{ status: string; endedAt: string }> {
     const userId = await this.requireAuth(req);
+    await this.loadAndAuthorize(sessionId, userId);
 
-    const session = await this.prisma.sessionRecord.findUnique({
-      where: { id: sessionId },
-    });
-
-    if (!session) {
-      throw new NotFoundException(`Session ${sessionId} not found`);
+    // Reject end-before-start and double-end transitions.
+    const session = await this.prisma.sessionRecord.findUnique({ where: { id: sessionId } });
+    if (session?.status === 'PENDING' || session?.status === 'ENDED') {
+      throw new ForbiddenException(`Cannot end session in status ${session.status}`);
     }
 
-    // Transition session to ENDED
     const updated = await this.prisma.sessionRecord.update({
       where: { id: sessionId },
       data: { status: 'ENDED' },
@@ -223,16 +201,8 @@ export class SessionController {
     @Req() req: AuthRequest,
   ): Promise<{ flagged: boolean; flagId: string }> {
     const userId = await this.requireAuth(req);
+    await this.loadAndAuthorize(sessionId, userId);
 
-    const session = await this.prisma.sessionRecord.findUnique({
-      where: { id: sessionId },
-    });
-
-    if (!session) {
-      throw new NotFoundException(`Session ${sessionId} not found`);
-    }
-
-    // Record audit event for safety flag
     const flagId = `flag_${Date.now()}_${Math.random().toString(36).slice(2)}`;
 
     await this.prisma.auditEvent.create({
@@ -244,7 +214,7 @@ export class SessionController {
           reporterUid: userId,
           reason: body.reason ?? 'No reason provided',
           severity: body.severity ?? 'medium',
-          metadata: body.metadata ?? {},
+          metadata: (body.metadata ?? {}) as any,
           flaggedAt: new Date().toISOString(),
         },
       },
@@ -264,21 +234,17 @@ export class SessionController {
     @Req() req: AuthRequest,
   ): Promise<ReconnectResponse> {
     const userId = await this.requireAuth(req);
+    await this.loadAndAuthorize(sessionId, userId);
 
-    const session = await this.prisma.sessionRecord.findUnique({
-      where: { id: sessionId },
-    });
-
+    const session = await this.prisma.sessionRecord.findUnique({ where: { id: sessionId } });
     if (!session) {
       throw new NotFoundException(`Session ${sessionId} not found`);
     }
 
-    // Check if session is still within reconnect window (10 min after end)
     const windowEnd = new Date(session.endsAt.getTime() + 10 * 60 * 1000);
     const now = new Date();
     const canReconnect = now < windowEnd;
 
-    // Record reconnect attempt as audit event
     await this.prisma.auditEvent.create({
       data: {
         id: `reconnect_${Date.now()}_${Math.random().toString(36).slice(2)}`,
@@ -299,7 +265,7 @@ export class SessionController {
     };
   }
 
-  /** ─── Auth helper ─────────────────────────────────────────── */
+  /** ─── Auth helpers ────────────────────────────────────────── */
 
   private async requireAuth(req: AuthRequest): Promise<string> {
     const authHeader = (req.headers as Record<string, string | undefined>)['authorization'];
@@ -317,5 +283,25 @@ export class SessionController {
     }
 
     return decodedIdToken.uid;
+  }
+
+  /**
+   * Load the session and assert the caller owns it. C4 (Sprint 1) closes the
+   * IDOR where any auth user could act on any session by id.
+   */
+  private async loadAndAuthorize(sessionId: string, userId: string) {
+    const session = await this.prisma.sessionRecord.findUnique({
+      where: { id: sessionId },
+    });
+
+    if (!session) {
+      throw new NotFoundException(`Session ${sessionId} not found`);
+    }
+
+    if (session.anonymousParticipantId !== userId) {
+      throw new ForbiddenException('Not authorized for this session');
+    }
+
+    return session;
   }
 }

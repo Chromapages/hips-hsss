@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react';
 
 export const dynamic = "force-dynamic";
 
-import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { Timer, Users, Shield, Zap, Loader2, CheckCircle, ArrowRight } from 'lucide-react';
 import { toast } from 'sonner';
@@ -69,8 +68,7 @@ export default function FacilitatorDashboard() {
   };
 
   return (
-    <DashboardLayout>
-      <div className="mx-auto max-w-7xl px-6 py-12 lg:px-8">
+    <div className="mx-auto max-w-7xl px-6 py-12 lg:px-8">
         <header>
           <div className="flex items-center gap-3 mb-4">
             <div className="px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] font-bold uppercase tracking-widest">
@@ -190,6 +188,5 @@ export default function FacilitatorDashboard() {
           )}
         </div>
       </div>
-    </DashboardLayout>
   );
 }

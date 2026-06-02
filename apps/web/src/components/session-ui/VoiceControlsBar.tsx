@@ -1,19 +1,10 @@
 "use client";
-
 import { Flag, Mic, MicOff, PhoneOff, Hand, Waves } from "lucide-react";
 import { useState, useCallback } from "react";
 import type { AvatarGesture } from "@hips/types";
 import type { VoicePreset } from "@/lib/voice-mask-presets";
 import { VoiceEffectsPanel } from "./VoiceEffectsPanel";
-
-// Task 5.6 — 5 gesture presets for voice controls
-const gestureOptions: { value: AvatarGesture; label: string; icon: string }[] = [
-  { value: "idle", label: "Idle", icon: "🤚" },
-  { value: "nodding", label: "Nod", icon: "👍" },
-  { value: "raised-hand", label: "Raise", icon: "✋" },
-  { value: "thinking", label: "Think", icon: "🤔" },
-  { value: "applause", label: "Clap", icon: "👏" },
-];
+// Gestures removed
 
 interface VoiceControlsBarProps {
   micEnabled: boolean;
@@ -23,12 +14,17 @@ interface VoiceControlsBarProps {
   onToggleHand: () => void;
   onFlag: () => void;
   onLeave: () => void;
-  gesture?: AvatarGesture;
-  onGestureChange?: (g: AvatarGesture) => void;
+  // Gestures removed
   voicePreset?: VoicePreset;
   voiceSemitones?: number;
   onVoicePresetChange?: (preset: VoicePreset) => void;
   onVoiceSemitoneChange?: (semitones: number) => void;
+  /**
+   * Visual variant. `'dark'` (default) is the immersive stage chrome used by
+   * the live `/session/[id]` room. `'light'` re-themes the bar for surfaces
+   * that sit on a light page — currently the demo-room.
+   */
+  variant?: "light" | "dark";
 }
 
 // Task 5.7 — Voice controls bar (mute, gesture, flag, end)
@@ -40,13 +36,14 @@ export function VoiceControlsBar({
   onToggleHand,
   onFlag,
   onLeave,
-  gesture = "idle",
-  onGestureChange,
+  // Gestures removed
   voicePreset = "subtle",
   voiceSemitones = 4,
   onVoicePresetChange,
   onVoiceSemitoneChange,
+  variant = "dark",
 }: VoiceControlsBarProps) {
+  const isLight = variant === "light";
   const [confirmEnd, setConfirmEnd] = useState(false);
   const [showFxPanel, setShowFxPanel] = useState(false);
 
@@ -65,9 +62,31 @@ export function VoiceControlsBar({
 
   const hasFxControls = Boolean(onVoicePresetChange && onVoiceSemitoneChange);
 
+  // Variant-driven tokens
+  const barShell = isLight
+    ? "fixed bottom-10 left-1/2 z-40 flex -translate-x-1/2 items-center gap-3 rounded-full border border-border bg-background/95 p-3 shadow-elevated backdrop-blur-3xl transition-all"
+    : "fixed bottom-10 left-1/2 z-40 flex -translate-x-1/2 items-center gap-3 rounded-full border border-white/10 bg-black/80 p-3 shadow-[0_0_50px_rgba(0,0,0,0.8)] backdrop-blur-3xl transition-all";
+
+  const idleButton = isLight
+    ? "border border-border bg-surface text-primary hover:bg-surface-alt"
+    : "border border-white/5 bg-white/5 text-white hover:bg-white/10";
+  const divider = isLight ? "border-l border-border" : "border-l border-white/10";
+  const dividerLine = isLight ? "bg-border" : "bg-white/10";
+  // Gestures removed
+  const modalBackdrop = isLight
+    ? "fixed inset-0 z-50 flex items-center justify-center bg-foreground/40 p-6 text-foreground backdrop-blur-2xl animate-in fade-in duration-300"
+    : "fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-6 text-white backdrop-blur-2xl animate-in fade-in duration-300";
+  const modalCard = isLight
+    ? "w-full max-w-md rounded-[2rem] border border-border bg-background p-10 animate-in zoom-in-95 duration-300"
+    : "w-full max-w-md rounded-[2rem] border border-white/10 bg-zinc-950 p-10 animate-in zoom-in-95 duration-300";
+  const modalCancel = isLight
+    ? "h-14 flex-1 rounded-2xl border border-border bg-transparent font-bold hover:bg-surface transition-all"
+    : "h-14 flex-1 rounded-2xl border border-white/10 bg-transparent font-bold hover:bg-white/5 transition-all";
+  const modalLead = isLight ? "leading-relaxed text-text-muted" : "leading-relaxed text-zinc-400";
+
   return (
     <>
-      <div className="fixed bottom-10 left-1/2 z-40 flex -translate-x-1/2 items-center gap-3 rounded-full border border-white/10 bg-black/80 p-3 shadow-[0_0_50px_rgba(0,0,0,0.8)] backdrop-blur-3xl transition-all">
+      <div className={barShell}>
         {/* Mute button */}
         <button
           aria-label={micEnabled ? "Mute microphone" : "Unmute microphone"}
@@ -76,7 +95,7 @@ export function VoiceControlsBar({
             micBusy
               ? "cursor-wait opacity-50"
               : micEnabled
-                ? "border border-white/5 bg-white/5 text-white hover:bg-white/10"
+                ? idleButton
                 : "border border-red-500/20 bg-red-500/10 text-red-500 hover:bg-red-500/20",
           ].join(" ")}
           disabled={micBusy}
@@ -98,7 +117,7 @@ export function VoiceControlsBar({
             "flex h-14 w-14 items-center justify-center rounded-full transition-all group",
             raisedHand
               ? "border border-amber-500/30 bg-amber-500/20 text-amber-200"
-              : "border border-white/5 bg-white/5 text-white hover:bg-white/10",
+              : idleButton,
           ].join(" ")}
           onClick={onToggleHand}
           type="button"
@@ -106,31 +125,9 @@ export function VoiceControlsBar({
           <Hand className="h-6 w-6 transition-transform group-hover:scale-110" />
         </button>
 
-        {/* Gesture selector */}
-        {onGestureChange && (
-          <div className="flex items-center gap-1 border-l border-white/10 pl-2">
-            {gestureOptions.map((opt) => (
-              <button
-                key={opt.value}
-                aria-label={`Set gesture to ${opt.label}`}
-                aria-pressed={gesture === opt.value}
-                className={[
-                  "flex h-10 w-10 items-center justify-center rounded-lg text-lg transition-all",
-                  gesture === opt.value
-                    ? "border border-[#173B57]/30 bg-[#173B57]/20 text-[#173B57]"
-                    : "text-zinc-400 hover:bg-white/5 hover:text-white",
-                ].join(" ")}
-                onClick={() => onGestureChange(opt.value)}
-                title={opt.label}
-                type="button"
-              >
-                {opt.icon}
-              </button>
-            ))}
-          </div>
-        )}
+        // Gestures removed
 
-        <div className="mx-1 h-8 w-px bg-white/10" />
+        <div className={`mx-1 h-8 w-px ${dividerLine}`} />
 
         {/* FX button */}
         {hasFxControls && (
@@ -142,8 +139,10 @@ export function VoiceControlsBar({
               className={[
                 "flex h-14 w-14 items-center justify-center rounded-full transition-all group",
                 showFxPanel
-                  ? "border border-[#173B57]/40 bg-[#173B57]/20 text-[#173B57]"
-                  : "border border-white/5 bg-white/5 text-white hover:bg-white/10",
+                  ? isLight
+                    ? "border border-accent/40 bg-accent/15 text-accent"
+                    : "border border-[#173B57]/40 bg-[#173B57]/20 text-[#173B57]"
+                  : idleButton,
               ].join(" ")}
             >
               <Waves className="h-6 w-6 transition-transform group-hover:scale-110" />
@@ -192,28 +191,27 @@ export function VoiceControlsBar({
       {/* Leave confirmation modal */}
       {confirmEnd ? (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-6 text-white backdrop-blur-2xl animate-in fade-in duration-300"
+          className={modalBackdrop}
           role="dialog"
           aria-modal="true"
           aria-labelledby="leave-modal-title"
         >
-          <section className="w-full max-w-md rounded-[2rem] border border-white/10 bg-zinc-950 p-10 animate-in zoom-in-95 duration-300">
+          <section className={modalCard}>
             <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-full border border-red-500/20 bg-red-500/10">
               <PhoneOff className="h-8 w-8 text-red-500" />
             </div>
-            <h2 className="font-heading mb-4 text-3xl font-extrabold tracking-tighter" id="leave-modal-title">
+            <h2
+              className="font-heading mb-4 text-3xl font-extrabold tracking-tighter text-primary"
+              id="leave-modal-title"
+            >
               End this session?
             </h2>
-            <p className="leading-relaxed text-zinc-400">
+            <p className={modalLead}>
               Are you sure you want to leave the Virtual Sanctuary? You can return to the
               dashboard after leaving.
             </p>
             <div className="mt-10 flex gap-4">
-              <button
-                className="h-14 flex-1 rounded-2xl border border-white/10 bg-transparent font-bold hover:bg-white/5 transition-all"
-                onClick={handleCancelLeave}
-                type="button"
-              >
+              <button className={modalCancel} onClick={handleCancelLeave} type="button">
                 Cancel
               </button>
               <button

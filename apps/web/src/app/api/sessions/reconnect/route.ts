@@ -3,6 +3,7 @@ import { getDb } from '@/lib/firebase-admin';
 import { AccessToken } from 'livekit-server-sdk';
 import crypto from 'crypto';
 import { verifyFirebaseIdToken } from '@/lib/auth-edge';
+import * as admin from 'firebase-admin';
 
 /**
  * Phase 5 — Session Reconnection Handler (5.14)
@@ -49,16 +50,6 @@ async function getReconnectRecord(sessionId: string, identity: string): Promise<
   return doc.data() as ReconnectRecord;
 }
 
-async function upsertReconnectRecord(record: ReconnectRecord) {
-  const db = getDb();
-  if (!db) return;
-
-  // Atomic upsert — set with merge avoids query-before-write
-  const docRef = db.collection('session_reconnects').doc(
-    `${record.sessionId}_${record.originalIdentity}`
-  );
-  await docRef.set(record, { merge: true });
-}
 
 export async function POST(req: NextRequest) {
   const db = getDb();
@@ -90,35 +81,45 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json().catch(() => ({}));
 
-    const { sessionId, originalIdentity, reason } = body;
+    const { sessionId, reason } = body;
 
-    if (!sessionId || !originalIdentity) {
+    if (!sessionId) {
       return NextResponse.json(
-        { error: 'sessionId and originalIdentity required' },
+        { error: 'sessionId is required' },
         { status: 400 }
       );
     }
 
-    // Verify the caller owns this session and their identity is a legitimate participant
-    // This prevents IDOR: callers cannot reconnect to arbitrary sessions
-    let callerAuthorized = false;
+    // Look up the participant's original anonymous identity server-side (H7)
+    let originalIdentity: string | null = null;
     try {
-      const sessionDoc = await db.collection('phase5_sessions').doc(sessionId).get();
-      if (sessionDoc.exists) {
-        const sessionData = sessionDoc.data();
-        // Caller must be the facilitator or a recorded participant
-        callerAuthorized =
-          sessionData?.facilitatorId === firebaseUid ||
-          (Array.isArray(sessionData?.participantIdentities) &&
-            sessionData.participantIdentities.includes(firebaseUid));
+      const participantDoc = await db
+        .collection('session_participants')
+        .doc(`${sessionId}_${firebaseUid}`)
+        .get();
+      if (participantDoc.exists) {
+        originalIdentity = participantDoc.data()?.anonymousIdentity ?? null;
       }
     } catch (err) {
-      console.warn('[SessionReconnect] Could not verify session membership:', err);
+      console.warn('[SessionReconnect] Could not read participant mapping:', err);
     }
 
-    if (!callerAuthorized) {
+    if (!originalIdentity) {
+      // Fallback: check if they are the facilitator of the session
+      try {
+        const sessionDoc = await db.collection('phase5_sessions').doc(sessionId).get();
+        if (sessionDoc.exists && sessionDoc.data()?.facilitatorId === firebaseUid) {
+          const apiSecret = process.env.LIVEKIT_API_SECRET || '';
+          originalIdentity = crypto.createHmac('sha256', apiSecret).update(firebaseUid).digest('hex');
+        }
+      } catch (err) {
+        console.warn('[SessionReconnect] Could not check facilitator status:', err);
+      }
+    }
+
+    if (!originalIdentity) {
       return NextResponse.json(
-        { error: 'Forbidden: you are not a member of this session' },
+        { error: 'Forbidden: you are not registered in this session' },
         { status: 403 }
       );
     }
@@ -190,6 +191,8 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    const roomName = `session-${sessionId}`;
+
     const at = new AccessToken(apiKey, apiSecret, {
       identity: originalIdentity, // Same identity for reconnection
       ttl: '1h',
@@ -197,7 +200,7 @@ export async function POST(req: NextRequest) {
 
     at.addGrant({
       roomJoin: true,
-      room: sessionId,
+      room: roomName,
       canPublish: true,
       canSubscribe: true,
       canPublishData: true,
@@ -212,43 +215,46 @@ export async function POST(req: NextRequest) {
 
     const tokenJwt = await at.toJwt();
 
-    // Update reconnect record
-    const newRecord: ReconnectRecord = {
-      sessionId,
-      originalIdentity,
-      reconnectCount: (reconnectRecord?.reconnectCount || 0) + 1,
-      lastReconnectAt: new Date().toISOString(),
-      expiresAt: new Date(Date.now() + RECONNECT_WINDOW_MS).toISOString(),
-    };
+    const attemptNumber = (reconnectRecord?.reconnectCount || 0) + 1;
 
     try {
-      await upsertReconnectRecord(newRecord);
+      const docRef = db.collection('session_reconnects').doc(`${sessionId}_${originalIdentity}`);
+      await docRef.set({
+        sessionId,
+        originalIdentity,
+        reconnectCount: admin.firestore.FieldValue.increment(1),
+        lastReconnectAt: new Date().toISOString(),
+        expiresAt: new Date(Date.now() + RECONNECT_WINDOW_MS).toISOString(),
+      }, { merge: true });
     } catch (err) {
       console.warn('[SessionReconnect] Could not store reconnect record:', err);
     }
 
-    const nextBackoffMs = calculateBackoff(newRecord.reconnectCount + 1);
+    const nextBackoffMs = calculateBackoff(attemptNumber + 1);
 
-    console.log(`[SessionReconnect] Token reissued for ${originalIdentity} in session ${sessionId} (attempt ${newRecord.reconnectCount})`);
+    console.log(`[SessionReconnect] Token reissued for ${originalIdentity} in session ${sessionId} (attempt ${attemptNumber})`);
 
     return NextResponse.json({
       success: true,
       token: tokenJwt,
-      roomName: sessionId,
+      roomName: roomName,
       anonymousIdentity: originalIdentity,
-      reconnectCount: newRecord.reconnectCount,
+      reconnectCount: attemptNumber,
       expiresAt: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
       backoff: {
         nextRetryInMs: nextBackoffMs,
         maxAttempts: MAX_RECONNECT_ATTEMPTS,
-        attemptNumber: newRecord.reconnectCount,
+        attemptNumber: attemptNumber,
       },
     });
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     console.error('[SessionReconnect] Error:', errorMessage);
     return NextResponse.json(
-      { error: 'Reconnection failed', details: errorMessage },
+      {
+        error: 'Reconnection failed',
+        details: process.env.NODE_ENV === 'development' ? errorMessage : undefined,
+      },
       { status: 500 }
     );
   }

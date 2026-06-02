@@ -6,9 +6,14 @@ import { useConnectionState, useRoomContext } from '@livekit/components-react';
 interface ConnectingOverlayProps {
   connectionQuality?: 'good' | 'fair' | 'poor';
   connectionLabel?: string;
+  variant?: 'light' | 'dark';
 }
 
-export function ConnectingOverlay({ connectionQuality, connectionLabel }: ConnectingOverlayProps) {
+export function ConnectingOverlay({
+  connectionQuality,
+  connectionLabel,
+  variant = 'dark',
+}: ConnectingOverlayProps) {
   const room = useRoomContext();
   const connectionState = useConnectionState(room);
 
@@ -17,38 +22,58 @@ export function ConnectingOverlay({ connectionQuality, connectionLabel }: Connec
     return null;
   }
 
+  const isLight = variant === 'light';
+  const backdrop = isLight
+    ? 'pointer-events-none fixed inset-0 z-50 flex items-center justify-center bg-foreground/30 backdrop-blur-sm'
+    : 'pointer-events-none fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm';
+  const card = isLight
+    ? 'flex flex-col items-center gap-6 rounded-2xl border border-border bg-background/95 px-10 py-8 shadow-elevated'
+    : 'flex flex-col items-center gap-6 rounded-2xl border border-[#173B57]/20 bg-black/80 px-10 py-8 shadow-2xl';
+  const loaderColor = isLight ? 'text-accent' : 'text-[#173B57]';
+  const loaderDot = isLight ? 'h-3 w-3 rounded-full bg-accent opacity-60' : 'h-3 w-3 rounded-full bg-[#173B57] opacity-60';
+  const titleText = isLight ? 'text-lg font-bold text-primary' : 'text-lg font-bold text-white';
+  const subtitleText = isLight ? 'mt-1 text-sm text-text-muted' : 'mt-1 text-sm text-zinc-400';
+  const pill = isLight
+    ? 'flex items-center gap-3 rounded-full border border-border bg-surface px-4 py-2'
+    : 'flex items-center gap-3 rounded-full border border-white/10 bg-white/5 px-4 py-2';
+  const pillLabel = isLight ? 'text-xs font-medium text-text-secondary' : 'text-xs font-medium text-zinc-300';
+
   return (
-    <div className="pointer-events-none fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
-      <div className="flex flex-col items-center gap-6 rounded-2xl border border-[#173B57]/20 bg-black/80 px-10 py-8 shadow-2xl">
-        {/* Animated loader */}
+    <div className={backdrop}>
+      <div className={card}>
         <div className="relative">
-          <Loader2 className="h-12 w-12 animate-spin text-[#173B57]" />
+          <Loader2 className={`h-12 w-12 animate-spin ${loaderColor}`} />
           <div className="absolute inset-0 flex items-center justify-center">
-            <div className="h-3 w-3 rounded-full bg-[#173B57] opacity-60" />
+            <div className={loaderDot} />
           </div>
         </div>
 
-        {/* Status text */}
         <div className="text-center">
-          <p className="text-lg font-bold text-white">
-            {connectionState === 'reconnecting' ? 'Reconnecting to demo room...' : 'Connecting to demo room...'}
+          <p className={titleText}>
+            {connectionState === 'reconnecting'
+              ? 'Reconnecting to demo room...'
+              : 'Connecting to demo room...'}
           </p>
-          <p className="mt-1 text-sm text-zinc-400">
+          <p className={subtitleText}>
             {connectionState === 'reconnecting'
               ? 'Please wait, your connection will restore shortly.'
               : 'Setting up your audio and video...'}
           </p>
         </div>
 
-        {/* Connection quality indicator */}
         {(connectionQuality || connectionLabel) && (
-          <div className="flex items-center gap-3 rounded-full border border-white/10 bg-white/5 px-4 py-2">
+          <div className={pill}>
             <div className="flex items-center gap-1.5">
-              <div className={`h-2 w-2 rounded-full ${
-                connectionQuality === 'good' ? 'bg-emerald-400' :
-                connectionQuality === 'fair' ? 'bg-amber-400' : 'bg-red-400'
-              }`} />
-              <span className="text-xs font-medium text-zinc-300">{connectionLabel || 'Connecting'}</span>
+              <div
+                className={`h-2 w-2 rounded-full ${
+                  connectionQuality === 'good'
+                    ? 'bg-emerald-400'
+                    : connectionQuality === 'fair'
+                      ? 'bg-amber-400'
+                      : 'bg-red-400'
+                }`}
+              />
+              <span className={pillLabel}>{connectionLabel || 'Connecting'}</span>
             </div>
           </div>
         )}

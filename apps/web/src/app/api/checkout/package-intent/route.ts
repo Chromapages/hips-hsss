@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { getStripeServerClient } from '@/lib/stripe';
 import { verifyFirebaseIdToken } from '@/lib/auth-edge';
+import { checkRateLimit, getRateLimitHeaders } from '@/lib/rate-limit';
 
 const packageSchema = z.object({
   packageId: z.enum(['SINGLE', 'ESSENTIAL', 'SANCTUARY']),
@@ -30,7 +31,18 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // 2. Validate Input
+    // 2. Per-user rate limit. Caps intentional retries at 5 per minute
+    // without blocking legitimate users (Stripe checkout flow can retry
+    // a few times during card entry). See H8 in the audit report.
+    const rateLimitResult = checkRateLimit(`pkg:${firebaseUid}`, 5, 60_000);
+    if (!rateLimitResult.allowed) {
+      return NextResponse.json(
+        { error: 'Too many package-intent requests. Please slow down.' },
+        { status: 429, headers: getRateLimitHeaders(rateLimitResult.resetAt, 0, 5) }
+      );
+    }
+
+    // 3. Validate Input
     const body = await req.json();
     const result = packageSchema.safeParse(body);
 
@@ -41,7 +53,10 @@ export async function POST(req: NextRequest) {
     const { packageId } = result.data;
     const pkg = PACKAGES[packageId];
 
-    // 3. Create Payment Intent with Package Metadata
+    // 4. Create Payment Intent with Package Metadata
+    // Stable idempotency key (no Date.now()) prevents double-charge on
+    // concurrent retries. Sequential retries that need a fresh attempt
+    // can cancel the existing intent and re-call.
     const stripe = getStripeServerClient();
     const paymentIntent = await stripe.paymentIntents.create({
       amount: pkg.priceCents,
@@ -55,7 +70,7 @@ export async function POST(req: NextRequest) {
         packageName: pkg.name,
       },
     }, {
-      idempotencyKey: `${firebaseUid}:${packageId}:${Date.now()}`,
+      idempotencyKey: `package:${firebaseUid}:${packageId}`,
     });
 
     console.log(`[Stripe Intent] Created package intent for ${firebaseUid}: ${packageId}`);

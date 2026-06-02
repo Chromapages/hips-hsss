@@ -18,7 +18,8 @@ import {
   PhoneOff,
 } from 'lucide-react';
 import type { AvatarProfile, UserRole } from '@hips/types';
-import { createLocalAudioTrack, LocalAudioTrack } from 'livekit-client';
+import { createLocalAudioTrack, LocalAudioTrack, Room } from 'livekit-client';
+import { toast } from 'sonner';
 import { useAuth } from '../auth/AuthProvider';
 import AvatarCanvas from './AvatarCanvas';
 import SafetyMonitor from './SafetyMonitor';
@@ -91,6 +92,7 @@ export default function SessionRoom({
   const { getToken, role } = useAuth();
   const [liveKitToken, setLiveKitToken] = useState<LiveKitTokenResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [mediaError, setMediaError] = useState<string | null>(null);
   const [isKicked, setIsKicked] = useState(false);
   const [kickReason, setKickReason] = useState('');
   const [isCrisis, setIsCrisis] = useState(false);
@@ -106,8 +108,34 @@ export default function SessionRoom({
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
+  // Pre-call media device check (Step 4.5 & 4.6)
   useEffect(() => {
-    // Skip fetch if token was pre-supplied via ?token= query param
+    async function checkDevicesAndPermissions() {
+      try {
+        const devices = await Room.getLocalDevices('audioinput');
+        if (devices.length === 0) {
+          setMediaError('No microphone detected on your device. Please plug in a microphone and retry.');
+          return;
+        }
+
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        stream.getTracks().forEach(track => track.stop());
+      } catch (err: any) {
+        console.error('[SessionRoom] Media device check failed:', err);
+        setMediaError(
+          'Microphone access blocked. Please enable microphone permissions in your browser settings to join the session.'
+        );
+      }
+    }
+    checkDevicesAndPermissions();
+  }, []);
+
+  useEffect(() => {
+    // Skip fetch if a token was pre-supplied via sessionStorage or query param.
+    // sessionStorage is the new preferred path — it doesn't leak the token via
+    // history, the Referer header, server logs, or analytics. The query-param
+    // path is kept as a fallback for callers that pass ?token= (e.g., the
+    // older /session/[id]?token=... flow during transition). See audit A1.
     if (prefetchedToken) return;
 
     let cancelled = false;
@@ -116,10 +144,18 @@ export default function SessionRoom({
       setError(null);
 
       try {
+        const idToken = await getToken();
+        if (!idToken) {
+          if (!cancelled) {
+            setError('Please sign in to join a session.');
+          }
+          return;
+        }
         const liveKitResponse = await fetch('/api/livekit/token', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
+            Authorization: `Bearer ${idToken}`,
           },
           body: JSON.stringify({ sessionId }),
         });
@@ -187,6 +223,18 @@ export default function SessionRoom({
     );
   }
 
+  if (mediaError) {
+    return (
+      <SessionExitState
+        actionLabel="Retry"
+        description={mediaError}
+        icon="warning"
+        onAction={() => window.location.reload()}
+        title="Microphone Required"
+      />
+    );
+  }
+
   if (error) {
     return (
       <SessionExitState
@@ -211,6 +259,10 @@ export default function SessionRoom({
           token={prefetchedToken}
           video={false}
           style={{ height: '100vh', backgroundColor: '#030712' }}
+          onError={(err) => {
+            console.error('[LiveKitRoom] Connection error:', err);
+            setError(err.message || 'Failed to connect to the session.');
+          }}
         >
           <SessionContent
             anonymousIdentity="direct-join"
@@ -253,6 +305,10 @@ export default function SessionRoom({
       token={liveKitToken.token}
       video={false}
       style={{ height: '100vh', backgroundColor: '#030712' }}
+      onError={(err) => {
+        console.error('[LiveKitRoom] Connection error:', err);
+        setError(err.message || 'Failed to connect to the session.');
+      }}
     >
       <SessionContent
         anonymousIdentity={liveKitToken.anonymousIdentity}
@@ -307,7 +363,6 @@ function SessionContent({
   const [sessionSeconds, setSessionSeconds] = useState(0);
   const [facilitatorNotes, setFacilitatorNotes] = useState('');
   const [webGLSupported, setWebGLSupported] = useState(true);
-  const [gesture, setGesture] = useState<AvatarGesture>('idle');
   const [cameraEnabled, setCameraEnabled] = useState(false);
 
   // Voice effects state
@@ -322,6 +377,15 @@ function SessionContent({
     selectAudioInput,
     selectAudioOutput,
   } = useMediaDevices();
+
+  // Task 4.3 — Disconnect on unmount to prevent zombie room connections
+  useEffect(() => {
+    return () => {
+      if (room) {
+        room.disconnect();
+      }
+    };
+  }, [room]);
 
   // Task 5.13 — Detect WebGL support on mount
   useEffect(() => {
@@ -409,7 +473,7 @@ function SessionContent({
     if (controlMessage) {
       applyControlMessage(controlMessage);
     }
-  }, [applyControlMessage]);
+  });
 
   const publishControlMessage = useCallback(
     async (message: SessionControlMessage) => {
@@ -433,9 +497,10 @@ function SessionContent({
   const startMicrophone = useCallback(async () => {
     setMicBusy(true);
     setVoiceMaskWarning(null);
+    let track: LocalAudioTrack | null = null;
 
     try {
-      const track = await createLocalAudioTrack({
+      track = await createLocalAudioTrack({
         autoGainControl: true,
         echoCancellation: true,
         noiseSuppression: true,
@@ -456,6 +521,19 @@ function SessionContent({
 
       setLocalAudioTrack(track);
       setMicEnabled(true);
+    } catch (err) {
+      console.error('[SessionRoom] Microphone publication failed:', err);
+      if (track) {
+        try {
+          track.stop();
+        } catch (stopErr) {
+          console.warn('Failed to stop track on error:', stopErr);
+        }
+      }
+      setLocalAudioTrack(null);
+      setMicEnabled(false);
+      const errMsg = err instanceof Error ? err.message : String(err);
+      toast.error(`Microphone failed to start: ${errMsg}`);
     } finally {
       setMicBusy(false);
     }
@@ -506,6 +584,14 @@ function SessionContent({
       }
     };
   }, [localAudioTrack]);
+
+  // Real-time synchronization of voice mask processor settings when preset or semitones change
+  useEffect(() => {
+    if (localAudioTrack && micEnabled) {
+      localAudioTrack.setProcessor(createVoiceMaskProcessor({ preset: activePreset, semitones }))
+        .catch((err) => console.error('[VoiceEffects] Failed to update processor:', err));
+    }
+  }, [activePreset, semitones, localAudioTrack, micEnabled]);
 
   const toggleHand = async () => {
     const isRaised = raisedHands.has(localParticipant.identity);
@@ -576,7 +662,6 @@ function SessionContent({
                 avatar={avatar}
                 localIdentity={localParticipant.identity}
                 raisedHands={raisedHands}
-                gesture={gesture}
               />
             </Suspense>
           ) : (
@@ -647,12 +732,10 @@ function SessionContent({
         micEnabled={micEnabled}
         micBusy={micBusy}
         raisedHand={raisedHands.has(localParticipant.identity)}
-        gesture={gesture}
         onToggleMute={toggleMicrophone}
         onToggleHand={toggleHand}
         onFlag={handleFlag}
         onLeave={leaveSession}
-        onGestureChange={setGesture}
         voicePreset={activePreset}
         voiceSemitones={semitones}
         onVoicePresetChange={handleVoicePresetChange}

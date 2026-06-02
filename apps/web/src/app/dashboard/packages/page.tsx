@@ -1,6 +1,5 @@
 "use client";
 
-import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { PackageBalanceCard } from "@/components/dashboard/PackageBalanceCard";
 import { useFetchWithTimeout } from "@/hooks/useFetchWithTimeout";
 import { Loader2 } from "lucide-react";
@@ -20,8 +19,7 @@ export default function DashboardPackagesPage() {
   const packages = data?.packages ?? [];
 
   return (
-    <DashboardLayout>
-      <section className="mx-auto max-w-6xl px-5 py-10">
+    <section className="mx-auto max-w-6xl px-5 py-10">
         <h1 className="text-4xl font-bold text-white">Packages</h1>
         <p className="mt-3 text-zinc-400">Track balances and expiry windows.</p>
 
@@ -37,6 +35,5 @@ export default function DashboardPackagesPage() {
           )}
         </div>
       </section>
-    </DashboardLayout>
   );
 }

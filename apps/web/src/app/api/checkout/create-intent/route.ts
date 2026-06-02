@@ -73,6 +73,10 @@ export async function POST(req: NextRequest) {
     }
 
     // 4. Create Payment Intent
+    // Idempotency key is stable per (user, session) so concurrent retries return
+    // the same PaymentIntent instead of creating a new one (which would
+    // double-charge). Sequential retries that need a fresh attempt can cancel
+    // the existing intent and create a new one.
     const stripe = getStripeServerClient();
     const paymentIntent = await stripe.paymentIntents.create({
       amount: service.priceCents || 5000, // Fallback to $50 if not set
@@ -84,8 +88,19 @@ export async function POST(req: NextRequest) {
         serviceId: session?.serviceId,
       },
     }, {
-      idempotencyKey: `checkout:${firebaseUid}:${sessionId}:${Date.now()}`,
+      idempotencyKey: `checkout:${firebaseUid}:${sessionId}`,
     });
+
+    // Persist the intent id on the session so future server-side paths
+    // (cancel/refund, webhooks) can correlate without trusting client input.
+    try {
+      await sessionRef.update({
+        stripePaymentIntentId: paymentIntent.id,
+        updatedAt: new Date().toISOString(),
+      });
+    } catch (err) {
+      console.warn('Failed to persist stripePaymentIntentId on session:', err);
+    }
 
     return NextResponse.json({
       clientSecret: paymentIntent.client_secret,

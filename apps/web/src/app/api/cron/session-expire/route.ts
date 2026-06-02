@@ -1,9 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/firebase-admin';
-import {
-  SESSION_COLLECTION,
-  SESSION_TOKEN_TTL_MS,
-} from '@/lib/services/session-service';
+const SESSION_COLLECTION = 'phase5_sessions';
+const SESSION_TOKEN_TTL_MS = (60 * 60 * 1000) + (5 * 60 * 1000); // 1 hour + 5 minutes buffer
 
 /**
  * Cron: Session Expiration

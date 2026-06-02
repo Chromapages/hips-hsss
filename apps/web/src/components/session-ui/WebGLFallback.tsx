@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from 'react';
 import { Monitor, Volume2 } from "lucide-react";
 import type { AvatarProfile } from "@hips/types";
 

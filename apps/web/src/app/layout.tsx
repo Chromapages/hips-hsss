@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { DM_Sans, Source_Sans_3, Montserrat } from "next/font/google";
 import { ToastProvider } from "@/components/polish/ToastProvider";
 import { AuthProvider } from "@/components/auth/AuthProvider";
-import { GlobalDisclaimerBanner } from "@/components/polish/GlobalDisclaimerBanner";
 import { AnalyticsTracker } from "@/components/analytics/AnalyticsTracker";
 import "./globals.css";
 import "./trust-strip-animations.css";
@@ -56,7 +55,6 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col pb-[env(safe-area-inset-bottom)] font-body text-text-primary" suppressHydrationWarning>
         <AuthProvider>
           <ToastProvider>
-            <GlobalDisclaimerBanner />
             <AnalyticsTracker />
             {children}
           </ToastProvider>

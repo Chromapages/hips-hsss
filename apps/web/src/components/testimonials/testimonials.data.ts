@@ -13,7 +13,7 @@ export const testimonials: Testimonial[] = [
   {
     quote: "The crisis resources helped me de-escalate during a breakdown I thought would never end.",
     name: "Sarah Williams",
-    title: "Clinical Social Worker",
+    title: "Licensed Social Worker",
   },
   {
     quote: "My scholarship covered the full cost of my certification exam. I am now a licensed counselor.",

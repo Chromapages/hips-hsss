@@ -63,7 +63,7 @@ export default function SignupPage() {
   return (
     <div className="space-y-8">
       <div className="space-y-2">
-        <h1 className="font-heading text-3xl md:text-4xl font-extrabold tracking-tighter text-white">New Sanctuary.</h1>
+        <h1 className="font-heading text-3xl md:text-4xl font-extrabold tracking-tighter text-white">New Account.</h1>
         <p className="text-sm font-medium text-zinc-500">Begin your journey with hard anonymity protection.</p>
       </div>
 
@@ -168,7 +168,7 @@ export default function SignupPage() {
 
       <div className="pt-4 text-center">
         <p className="text-xs font-medium text-zinc-500">
-          Already have a sanctuary?{" "}
+          Already have an account?{" "}
           <Link href="/login" className="text-white font-bold hover:text-[#173B57] transition-colors">
             Sign In
           </Link>

@@ -1,5 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { adminAuth, getDb, isFirebaseAdminReady } from '@/lib/firebase-admin';
+import {
+  adminAuth,
+  getDb,
+  getFirebaseAdminConfigStatus,
+  isFirebaseAdminReady,
+} from '@/lib/firebase-admin';
 
 function getErrorMessage(error: unknown) {
   return error instanceof Error ? error.message : String(error);
@@ -32,23 +37,18 @@ export async function POST(req: NextRequest) {
   // Check Firebase Admin readiness first with full diagnostic
   const adminReady = isFirebaseAdminReady();
   if (!adminReady) {
-    const missingEnvVars: string[] = [];
-    if (!process.env.FIREBASE_ADMIN_SDK_KEY && !process.env.FIREBASE_SERVICE_ACCOUNT_KEY) {
-      missingEnvVars.push('FIREBASE_ADMIN_SDK_KEY / FIREBASE_SERVICE_ACCOUNT_KEY');
-    }
-    if (!process.env.FIREBASE_PROJECT_ID && !process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID) {
-      missingEnvVars.push('FIREBASE_PROJECT_ID / NEXT_PUBLIC_FIREBASE_PROJECT_ID');
-    }
-    if (!process.env.FIREBASE_CLIENT_EMAIL) missingEnvVars.push('FIREBASE_CLIENT_EMAIL');
-    if (!process.env.FIREBASE_PRIVATE_KEY) missingEnvVars.push('FIREBASE_PRIVATE_KEY');
+    const configStatus = getFirebaseAdminConfigStatus();
 
-    console.error(`[AuthSync][${requestId}] Firebase Admin SDK not initialized. Missing env vars: ${missingEnvVars.join(', ')}`);
+    console.error(
+      `[AuthSync][${requestId}] Firebase Admin SDK not initialized. Missing env vars: ${configStatus.missing.join(', ')}`
+    );
     return NextResponse.json({
       error: 'Service temporarily unavailable',
       code: 'FIREBASE_ADMIN_NOT_INITIALIZED',
       message: 'Firebase Admin SDK is not configured on this server.',
-      guidance: 'Ensure FIREBASE_ADMIN_SDK_KEY (file path or base64 JSON), FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL, and FIREBASE_PRIVATE_KEY are set in the server environment.',
-      missingEnvVars: missingEnvVars,
+      guidance:
+        'Ensure FIREBASE_ADMIN_SDK_KEY points to a valid service account JSON file, or set FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL, and FIREBASE_PRIVATE_KEY directly.',
+      missingEnvVars: configStatus.missing,
       requestId,
     }, { status: 503 });
   }

@@ -8,9 +8,13 @@ import { PhoneCall, MessageSquare, ShieldAlert } from "lucide-react";
 export function CrisisEscalation({
   region = "local emergency resources",
   country = "your area",
+  onStayInSession,
+  onEndSession,
 }: {
   region?: string;
   country?: string;
+  onStayInSession?: () => void;
+  onEndSession?: () => void;
 }) {
   const overlayRef = useRef<HTMLDivElement>(null);
 
@@ -104,10 +108,16 @@ export function CrisisEscalation({
         </div>
 
         <div className="flex flex-col gap-4 sm:flex-row justify-center border-t border-white/10 pt-8">
-          <button className="h-14 rounded-2xl border border-white/10 bg-transparent px-8 font-bold text-white transition-all hover:bg-white/5 focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-black">
+          <button 
+            className="h-14 rounded-2xl border border-white/10 bg-transparent px-8 font-bold text-white transition-all hover:bg-white/5 focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-black"
+            onClick={onStayInSession}
+          >
             Stay in session
           </button>
-          <button className="h-14 rounded-2xl bg-red-600 px-8 font-bold text-white transition-all hover:bg-red-500 shadow-xl shadow-red-900/40">
+          <button 
+            className="h-14 rounded-2xl bg-red-600 px-8 font-bold text-white transition-all hover:bg-red-500 shadow-xl shadow-red-900/40"
+            onClick={onEndSession}
+          >
             End session safely
           </button>
         </div>

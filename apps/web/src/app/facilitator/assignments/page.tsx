@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { Timer, ExternalLink, Loader2, Calendar } from 'lucide-react';
 import Link from 'next/link';
@@ -30,8 +29,7 @@ export default function AssignmentsPage() {
   }, [getToken]);
 
   return (
-    <DashboardLayout>
-      <div className="mx-auto max-w-7xl px-6 py-12 lg:px-8">
+    <div className="mx-auto max-w-7xl px-6 py-12 lg:px-8">
         <header className="mb-12">
           <h1 className="font-heading text-4xl font-extrabold text-white">My <span className="text-emerald-500">Assignments</span></h1>
           <p className="mt-4 text-zinc-400">Sessions you are scheduled to lead.</p>
@@ -67,6 +65,5 @@ export default function AssignmentsPage() {
           </div>
         )}
       </div>
-    </DashboardLayout>
   );
 }
