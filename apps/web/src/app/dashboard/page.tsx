@@ -141,8 +141,8 @@ export default function DashboardPage() {
 
         {/* Errors are handled gracefully in the background by SWR retries, no intrusive banner shown. */}
 
-        {/* Stats Grid */}
-        <div className="grid gap-6 md:grid-cols-3 mb-10">
+        {/* Stats Grid - Hidden for Demo */}
+        <div className="hidden">
           {statsList.map(({ label, value, icon: Icon, action }) => {
             const isInteractive = !!action;
             return (
@@ -178,6 +178,29 @@ export default function DashboardPage() {
         <div className="grid gap-8 lg:grid-cols-[1fr_380px]">
           {/* Main Column */}
           <div className="space-y-8">
+            {/* Demo Promotion Banner */}
+            <article className="relative overflow-hidden rounded-[2rem] border border-zinc-200 bg-white shadow-sm p-8 group flex flex-col md:flex-row items-center justify-between gap-6">
+              <div>
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#C59A35]/10 border border-[#C59A35]/20 text-[10px] font-bold uppercase tracking-widest text-[#C59A35] mb-4">
+                  Demo Mode
+                </div>
+                <h2 className="font-heading text-2xl font-bold tracking-tighter text-zinc-900 mb-2">
+                  Test the Session Experience
+                </h2>
+                <p className="text-zinc-600 text-sm max-w-md">
+                  Experience the anonymous avatar and voice masking technology firsthand. Enter a specific Session ID to connect.
+                </p>
+              </div>
+              <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+                <Link
+                  href="/join"
+                  className="inline-flex h-12 items-center justify-center rounded-xl bg-[#C59A35] text-white px-6 text-sm font-bold transition-all hover:bg-[#C59A35]/90 shadow-lg shadow-[#C59A35]/20 hover:scale-[1.02] active:scale-95 whitespace-nowrap"
+                >
+                  Enter with Session ID
+                </Link>
+              </div>
+            </article>
+
             {/* Next Session Hero Card */}
             <article className="relative overflow-hidden rounded-[2.5rem] border border-[#173B57]/20 bg-gradient-to-br from-#173B57/40 to-black p-10 group">
               <div className="absolute top-0 right-0 w-full h-full bg-[radial-gradient(circle_at_100%_0%,rgba(99,102,241,0.15)_0%,transparent_50%)] pointer-events-none" />
@@ -223,14 +246,22 @@ export default function DashboardPage() {
                       No upcoming sessions
                     </h2>
                     <p className="text-zinc-400 mb-10">
-                      You don&apos;t have any sessions scheduled. Browse our catalog to book your next support session.
+                      You don&apos;t have any sessions scheduled. You can enter a session ID manually or browse our catalog.
                     </p>
-                    <Link
-                      className="inline-flex h-14 items-center justify-center rounded-2xl bg-[#173B57] text-white px-8 text-base font-bold transition-all hover:bg-[#173B57]/90 shadow-xl shadow-[#173B57]/20 hover:scale-[1.02] active:scale-95"
-                      href="/services"
-                    >
-                      Browse Services
-                    </Link>
+                    <div className="flex gap-4">
+                      <Link
+                        className="inline-flex h-14 items-center justify-center rounded-2xl bg-[#173B57] text-white px-8 text-base font-bold transition-all hover:bg-[#173B57]/90 shadow-xl shadow-[#173B57]/20 hover:scale-[1.02] active:scale-95"
+                        href="/join"
+                      >
+                        Enter Session ID
+                      </Link>
+                      <Link
+                        className="inline-flex h-14 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-white px-8 text-base font-bold transition-all hover:bg-white/10 hover:border-white/20 hover:scale-[1.02] active:scale-95"
+                        href="/services"
+                      >
+                        Browse Services
+                      </Link>
+                    </div>
                   </>
                 )}
               </div>
