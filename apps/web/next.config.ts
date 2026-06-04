@@ -36,6 +36,19 @@ function loadWorkspaceEnv() {
 loadWorkspaceEnv();
 
 const isDev = process.env.NODE_ENV !== "production";
+const publicSiteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "";
+const publicSiteHost = (() => {
+  if (!publicSiteUrl) return "";
+  try {
+    return new URL(publicSiteUrl).hostname;
+  } catch {
+    return "";
+  }
+})();
+const isIpHost = /^(?:\d{1,3}\.){3}\d{1,3}$/.test(publicSiteHost) || publicSiteHost.includes(":");
+const shouldUpgradeInsecureRequests =
+  process.env.ENABLE_HTTPS_UPGRADE === "true" ||
+  (!!publicSiteUrl && publicSiteUrl.startsWith("https://") && !isIpHost);
 const cspDirectives = [
   "default-src 'self'",
   // 'unsafe-inline' is required for Next.js webpack bundles (HMR in dev, compiled scripts in prod)
@@ -54,7 +67,7 @@ const cspDirectives = [
   "base-uri 'self'",
   "form-action 'self'",
   "frame-ancestors 'none'",
-  ...(isDev ? [] : ["upgrade-insecure-requests"]),
+  ...(!isDev && shouldUpgradeInsecureRequests ? ["upgrade-insecure-requests"] : []),
 ];
 
 const nextConfig: NextConfig = {
@@ -116,7 +129,7 @@ const nextConfig: NextConfig = {
           },
           {
             key: 'Permissions-Policy',
-            value: 'camera=(), microphone=(), geolocation=()',
+            value: 'camera=(self), microphone=(self), geolocation=()',
           },
         ],
       },
