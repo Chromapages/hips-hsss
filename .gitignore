@@ -57,3 +57,6 @@ next-env.d.ts
 # Prisma Generated Clients
 packages/db/generated/
 **/generated/
+
+# Firebase Admin Service Account Key
+firebase-admin.json
