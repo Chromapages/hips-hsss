@@ -10,7 +10,7 @@ const FOOTER_LINKS = {
   ],
   Organization: [
     { label: "About", href: "/about" },
-    { label: "Organizations", href: "/organizations" },
+    { label: "Organizations", href: "/opportunities" },
     { label: "Donate", href: "/donate" },
     { label: "Crisis Resources", href: "/crisis" },
   ],

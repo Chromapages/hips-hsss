@@ -8,7 +8,7 @@ export default function ServicesNotFound() {
   return (
     <main
       id="main-content"
-      className="grid min-h-screen place-items-center bg-background p-6 text-text-primary"
+      className="grid min-h-screen place-items-center bg-background p-6 pt-24 text-text-primary"
     >
       <div
         role="alert"

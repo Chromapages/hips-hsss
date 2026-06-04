@@ -18,6 +18,7 @@ import {
   ListChecks,
   Server,
   Download,
+  Heart,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import {
@@ -54,6 +55,8 @@ const participantNav: NavItem[] = [
   { title: "Packages", href: "/dashboard/packages", icon: Package },
   { title: "Downloads", href: "/dashboard/downloads", icon: Download },
   { title: "Get Sessions", href: "/services", icon: ShoppingBag },
+  { title: "Partnerships", href: "/organizations", icon: Building2 },
+  { title: "Donate", href: "/dashboard/donate", icon: Heart },
   { title: "Settings", href: "/dashboard/settings", icon: Settings },
 ];
 

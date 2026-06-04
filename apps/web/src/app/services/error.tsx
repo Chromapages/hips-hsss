@@ -15,7 +15,7 @@ export default function ServicesError({
   }, [error]);
 
   return (
-    <main className="grid min-h-screen place-items-center bg-background p-6">
+    <main className="grid min-h-screen place-items-center bg-background p-6 pt-24">
       <ErrorState
         title="Services Error"
         error="The services page could not be loaded. Please try again."

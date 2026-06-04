@@ -6,7 +6,7 @@ const navItems = [
   ["Packages", "/packages"],
   ["Scholarship", "/scholarship"],
   ["Donate", "/donate"],
-  ["Organizations", "/organizations"],
+  ["Organizations", "/opportunities"],
 ] as const;
 
 export function PageShell({ children }: { children: ReactNode }) {

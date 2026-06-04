@@ -10,7 +10,8 @@ import { useAuth } from '@/components/auth/AuthProvider';
 // Stable nav links defined outside component to prevent recreation on re-renders
 const navLinks: ReadonlyArray<{ href: string; label: string }> = [
   { href: '/services', label: 'Services' },
-  { href: '/organizations', label: 'Organizations' },
+  { href: '/opportunities', label: 'Organizations' },
+  { href: '/about', label: 'About' },
   { href: '/donate', label: 'Donate' },
 ];
 
@@ -123,7 +124,7 @@ export const Navbar = React.memo(function Navbar() {
           {/* Logo */}
           <Link
             href="/"
-            className="relative flex items-center space-x-3 group"
+            className="relative flex items-center space-x-3"
             aria-label="H.I.P.S. Foundation - Return to homepage"
           >
             <Image
@@ -131,11 +132,11 @@ export const Navbar = React.memo(function Navbar() {
               alt="H.I.P.S. Logo"
               width={220}
               height={220}
-              className="object-contain transition-all duration-200 ease-in-out group-hover:opacity-80 group-hover:scale-[1.02]"
+              className="object-contain"
               quality={85}
             />
             {role && role !== 'PARTICIPANT' && (
-              <span className="bg-primary/10 border border-primary/20 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-widest text-primary brand-caps transition-all group-hover:bg-primary/20">
+              <span className="bg-primary/10 border border-primary/20 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-widest text-primary brand-caps">
                 {roleLabels[role] ?? role}
               </span>
             )}

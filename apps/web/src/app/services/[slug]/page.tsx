@@ -25,9 +25,7 @@ import {
   type Service,
 } from "@/lib/services-data";
 import { getUserCountry } from "@/lib/geo";
-import { Navbar } from "@/components/polish/Navbar";
 import { PricingSwitcher } from "@/components/polish/PricingSwitcher";
-import { Footer } from "@/components/polish/Footer";
 import { MobileBookingBar } from "@/components/polish/MobileBookingBar";
 import { Button } from "@/components/ui/button";
 import { ServiceJsonLd } from "@/components/seo/ServiceJsonLd";
@@ -152,43 +150,8 @@ export default async function ServiceDetailPage({
         id="main-content"
         className="min-h-screen bg-background text-text-primary pb-32 overflow-x-hidden"
       >
-        <Navbar />
-
-        {/* Breadcrumb */}
-        <nav
-          aria-label="Breadcrumb"
-          className="container mx-auto px-6 max-w-6xl pt-28"
-        >
-          <ol className="flex items-center gap-2 text-xs font-ui uppercase tracking-wide text-text-muted">
-            <li>
-              <Link
-                href="/"
-                className="hover:text-text-primary transition-colors"
-              >
-                Home
-              </Link>
-            </li>
-            <li aria-hidden="true">/</li>
-            <li>
-              <Link
-                href="/services"
-                className="hover:text-text-primary transition-colors"
-              >
-                Services
-              </Link>
-            </li>
-            <li aria-hidden="true">/</li>
-            <li
-              aria-current="page"
-              className="text-text-primary font-semibold truncate max-w-[200px]"
-            >
-              {service.title}
-            </li>
-          </ol>
-        </nav>
-
         {/* Hero Section */}
-        <header className="relative pt-12 pb-20 border-b border-border">
+        <header className="relative pt-24 pb-20 border-b border-border">
           <div className="container mx-auto px-6 max-w-6xl">
             <Link
               href="/services"
@@ -482,7 +445,6 @@ export default async function ServiceDetailPage({
         serviceTitle={service.title}
         analyticsId={`cta-mobile-book-${service.slug}`}
       />
-      <Footer />
     </>
   );
 }

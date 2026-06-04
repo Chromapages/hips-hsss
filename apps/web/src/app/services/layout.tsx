@@ -1,5 +1,10 @@
-import { DashboardShell } from "@/components/layout/dashboard-shell";
+import { Navbar } from "@/components/polish/Navbar";
 
 export default function ServicesLayout({ children }: { children: React.ReactNode }) {
-  return <DashboardShell>{children}</DashboardShell>;
+  return (
+    <>
+      <Navbar />
+      {children}
+    </>
+  );
 }

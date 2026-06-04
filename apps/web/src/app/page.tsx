@@ -61,7 +61,7 @@ export default function HomePage() {
                   </Link>
                 </Button>
                 <Button variant="ghost" asChild className="h-14 px-10 rounded-full border-2 border-primary text-primary hover:bg-primary hover:text-white transition-all duration-200 ease-in-out text-base font-bold group focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2">
-                  <Link href="/organizations">
+                  <Link href="/opportunities">
                     <PlayCircle className="mr-2 h-5 w-5 text-accent group-hover:scale-110 transition-transform duration-200" />
                     For Organizations
                   </Link>

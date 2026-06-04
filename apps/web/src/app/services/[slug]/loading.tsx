@@ -1,5 +1,3 @@
-import { Navbar } from "@/components/polish/Navbar";
-
 export default function ServiceDetailLoading() {
   return (
     <main
@@ -8,8 +6,6 @@ export default function ServiceDetailLoading() {
       aria-label="Loading service details"
       className="min-h-screen bg-primary text-white pb-32 overflow-x-hidden"
     >
-      <Navbar />
-
       <header className="relative pt-24 pb-20 border-b border-white/5 overflow-hidden">
         <div className="container mx-auto px-6 max-w-6xl">
           <div className="h-4 w-32 rounded bg-white/5 animate-pulse motion-reduce:animate-none" />

@@ -4,7 +4,7 @@ export default function ServicesLoading() {
       role="status"
       aria-live="polite"
       aria-label="Loading services"
-      className="mx-auto max-w-7xl px-6 py-12 lg:px-8"
+      className="mx-auto max-w-7xl px-6 pt-24 pb-12 lg:px-8"
     >
       <div className="max-w-2xl">
         <div className="h-12 w-72 rounded-md bg-surface animate-pulse motion-reduce:animate-none" />

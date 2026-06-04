@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { DM_Sans, Source_Sans_3, Montserrat } from "next/font/google";
 import { ToastProvider } from "@/components/polish/ToastProvider";
+import { GlobalFooter } from "@/components/polish/GlobalFooter";
 import { AuthProvider } from "@/components/auth/AuthProvider";
 import { AnalyticsTracker } from "@/components/analytics/AnalyticsTracker";
 import "./globals.css";
@@ -57,6 +58,7 @@ export default function RootLayout({
           <ToastProvider>
             <AnalyticsTracker />
             {children}
+            <GlobalFooter />
           </ToastProvider>
         </AuthProvider>
       </body>
