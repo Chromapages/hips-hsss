@@ -101,11 +101,27 @@ describe('CommerceService', () => {
         orgName: 'Test Org',
         contactName: 'John Doe',
         email: 'john@test.org',
+        isNonprofit: false,
+        eventType: 'WORKSHOP',
+        headcount: 25,
+        preferredStart: new Date('2026-07-01'),
+        preferredEnd: new Date('2026-07-15'),
         message: 'Interested in training',
       });
 
       expect(result).toHaveProperty('inquiryId');
       expect(result.inquiryId).toBe('inquiry123');
+      expect(mockPrisma.orgInquiry.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            orgName: 'Test Org',
+            contactName: 'John Doe',
+            email: 'john@test.org',
+            eventType: 'WORKSHOP',
+            headcount: 25,
+          }),
+        }),
+      );
     });
   });
 

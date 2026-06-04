@@ -8,11 +8,12 @@ import { useToast } from "@/components/polish/ToastProvider";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Check, Send, Calendar, Users, Building2, User } from "lucide-react";
+import { Check, Send, Calendar, Users, Building2, User, Mail } from "lucide-react";
 
 const intakeSchema = z.object({
   orgName: z.string().min(2, "Organization name is required"),
   contactName: z.string().min(2, "Contact name is required"),
+  email: z.string().email("A valid work email is required"),
   isNonprofit: z.boolean().default(false),
   ein: z.string().optional().refine((val) => {
     if (!val) return true;
@@ -22,13 +23,19 @@ const intakeSchema = z.object({
   headcount: z.coerce.number().min(1, "Min 1 participant").max(500, "Max 500 participants"),
   preferredStart: z.string().min(1, "Start date is required"),
   preferredEnd: z.string().min(1, "End date is required"),
-  notes: z.string().optional(),
+  message: z.string().optional(),
 }).refine((data) => {
   if (data.isNonprofit && !data.ein) return false;
   return true;
 }, {
   message: "EIN is required for nonprofits",
   path: ["ein"],
+}).refine((data) => {
+  if (!data.preferredStart || !data.preferredEnd) return true;
+  return new Date(data.preferredEnd) >= new Date(data.preferredStart);
+}, {
+  message: "End date must be on or after the start date",
+  path: ["preferredEnd"],
 });
 
 type IntakeInput = z.input<typeof intakeSchema>;
@@ -76,15 +83,15 @@ export function OrganizationIntakeForm() {
 
   if (isSubmitted) {
     return (
-      <div className="rounded-[2.5rem] bg-white/5 border border-white/10 p-12 text-center animate-in fade-in zoom-in-95 duration-500 overflow-hidden relative">
+      <div className="rounded-2xl bg-white border border-border p-12 text-center animate-in fade-in zoom-in-95 duration-500 overflow-hidden relative shadow-card">
         {/* Success Background Glow */}
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-64 h-64 bg-emerald-500/10 blur-[100px] -z-10" />
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-64 h-64 bg-emerald-500/5 blur-[100px] -z-10" />
         
-        <div className="mx-auto w-20 h-20 bg-emerald-500/10 border border-emerald-500/20 rounded-full flex items-center justify-center mb-6">
-          <Check className="w-10 h-10 text-emerald-500" />
+        <div className="mx-auto w-20 h-20 bg-emerald-50 border border-emerald-200 rounded-full flex items-center justify-center mb-6">
+          <Check className="w-10 h-10 text-emerald-600" />
         </div>
-        <h2 className="text-3xl font-bold text-white mb-4">Inquiry Received</h2>
-        <p className="text-zinc-400 max-w-sm mx-auto leading-relaxed mb-12">
+        <h2 className="text-3xl font-bold text-text-primary mb-4 font-heading">Inquiry Received</h2>
+        <p className="text-text-secondary max-w-sm mx-auto leading-relaxed mb-12 font-body">
           Thank you for reaching out. Our partnerships team will review your requirements and provide a custom proposal within 48 hours.
         </p>
 
@@ -94,17 +101,17 @@ export function OrganizationIntakeForm() {
             { step: 2, title: "Custom Proposal", desc: "You'll receive a tailored quote and date options." },
             { step: 3, title: "Onboarding", desc: "A 25% deposit locks your date and initiates setup." },
           ].map((item) => (
-            <div key={item.step} className="p-5 rounded-2xl bg-black/40 border border-white/5 space-y-3">
-              <span className="text-[10px] font-bold text-emerald-500 uppercase tracking-widest">Phase 0{item.step}</span>
-              <h4 className="text-sm font-bold text-white">{item.title}</h4>
-              <p className="text-xs text-zinc-500 leading-relaxed">{item.desc}</p>
+            <div key={item.step} className="p-5 rounded-xl bg-surface border border-border space-y-3 shadow-soft">
+              <span className="text-[10px] font-bold text-emerald-600 uppercase tracking-widest font-ui">Phase 0{item.step}</span>
+              <h4 className="text-sm font-bold text-text-primary font-heading">{item.title}</h4>
+              <p className="text-xs text-text-muted leading-relaxed font-body">{item.desc}</p>
             </div>
           ))}
         </div>
 
         <Button 
           variant="outline" 
-          className="mt-12 rounded-2xl px-8 h-12"
+          className="mt-12 rounded-pill px-8 h-12 font-ui text-xs uppercase tracking-wider"
           onClick={() => window.location.href = '/'}
         >
           Back to Home
@@ -114,43 +121,52 @@ export function OrganizationIntakeForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-8 bg-white/5 border border-white/10 rounded-[2.5rem] p-8 md:p-10 backdrop-blur-xl">
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-8 bg-white border border-border rounded-2xl p-8 md:p-10 shadow-card">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
         {/* Left Column */}
         <div className="space-y-6">
           <div className="space-y-2">
-            <label className="flex items-center gap-2 text-sm font-medium text-zinc-300 ml-1">
-              <Building2 className="w-4 h-4 text-zinc-500" />
+            <label className="flex items-center gap-2 text-xs font-bold font-ui uppercase tracking-wider text-text-primary ml-1">
+              <Building2 className="w-4 h-4 text-text-muted" />
               Organization Name
             </label>
             <Input placeholder="e.g. Acme Corp" {...register("orgName")} />
-            {errors.orgName && <p className="text-xs text-red-500 ml-1">{errors.orgName.message}</p>}
+            {errors.orgName && <p className="text-xs text-red-500 ml-1 font-body">{errors.orgName.message}</p>}
           </div>
 
           <div className="space-y-2">
-            <label className="flex items-center gap-2 text-sm font-medium text-zinc-300 ml-1">
-              <User className="w-4 h-4 text-zinc-500" />
+            <label className="flex items-center gap-2 text-xs font-bold font-ui uppercase tracking-wider text-text-primary ml-1">
+              <User className="w-4 h-4 text-text-muted" />
               Primary Contact
             </label>
             <Input placeholder="Full Name" {...register("contactName")} />
-            {errors.contactName && <p className="text-xs text-red-500 ml-1">{errors.contactName.message}</p>}
+            {errors.contactName && <p className="text-xs text-red-500 ml-1 font-body">{errors.contactName.message}</p>}
+          </div>
+
+          <div className="space-y-2">
+            <label className="flex items-center gap-2 text-xs font-bold font-ui uppercase tracking-wider text-text-primary ml-1">
+              <Mail className="w-4 h-4 text-text-muted" />
+              Work Email
+            </label>
+            <Input type="email" placeholder="name@organization.org" {...register("email")} />
+            {errors.email && <p className="text-xs text-red-500 ml-1 font-body">{errors.email.message}</p>}
           </div>
 
           <div className="pt-2 space-y-4">
             <label className="flex items-center gap-3 cursor-pointer group">
               <input 
                 type="checkbox" 
-                className="h-5 w-5 rounded-lg border-zinc-800 bg-zinc-950 text-[#173B57] focus:ring-[#173B57] focus:ring-offset-black transition-all"
+                className="h-5 w-5 rounded border-border text-primary focus:ring-primary focus:ring-offset-white transition-all cursor-pointer"
                 {...register("isNonprofit")}
               />
-              <span className="text-sm text-zinc-400 group-hover:text-zinc-200 transition-colors">This is a 501(c)(3) nonprofit organization</span>
+              <span className="text-sm text-text-secondary group-hover:text-text-primary transition-colors cursor-pointer select-none font-body">This is a 501(c)(3) nonprofit organization</span>
             </label>
 
             {isNonprofit && (
               <div className="space-y-2 animate-in slide-in-from-top-2 duration-300">
-                <label className="text-sm font-medium text-zinc-300 ml-1">Tax ID (EIN)</label>
+                <label className="text-xs font-bold font-ui uppercase tracking-wider text-text-primary ml-1">Tax ID (EIN)</label>
                 <Input placeholder="XX-XXXXXXX" {...register("ein")} />
-                {errors.ein && <p className="text-xs text-red-500 ml-1">{errors.ein.message}</p>}
+                {errors.ein && <p className="text-xs text-red-500 ml-1 font-body">{errors.ein.message}</p>}
               </div>
             )}
           </div>
@@ -159,66 +175,73 @@ export function OrganizationIntakeForm() {
         {/* Right Column */}
         <div className="space-y-6">
           <div className="space-y-2">
-            <label className="text-sm font-medium text-zinc-300 ml-1" htmlFor="eventType">Event Type</label>
-            <select
-              id="eventType"
-              {...register("eventType")}
-              className="w-full h-12 rounded-2xl border border-white/5 bg-white/5 px-4 text-sm text-white focus:ring-1 focus:ring-[#173B57] focus:border-[#173B57]/50 outline-none transition-all appearance-none"
-            >
-              <option value="" className="bg-zinc-900">Select event type</option>
-              <option value="workshop" className="bg-zinc-900">Interactive Workshop</option>
-              <option value="recurring" className="bg-zinc-900">Recurring Peer Support</option>
-              <option value="consultancy" className="bg-zinc-900">Care Navigation Setup</option>
-            </select>
-            {errors.eventType && <p className="text-xs text-red-500 ml-1">{errors.eventType.message}</p>}
+            <label className="text-xs font-bold font-ui uppercase tracking-wider text-text-primary ml-1" htmlFor="eventType">Event Type</label>
+            <div className="relative">
+              <select
+                id="eventType"
+                {...register("eventType")}
+                className="w-full h-12 rounded-lg border border-border bg-white px-4 text-sm text-text-primary focus:ring-2 focus:ring-primary focus:border-primary/50 outline-none transition-all appearance-none cursor-pointer font-body"
+              >
+                <option value="" className="bg-white text-text-primary">Select event type</option>
+                <option value="WORKSHOP" className="bg-white text-text-primary">Interactive Workshop</option>
+                <option value="RECURRING" className="bg-white text-text-primary">Recurring Peer Support</option>
+                <option value="CONSULTANCY" className="bg-white text-text-primary">Care Navigation Setup</option>
+              </select>
+              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-text-secondary" aria-hidden="true">
+                <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                  <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/>
+                </svg>
+              </div>
+            </div>
+            {errors.eventType && <p className="text-xs text-red-500 ml-1 font-body">{errors.eventType.message}</p>}
           </div>
 
           <div className="space-y-2">
-            <label className="flex items-center gap-2 text-sm font-medium text-zinc-300 ml-1">
-              <Users className="w-4 h-4 text-zinc-500" />
+            <label className="flex items-center gap-2 text-xs font-bold font-ui uppercase tracking-wider text-text-primary ml-1">
+              <Users className="w-4 h-4 text-text-muted" />
               Estimated Headcount
             </label>
             <Input type="number" {...register("headcount")} />
-            {errors.headcount && <p className="text-xs text-red-500 ml-1">{errors.headcount.message}</p>}
+            {errors.headcount && <p className="text-xs text-red-500 ml-1 font-body">{errors.headcount.message}</p>}
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <label className="flex items-center gap-2 text-sm font-medium text-zinc-300 ml-1">
-                <Calendar className="w-3.5 h-3.5 text-zinc-500" />
+              <label className="flex items-center gap-2 text-xs font-bold font-ui uppercase tracking-wider text-text-primary ml-1">
+                <Calendar className="w-3.5 h-3.5 text-text-muted" />
                 Earliest Start
               </label>
               <Input type="date" {...register("preferredStart")} />
-              {errors.preferredStart && <p className="text-xs text-red-500 ml-1">{errors.preferredStart.message}</p>}
+              {errors.preferredStart && <p className="text-xs text-red-500 ml-1 font-body">{errors.preferredStart.message}</p>}
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium text-zinc-300 ml-1">Latest End</label>
+              <label className="text-xs font-bold font-ui uppercase tracking-wider text-text-primary ml-1">Latest End</label>
               <Input type="date" {...register("preferredEnd")} />
-              {errors.preferredEnd && <p className="text-xs text-red-500 ml-1">{errors.preferredEnd.message}</p>}
+              {errors.preferredEnd && <p className="text-xs text-red-500 ml-1 font-body">{errors.preferredEnd.message}</p>}
             </div>
           </div>
         </div>
       </div>
 
       <div className="space-y-2">
-        <label className="text-sm font-medium text-zinc-300 ml-1">Additional Requirements (Optional)</label>
-        <Textarea 
+        <label className="text-xs font-bold font-ui uppercase tracking-wider text-text-primary ml-1">Additional Requirements (Optional)</label>
+        <Textarea
           placeholder="Tell us more about your team's specific needs..."
           className="min-h-[120px]"
-          {...register("notes")}
+          {...register("message")}
         />
       </div>
 
       <Button 
         type="submit" 
         isLoading={isSubmitting}
-        className="w-full h-14 rounded-2xl bg-[#173B57] hover:bg-[#173B57] text-base font-bold shadow-xl shadow-[#173B57]/20 group"
+        className="w-full h-12 rounded-pill bg-primary hover:bg-primary-dark text-xs font-bold font-ui uppercase tracking-wider shadow-soft transition-all hover:scale-[1.01] active:scale-[0.99] flex items-center justify-center gap-2 cursor-pointer text-white"
       >
         Send Partnership Inquiry
-        <Send className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+        <Send className="w-3.5 h-3.5" />
       </Button>
 
-      <p className="text-center text-[10px] text-zinc-500 uppercase tracking-widest">
+      <p className="text-center text-[10px] text-text-muted font-ui uppercase tracking-widest">
         Confidentiality Guaranteed • Response within 48 Hours
       </p>
     </form>

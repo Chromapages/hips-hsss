@@ -190,6 +190,12 @@ exports.Prisma.OrgInquiryScalarFieldEnum = {
   orgName: 'orgName',
   contactName: 'contactName',
   email: 'email',
+  isNonprofit: 'isNonprofit',
+  ein: 'ein',
+  eventType: 'eventType',
+  headcount: 'headcount',
+  preferredStart: 'preferredStart',
+  preferredEnd: 'preferredEnd',
   status: 'status',
   message: 'message',
   createdAt: 'createdAt',
@@ -245,6 +251,12 @@ exports.DonationTier = exports.$Enums.DonationTier = {
   BUILDER: 'BUILDER',
   SUSTAINER: 'SUSTAINER',
   CATALYST: 'CATALYST'
+};
+
+exports.OrgInquiryEventType = exports.$Enums.OrgInquiryEventType = {
+  WORKSHOP: 'WORKSHOP',
+  RECURRING: 'RECURRING',
+  CONSULTANCY: 'CONSULTANCY'
 };
 
 exports.InquiryStatus = exports.$Enums.InquiryStatus = {

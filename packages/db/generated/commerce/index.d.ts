@@ -114,6 +114,15 @@ export const InquiryStatus: {
 
 export type InquiryStatus = (typeof InquiryStatus)[keyof typeof InquiryStatus]
 
+
+export const OrgInquiryEventType: {
+  WORKSHOP: 'WORKSHOP',
+  RECURRING: 'RECURRING',
+  CONSULTANCY: 'CONSULTANCY'
+};
+
+export type OrgInquiryEventType = (typeof OrgInquiryEventType)[keyof typeof OrgInquiryEventType]
+
 }
 
 export type UserRole = $Enums.UserRole
@@ -139,6 +148,10 @@ export const DonationTier: typeof $Enums.DonationTier
 export type InquiryStatus = $Enums.InquiryStatus
 
 export const InquiryStatus: typeof $Enums.InquiryStatus
+
+export type OrgInquiryEventType = $Enums.OrgInquiryEventType
+
+export const OrgInquiryEventType: typeof $Enums.OrgInquiryEventType
 
 /**
  * ##  Prisma Client ʲˢ
@@ -7773,8 +7786,18 @@ export namespace Prisma {
 
   export type AggregateOrgInquiry = {
     _count: OrgInquiryCountAggregateOutputType | null
+    _avg: OrgInquiryAvgAggregateOutputType | null
+    _sum: OrgInquirySumAggregateOutputType | null
     _min: OrgInquiryMinAggregateOutputType | null
     _max: OrgInquiryMaxAggregateOutputType | null
+  }
+
+  export type OrgInquiryAvgAggregateOutputType = {
+    headcount: number | null
+  }
+
+  export type OrgInquirySumAggregateOutputType = {
+    headcount: number | null
   }
 
   export type OrgInquiryMinAggregateOutputType = {
@@ -7782,6 +7805,12 @@ export namespace Prisma {
     orgName: string | null
     contactName: string | null
     email: string | null
+    isNonprofit: boolean | null
+    ein: string | null
+    eventType: $Enums.OrgInquiryEventType | null
+    headcount: number | null
+    preferredStart: Date | null
+    preferredEnd: Date | null
     status: $Enums.InquiryStatus | null
     message: string | null
     createdAt: Date | null
@@ -7793,6 +7822,12 @@ export namespace Prisma {
     orgName: string | null
     contactName: string | null
     email: string | null
+    isNonprofit: boolean | null
+    ein: string | null
+    eventType: $Enums.OrgInquiryEventType | null
+    headcount: number | null
+    preferredStart: Date | null
+    preferredEnd: Date | null
     status: $Enums.InquiryStatus | null
     message: string | null
     createdAt: Date | null
@@ -7804,6 +7839,12 @@ export namespace Prisma {
     orgName: number
     contactName: number
     email: number
+    isNonprofit: number
+    ein: number
+    eventType: number
+    headcount: number
+    preferredStart: number
+    preferredEnd: number
     status: number
     message: number
     createdAt: number
@@ -7812,11 +7853,25 @@ export namespace Prisma {
   }
 
 
+  export type OrgInquiryAvgAggregateInputType = {
+    headcount?: true
+  }
+
+  export type OrgInquirySumAggregateInputType = {
+    headcount?: true
+  }
+
   export type OrgInquiryMinAggregateInputType = {
     id?: true
     orgName?: true
     contactName?: true
     email?: true
+    isNonprofit?: true
+    ein?: true
+    eventType?: true
+    headcount?: true
+    preferredStart?: true
+    preferredEnd?: true
     status?: true
     message?: true
     createdAt?: true
@@ -7828,6 +7883,12 @@ export namespace Prisma {
     orgName?: true
     contactName?: true
     email?: true
+    isNonprofit?: true
+    ein?: true
+    eventType?: true
+    headcount?: true
+    preferredStart?: true
+    preferredEnd?: true
     status?: true
     message?: true
     createdAt?: true
@@ -7839,6 +7900,12 @@ export namespace Prisma {
     orgName?: true
     contactName?: true
     email?: true
+    isNonprofit?: true
+    ein?: true
+    eventType?: true
+    headcount?: true
+    preferredStart?: true
+    preferredEnd?: true
     status?: true
     message?: true
     createdAt?: true
@@ -7884,6 +7951,18 @@ export namespace Prisma {
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
      * 
+     * Select which fields to average
+    **/
+    _avg?: OrgInquiryAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: OrgInquirySumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
      * Select which fields to find the minimum value
     **/
     _min?: OrgInquiryMinAggregateInputType
@@ -7914,6 +7993,8 @@ export namespace Prisma {
     take?: number
     skip?: number
     _count?: OrgInquiryCountAggregateInputType | true
+    _avg?: OrgInquiryAvgAggregateInputType
+    _sum?: OrgInquirySumAggregateInputType
     _min?: OrgInquiryMinAggregateInputType
     _max?: OrgInquiryMaxAggregateInputType
   }
@@ -7923,11 +8004,19 @@ export namespace Prisma {
     orgName: string
     contactName: string
     email: string
+    isNonprofit: boolean
+    ein: string | null
+    eventType: $Enums.OrgInquiryEventType
+    headcount: number
+    preferredStart: Date
+    preferredEnd: Date
     status: $Enums.InquiryStatus
     message: string | null
     createdAt: Date
     updatedAt: Date
     _count: OrgInquiryCountAggregateOutputType | null
+    _avg: OrgInquiryAvgAggregateOutputType | null
+    _sum: OrgInquirySumAggregateOutputType | null
     _min: OrgInquiryMinAggregateOutputType | null
     _max: OrgInquiryMaxAggregateOutputType | null
   }
@@ -7951,6 +8040,12 @@ export namespace Prisma {
     orgName?: boolean
     contactName?: boolean
     email?: boolean
+    isNonprofit?: boolean
+    ein?: boolean
+    eventType?: boolean
+    headcount?: boolean
+    preferredStart?: boolean
+    preferredEnd?: boolean
     status?: boolean
     message?: boolean
     createdAt?: boolean
@@ -7962,6 +8057,12 @@ export namespace Prisma {
     orgName?: boolean
     contactName?: boolean
     email?: boolean
+    isNonprofit?: boolean
+    ein?: boolean
+    eventType?: boolean
+    headcount?: boolean
+    preferredStart?: boolean
+    preferredEnd?: boolean
     status?: boolean
     message?: boolean
     createdAt?: boolean
@@ -7973,6 +8074,12 @@ export namespace Prisma {
     orgName?: boolean
     contactName?: boolean
     email?: boolean
+    isNonprofit?: boolean
+    ein?: boolean
+    eventType?: boolean
+    headcount?: boolean
+    preferredStart?: boolean
+    preferredEnd?: boolean
     status?: boolean
     message?: boolean
     createdAt?: boolean
@@ -7988,6 +8095,12 @@ export namespace Prisma {
       orgName: string
       contactName: string
       email: string
+      isNonprofit: boolean
+      ein: string | null
+      eventType: $Enums.OrgInquiryEventType
+      headcount: number
+      preferredStart: Date
+      preferredEnd: Date
       status: $Enums.InquiryStatus
       message: string | null
       createdAt: Date
@@ -8389,6 +8502,12 @@ export namespace Prisma {
     readonly orgName: FieldRef<"OrgInquiry", 'String'>
     readonly contactName: FieldRef<"OrgInquiry", 'String'>
     readonly email: FieldRef<"OrgInquiry", 'String'>
+    readonly isNonprofit: FieldRef<"OrgInquiry", 'Boolean'>
+    readonly ein: FieldRef<"OrgInquiry", 'String'>
+    readonly eventType: FieldRef<"OrgInquiry", 'OrgInquiryEventType'>
+    readonly headcount: FieldRef<"OrgInquiry", 'Int'>
+    readonly preferredStart: FieldRef<"OrgInquiry", 'DateTime'>
+    readonly preferredEnd: FieldRef<"OrgInquiry", 'DateTime'>
     readonly status: FieldRef<"OrgInquiry", 'InquiryStatus'>
     readonly message: FieldRef<"OrgInquiry", 'String'>
     readonly createdAt: FieldRef<"OrgInquiry", 'DateTime'>
@@ -8786,6 +8905,12 @@ export namespace Prisma {
     orgName: 'orgName',
     contactName: 'contactName',
     email: 'email',
+    isNonprofit: 'isNonprofit',
+    ein: 'ein',
+    eventType: 'eventType',
+    headcount: 'headcount',
+    preferredStart: 'preferredStart',
+    preferredEnd: 'preferredEnd',
     status: 'status',
     message: 'message',
     createdAt: 'createdAt',
@@ -8940,6 +9065,20 @@ export namespace Prisma {
    * Reference to a field of type 'DonationTier[]'
    */
   export type ListEnumDonationTierFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'DonationTier[]'>
+    
+
+
+  /**
+   * Reference to a field of type 'OrgInquiryEventType'
+   */
+  export type EnumOrgInquiryEventTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'OrgInquiryEventType'>
+    
+
+
+  /**
+   * Reference to a field of type 'OrgInquiryEventType[]'
+   */
+  export type ListEnumOrgInquiryEventTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'OrgInquiryEventType[]'>
     
 
 
@@ -9444,6 +9583,12 @@ export namespace Prisma {
     orgName?: StringFilter<"OrgInquiry"> | string
     contactName?: StringFilter<"OrgInquiry"> | string
     email?: StringFilter<"OrgInquiry"> | string
+    isNonprofit?: BoolFilter<"OrgInquiry"> | boolean
+    ein?: StringNullableFilter<"OrgInquiry"> | string | null
+    eventType?: EnumOrgInquiryEventTypeFilter<"OrgInquiry"> | $Enums.OrgInquiryEventType
+    headcount?: IntFilter<"OrgInquiry"> | number
+    preferredStart?: DateTimeFilter<"OrgInquiry"> | Date | string
+    preferredEnd?: DateTimeFilter<"OrgInquiry"> | Date | string
     status?: EnumInquiryStatusFilter<"OrgInquiry"> | $Enums.InquiryStatus
     message?: StringNullableFilter<"OrgInquiry"> | string | null
     createdAt?: DateTimeFilter<"OrgInquiry"> | Date | string
@@ -9455,6 +9600,12 @@ export namespace Prisma {
     orgName?: SortOrder
     contactName?: SortOrder
     email?: SortOrder
+    isNonprofit?: SortOrder
+    ein?: SortOrderInput | SortOrder
+    eventType?: SortOrder
+    headcount?: SortOrder
+    preferredStart?: SortOrder
+    preferredEnd?: SortOrder
     status?: SortOrder
     message?: SortOrderInput | SortOrder
     createdAt?: SortOrder
@@ -9469,6 +9620,12 @@ export namespace Prisma {
     orgName?: StringFilter<"OrgInquiry"> | string
     contactName?: StringFilter<"OrgInquiry"> | string
     email?: StringFilter<"OrgInquiry"> | string
+    isNonprofit?: BoolFilter<"OrgInquiry"> | boolean
+    ein?: StringNullableFilter<"OrgInquiry"> | string | null
+    eventType?: EnumOrgInquiryEventTypeFilter<"OrgInquiry"> | $Enums.OrgInquiryEventType
+    headcount?: IntFilter<"OrgInquiry"> | number
+    preferredStart?: DateTimeFilter<"OrgInquiry"> | Date | string
+    preferredEnd?: DateTimeFilter<"OrgInquiry"> | Date | string
     status?: EnumInquiryStatusFilter<"OrgInquiry"> | $Enums.InquiryStatus
     message?: StringNullableFilter<"OrgInquiry"> | string | null
     createdAt?: DateTimeFilter<"OrgInquiry"> | Date | string
@@ -9480,13 +9637,21 @@ export namespace Prisma {
     orgName?: SortOrder
     contactName?: SortOrder
     email?: SortOrder
+    isNonprofit?: SortOrder
+    ein?: SortOrderInput | SortOrder
+    eventType?: SortOrder
+    headcount?: SortOrder
+    preferredStart?: SortOrder
+    preferredEnd?: SortOrder
     status?: SortOrder
     message?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     _count?: OrgInquiryCountOrderByAggregateInput
+    _avg?: OrgInquiryAvgOrderByAggregateInput
     _max?: OrgInquiryMaxOrderByAggregateInput
     _min?: OrgInquiryMinOrderByAggregateInput
+    _sum?: OrgInquirySumOrderByAggregateInput
   }
 
   export type OrgInquiryScalarWhereWithAggregatesInput = {
@@ -9497,6 +9662,12 @@ export namespace Prisma {
     orgName?: StringWithAggregatesFilter<"OrgInquiry"> | string
     contactName?: StringWithAggregatesFilter<"OrgInquiry"> | string
     email?: StringWithAggregatesFilter<"OrgInquiry"> | string
+    isNonprofit?: BoolWithAggregatesFilter<"OrgInquiry"> | boolean
+    ein?: StringNullableWithAggregatesFilter<"OrgInquiry"> | string | null
+    eventType?: EnumOrgInquiryEventTypeWithAggregatesFilter<"OrgInquiry"> | $Enums.OrgInquiryEventType
+    headcount?: IntWithAggregatesFilter<"OrgInquiry"> | number
+    preferredStart?: DateTimeWithAggregatesFilter<"OrgInquiry"> | Date | string
+    preferredEnd?: DateTimeWithAggregatesFilter<"OrgInquiry"> | Date | string
     status?: EnumInquiryStatusWithAggregatesFilter<"OrgInquiry"> | $Enums.InquiryStatus
     message?: StringNullableWithAggregatesFilter<"OrgInquiry"> | string | null
     createdAt?: DateTimeWithAggregatesFilter<"OrgInquiry"> | Date | string
@@ -10005,6 +10176,12 @@ export namespace Prisma {
     orgName: string
     contactName: string
     email: string
+    isNonprofit?: boolean
+    ein?: string | null
+    eventType: $Enums.OrgInquiryEventType
+    headcount: number
+    preferredStart: Date | string
+    preferredEnd: Date | string
     status?: $Enums.InquiryStatus
     message?: string | null
     createdAt?: Date | string
@@ -10016,6 +10193,12 @@ export namespace Prisma {
     orgName: string
     contactName: string
     email: string
+    isNonprofit?: boolean
+    ein?: string | null
+    eventType: $Enums.OrgInquiryEventType
+    headcount: number
+    preferredStart: Date | string
+    preferredEnd: Date | string
     status?: $Enums.InquiryStatus
     message?: string | null
     createdAt?: Date | string
@@ -10027,6 +10210,12 @@ export namespace Prisma {
     orgName?: StringFieldUpdateOperationsInput | string
     contactName?: StringFieldUpdateOperationsInput | string
     email?: StringFieldUpdateOperationsInput | string
+    isNonprofit?: BoolFieldUpdateOperationsInput | boolean
+    ein?: NullableStringFieldUpdateOperationsInput | string | null
+    eventType?: EnumOrgInquiryEventTypeFieldUpdateOperationsInput | $Enums.OrgInquiryEventType
+    headcount?: IntFieldUpdateOperationsInput | number
+    preferredStart?: DateTimeFieldUpdateOperationsInput | Date | string
+    preferredEnd?: DateTimeFieldUpdateOperationsInput | Date | string
     status?: EnumInquiryStatusFieldUpdateOperationsInput | $Enums.InquiryStatus
     message?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -10038,6 +10227,12 @@ export namespace Prisma {
     orgName?: StringFieldUpdateOperationsInput | string
     contactName?: StringFieldUpdateOperationsInput | string
     email?: StringFieldUpdateOperationsInput | string
+    isNonprofit?: BoolFieldUpdateOperationsInput | boolean
+    ein?: NullableStringFieldUpdateOperationsInput | string | null
+    eventType?: EnumOrgInquiryEventTypeFieldUpdateOperationsInput | $Enums.OrgInquiryEventType
+    headcount?: IntFieldUpdateOperationsInput | number
+    preferredStart?: DateTimeFieldUpdateOperationsInput | Date | string
+    preferredEnd?: DateTimeFieldUpdateOperationsInput | Date | string
     status?: EnumInquiryStatusFieldUpdateOperationsInput | $Enums.InquiryStatus
     message?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -10049,6 +10244,12 @@ export namespace Prisma {
     orgName: string
     contactName: string
     email: string
+    isNonprofit?: boolean
+    ein?: string | null
+    eventType: $Enums.OrgInquiryEventType
+    headcount: number
+    preferredStart: Date | string
+    preferredEnd: Date | string
     status?: $Enums.InquiryStatus
     message?: string | null
     createdAt?: Date | string
@@ -10060,6 +10261,12 @@ export namespace Prisma {
     orgName?: StringFieldUpdateOperationsInput | string
     contactName?: StringFieldUpdateOperationsInput | string
     email?: StringFieldUpdateOperationsInput | string
+    isNonprofit?: BoolFieldUpdateOperationsInput | boolean
+    ein?: NullableStringFieldUpdateOperationsInput | string | null
+    eventType?: EnumOrgInquiryEventTypeFieldUpdateOperationsInput | $Enums.OrgInquiryEventType
+    headcount?: IntFieldUpdateOperationsInput | number
+    preferredStart?: DateTimeFieldUpdateOperationsInput | Date | string
+    preferredEnd?: DateTimeFieldUpdateOperationsInput | Date | string
     status?: EnumInquiryStatusFieldUpdateOperationsInput | $Enums.InquiryStatus
     message?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -10071,6 +10278,12 @@ export namespace Prisma {
     orgName?: StringFieldUpdateOperationsInput | string
     contactName?: StringFieldUpdateOperationsInput | string
     email?: StringFieldUpdateOperationsInput | string
+    isNonprofit?: BoolFieldUpdateOperationsInput | boolean
+    ein?: NullableStringFieldUpdateOperationsInput | string | null
+    eventType?: EnumOrgInquiryEventTypeFieldUpdateOperationsInput | $Enums.OrgInquiryEventType
+    headcount?: IntFieldUpdateOperationsInput | number
+    preferredStart?: DateTimeFieldUpdateOperationsInput | Date | string
+    preferredEnd?: DateTimeFieldUpdateOperationsInput | Date | string
     status?: EnumInquiryStatusFieldUpdateOperationsInput | $Enums.InquiryStatus
     message?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -10708,6 +10921,13 @@ export namespace Prisma {
     _max?: NestedEnumDonationTierFilter<$PrismaModel>
   }
 
+  export type EnumOrgInquiryEventTypeFilter<$PrismaModel = never> = {
+    equals?: $Enums.OrgInquiryEventType | EnumOrgInquiryEventTypeFieldRefInput<$PrismaModel>
+    in?: $Enums.OrgInquiryEventType[] | ListEnumOrgInquiryEventTypeFieldRefInput<$PrismaModel>
+    notIn?: $Enums.OrgInquiryEventType[] | ListEnumOrgInquiryEventTypeFieldRefInput<$PrismaModel>
+    not?: NestedEnumOrgInquiryEventTypeFilter<$PrismaModel> | $Enums.OrgInquiryEventType
+  }
+
   export type EnumInquiryStatusFilter<$PrismaModel = never> = {
     equals?: $Enums.InquiryStatus | EnumInquiryStatusFieldRefInput<$PrismaModel>
     in?: $Enums.InquiryStatus[] | ListEnumInquiryStatusFieldRefInput<$PrismaModel>
@@ -10720,10 +10940,20 @@ export namespace Prisma {
     orgName?: SortOrder
     contactName?: SortOrder
     email?: SortOrder
+    isNonprofit?: SortOrder
+    ein?: SortOrder
+    eventType?: SortOrder
+    headcount?: SortOrder
+    preferredStart?: SortOrder
+    preferredEnd?: SortOrder
     status?: SortOrder
     message?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
+  }
+
+  export type OrgInquiryAvgOrderByAggregateInput = {
+    headcount?: SortOrder
   }
 
   export type OrgInquiryMaxOrderByAggregateInput = {
@@ -10731,6 +10961,12 @@ export namespace Prisma {
     orgName?: SortOrder
     contactName?: SortOrder
     email?: SortOrder
+    isNonprofit?: SortOrder
+    ein?: SortOrder
+    eventType?: SortOrder
+    headcount?: SortOrder
+    preferredStart?: SortOrder
+    preferredEnd?: SortOrder
     status?: SortOrder
     message?: SortOrder
     createdAt?: SortOrder
@@ -10742,10 +10978,30 @@ export namespace Prisma {
     orgName?: SortOrder
     contactName?: SortOrder
     email?: SortOrder
+    isNonprofit?: SortOrder
+    ein?: SortOrder
+    eventType?: SortOrder
+    headcount?: SortOrder
+    preferredStart?: SortOrder
+    preferredEnd?: SortOrder
     status?: SortOrder
     message?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
+  }
+
+  export type OrgInquirySumOrderByAggregateInput = {
+    headcount?: SortOrder
+  }
+
+  export type EnumOrgInquiryEventTypeWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.OrgInquiryEventType | EnumOrgInquiryEventTypeFieldRefInput<$PrismaModel>
+    in?: $Enums.OrgInquiryEventType[] | ListEnumOrgInquiryEventTypeFieldRefInput<$PrismaModel>
+    notIn?: $Enums.OrgInquiryEventType[] | ListEnumOrgInquiryEventTypeFieldRefInput<$PrismaModel>
+    not?: NestedEnumOrgInquiryEventTypeWithAggregatesFilter<$PrismaModel> | $Enums.OrgInquiryEventType
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumOrgInquiryEventTypeFilter<$PrismaModel>
+    _max?: NestedEnumOrgInquiryEventTypeFilter<$PrismaModel>
   }
 
   export type EnumInquiryStatusWithAggregatesFilter<$PrismaModel = never> = {
@@ -11210,6 +11466,10 @@ export namespace Prisma {
     update?: XOR<XOR<UserUpdateToOneWithWhereWithoutDonationsInput, UserUpdateWithoutDonationsInput>, UserUncheckedUpdateWithoutDonationsInput>
   }
 
+  export type EnumOrgInquiryEventTypeFieldUpdateOperationsInput = {
+    set?: $Enums.OrgInquiryEventType
+  }
+
   export type EnumInquiryStatusFieldUpdateOperationsInput = {
     set?: $Enums.InquiryStatus
   }
@@ -11550,11 +11810,28 @@ export namespace Prisma {
     _max?: NestedEnumDonationTierFilter<$PrismaModel>
   }
 
+  export type NestedEnumOrgInquiryEventTypeFilter<$PrismaModel = never> = {
+    equals?: $Enums.OrgInquiryEventType | EnumOrgInquiryEventTypeFieldRefInput<$PrismaModel>
+    in?: $Enums.OrgInquiryEventType[] | ListEnumOrgInquiryEventTypeFieldRefInput<$PrismaModel>
+    notIn?: $Enums.OrgInquiryEventType[] | ListEnumOrgInquiryEventTypeFieldRefInput<$PrismaModel>
+    not?: NestedEnumOrgInquiryEventTypeFilter<$PrismaModel> | $Enums.OrgInquiryEventType
+  }
+
   export type NestedEnumInquiryStatusFilter<$PrismaModel = never> = {
     equals?: $Enums.InquiryStatus | EnumInquiryStatusFieldRefInput<$PrismaModel>
     in?: $Enums.InquiryStatus[] | ListEnumInquiryStatusFieldRefInput<$PrismaModel>
     notIn?: $Enums.InquiryStatus[] | ListEnumInquiryStatusFieldRefInput<$PrismaModel>
     not?: NestedEnumInquiryStatusFilter<$PrismaModel> | $Enums.InquiryStatus
+  }
+
+  export type NestedEnumOrgInquiryEventTypeWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.OrgInquiryEventType | EnumOrgInquiryEventTypeFieldRefInput<$PrismaModel>
+    in?: $Enums.OrgInquiryEventType[] | ListEnumOrgInquiryEventTypeFieldRefInput<$PrismaModel>
+    notIn?: $Enums.OrgInquiryEventType[] | ListEnumOrgInquiryEventTypeFieldRefInput<$PrismaModel>
+    not?: NestedEnumOrgInquiryEventTypeWithAggregatesFilter<$PrismaModel> | $Enums.OrgInquiryEventType
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumOrgInquiryEventTypeFilter<$PrismaModel>
+    _max?: NestedEnumOrgInquiryEventTypeFilter<$PrismaModel>
   }
 
   export type NestedEnumInquiryStatusWithAggregatesFilter<$PrismaModel = never> = {

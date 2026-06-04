@@ -7,12 +7,38 @@ export const createDonationSchema = z.object({
 
 export type CreateDonationDto = z.infer<typeof createDonationSchema>;
 
-export const createOrgInquirySchema = z.object({
-  orgName: z.string().min(2).max(100),
-  contactName: z.string().min(2).max(100),
-  email: z.string().email(),
-  message: z.string().max(2000).optional(),
-});
+export const createOrgInquirySchema = z
+  .object({
+    orgName: z.string().min(2).max(100),
+    contactName: z.string().min(2).max(100),
+    email: z.string().email(),
+    isNonprofit: z.boolean().default(false),
+    ein: z
+      .string()
+      .regex(/^\d{2}-\d{7}$/, 'EIN must follow format XX-XXXXXXX')
+      .optional(),
+    eventType: z.enum(['WORKSHOP', 'RECURRING', 'CONSULTANCY']),
+    headcount: z.coerce.number().int().min(1).max(500),
+    preferredStart: z.coerce.date(),
+    preferredEnd: z.coerce.date(),
+    message: z.string().max(2000).optional(),
+  })
+  .superRefine((data, ctx) => {
+    if (data.isNonprofit && !data.ein) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['ein'],
+        message: 'EIN is required for nonprofits',
+      });
+    }
+    if (data.preferredEnd < data.preferredStart) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['preferredEnd'],
+        message: 'End date must be on or after the start date',
+      });
+    }
+  });
 
 export type CreateOrgInquiryDto = z.infer<typeof createOrgInquirySchema>;
 

@@ -254,6 +254,12 @@ export class CommerceService {
         orgName: dto.orgName,
         contactName: dto.contactName,
         email: dto.email,
+        isNonprofit: dto.isNonprofit,
+        ein: dto.ein ?? null,
+        eventType: dto.eventType,
+        headcount: dto.headcount,
+        preferredStart: dto.preferredStart,
+        preferredEnd: dto.preferredEnd,
         message: dto.message ?? null,
         status: 'NEW',
       },
@@ -262,15 +268,21 @@ export class CommerceService {
     // Send admin notification email
     try {
       if (resend) {
+        const start = new Date(dto.preferredStart).toISOString().slice(0, 10);
+        const end = new Date(dto.preferredEnd).toISOString().slice(0, 10);
         await resend.emails.send({
           from: FROM_EMAIL,
           to: ADMIN_EMAIL,
-          subject: `New Org Inquiry: ${dto.orgName}`,
+          subject: `New Org Inquiry: ${dto.orgName} (${dto.eventType}, ${dto.headcount} ppl)`,
           html: `
             <h2>New Organization Inquiry</h2>
-            <p><strong>Organization:</strong> ${dto.orgName}</p>
+            <p><strong>Organization:</strong> ${dto.orgName}${dto.isNonprofit ? ' (501(c)(3))' : ''}</p>
             <p><strong>Contact:</strong> ${dto.contactName}</p>
             <p><strong>Email:</strong> <a href="mailto:${dto.email}">${dto.email}</a></p>
+            <p><strong>Event Type:</strong> ${dto.eventType}</p>
+            <p><strong>Headcount:</strong> ${dto.headcount}</p>
+            <p><strong>Preferred Window:</strong> ${start} → ${end}</p>
+            ${dto.ein ? `<p><strong>EIN:</strong> ${dto.ein}</p>` : ''}
             <p><strong>Message:</strong></p>
             <p>${dto.message || 'No message provided'}</p>
             <hr>
