@@ -130,11 +130,11 @@ export const SidebarUserFooter = ({
           </div>
         </div>
 
-        <div className="hidden group-data-[collapsible=icon]:flex justify-center px-2 pb-1">
+        <div className="hidden group-data-[collapsible=icon]:flex justify-center px-0 pb-1">
           <Link
             href="/login"
             aria-label="Return to login"
-            className="flex h-9 w-9 items-center justify-center rounded-full border border-accent/30 bg-accent/15 text-xs font-bold text-accent font-ui transition-colors hover:bg-accent hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+            className="flex h-8 w-8 items-center justify-center rounded-full border border-accent/30 bg-accent/15 text-xs font-bold text-accent font-ui transition-colors hover:bg-accent hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
           >
             {initials}
           </Link>
@@ -198,11 +198,11 @@ export const SidebarUserFooter = ({
       </div>
 
       {/* Collapsed state — avatar icon with popup menu */}
-      <div className="hidden group-data-[collapsible=icon]:flex justify-center px-2 pb-1">
+      <div className="hidden group-data-[collapsible=icon]:flex justify-center px-0 pb-1">
         <DropdownMenu>
           <DropdownMenuTrigger
             aria-label={`Account menu for ${nameDisplay}`}
-            className="flex h-9 w-9 items-center justify-center rounded-full bg-accent text-primary text-xs font-bold font-ui transition-colors hover:ring-2 hover:ring-accent/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent data-[state=open]:ring-2 data-[state=open]:ring-accent/40"
+            className="flex h-8 w-8 items-center justify-center rounded-full bg-accent text-primary text-xs font-bold font-ui transition-colors hover:ring-2 hover:ring-accent/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent data-[state=open]:ring-2 data-[state=open]:ring-accent/40"
           >
             {initials}
           </DropdownMenuTrigger>
