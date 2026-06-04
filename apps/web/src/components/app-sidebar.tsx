@@ -88,29 +88,41 @@ const NavItemRow = ({ item, isActive }: { item: NavItem; isActive: boolean }) =>
   const showBadge = item.badge !== undefined && item.badge > 0;
 
   return (
-    <SidebarMenuItem className="sidebar-item-enter">
+    <SidebarMenuItem className="sidebar-item-enter relative">
+      {isActive && (
+        <span 
+          className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-7 bg-accent rounded-r-full z-20 transition-all duration-200"
+          aria-hidden="true"
+        />
+      )}
       <SidebarMenuButton
         asChild
         isActive={isActive}
         tooltip={item.title}
         className={cn(
-          "rounded-xl border border-transparent py-2.5 pr-3 shadow-none",
+          "rounded-xl border transition-all duration-200 py-2.5 pl-3 pr-3 shadow-none relative overflow-hidden group/btn",
           isActive
-            ? "border-accent/25 bg-white/10 text-white shadow-[inset_3px_0_0_0_theme(colors.accent.DEFAULT)]"
-            : "text-white/72 hover:border-white/8 hover:bg-white/5 hover:text-white",
-          "[&_svg]:!size-[17px] [&_svg]:shrink-0",
+            ? "border-accent/20 bg-white/[0.08] text-white"
+            : "border-transparent text-white/70 hover:border-white/[0.06] hover:bg-white/[0.04] hover:text-white",
+          "[&_svg]:!size-[18px] [&_svg]:shrink-0",
           isActive
             ? "[&_svg]:text-accent [&_svg]:[stroke-width:2.2]"
-            : "[&_svg]:text-white/60 [&_svg]:[stroke-width:1.8]",
+            : "[&_svg]:text-white/60 [&_svg]:[stroke-width:1.8] group-hover/btn:[&_svg]:text-white/80 group-hover/btn:[&_svg]:scale-105 group-hover/btn:[&_svg]:[stroke-width:2.0] group-hover/btn:[&_svg]:translate-x-0.5",
+          // Collapsed icon styling overrides
+          "group-data-[collapsible=icon]:!p-0 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:!size-9 group-data-[collapsible=icon]:mx-auto",
+          isActive && "group-data-[collapsible=icon]:bg-accent/15 group-data-[collapsible=icon]:border-accent/30 group-data-[collapsible=icon]:text-accent"
         )}
       >
         <Link
           href={item.href}
           aria-label={item.title}
           aria-current={isActive ? "page" : undefined}
+          className="w-full flex items-center"
         >
           <IconComponent aria-hidden="true" />
-          <span className="font-medium group-data-[collapsible=icon]:hidden">{item.title}</span>
+          <span className="font-semibold tracking-wide font-body text-sm ml-3 transition-colors duration-150 group-data-[collapsible=icon]:hidden">
+            {item.title}
+          </span>
         </Link>
       </SidebarMenuButton>
 
@@ -175,13 +187,13 @@ export function AppSidebar() {
       className="border-r-0 text-white"
       style={{ "--sidebar-width": "260px" } as React.CSSProperties}
     >
-      <SidebarHeader className="border-b border-white/6 px-3 pb-4 pt-4">
+      <SidebarHeader className="border-b border-white/6 px-3 pb-4 pt-4 group-data-[collapsible=icon]:px-2 group-data-[collapsible=icon]:py-2">
         <Link
           href={homeHref}
-          className="flex min-h-[84px] items-center gap-3 rounded-2xl border border-white/8 bg-white/[0.04] px-3 transition-[padding,background-color,border-color] duration-200 hover:border-white/14 hover:bg-white/[0.06] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1 focus-visible:ring-offset-primary group-data-[collapsible=icon]:min-h-[56px] group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0"
+          className="flex min-h-[84px] items-center gap-3 rounded-2xl border border-white/8 bg-white/[0.04] px-3 transition-[padding,background-color,border-color] duration-200 hover:border-white/14 hover:bg-white/[0.06] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1 focus-visible:ring-offset-primary group-data-[collapsible=icon]:min-h-[40px] group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0 group-data-[collapsible=icon]:border-0 group-data-[collapsible=icon]:bg-transparent"
           aria-label={`Go to ${consoleLabel}`}
         >
-          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-accent/25 bg-accent/12 text-accent">
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-accent/25 bg-accent/12 text-accent group-data-[collapsible=icon]:h-8 group-data-[collapsible=icon]:w-8 group-data-[collapsible=icon]:rounded-lg">
             <Building2 className="h-5 w-5 group-data-[collapsible=icon]:hidden" />
             <BadgeCheck className="hidden h-5 w-5 group-data-[collapsible=icon]:block" />
           </div>
@@ -217,7 +229,7 @@ export function AppSidebar() {
             </SidebarGroupLabel>
 
             <SidebarGroupContent>
-                <SidebarMenu className="gap-0 px-0">
+                <SidebarMenu className="gap-1 px-0">
                   {nav.map((item) => (
                     <NavItemRow key={item.href} item={item} isActive={isItemActive(item)} />
                 ))}
@@ -239,7 +251,7 @@ export function AppSidebar() {
                 </SidebarGroupLabel>
 
                 <SidebarGroupContent>
-                  <SidebarMenu className="gap-0 px-0">
+                  <SidebarMenu className="gap-1 px-0">
                     {extraNavItems.map((item) => (
                       <NavItemRow key={item.href} item={item} isActive={isItemActive(item)} />
                     ))}
@@ -251,7 +263,7 @@ export function AppSidebar() {
         </nav>
       </SidebarContent>
 
-      <SidebarFooter className="border-t border-white/6 px-3 pb-3 pt-2">
+      <SidebarFooter className="border-t border-white/6 px-3 pb-3 pt-2 group-data-[collapsible=icon]:p-2">
         <SidebarUserFooter
           displayName={user?.displayName ?? null}
           email={user?.email ?? null}
