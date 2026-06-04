@@ -10,7 +10,6 @@ import {
   Globe 
 } from "lucide-react";
 import { Navbar } from "@/components/polish/Navbar";
-import { Footer } from "@/components/polish/Footer";
 import { Button } from "@/components/ui/button";
 
 export const metadata: Metadata = {
@@ -292,7 +291,6 @@ export default function AboutPage() {
         </section>
 
       </main>
-      <Footer />
     </>
   );
 }

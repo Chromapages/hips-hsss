@@ -549,41 +549,6 @@ export default function HomePage() {
 
         </div>
       </section>
-
-      {/* Footer */}
-      <footer className="border-t border-zinc-200 bg-white py-16 md:py-20 text-center relative">
-        <div className="max-w-[1200px] mx-auto px-6">
-          <div className="flex flex-col items-center gap-8">
-            <div className="flex items-center space-x-3 grayscale opacity-50">
-              <Image
-                src="/hipslogo.png"
-                alt="H.I.P.S. Foundation"
-                width={32}
-                height={32}
-                quality={85}
-                className="object-contain"
-              />
-              <span className="font-heading font-bold tracking-tight text-xl text-primary">H.I.P.S.</span>
-            </div>
-
-            {/* Footer nav - uppercase with tracking */}
-            <nav className="flex flex-wrap justify-center gap-x-8 gap-y-4 text-xs font-bold uppercase text-slate-700 brand-caps">
-              <Link href="/privacy" className="hover:text-primary transition-colors duration-200 ease-in-out">Privacy Policy</Link>
-              <Link href="/terms" className="hover:text-primary transition-colors duration-200 ease-in-out">Terms of Service</Link>
-              <Link href="/compliance" className="hover:text-primary transition-colors duration-200 ease-in-out">Compliance</Link>
-              <Link href="/contact" className="hover:text-primary transition-colors duration-200 ease-in-out">Contact</Link>
-            </nav>
-
-            <div className="max-w-2xl text-xs text-slate-700 leading-relaxed space-y-4 font-body">
-              <p>Copyright &copy; 2026 Hiding in Plain Sight Foundation. All rights reserved.</p>
-              <p>
-                HSSS provides coaching and peer support only. We are not a medical provider and do not provide medical advice or emergency care.
-                For immediate crisis help, call or text <a href="tel:988" className="text-accent hover:text-accent transition-colors duration-200 ease-in-out">988</a> (USA) or contact your local emergency services.
-              </p>
-            </div>
-          </div>
-        </div>
-      </footer>
     </main>
   )
 }
