@@ -1,7 +1,6 @@
 import { NextResponse, NextRequest } from 'next/server';
 import { jwtVerify, importX509 } from 'jose';
 import { ROLES } from '@/lib/roles';
-import { getRedis } from '@/lib/redis';
 
 const FIREBASE_PUBLIC_KEYS_URL = 'https://www.googleapis.com/robot/v1/metadata/x509/securetoken@system.gserviceaccount.com';
 
@@ -57,41 +56,6 @@ function getRateLimitKey(request: NextRequest): string {
 }
 
 async function isRateLimited(key: string): Promise<boolean> {
-  const redis = getRedis();
-
-  if (redis) {
-    try {
-      const ttlKey = key;
-      const incrKey = key;
-      const pipeline = redis.pipeline();
-      pipeline.incr(incrKey);
-      pipeline.ttl(ttlKey);
-      const results = await pipeline.exec();
-
-      if (results) {
-        const incrResult = results[0];
-        const ttlResult = results[1];
-
-        if (!incrResult[0] && !ttlResult[0]) {
-          const current = incrResult[1] as number;
-          let ttl = ttlResult[1] as number;
-
-          if (ttl <= 0) {
-            await redis.expire(ttlKey, 60);
-            ttl = 60;
-          }
-
-          if (current > MAX_REQUESTS) {
-            return true;
-          }
-        }
-      }
-    } catch {
-      // Fall through to in-memory on error
-    }
-  }
-
-  // In-memory fallback
   const now = Date.now();
   const record = inMemoryRateLimitStore.get(key);
 
