@@ -7,20 +7,20 @@ export default function AuthLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-screen bg-white text-[#173B57] selection:bg-[#173B57]/30 overflow-hidden">
+    <div className="min-h-screen bg-surface text-text selection:bg-primary/30 overflow-hidden">
       <Navbar />
 
       {/* Dynamic Background Elements */}
       <div className="fixed top-0 left-0 w-full h-full pointer-events-none">
-        <div className="absolute top-1/4 left-1/4 w-[600px] h-[600px] bg-[#173B57]/5 rounded-full blur-[140px] animate-pulse" />
-        <div className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] bg-[#C59A35]/5 rounded-full blur-[120px] animate-pulse [animation-delay:2s]" />
+        <div className="absolute top-1/4 left-1/4 w-[600px] h-[600px] bg-primary/5 rounded-full blur-[140px] animate-pulse" />
+        <div className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] bg-accent/5 rounded-full blur-[120px] animate-pulse [animation-delay:2s]" />
       </div>
 
       <main className="relative z-10 flex min-h-screen items-center justify-center p-6">
         <div className="w-full max-w-[440px] animate-in fade-in slide-in-from-bottom-8 duration-1000">
-          <div className="rounded-3xl border border-zinc-200 bg-white p-8 md:p-12 shadow-xl relative overflow-hidden">
+          <div className="rounded-3xl border border-border bg-surface p-8 md:p-12 shadow-xl relative overflow-hidden">
             {/* Subtle inner glow */}
-            <div className="absolute -top-12 -right-12 w-48 h-48 bg-[#173B57]/5 rounded-full blur-[60px]" />
+            <div className="absolute -top-12 -right-12 w-48 h-48 bg-primary/5 rounded-full blur-[60px]" />
 
             <div className="relative z-10">
               {children}
@@ -28,7 +28,7 @@ export default function AuthLayout({
           </div>
 
           <div className="mt-8 text-center animate-in fade-in duration-1000 delay-500">
-            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#6F8291]">
+            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-text-muted">
               Secured by Hard Anonymity Protocol
             </p>
           </div>

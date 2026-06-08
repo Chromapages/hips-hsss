@@ -28,15 +28,15 @@ export function ConnectingOverlay({
     : 'pointer-events-none fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm';
   const card = isLight
     ? 'flex flex-col items-center gap-6 rounded-2xl border border-border bg-background/95 px-10 py-8 shadow-elevated'
-    : 'flex flex-col items-center gap-6 rounded-2xl border border-[#173B57]/20 bg-black/80 px-10 py-8 shadow-2xl';
-  const loaderColor = isLight ? 'text-accent' : 'text-[#173B57]';
-  const loaderDot = isLight ? 'h-3 w-3 rounded-full bg-accent opacity-60' : 'h-3 w-3 rounded-full bg-[#173B57] opacity-60';
+    : 'flex flex-col items-center gap-6 rounded-2xl border border-primary/20 bg-black/80 px-10 py-8 shadow-2xl';
+  const loaderColor = isLight ? 'text-accent' : 'text-text';
+  const loaderDot = isLight ? 'h-3 w-3 rounded-full bg-accent opacity-60' : 'h-3 w-3 rounded-full bg-primary opacity-60';
   const titleText = isLight ? 'text-lg font-bold text-primary' : 'text-lg font-bold text-white';
-  const subtitleText = isLight ? 'mt-1 text-sm text-text-muted' : 'mt-1 text-sm text-zinc-400';
+  const subtitleText = isLight ? 'mt-1 text-sm text-text-muted' : 'mt-1 text-sm text-text';
   const pill = isLight
     ? 'flex items-center gap-3 rounded-full border border-border bg-surface px-4 py-2'
-    : 'flex items-center gap-3 rounded-full border border-white/10 bg-white/5 px-4 py-2';
-  const pillLabel = isLight ? 'text-xs font-medium text-text-secondary' : 'text-xs font-medium text-zinc-300';
+    : 'flex items-center gap-3 rounded-full border border-white/10 bg-surface/5 px-4 py-2';
+  const pillLabel = isLight ? 'text-xs font-medium text-text-secondary' : 'text-xs font-medium text-text-muted';
 
   return (
     <div className={backdrop}>
@@ -70,7 +70,7 @@ export function ConnectingOverlay({
                     ? 'bg-emerald-400'
                     : connectionQuality === 'fair'
                       ? 'bg-amber-400'
-                      : 'bg-red-400'
+                      : 'bg-destructive'
                 }`}
               />
               <span className={pillLabel}>{connectionLabel || 'Connecting'}</span>

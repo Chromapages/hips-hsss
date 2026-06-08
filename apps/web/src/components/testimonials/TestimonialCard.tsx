@@ -55,7 +55,7 @@ const TestimonialCard: React.FC<TestimonialCardProps> = ({
     >
       {/* Oversized decorative opening quotation mark with gradient */}
       <span
-        className="text-8xl font-serif leading-none select-none bg-clip-text text-transparent bg-gradient-to-r from-[#173B57] to-[#C59A35]"
+        className="text-8xl font-serif leading-none select-none bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent"
         aria-hidden="true"
       >
         &ldquo;

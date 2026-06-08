@@ -20,9 +20,9 @@ export function VoiceEffectsPanel({
   return (
     <div className="absolute bottom-full left-1/2 mb-4 w-72 -translate-x-1/2 rounded-2xl border border-white/10 bg-black/90 p-4 shadow-[0_0_40px_rgba(0,0,0,0.8)] backdrop-blur-xl">
       <div className="mb-4 flex items-center gap-2">
-        <Waves className="h-4 w-4 text-[#173B57]" />
+        <Waves className="h-4 w-4 text-text" />
         <p className="text-sm font-semibold text-white">Voice Effects</p>
-        <span className="ml-auto rounded-full bg-[#173B57]/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest text-[#173B57]">
+        <span className="ml-auto rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest text-text">
           {VOICE_PRESETS[activePreset].label}
         </span>
       </div>
@@ -36,8 +36,8 @@ export function VoiceEffectsPanel({
             className={[
               'flex flex-col items-start gap-1 rounded-xl border px-3 py-2.5 text-left transition-all',
               activePreset === preset
-                ? 'border-[#173B57]/40 bg-[#173B57]/20 text-[#173B57]'
-                : 'border-white/5 bg-white/5 text-zinc-400 hover:bg-white/10 hover:text-white',
+                ? 'border-primary/40 bg-primary/20 text-text'
+                : 'border-white/5 bg-surface/5 text-text hover:bg-surface/10 hover:text-white',
             ].join(' ')}
           >
             <div className="flex items-center gap-1.5">
@@ -46,7 +46,7 @@ export function VoiceEffectsPanel({
                 {VOICE_PRESETS[preset].label}
               </span>
             </div>
-            <span className="text-[10px] leading-tight text-zinc-500">
+            <span className="text-[10px] leading-tight text-text-muted0">
               {VOICE_PRESETS[preset].description}
             </span>
           </button>
@@ -56,10 +56,10 @@ export function VoiceEffectsPanel({
       {/* Semitone slider */}
       <div className="space-y-2">
         <div className="flex items-center justify-between">
-          <label htmlFor="pitch-shift" className="text-[10px] font-semibold uppercase tracking-widest text-zinc-500">
+          <label htmlFor="pitch-shift" className="text-[10px] font-semibold uppercase tracking-widest text-text-muted0">
             Pitch Shift
           </label>
-          <span className="font-mono text-xs text-[#173B57]">
+          <span className="font-mono text-xs text-text">
             {semitones > 0 ? `+${semitones}` : semitones} st
           </span>
         </div>
@@ -76,9 +76,9 @@ export function VoiceEffectsPanel({
           aria-valuemax={5 as const}
           aria-valuenow={semitones}
           aria-valuetext={`${semitones > 0 ? '+' : ''}${semitones} semitones`}
-          className="h-2 w-full appearance-none rounded-full bg-white/10 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-[#173B57] [&::-webkit-slider-thumb]:shadow-lg [&::-webkit-slider-thumb]:shadow-[#173B57]/30"
+          className="h-2 w-full appearance-none rounded-full bg-surface/10 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-primary [&::-webkit-slider-thumb]:shadow-lg [&::-webkit-slider-thumb]:shadow-primary/30"
         />
-        <div className="flex justify-between text-[9px] text-zinc-600">
+        <div className="flex justify-between text-[9px] text-text">
           <span>−5 (Deep)</span>
           <span>0</span>
           <span>+5 (High)</span>

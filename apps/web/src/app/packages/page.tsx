@@ -18,7 +18,7 @@ export default function PackagesPage() {
         <div className="mt-10 grid gap-4 md:grid-cols-3">
           {packages.map((item) => (
             <article
-              className="rounded-lg border border-border bg-white p-6"
+              className="rounded-lg border border-border bg-surface p-6"
               key={item.name}
             >
               {/* H2 - serif heading */}

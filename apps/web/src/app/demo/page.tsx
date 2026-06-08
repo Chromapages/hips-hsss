@@ -6,7 +6,7 @@ const services = [
 
 export default function DemoPage() {
   return (
-    <main className="min-h-screen bg-white text-primary overflow-x-hidden">
+    <main className="min-h-screen bg-surface text-primary overflow-x-hidden">
       <section className="mx-auto grid min-h-screen w-full max-w-7xl gap-8 px-5 py-8 lg:grid-cols-[1.05fr_0.95fr] lg:px-10">
         <div className="flex flex-col justify-between gap-8">
           <div>
@@ -69,7 +69,7 @@ export default function DemoPage() {
             <div className="mt-4 grid gap-3 md:grid-cols-3">
               {services.map(([name, price, detail]) => (
                 <article
-                  className="rounded-xl border border-border bg-white p-4"
+                  className="rounded-xl border border-border bg-surface p-4"
                   key={name}
                 >
                   <div className="flex items-start justify-between gap-4">
@@ -87,15 +87,15 @@ export default function DemoPage() {
 
         <aside className="relative min-h-[620px] overflow-hidden rounded-lg border border-border bg-surface">
           <div className="absolute inset-x-0 top-0 h-1/2 bg-gradient-to-b from-teal-500/20 to-emerald-500/20" />
-          <div className="absolute inset-x-8 bottom-16 h-36 rounded-t-lg bg-white shadow-2xl" />
-          <div className="absolute inset-x-0 bottom-0 h-1/2 bg-white/80" />
+          <div className="absolute inset-x-8 bottom-16 h-36 rounded-t-lg bg-surface shadow-2xl" />
+          <div className="absolute inset-x-0 bottom-0 h-1/2 bg-surface/80" />
           <div className="absolute bottom-20 left-1/2 h-32 w-52 -translate-x-1/2 rounded-lg bg-accent/20 shadow-xl" />
           <div className="absolute bottom-52 left-[22%] h-24 w-24 rounded-full bg-primary/20 shadow-xl" />
           <div className="absolute bottom-52 right-[22%] h-24 w-24 rounded-full bg-accent/20 shadow-xl" />
           <div className="absolute left-8 top-8 rounded-md border border-amber-500/50 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-800">
             Crisis overlay armed
           </div>
-          <div className="absolute bottom-8 left-8 right-8 rounded-lg bg-white/90 p-4 backdrop-blur border border-border">
+          <div className="absolute bottom-8 left-8 right-8 rounded-lg bg-surface/90 p-4 backdrop-blur border border-border">
             {/* H2 - serif heading */}
             <h2 className="font-heading text-xl font-semibold text-primary">Virtual office mock</h2>
             <p className="mt-2 text-sm leading-6 text-secondary font-body">

@@ -86,21 +86,21 @@ function StatBlock({ stat, index, animationClass }: StatBlockProps) {
   return (
     <div
       ref={blockRef}
-      className={`flex flex-col items-center text-center px-3 py-4 rounded-xl hover:bg-[#C59A35]/8 transition-all duration-200 focus-within:ring-2 focus-within:ring-[#C59A35]/30 ${animationClass}`}
+      className={`flex flex-col items-center text-center px-3 py-4 rounded-xl hover:bg-accent/8 transition-all duration-200 focus-within:ring-2 focus-within:ring-accent/30 ${animationClass}`}
       style={index % 2 === 0 && index > 0 ? { borderLeft: "1px solid #D6E0E8" } : index > 1 ? { borderTop: "1px solid #D6E0E8" } : undefined}
     >
       {/* Icon */}
-      <div className={`w-9 h-9 rounded-full flex items-center justify-center mb-3 ${stat.iconAccent ? 'bg-[#C59A35]/10 border border-[#C59A35]/20' : 'bg-[#C59A35]/10 border border-[#C59A35]/20'}`}>
+      <div className={`w-9 h-9 rounded-full flex items-center justify-center mb-3 ${stat.iconAccent ? 'bg-accent/10 border border-accent/20' : 'bg-accent/10 border border-accent/20'}`}>
         {stat.iconAccent ? (
-          <CheckCircle2 className="w-4 h-4 text-[#C59A35]" aria-hidden="true" />
+          <CheckCircle2 className="w-4 h-4 text-accent" aria-hidden="true" />
         ) : (
-          <Icon className="w-4 h-4 text-[#C59A35]" aria-hidden="true" />
+          <Icon className="w-4 h-4 text-accent" aria-hidden="true" />
         )}
       </div>
 
       {/* Animated counter */}
       <span
-        className="text-3xl md:text-4xl font-bold text-[#213d53] tracking-tight leading-none mb-1 font-heading"
+        className="text-3xl md:text-4xl font-bold text-text tracking-tight leading-none mb-1 font-heading"
         aria-live="polite"
         aria-label={`${stat.display} ${stat.label}`}
       >
@@ -108,7 +108,7 @@ function StatBlock({ stat, index, animationClass }: StatBlockProps) {
       </span>
 
       {/* Label */}
-      <span className="text-[10px] text-[#6F8291] leading-relaxed font-body text-center max-w-[12ch]">
+      <span className="text-[10px] text-text-muted leading-relaxed font-body text-center max-w-[12ch]">
         {stat.label}
       </span>
     </div>
@@ -139,7 +139,7 @@ export const TrustStrip = memo(function TrustStrip() {
   return (
     <section
       ref={sectionRef}
-      className="py-[clamp(2rem,4vw,3rem)] md:py-[clamp(2.5rem,5vw,3.5rem)] bg-[#F6F8FA] border-t border-b border-[#D6E0E8]"
+      className="py-[clamp(2rem,4vw,3rem)] md:py-[clamp(2.5rem,5vw,3.5rem)] bg-bg-subtle border-t border-b border-border"
       aria-label="Trust and credibility statistics"
     >
       <div className="max-w-[1200px] mx-auto px-6">
@@ -155,7 +155,7 @@ export const TrustStrip = memo(function TrustStrip() {
                 {avatarUsers.map((user, i) => (
                   <div
                     key={i}
-                    className="w-8 h-8 rounded-full border-2 border-[#F6F8FA] flex items-center justify-center text-[9px] font-bold text-white font-heading"
+                    className="w-8 h-8 rounded-full border-2 border-bg-subtle flex items-center justify-center text-[9px] font-bold text-white font-heading"
                     style={{ backgroundColor: user.bg, zIndex: 5 - i }}
                     aria-hidden="true"
                   >
@@ -164,14 +164,14 @@ export const TrustStrip = memo(function TrustStrip() {
                 ))}
               </div>
               {/* Credibility line */}
-              <p className="text-sm font-bold text-[#213d53] font-heading leading-snug">
-                Trusted by <span className="text-[#C59A35]">12,400+</span> people in crisis
+              <p className="text-sm font-bold text-text font-heading leading-snug">
+                Trusted by <span className="text-accent">12,400+</span> people in crisis
               </p>
             </div>
 
             {/* Row 2: Emotional reassurance hook */}
             <div className={`mb-6 ${visible ? 'trust-fade-2' : 'opacity-0'}`}>
-              <p className="font-heading text-xl md:text-2xl font-bold text-[#213d53] leading-snug">
+              <p className="font-heading text-xl md:text-2xl font-bold text-text leading-snug">
                 You are not alone.<br />This works.
               </p>
             </div>
@@ -185,14 +185,14 @@ export const TrustStrip = memo(function TrustStrip() {
 
             {/* Row 4: Trust badges / press logos */}
             <div className={`${visible ? 'trust-fade-4' : 'opacity-0'}`}>
-              <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-[#6F8291] mb-3 font-ui">
+              <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-text-muted mb-3 font-ui">
                 As seen in
               </p>
               <div className="flex flex-wrap items-center gap-4 md:gap-6">
                 {trustBadges.map((badge) => (
                   <span
                     key={badge}
-                    className="text-[10px] font-bold uppercase tracking-[0.1em] text-[#213d53]/60 font-ui opacity-60"
+                    className="text-[10px] font-bold uppercase tracking-[0.1em] text-text/60 font-ui opacity-60"
                   >
                     {badge}
                   </span>
@@ -202,14 +202,14 @@ export const TrustStrip = memo(function TrustStrip() {
           </div>
 
           {/* Right Column — Testimonial Quote */}
-          <div className="pl-0 md:pl-10 md:border-l border-[#D6E0E8]">
+          <div className="pl-0 md:pl-10 md:border-l border-border">
             <div className={`text-center md:text-left ${visible ? 'trust-fade-5' : 'opacity-0'}`}>
               {/* Quote mark accent */}
-              <span className="text-5xl text-[#C59A35]/30 font-serif leading-none block mb-4">"</span>
+              <span className="text-5xl text-accent/30 font-serif leading-none block mb-4">"</span>
 
               {/* Quote text */}
               <blockquote>
-                <p className="font-heading text-2xl md:text-3xl italic text-[#213d53] leading-relaxed">
+                <p className="font-heading text-2xl md:text-3xl italic text-text leading-relaxed">
                   I came here broken and invisible. I left feeling seen for the first time in years — without ever showing my face.
                 </p>
               </blockquote>
@@ -218,14 +218,14 @@ export const TrustStrip = memo(function TrustStrip() {
               <div className="mt-6 flex items-center justify-center md:justify-start gap-4">
                 {/* Avatar initials badge */}
                 <div
-                  className="w-10 h-10 rounded-full bg-[#213d53] text-white flex items-center justify-center text-sm font-bold font-heading shrink-0"
+                  className="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center text-sm font-bold font-heading shrink-0"
                   aria-hidden="true"
                 >
                   MT
                 </div>
                 <div className="text-left">
-                  <p className="text-sm font-bold text-[#213d53] font-heading">Marcus T.</p>
-                  <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-[#6F8291] font-ui">Peer Support Participant</p>
+                  <p className="text-sm font-bold text-text font-heading">Marcus T.</p>
+                  <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-text-muted font-ui">Peer Support Participant</p>
                 </div>
               </div>
             </div>

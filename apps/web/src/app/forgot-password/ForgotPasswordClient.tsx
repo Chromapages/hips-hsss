@@ -57,7 +57,7 @@ export default function ForgotPasswordClient() {
           </div>
           <button
             onClick={() => router.push("/login")}
-            className="text-[#173B57] hover:text-[#173B57] text-sm font-medium"
+            className="text-text hover:text-text text-sm font-medium"
           >
             Return to sign in
           </button>
@@ -77,7 +77,7 @@ export default function ForgotPasswordClient() {
         </div>
         <form className="space-y-4" onSubmit={handleSubmit}>
           <div>
-            <label htmlFor="email" className="block text-sm font-medium mb-2 text-zinc-300">
+            <label htmlFor="email" className="block text-sm font-medium mb-2 text-text-muted">
               Email Address
             </label>
             <input
@@ -87,19 +87,19 @@ export default function ForgotPasswordClient() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="w-full px-4 py-3 bg-zinc-900 border border-zinc-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#173B57] focus:border-[#173B57]/50 text-white placeholder:text-zinc-500"
+              className="w-full px-4 py-3 bg-text border border-border-strong rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary/50 text-white placeholder:text-text-muted0"
               placeholder="you@example.com"
             />
           </div>
           {error && (
-            <p className="text-red-400 text-sm bg-red-500/10 border border-red-500/20 rounded-lg px-4 py-2">
+            <p className="text-destructive text-sm bg-destructive0/10 border border-destructive/20 rounded-lg px-4 py-2">
               {error}
             </p>
           )}
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-[#173B57] hover:bg-[#173B57] disabled:opacity-50 text-white font-semibold py-3 rounded-lg transition-colors flex items-center justify-center gap-2"
+            className="w-full bg-primary hover:bg-primary disabled:opacity-50 text-white font-semibold py-3 rounded-lg transition-colors flex items-center justify-center gap-2"
           >
             {loading ? (
               <>
@@ -113,7 +113,7 @@ export default function ForgotPasswordClient() {
         </form>
         <p className="text-center mt-6 text-gray-400 text-sm">
           Remember your password?{" "}
-          <a href="/login" className="text-[#173B57] hover:text-[#173B57] font-medium">
+          <a href="/login" className="text-text hover:text-text font-medium">
             Sign in
           </a>
         </p>

@@ -14,36 +14,36 @@ export function MobileBlockPage({ onDismiss }: MobileBlockPageProps) {
         <h2 className="mb-3 text-2xl font-extrabold text-white">
           Desktop Required
         </h2>
-        <p className="mb-6 text-sm text-slate-400">
+        <p className="mb-6 text-sm text-text-muted">
           HIPS peer support sessions require a larger screen for the full experience, 
           including real-time voice masking controls and participant video.
         </p>
-        <div className="mb-6 space-y-3 rounded-xl border border-white/10 bg-white/[0.03] p-4 text-left">
-          <p className="text-xs font-bold uppercase tracking-widest text-slate-500">
+        <div className="mb-6 space-y-3 rounded-xl border border-white/10 bg-surface/[0.03] p-4 text-left">
+          <p className="text-xs font-bold uppercase tracking-widest text-text-muted">
             Session Features
           </p>
-          <div className="flex items-center gap-3 text-sm text-slate-300">
+          <div className="flex items-center gap-3 text-sm text-text-muted">
             <span>🎤</span>
             <span>Voice masking with pitch shift</span>
           </div>
-          <div className="flex items-center gap-3 text-sm text-slate-300">
+          <div className="flex items-center gap-3 text-sm text-text-muted">
             <span>🛡️</span>
             <span>Safety engine monitoring</span>
           </div>
-          <div className="flex items-center gap-3 text-sm text-slate-300">
+          <div className="flex items-center gap-3 text-sm text-text-muted">
             <span>🔒</span>
             <span>Zero data correlation</span>
           </div>
         </div>
-        <p className="mb-6 text-xs text-slate-500">
+        <p className="mb-6 text-xs text-text-muted">
           Please visit on a desktop or tablet device to join this session.
         </p>
         {onDismiss && (
           <button
             onClick={onDismiss}
-            className="w-full rounded-xl bg-[#173B57] py-3 font-bold text-white 
-              transition-all hover:bg-[#173B57] active:scale-[0.97]
-              focus:outline-none focus:ring-2 focus:ring-[#173B57]"
+            className="w-full rounded-xl bg-primary py-3 font-bold text-white 
+              transition-all hover:bg-primary active:scale-[0.97]
+              focus:outline-none focus:ring-2 focus:ring-primary"
           >
             Return to Dashboard
           </button>

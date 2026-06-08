@@ -23,15 +23,15 @@ export function SessionControls({
 }: SessionControlsProps) {
   return (
     <footer className="flex items-center justify-center px-4 sm:px-6 py-4 sm:py-5 border-t border-white/10 bg-black/60 backdrop-blur-xl">
-      <div className="flex items-center gap-2 sm:gap-3 p-2 rounded-3xl border border-white/10 bg-white/[0.03]">
+      <div className="flex items-center gap-2 sm:gap-3 p-2 rounded-3xl border border-white/10 bg-surface/[0.03]">
         <button
           id="btn-mute"
           onClick={onToggleMute}
           aria-label={isMuted ? 'Unmute microphone' : 'Mute microphone'}
           aria-pressed={isMuted}
-          className={`ctrl-btn flex items-center gap-2 sm:gap-3 px-4 sm:px-6 py-3 sm:py-4 rounded-2xl border font-bold transition-all hover:bg-white/10 ${
+          className={`ctrl-btn flex items-center gap-2 sm:gap-3 px-4 sm:px-6 py-3 sm:py-4 rounded-2xl border font-bold transition-all hover:bg-surface/10 ${
             isMuted
-              ? 'bg-red-500/10 border-red-500/30 text-red-300'
+              ? 'bg-destructive0/10 border-destructive/30 text-destructive'
               : 'border-white/10 text-white'
           }`}
         >
@@ -44,7 +44,7 @@ export function SessionControls({
           onClick={onToggleHand}
           aria-label={isHandRaised ? 'Lower hand' : 'Raise hand for facilitator attention'}
           aria-pressed={isHandRaised}
-          className={`ctrl-btn flex items-center gap-2 sm:gap-3 px-4 sm:px-6 py-3 sm:py-4 rounded-2xl border font-bold transition-all hover:bg-white/10 ${
+          className={`ctrl-btn flex items-center gap-2 sm:gap-3 px-4 sm:px-6 py-3 sm:py-4 rounded-2xl border font-bold transition-all hover:bg-surface/10 ${
             isHandRaised
               ? 'bg-amber-500/15 border-amber-500/50 text-amber-200'
               : 'border-white/10 text-white'
@@ -57,7 +57,7 @@ export function SessionControls({
         <button
           onClick={onFlag}
           aria-label="Flag a safety concern"
-          className="ctrl-btn flex items-center gap-2 sm:gap-3 px-4 sm:px-6 py-3 sm:py-4 rounded-2xl border border-white/10 font-bold transition-all hover:bg-white/10 text-white"
+          className="ctrl-btn flex items-center gap-2 sm:gap-3 px-4 sm:px-6 py-3 sm:py-4 rounded-2xl border border-white/10 font-bold transition-all hover:bg-surface/10 text-white"
         >
           <Flag className="w-5 h-5" />
           <span className="text-sm sm:text-base">Flag</span>
@@ -66,7 +66,7 @@ export function SessionControls({
         <button
           onClick={onLeave}
           aria-label="Leave the session"
-          className="flex items-center gap-2 sm:gap-3 px-4 sm:px-6 py-3 sm:py-4 rounded-xl bg-red-600 text-white font-bold transition-all hover:bg-red-500 ml-0 sm:ml-3 leave-btn"
+          className="flex items-center gap-2 sm:gap-3 px-4 sm:px-6 py-3 sm:py-4 rounded-xl bg-destructive text-white font-bold transition-all hover:bg-destructive0 ml-0 sm:ml-3 leave-btn"
         >
           <PhoneOff className="w-5 h-5" />
           <span className="text-sm sm:text-base">Leave</span>
@@ -103,26 +103,26 @@ export function FlagModal({ onClose, onSubmit }: FlagModalProps) {
         <h3 id="flag-modal-title" className="font-heading text-xl sm:text-2xl font-extrabold mb-2">
           🚨 Flag Safety Concern
         </h3>
-        <p className="text-sm text-slate-400 mb-6">
+        <p className="text-sm text-text-muted mb-6">
           Describe what is happening. A facilitator will be notified immediately.
         </p>
         <textarea
           value={reason}
           onChange={(e) => setReason(e.target.value)}
           placeholder="Describe the safety concern..."
-          className="w-full h-32 bg-white/5 border border-white/10 rounded-xl p-4 text-white placeholder-slate-500 mb-4"
+          className="w-full h-32 bg-surface/5 border border-white/10 rounded-xl p-4 text-white placeholder-slate-500 mb-4"
           aria-label="Describe the safety concern"
         />
         <div className="flex gap-3">
           <button
             onClick={onClose}
-            className="flex-1 py-3 rounded-xl border border-white/10 font-bold hover:bg-white/5 focus:outline-none focus:ring-2 focus:ring-[#173B57]"
+            className="flex-1 py-3 rounded-xl border border-white/10 font-bold hover:bg-surface/5 focus:outline-none focus:ring-2 focus:ring-primary"
           >
             Cancel
           </button>
           <button
             onClick={handleSubmit}
-            className="flex-1 py-3 rounded-xl bg-red-600 text-white font-bold hover:bg-red-500 focus:outline-none focus:ring-2 focus:ring-red-500"
+            className="flex-1 py-3 rounded-xl bg-destructive text-white font-bold hover:bg-destructive0 focus:outline-none focus:ring-2 focus:ring-red-500"
           >
             Submit Flag
           </button>
@@ -152,19 +152,19 @@ export function LeaveModal({ onClose, onConfirm }: LeaveModalProps) {
         <h3 id="leave-modal-title" className="font-heading text-xl sm:text-2xl font-extrabold mb-2">
           Leave this session?
         </h3>
-        <p className="text-sm text-slate-400 mb-6">
+        <p className="text-sm text-text-muted mb-6">
           Your audio will stop and you will return to the dashboard.
         </p>
         <div className="flex gap-3">
           <button
             onClick={onClose}
-            className="flex-1 py-3 rounded-xl border border-white/10 font-bold hover:bg-white/5 focus:outline-none focus:ring-2 focus:ring-[#173B57]"
+            className="flex-1 py-3 rounded-xl border border-white/10 font-bold hover:bg-surface/5 focus:outline-none focus:ring-2 focus:ring-primary"
           >
             Cancel
           </button>
           <button
             onClick={onConfirm}
-            className="flex-1 py-3 rounded-xl bg-red-600 text-white font-bold hover:bg-red-500 focus:outline-none focus:ring-2 focus:ring-red-500"
+            className="flex-1 py-3 rounded-xl bg-destructive text-white font-bold hover:bg-destructive0 focus:outline-none focus:ring-2 focus:ring-red-500"
           >
             Leave Session
           </button>
@@ -186,31 +186,31 @@ export function SummaryScreen({ anonId, duration, onReset }: SummaryScreenProps)
       <div className="fade-in max-w-md text-center">
         <div className="text-5xl sm:text-6xl mb-6">✅</div>
         <h2 className="font-heading text-3xl sm:text-4xl font-extrabold mb-3">Session Complete</h2>
-        <p className="text-slate-400 mb-8 text-sm sm:text-base">
+        <p className="text-text-muted mb-8 text-sm sm:text-base">
           Your session has ended. Here is what happened:
         </p>
 
-        <div className="text-left rounded-2xl border border-white/10 bg-white/[0.03] p-4 sm:p-6 space-y-4 mb-8">
+        <div className="text-left rounded-2xl border border-white/10 bg-surface/[0.03] p-4 sm:p-6 space-y-4 mb-8">
           <div className="flex justify-between">
-            <span className="text-slate-400 text-sm">Anonymous ID</span>
-            <span className="font-mono text-[#173B57]">{anonId}</span>
+            <span className="text-text-muted text-sm">Anonymous ID</span>
+            <span className="font-mono text-text">{anonId}</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-slate-400 text-sm">Duration</span>
+            <span className="text-text-muted text-sm">Duration</span>
             <span className="text-white">{duration}</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-slate-400 text-sm">Recording</span>
+            <span className="text-text-muted text-sm">Recording</span>
             <span className="text-emerald-400">None — as promised</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-slate-400 text-sm">Data correlation</span>
+            <span className="text-text-muted text-sm">Data correlation</span>
             <span className="text-emerald-400">Zero — hard anonymity</span>
           </div>
         </div>
 
-        <div className="rounded-xl border border-[#173B57]/20 bg-[#173B57]/5 p-4 mb-8">
-          <p className="text-sm text-[#173B57]">
+        <div className="rounded-xl border border-primary/20 bg-primary/5 p-4 mb-8">
+          <p className="text-sm text-text">
             🛡️ Your identity was never stored with your voice. The session DB
             only knew your anonymous token — never your billing identity.
           </p>
@@ -236,15 +236,15 @@ export function ConnectingScreen({ anonId }: ConnectingScreenProps) {
   return (
     <div className="screen flex-col items-center justify-center min-h-screen px-4 sm:px-6">
       <div className="fade-in text-center">
-        <div className="w-16 h-16 border-4 border-[#173B57]/30 border-t-#173B57 rounded-full spin mx-auto mb-6" />
+        <div className="w-16 h-16 border-4 border-primary/30 border-t-#173B57 rounded-full spin mx-auto mb-6" />
         <h2 className="font-heading text-2xl sm:text-3xl font-extrabold mb-3">
           Preparing your anonymous room...
         </h2>
-        <p className="text-slate-400 mb-4 text-sm sm:text-base">
+        <p className="text-text-muted mb-4 text-sm sm:text-base">
           Connecting to LiveKit servers
         </p>
-        <p className="font-mono text-sm text-[#173B57]">Room: demo-room-hips</p>
-        <p className="font-mono text-xs text-slate-500 mt-2">{anonId}</p>
+        <p className="font-mono text-sm text-text">Room: demo-room-hips</p>
+        <p className="font-mono text-xs text-text-muted mt-2">{anonId}</p>
       </div>
     </div>
   );
@@ -272,22 +272,22 @@ export function MicSetupScreen({ onBack, onMicReady }: MicSetupScreenProps) {
   return (
     <div className="screen flex-col items-center justify-center min-h-screen px-4 sm:px-6">
       <div className="fade-in max-w-xl w-full">
-        <p className="text-xs font-bold uppercase tracking-widest text-[#173B57] mb-4 text-center">
+        <p className="text-xs font-bold uppercase tracking-widest text-text mb-4 text-center">
           Step 1 of 2
         </p>
         <h2 className="font-heading text-2xl sm:text-3xl md:text-4xl font-extrabold mb-2 text-center">
           Set up your microphone
         </h2>
-        <p className="text-slate-400 text-center mb-8 text-sm sm:text-base">
+        <p className="text-text-muted text-center mb-8 text-sm sm:text-base">
           We need microphone access to connect you to the session with voice
           masking enabled.
         </p>
 
-        <div className="rounded-xl border border-white/10 bg-white/[0.02] p-4 sm:p-6 mb-8">
-          <h3 className="font-semibold text-[#173B57] mb-2">
+        <div className="rounded-xl border border-white/10 bg-surface/[0.02] p-4 sm:p-6 mb-8">
+          <h3 className="font-semibold text-text mb-2">
             🎭 Voice Masking Preview
           </h3>
-          <p className="text-sm text-slate-400 mb-4">
+          <p className="text-sm text-text-muted mb-4">
             Your voice will be pitch-shifted so it is not recognizable. Here is
             what it sounds like:
           </p>
@@ -314,14 +314,14 @@ export function MicSetupScreen({ onBack, onMicReady }: MicSetupScreenProps) {
         </button>
 
         {micStatus === 'denied' && (
-          <p className="mt-4 text-center text-red-400 text-sm">
+          <p className="mt-4 text-center text-destructive text-sm">
             Microphone access denied. Please enable it in your browser settings.
           </p>
         )}
 
         <button
           onClick={onBack}
-          className="mt-4 text-sm text-slate-500 hover:text-white rounded-md px-4 py-2"
+          className="mt-4 text-sm text-text-muted hover:text-white rounded-md px-4 py-2"
         >
           ← Back
         </button>
@@ -344,13 +344,13 @@ export function LandingScreen({ onStart }: LandingScreenProps) {
           </div>
           <span className="text-2xl font-bold tracking-tight">H.I.P.S.</span>
         </div>
-        <p className="text-xs font-bold uppercase tracking-widest text-[#173B57] mb-4">
+        <p className="text-xs font-bold uppercase tracking-widest text-text mb-4">
           Anonymous Peer Support
         </p>
         <h1 className="font-heading text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold leading-tight mb-6">
           Your voice will be masked.<br />Your identity stays hidden.
         </h1>
-        <p className="text-base sm:text-lg text-slate-400 mb-10 max-w-lg mx-auto leading-relaxed">
+        <p className="text-base sm:text-lg text-text-muted mb-10 max-w-lg mx-auto leading-relaxed">
           Press start to enter a private peer support session. Your voice is
           pitch-shifted in real-time so it cannot be recognized. No recording.
           No correlation.
@@ -362,12 +362,12 @@ export function LandingScreen({ onStart }: LandingScreenProps) {
         >
           🎤 Start Session
         </button>
-        <div className="mt-10 flex items-center justify-center gap-4 sm:gap-6 text-xs text-slate-500">
+        <div className="mt-10 flex items-center justify-center gap-4 sm:gap-6 text-xs text-text-muted">
           <span className="flex items-center gap-2">🔒 Zero data correlation</span>
           <span className="flex items-center gap-2">🛡️ Safety engine active</span>
           <span className="flex items-center gap-2">🚫 No recording</span>
         </div>
-        <p className="mt-6 text-xs text-slate-600">
+        <p className="mt-6 text-xs text-text-muted">
           We never store your voice and identity together.
         </p>
       </div>

@@ -178,7 +178,7 @@ export const AvatarRing: React.FC<AvatarRingProps> = ({
       {label && (
         <span
           className="absolute -bottom-6 left-1/2 -translate-x-1/2 font-mono text-xs"
-          style={{ color: isPeer ? '#9CA3AF' : '#173B57' }}
+          style={{ color: isPeer ? 'var(--color-text-muted)' : 'var(--color-text)' }}
         >
           {label}
         </span>

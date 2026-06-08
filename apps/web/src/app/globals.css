@@ -1,37 +1,60 @@
 @import "tailwindcss";
 
+/* Tailwind v4 — make `dark:` utility variants respond to data-theme="dark"
+   on the <html> element (or any ancestor). This replaces the v3-style
+   `darkMode: 'class'` in tailwind.config.ts and ensures our manual theme
+   toggle controls the dark palette. */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+/* =========================================================================
+   H.I.P.S. Foundation — Dual-Theme Design Token System
+   --------------------------------------------------------------------------
+   Light tokens live in :root; dark tokens live in [data-theme="dark"].
+   All shadcn-compatible snake_case names are aliased to the kebab-case
+   source-of-truth tokens so existing components work unchanged.
+
+   Tailwind v4 @theme block auto-derives utility classes (bg-bg, text-text,
+   border-border, bg-gold, shadow-sm, etc.) from any --color-* or
+   --shadow-* variable registered below.
+   ========================================================================= */
+
 @theme {
-  --color-primary: #213d53;
-  --color-primary-dark: #1A3244;
-  --color-primary-soft: #2A5576;
-  --color-primary-foreground: #FFFFFF;
-  --color-accent: #C59A35;
-  --color-accent-dark: #A67F28;
-  --color-accent-soft: #DFC06A;
-  --color-accent-foreground: #FFFFFF;
-  --color-background: #FFFFFF;
-  --color-foreground: #213d53;
-  --color-surface: #F6F8FA;
-  --color-surface-alt: #EEF3F6;
-  --color-border: #D6E0E8;
-  --color-input: #D6E0E8;
-  --color-ring: #213d53;
-  --color-text-primary: #213d53;
-  --color-text-secondary: #445A6C;
-  --color-text-muted: #6F8291;
-  --color-muted: #F6F8FA;
-  --color-muted-foreground: #6F8291;
-  --color-secondary: #F6F8FA;
-  --color-secondary-foreground: #213d53;
-  --color-success: #2F7A5F;
-  --color-warning: #A06A18;
-  --color-destructive: #9C3E3E;
-  --color-destructive-foreground: #FFFFFF;
-  --color-danger: #9C3E3E;
-  --color-popover: #FFFFFF;
-  --color-popover-foreground: #213d53;
-  --color-card: #FFFFFF;
-  --color-card-foreground: #213d53;
+  /* Tailwind v4 — aliases from shadcn snake_case to the source kebab-case
+     tokens defined in :root. Because these CSS variables flip in
+     [data-theme="dark"], the resulting utility classes (bg-background,
+     text-foreground, border-border, etc.) automatically theme-switch. */
+  --color-background: var(--color-bg);
+  --color-foreground: var(--color-text);
+  --color-card: var(--color-surface);
+  --color-card-foreground: var(--color-text);
+  --color-popover: var(--color-surface-raised);
+  --color-popover-foreground: var(--color-text);
+  --color-primary: var(--color-primary);
+  --color-primary-foreground: var(--color-primary-foreground);
+  --color-secondary: var(--color-surface-offset);
+  --color-secondary-foreground: var(--color-text);
+  --color-muted: var(--color-surface-offset);
+  --color-muted-foreground: var(--color-text-muted);
+  --color-accent: var(--color-accent);
+  --color-accent-foreground: var(--color-primary-foreground);
+  --color-destructive: var(--color-destructive);
+  --color-destructive-foreground: var(--color-destructive-foreground);
+  --color-success: var(--color-success);
+  --color-warning: var(--color-warning);
+  --color-gold: var(--color-gold);
+  --color-border: var(--color-border);
+  --color-input: var(--color-border-strong);
+  --color-ring: var(--color-primary);
+
+  /* Convenience aliases for older class names referenced in the codebase. */
+  --color-text-primary: var(--color-text);
+  --color-text-secondary: var(--color-text-muted);
+  --color-text-muted: var(--color-text-muted);
+  --color-surface: var(--color-surface);
+  --color-surface-alt: var(--color-bg-subtle);
+  --color-danger: var(--color-destructive);
+
+  /* Sidebar — HSL triples consumed as hsl(var(--sidebar-*)). */
   --color-sidebar: hsl(var(--sidebar-background));
   --color-sidebar-foreground: hsl(var(--sidebar-foreground));
   --color-sidebar-primary: hsl(var(--sidebar-primary));
@@ -40,6 +63,13 @@
   --color-sidebar-accent-foreground: hsl(var(--sidebar-accent-foreground));
   --color-sidebar-border: hsl(var(--sidebar-border));
   --color-sidebar-ring: hsl(var(--sidebar-ring));
+
+  /* Shadow utility classes (shadow-sm, shadow-md, shadow-lg) */
+  --shadow-sm: var(--shadow-sm);
+  --shadow-md: var(--shadow-md);
+  --shadow-lg: var(--shadow-lg);
+
+  /* Typography — pass-through to global tokens */
   --font-heading: var(--font-dm-sans), "Helvetica Neue", Arial, sans-serif;
   --font-display: var(--font-dm-sans), "Helvetica Neue", Arial, sans-serif;
   --font-body: "Source Sans 3", Arial, sans-serif;
@@ -47,90 +77,127 @@
 }
 
 :root {
-  /* HIPS Foundation Brand Colors */
-  --color-primary: #213d53;
-  --color-primary-dark: #1A3244;
-  --color-primary-soft: #2A5576;
+  color-scheme: light;
+
+  /* =========================================================================
+     SOURCE-OF-TRUTH DUAL-THEME TOKENS
+     These are the canonical color/spacing tokens. All shadcn and Tailwind
+     aliases above point to them. Override values in [data-theme="dark"].
+     ========================================================================= */
+
+  /* Brand — preserved exactly from existing light palette */
   --color-accent: #C59A35;
   --color-accent-dark: #A67F28;
   --color-accent-soft: #DFC06A;
 
-  /* Background & Surface */
-  --background: #FFFFFF;
-  --surface: #F6F8FA;
-  --surface-alt: #EEF3F6;
+  /* Backgrounds */
+  --color-bg: #FFFFFF;
+  --color-bg-subtle: #F6F8FA;
+  --color-surface: #FFFFFF;
+  --color-surface-offset: #EEF3F6;
+  --color-surface-raised: #FFFFFF;
 
-  /* Border */
-  --border: #D6E0E8;
+  /* Text */
+  --color-text: #213d53;
+  --color-text-muted: #6F8291;
+  --color-text-inverse: #FFFFFF;
 
-  /* Text Colors */
-  --text-primary: #213d53;
-  --text-secondary: #445A6C;
-  --text-muted: #6F8291;
+  /* Borders */
+  --color-border: #D6E0E8;
+  --color-border-strong: #B6C5D3;
 
-  /* Semantic Colors */
+  /* Primary brand */
+  --color-primary: #213d53;
+  --color-primary-hover: #1A3244;
+  --color-primary-active: #102A3D;
+  --color-primary-foreground: #FFFFFF;
+
+  /* Semantic */
+  --color-destructive: #9C3E3E;
+  --color-destructive-foreground: #FFFFFF;
   --color-success: #2F7A5F;
   --color-warning: #A06A18;
-  --color-danger: #9C3E3E;
+  --color-gold: #C59A35;
 
-  /* shadcn/ui-compatible semantic tokens */
-  --primary: #213d53;
-  --primary-foreground: #FFFFFF;
-  --secondary: #F6F8FA;
-  --secondary-foreground: #213d53;
-  --muted: #F6F8FA;
-  --muted-foreground: #6F8291;
-  --accent: #C59A35;
-  --accent-foreground: #FFFFFF;
-  --destructive: #9C3E3E;
-  --destructive-foreground: #FFFFFF;
-  --ring: #213d53;
-  --border: #D6E0E8;
-  --input: #D6E0E8;
+  /* Shadows */
+  --shadow-sm: 0 1px 2px 0 oklch(0.2 0.02 260 / 0.06), 0 1px 3px 0 oklch(0.2 0.02 260 / 0.08);
+  --shadow-md: 0 4px 12px oklch(0.2 0.02 260 / 0.10);
+  --shadow-lg: 0 18px 40px oklch(0.2 0.02 260 / 0.16);
+
+  /* =========================================================================
+     shadcn/ui snake_case aliases — kept for backward compatibility with the
+     25+ shadcn components in components/ui/. These point at the source
+     kebab-case tokens above so a single dark-mode override cascades
+     everywhere.
+     ========================================================================= */
+  --background: var(--color-bg);
+  --surface: var(--color-bg-subtle);
+  --surface-alt: var(--color-bg-subtle);
+  --text-primary: var(--color-text);
+  --text-secondary: var(--color-text-muted);
+  --text-muted: var(--color-text-muted);
+  --border: var(--color-border);
+
+  --primary: var(--color-primary);
+  --primary-foreground: var(--color-primary-foreground);
+  --secondary: var(--color-surface-offset);
+  --secondary-foreground: var(--color-text);
+  --muted: var(--color-surface-offset);
+  --muted-foreground: var(--color-text-muted);
+  --accent: var(--color-accent);
+  --accent-foreground: var(--color-primary-foreground);
+  --destructive: var(--color-destructive);
+  --destructive-foreground: var(--color-destructive-foreground);
+  --ring: var(--color-primary);
+  --input: var(--color-border-strong);
   --radius: 0.5rem;
 
-  /* Typography - Font Families */
+  /* =========================================================================
+     Typography
+     ========================================================================= */
   --font-heading: var(--font-dm-sans), "Helvetica Neue", Arial, sans-serif;
   --font-display: var(--font-dm-sans), "Helvetica Neue", Arial, sans-serif;
   --font-body: "Source Sans 3", Arial, sans-serif;
   --font-ui: "Montserrat", Arial, sans-serif;
 
-  /* Typography - Font Sizes with Line Heights */
-  --text-xs: 0.75rem;
-  --text-xs-leading: 1.65;
-  --text-sm: 0.875rem;
-  --text-sm-leading: 1.65;
-  --text-base: 1rem;
-  --text-base-leading: 1.65;
-  --text-md: 1.125rem;
-  --text-md-leading: 1.65;
-  --text-lg: 1.25rem;
-  --text-lg-leading: 1.15;
-  --text-xl: 1.5rem;
-  --text-xl-leading: 1.15;
-  --text-2xl: 2rem;
-  --text-2xl-leading: 1.15;
-  --text-3xl: 2.75rem;
-  --text-3xl-leading: 1.15;
-  --text-4xl: 3.5rem;
-  --text-4xl-leading: 1.1;
-  --text-5xl: 4.5rem;
-  --text-5xl-leading: 1.1;
+  --text-xs: 0.75rem;       --text-xs-leading: 1.65;
+  --text-sm: 0.875rem;      --text-sm-leading: 1.65;
+  --text-base: 1rem;        --text-base-leading: 1.65;
+  --text-md: 1.125rem;      --text-md-leading: 1.65;
+  --text-lg: 1.25rem;       --text-lg-leading: 1.15;
+  --text-xl: 1.5rem;        --text-xl-leading: 1.15;
+  --text-2xl: 2rem;         --text-2xl-leading: 1.15;
+  --text-3xl: 2.75rem;      --text-3xl-leading: 1.15;
+  --text-4xl: 3.5rem;       --text-4xl-leading: 1.1;
+  --text-5xl: 4.5rem;       --text-5xl-leading: 1.1;
 
-  /* Typography - Font Weights */
   --font-regular: 400;
   --font-medium: 500;
   --font-semibold: 600;
   --font-bold: 700;
 
-  /* Typography - Letter Spacing */
   --tracking-tight: -0.02em;
   --tracking-normal: 0;
   --tracking-wide: 0.12em;
   --tracking-brand: 0.22em;
 
-  /* Layout */
   --navbar-height: 5rem;
+
+  /* Layout / shape / motion */
+  --radius-md: 0.5rem;
+  --radius-sm: 0.375rem;
+
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+
+  --ease-out-quint: cubic-bezier(0.16, 1, 0.3, 1);
+  --duration-fast: 150ms;
+  --duration-base: 200ms;
+  --duration-slow: 300ms;
 
   /* shadcn Sidebar — HSL triples consumed as hsl(var(--sidebar-*)) */
   --sidebar-background: 206 58% 22%;
@@ -141,17 +208,6 @@
   --sidebar-accent-foreground: 0 0% 100%;
   --sidebar-border: 0 0% 100% / 0.1;
   --sidebar-ring: 42 58% 49%;
-
-  /* Tailwind v4 theme bridge — auto-discovered by the `--color-*` prefix.
-     Without these, bg-sidebar / text-sidebar-foreground etc. resolve to nothing. */
-  --color-sidebar: hsl(var(--sidebar-background));
-  --color-sidebar-foreground: hsl(var(--sidebar-foreground));
-  --color-sidebar-primary: hsl(var(--sidebar-primary));
-  --color-sidebar-primary-foreground: hsl(var(--sidebar-primary-foreground));
-  --color-sidebar-accent: hsl(var(--sidebar-accent));
-  --color-sidebar-accent-foreground: hsl(var(--sidebar-accent-foreground));
-  --color-sidebar-border: hsl(var(--sidebar-border));
-  --color-sidebar-ring: hsl(var(--sidebar-ring));
 
   /* Fluid Section Spacing Tokens */
   --section-lg: clamp(3rem, 5vw, 7rem);
@@ -169,18 +225,121 @@
   --leading-relaxed: 1.8;
 }
 
-/* Base Typography Styles */
+/* =========================================================================
+   Dark Theme — Complete token override
+   Per design spec: deep neutrals, near-white text, low-opacity white
+   borders, lifted primary for WCAG AA, shadows replaced with subtle
+   border highlights.
+   ========================================================================= */
+[data-theme="dark"] {
+  color-scheme: dark;
+
+  /* Backgrounds */
+  --color-bg: oklch(0.13 0.01 260);
+  --color-bg-subtle: oklch(0.15 0.01 260);
+  --color-surface: oklch(0.17 0.01 260);
+  --color-surface-offset: oklch(0.19 0.01 260);
+  --color-surface-raised: oklch(0.21 0.01 260);
+
+  /* Text */
+  --color-text: oklch(0.97 0 0);
+  --color-text-muted: oklch(0.65 0.01 260);
+  --color-text-inverse: oklch(0.13 0.01 260);
+
+  /* Borders */
+  --color-border: oklch(1 0 0 / 0.08);
+  --color-border-strong: oklch(1 0 0 / 0.14);
+
+  /* Primary brand — lifted for WCAG AA contrast on dark bg */
+  --color-primary: oklch(0.65 0.10 260);
+  --color-primary-hover: oklch(0.70 0.11 260);
+  --color-primary-active: oklch(0.60 0.10 260);
+  --color-primary-foreground: oklch(0.13 0.01 260);
+
+  /* Accent — gold stays warm in dark mode for legibility */
+  --color-accent: oklch(0.78 0.13 85);
+  --color-accent-dark: oklch(0.70 0.12 85);
+  --color-accent-soft: oklch(0.85 0.10 85);
+
+  /* Semantic — lifted for dark contrast */
+  --color-destructive: oklch(0.65 0.18 25);
+  --color-destructive-foreground: oklch(0.97 0 0);
+  --color-success: oklch(0.70 0.15 155);
+  --color-warning: oklch(0.78 0.15 75);
+  --color-gold: oklch(0.78 0.13 85);
+
+  /* Shadows → subtle border highlights (drop shadows are invisible on dark) */
+  --shadow-sm: 0 0 0 1px oklch(1 0 0 / 0.06);
+  --shadow-md: 0 0 0 1px oklch(1 0 0 / 0.10), 0 4px 12px oklch(0 0 0 / 0.30);
+  --shadow-lg: 0 0 0 1px oklch(1 0 0 / 0.14), 0 18px 40px oklch(0 0 0 / 0.40);
+
+  /* Sidebar — dark equivalents (the rest cascade from above) */
+  --sidebar-background: 220 14% 13%;
+  --sidebar-foreground: 220 14% 95%;
+  --sidebar-primary: 217 50% 70%;
+  --sidebar-primary-foreground: 220 14% 13%;
+  --sidebar-accent: 220 14% 19%;
+  --sidebar-accent-foreground: 220 14% 95%;
+  --sidebar-border: 0 0% 100% / 0.08;
+  --sidebar-ring: 217 50% 70%;
+}
+
+/* =========================================================================
+   Smooth theme transition — enabled on every theme-aware surface.
+   Suppressed on first paint (when data-theme-ready is absent) so the
+   page doesn't visibly transition from the inline-script default into
+   the resolved theme. Toggle re-enabled by the inline script setting
+   data-theme-ready="" once the body has mounted.
+   ========================================================================= */
+html {
+  transition: background-color 200ms ease, color 200ms ease, border-color 200ms ease;
+}
+body {
+  transition: background-color 200ms ease, color 200ms ease;
+}
+html:not([data-theme-ready]) * {
+  transition: none !important;
+}
+
+/* =========================================================================
+   Theme toggle icon — keyframe entrance on cycle.
+   The icon element is keyed on the current theme value in
+   components/theme/ThemeToggle.tsx, so the animation fires on each
+   remount. Honors prefers-reduced-motion.
+   ========================================================================= */
+@keyframes theme-icon-enter {
+  from {
+    opacity: 0;
+    transform: rotate(20deg) scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: rotate(0deg) scale(1);
+  }
+}
+.theme-icon-enter {
+  animation: theme-icon-enter 200ms ease-out;
+}
+@media (prefers-reduced-motion: reduce) {
+  .theme-icon-enter {
+    animation: none;
+  }
+}
+
+/* =========================================================================
+   Base Typography Styles
+   ========================================================================= */
 body {
   font-family: var(--font-body);
   font-size: var(--text-base);
   line-height: var(--leading-body);
   letter-spacing: var(--tracking-normal);
-  color: var(--text-primary);
+  color: var(--color-text);
+  background-color: var(--color-bg);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Heading base styles - use DM Sans Bold */
 h1, h2, h3, h4, h5, h6,
 .font-heading {
   font-family: var(--font-heading);
@@ -189,12 +348,8 @@ h1, h2, h3, h4, h5, h6,
   letter-spacing: var(--tracking-tight);
 }
 
-/* H1, H2, H3 explicitly default to Bold (700) */
-h1, h2, h3 {
-  font-weight: 700;
-}
+h1, h2, h3 { font-weight: 700; }
 
-/* Hero display headlines render at ExtraBold (800) */
 .font-display,
 .hero-display,
 .display-heading,
@@ -204,32 +359,12 @@ h1, h2, h3 {
 }
 
 @layer base {
-  /* H1 - ceremonial and stable */
-  h1, .h1 {
-    font-size: var(--text-4xl);
-    line-height: var(--leading-tight);
-  }
-
-  /* H2 - tighter and more practical */
-  h2, .h2 {
-    font-size: var(--text-3xl);
-    line-height: var(--leading-heading);
-  }
-
-  /* H3 - serif but practical */
-  h3, .h3 {
-    font-size: var(--text-2xl);
-    line-height: var(--leading-heading);
-  }
-
-  /* H4 */
-  h4, .h4 {
-    font-size: var(--text-xl);
-    line-height: var(--leading-heading);
-  }
+  h1, .h1 { font-size: var(--text-4xl); line-height: var(--leading-tight); }
+  h2, .h2 { font-size: var(--text-3xl); line-height: var(--leading-heading); }
+  h3, .h3 { font-size: var(--text-2xl); line-height: var(--leading-heading); }
+  h4, .h4 { font-size: var(--text-xl);  line-height: var(--leading-heading); }
 }
 
-/* UI Labels - use Montserrat uppercase with tracking */
 .font-ui,
 .ui-label {
   font-family: var(--font-ui);
@@ -238,7 +373,6 @@ h1, h2, h3 {
   letter-spacing: var(--tracking-wide);
 }
 
-/* Brand caps - FOUNDATION-style tracking */
 .brand-caps {
   font-family: var(--font-ui);
   font-weight: var(--font-bold);
@@ -246,134 +380,99 @@ h1, h2, h3 {
   letter-spacing: var(--tracking-brand);
 }
 
-/* Body text styles */
-.body-lg {
-  font-size: var(--text-md);
-  line-height: var(--leading-body);
-}
+.body-lg    { font-size: var(--text-md);   line-height: var(--leading-body); }
+.body-base  { font-size: var(--text-base); line-height: var(--leading-body); }
+.body-sm    { font-size: var(--text-sm);   line-height: var(--leading-body); }
 
-.body-base {
-  font-size: var(--text-base);
-  line-height: var(--leading-body);
-}
-
-.body-sm {
-  font-size: var(--text-sm);
-  line-height: var(--leading-body);
-}
-
-/* Fluid Spacing Utility Classes */
 .section-spacing-lg { padding-top: var(--section-lg); padding-bottom: var(--section-lg); }
 .section-spacing-md { padding-top: var(--section-md); padding-bottom: var(--section-md); }
 .section-spacing-sm { padding-top: var(--section-sm); padding-bottom: var(--section-sm); }
 
-/* Fluid Typography Utility Classes */
 .heading-fluid-xl { font-size: var(--heading-xl); line-height: var(--leading-tight); }
 .heading-fluid-lg { font-size: var(--heading-lg); line-height: var(--leading-heading); }
 
-/* Scrolling marquee animations */
+/* =========================================================================
+   Marquee Animations
+   ========================================================================= */
 @keyframes marquee {
-  0% { transform: translateX(0); }
+  0%   { transform: translateX(0); }
   100% { transform: translateX(-50%); }
 }
 @keyframes marquee-reverse {
-  0% { transform: translateX(-50%); }
+  0%   { transform: translateX(-50%); }
   100% { transform: translateX(0); }
 }
-.animate-marquee { animation: marquee 25s linear infinite; }
+.animate-marquee        { animation: marquee 25s linear infinite; }
 .animate-marquee-reverse { animation: marquee-reverse 25s linear infinite; }
 
-/* Marquee mask fade edges */
-.marquee-mask-left {
-  position: relative;
-}
+.marquee-mask-left { position: relative; }
 .marquee-mask-left::before {
   content: '';
   position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
+  left: 0; top: 0; bottom: 0;
   width: 80px;
-  background: linear-gradient(to right, var(--background), transparent);
+  background: linear-gradient(to right, var(--color-bg), transparent);
   z-index: 10;
   pointer-events: none;
 }
-.marquee-mask-right {
-  position: relative;
-}
+.marquee-mask-right { position: relative; }
 .marquee-mask-right::after {
   content: '';
   position: absolute;
-  right: 0;
-  top: 0;
-  bottom: 0;
+  right: 0; top: 0; bottom: 0;
   width: 80px;
-  background: linear-gradient(to left, var(--background), transparent);
+  background: linear-gradient(to left, var(--color-bg), transparent);
   z-index: 10;
   pointer-events: none;
 }
-.marquee-inner {
-  display: flex;
-  width: max-content;
-}
+.marquee-inner { display: flex; width: max-content; }
 
 /* =========================================================================
    Sidebar Navigation — Animation & Interaction Tokens
    ========================================================================= */
-
-/* Badge pulse ring — used for safety-critical nav items (e.g., Safety Feed) */
 @keyframes sidebar-badge-pulse {
-  0%, 100% {
-    box-shadow: 0 0 0 0 rgba(156, 62, 62, 0.5);
-  }
-  50% {
-    box-shadow: 0 0 0 4px rgba(156, 62, 62, 0);
-  }
+  0%, 100% { box-shadow: 0 0 0 0 oklch(0.55 0.18 25 / 0.5); }
+  50%      { box-shadow: 0 0 0 4px oklch(0.55 0.18 25 / 0); }
 }
+.sidebar-badge-pulse { animation: sidebar-badge-pulse 2s ease-in-out infinite; }
 
-.sidebar-badge-pulse {
-  animation: sidebar-badge-pulse 2s ease-in-out infinite;
-}
-
-/* Sidebar item — fade-in-up on mount */
 @keyframes sidebar-item-enter {
-  from {
-    opacity: 0;
-    transform: translateX(-6px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
+  from { opacity: 0; transform: translateX(-6px); }
+  to   { opacity: 1; transform: translateX(0); }
 }
+.sidebar-item-enter { animation: sidebar-item-enter 220ms ease-out both; }
 
-.sidebar-item-enter {
-  animation: sidebar-item-enter 220ms ease-out both;
-}
-
-/* =========================================================================
-   Reduced Motion — Sidebar overrides
-   ========================================================================= */
 @media (prefers-reduced-motion: reduce) {
-  .sidebar-badge-pulse {
-    animation: none;
-  }
-  .sidebar-item-enter {
-    animation: none;
-  }
+  .sidebar-badge-pulse { animation: none; }
+  .sidebar-item-enter  { animation: none; }
 }
 
 /* =========================================================================
-   Sidebar Layout Fixes — Prevent main content overlap
+   Sidebar Layout Fixes
    ========================================================================= */
 .peer[data-state="expanded"] {
   width: var(--sidebar-width, 260px) !important;
   flex-shrink: 0 !important;
   transition: width 200ms ease-linear;
 }
-
 .peer[data-state="collapsed"] {
   width: var(--sidebar-width-icon, 48px) !important;
   flex-shrink: 0 !important;
   transition: width 200ms ease-linear;
+}
+
+/* =========================================================================
+   Image dark-mode treatment — reduce harsh contrast on white images
+   ========================================================================= */
+[data-theme="dark"] img:not([data-no-dark]):not([src$=".svg"]) {
+  filter: brightness(0.92) contrast(1.05);
+}
+
+/* =========================================================================
+   Form input placeholder — explicit muted color (Tailwind v4 places this
+   in components/ui/input.tsx, but a global fallback prevents missed cases)
+   ========================================================================= */
+input::placeholder, textarea::placeholder {
+  color: var(--color-text-muted);
+  opacity: 1;
 }

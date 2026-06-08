@@ -33,27 +33,27 @@ export default function SessionLoading() {
       <div className="relative flex items-center justify-center">
         {/* Outer expanding ring */}
         <div
-          className="breathe-ring absolute h-32 w-32 rounded-full border border-[#173B57]/30"
+          className="breathe-ring absolute h-32 w-32 rounded-full border border-primary/30"
           style={{ animationDelay: '0s' }}
         />
         <div
-          className="breathe-ring absolute h-24 w-24 rounded-full border border-[#173B57]/20"
+          className="breathe-ring absolute h-24 w-24 rounded-full border border-primary/20"
           style={{ animationDelay: '0.4s' }}
         />
         {/* Inner glowing dot */}
-        <div className="pulse-dot h-10 w-10 rounded-full bg-[#173B57]/70 shadow-[0_0_28px_8px_rgba(99,102,241,0.35)]" />
+        <div className="pulse-dot h-10 w-10 rounded-full bg-primary/70 shadow-[0_0_28px_8px_rgba(99,102,241,0.35)]" />
       </div>
 
       {/* Text */}
       <div className="fade-in flex flex-col items-center gap-2 text-center">
-        <p className="text-base font-bold tracking-widest text-[#173B57] uppercase">
+        <p className="text-base font-bold tracking-widest text-text uppercase">
           Entering your sanctuary
         </p>
       </div>
 
       <div className="fade-in-delay flex flex-col items-center gap-1 text-center">
-        <p className="text-xs font-medium text-zinc-500">Your voice will be anonymized</p>
-        <p className="text-xs text-zinc-600">You are safe here</p>
+        <p className="text-xs font-medium text-text-muted0">Your voice will be anonymized</p>
+        <p className="text-xs text-text">You are safe here</p>
       </div>
     </div>
   );

@@ -36,7 +36,7 @@ const DotIndicators: React.FC<{
             tabIndex={active === i ? 0 : -1}
             onClick={() => onDotClick(i)}
             className={`w-3 h-3 rounded-full transition-all duration-200 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-[#102A3D] ${
-              active === i ? "bg-accent scale-110" : "bg-white/40 hover:bg-white/60"
+              active === i ? "bg-accent scale-110" : "bg-surface/40 hover:bg-surface/60"
             }`}
           />
         </span>
@@ -105,12 +105,12 @@ export default function TestimonialCarousel({ className }: TestimonialCarouselPr
 
   return (
     <section
-      className={`relative bg-[#102A3D] py-24 md:py-32 px-0 border-t border-b border-[#102A3D]/50 ${className ?? ""}`}
+      className={`relative bg-primary-active py-24 md:py-32 px-0 border-t border-b border-primary-active/50 ${className ?? ""}`}
       aria-label="Member testimonials"
     >
       {/* Section header */}
       <div className="max-w-4xl mx-auto text-center mb-12 px-6">
-        <span className="inline-flex items-center rounded-full bg-white/10 border border-white/20 px-4 py-1 text-[10px] font-bold uppercase tracking-brand text-accent font-ui mb-6">
+        <span className="inline-flex items-center rounded-full bg-surface/10 border border-white/20 px-4 py-1 text-[10px] font-bold uppercase tracking-brand text-accent font-ui mb-6">
           Member Stories
         </span>
         <h2 className="font-heading text-2xl md:text-3xl font-bold text-white mb-2">
@@ -125,9 +125,9 @@ export default function TestimonialCarousel({ className }: TestimonialCarouselPr
         aria-label="Testimonial navigation"
       >
         {/* Left fade */}
-        <div className="pointer-events-none absolute left-0 top-0 bottom-0 z-10 w-8 bg-gradient-to-r from-[#102A3D] to-transparent md:w-16" />
+        <div className="pointer-events-none absolute left-0 top-0 bottom-0 z-10 w-8 bg-gradient-to-r from-primary-active to-transparent md:w-16" />
         {/* Right fade */}
-        <div className="pointer-events-none absolute right-0 top-0 bottom-0 z-10 w-8 bg-gradient-to-l from-[#102A3D] to-transparent md:w-16" />
+        <div className="pointer-events-none absolute right-0 top-0 bottom-0 z-10 w-8 bg-gradient-to-l from-primary-active to-transparent md:w-16" />
 
         {/* Scrollable track */}
         <div
@@ -150,7 +150,7 @@ export default function TestimonialCarousel({ className }: TestimonialCarouselPr
               <div className="max-w-[720px] mx-auto text-center">
                 {/* Opening quote mark */}
                 <span
-                  className="text-8xl font-serif leading-none select-none bg-clip-text text-transparent bg-gradient-to-r from-[#173B57] to-[#C59A35]"
+                  className="text-8xl font-serif leading-none select-none bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent"
                   aria-hidden="true"
                 >
                   &ldquo;
@@ -177,7 +177,7 @@ export default function TestimonialCarousel({ className }: TestimonialCarouselPr
             type="button"
             aria-label="Previous testimonial"
             onClick={goPrev}
-            className="w-12 h-12 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center text-white hover:bg-white/20 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-[#102A3D]"
+            className="w-12 h-12 rounded-full bg-surface/10 backdrop-blur-sm border border-white/20 flex items-center justify-center text-white hover:bg-surface/20 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-[#102A3D]"
           >
             <ChevronLeft size={24} aria-hidden="true" />
           </button>
@@ -187,7 +187,7 @@ export default function TestimonialCarousel({ className }: TestimonialCarouselPr
             type="button"
             aria-label="Next testimonial"
             onClick={goNext}
-            className="w-12 h-12 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center text-white hover:bg-white/20 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-[#102A3D]"
+            className="w-12 h-12 rounded-full bg-surface/10 backdrop-blur-sm border border-white/20 flex items-center justify-center text-white hover:bg-surface/20 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-[#102A3D]"
           >
             <ChevronRight size={24} aria-hidden="true" />
           </button>

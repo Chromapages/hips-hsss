@@ -3,28 +3,31 @@
 import { AuthGuard } from "@/components/auth/AuthGuard";
 import { OrganizationIntakeForm } from "@/components/forms/OrganizationIntakeForm";
 
-export default function OrganizationsPageClient() {
+const OrganizationsPageClient = () => {
   return (
     <AuthGuard>
-      <main className="min-h-screen bg-white text-primary">
-        <section className="mx-auto max-w-4xl px-5 py-12">
-          {/* Section label - gold uppercase with tracking */}
-          <p className="text-sm font-semibold uppercase tracking-wide text-accent brand-caps">
+      <main className="min-h-screen bg-surface text-text-primary selection:bg-primary/20">
+        <section className="mx-auto max-w-4xl px-6 py-16 flex flex-col items-center">
+          {/* Category Badge - Gold uppercase with tracking */}
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-accent/10 border border-accent/20 text-[10px] font-bold uppercase tracking-widest text-accent font-ui mb-4">
+            <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
             Partnerships
-          </p>
-          {/* H1 - ceremonial serif */}
-          <h1 className="mt-3 font-heading text-4xl font-bold text-primary leading-tight">
+          </div>
+          {/* H1 - ceremonial serif centered */}
+          <h1 className="font-heading text-4xl md:text-5xl font-extrabold tracking-tighter text-text-primary text-center leading-tight">
             Custom program inquiry.
           </h1>
-          {/* Body text - secondary for readability */}
-          <p className="mt-3 max-w-2xl text-secondary font-body text-base md:text-lg leading-relaxed">
+          {/* Body text - centered secondary */}
+          <p className="mt-4 max-w-xl text-text-secondary font-body text-base md:text-lg leading-relaxed text-center">
             Tailored peer support solutions for teams, organizations, and communities.
           </p>
-          <div className="mt-8">
+          <div className="mt-10 w-full">
             <OrganizationIntakeForm />
           </div>
         </section>
       </main>
     </AuthGuard>
   );
-}
+};
+
+export default OrganizationsPageClient;

@@ -59,45 +59,45 @@ export default function AdminInquiriesPage() {
       <header className="mb-8 flex justify-between items-end">
         <div>
           <h1 className="text-3xl font-bold text-white">Organizational Inquiries</h1>
-          <p className="text-zinc-400 mt-2">Manage partnership leads and training requests.</p>
+          <p className="text-text mt-2">Manage partnership leads and training requests.</p>
         </div>
       </header>
 
       {isLoading ? (
         <div className="flex justify-center py-20">
-          <Loader2 className="h-8 w-8 animate-spin text-[#173B57]" />
+          <Loader2 className="h-8 w-8 animate-spin text-text" />
         </div>
       ) : (
         <div className="grid gap-6">
           {inquiries.map((inquiry) => (
-            <article key={inquiry.id} className="rounded-xl border border-white/10 bg-zinc-900 p-6 hover:border-white/20 transition-all">
+            <article key={inquiry.id} className="rounded-xl border border-white/10 bg-text p-6 hover:border-white/20 transition-all">
               <div className="flex flex-col md:flex-row md:items-start justify-between gap-6">
                 <div className="space-y-4 flex-1">
                   <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-lg bg-[#173B57]/10">
-                      <Mail className="h-5 w-5 text-[#173B57]" />
+                    <div className="p-2 rounded-lg bg-primary/10">
+                      <Mail className="h-5 w-5 text-text" />
                     </div>
                     <div>
                       <h2 className="text-xl font-bold text-white">{inquiry.orgName}</h2>
-                      <p className="text-sm text-zinc-400">{inquiry.contactName} &bull; {inquiry.email}</p>
+                      <p className="text-sm text-text">{inquiry.contactName} &bull; {inquiry.email}</p>
                     </div>
                   </div>
                   {inquiry.message && (
-                    <div className="p-4 rounded-lg bg-white/5 border border-white/5">
-                      <p className="text-sm text-zinc-300 leading-relaxed italic">"{inquiry.message}"</p>
+                    <div className="p-4 rounded-lg bg-surface/5 border border-white/5">
+                      <p className="text-sm text-text-muted leading-relaxed italic">"{inquiry.message}"</p>
                     </div>
                   )}
-                  <p className="text-[10px] text-zinc-600 uppercase tracking-widest font-semibold">Received {format(new Date(inquiry.createdAt), 'MMMM d, yyyy')}</p>
+                  <p className="text-[10px] text-text uppercase tracking-widest font-semibold">Received {format(new Date(inquiry.createdAt), 'MMMM d, yyyy')}</p>
                 </div>
 
                 <div className="flex flex-col gap-4 min-w-[200px]">
                   <div className="space-y-2">
-                    <label className="text-[10px] font-bold text-zinc-500 uppercase">Lead Status</label>
+                    <label className="text-[10px] font-bold text-text-muted0 uppercase">Lead Status</label>
                     <select
                       value={inquiry.status}
                       disabled={updatingId === inquiry.id}
                       onChange={(e) => handleUpdateStatus(inquiry.id, e.target.value)}
-                      className="w-full bg-black border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:ring-2 focus:ring-[#173B57] disabled:opacity-50"
+                      className="w-full bg-black border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:ring-2 focus:ring-primary disabled:opacity-50"
                     >
                       <option value="NEW">New Lead</option>
                       <option value="CONTACTED">Contacted</option>
@@ -107,7 +107,7 @@ export default function AdminInquiriesPage() {
                   </div>
                   <a
                     href={`mailto:${inquiry.email}`}
-                    className="flex items-center justify-center gap-2 w-full bg-[#173B57] text-white rounded-lg px-4 py-2 text-sm font-bold hover:bg-[#173B57]/80 transition-colors"
+                    className="flex items-center justify-center gap-2 w-full bg-primary text-white rounded-lg px-4 py-2 text-sm font-bold hover:bg-primary/80 transition-colors"
                   >
                     Send Email <ExternalLink className="w-3 h-3" />
                   </a>
@@ -116,7 +116,7 @@ export default function AdminInquiriesPage() {
             </article>
           ))}
           {inquiries.length === 0 && (
-            <div className="p-20 text-center text-zinc-500 rounded-xl border border-dashed border-white/10">
+            <div className="p-20 text-center text-text-muted0 rounded-xl border border-dashed border-white/10">
               <AlertCircle className="mx-auto h-12 w-12 opacity-20 mb-4" />
               <p>No organizational inquiries found.</p>
             </div>

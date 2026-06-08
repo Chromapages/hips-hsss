@@ -78,42 +78,42 @@ export default function FacilitatorDashboard() {
           <h1 className="font-heading text-4xl font-extrabold tracking-tight text-white sm:text-5xl">
             Lead <span className="text-emerald-500">Dispatch</span>
           </h1>
-          <p className="mt-4 text-lg text-zinc-400 max-w-2xl">
+          <p className="mt-4 text-lg text-text max-w-2xl">
             Monitor incoming session requests. Claim assignments that match your expertise and availability.
           </p>
         </header>
 
         {/* Stats Strip */}
         <div className="mt-12 grid grid-cols-1 gap-6 sm:grid-cols-3">
-           <div className="rounded-2xl border border-white/5 bg-zinc-900/50 p-6">
+           <div className="rounded-2xl border border-white/5 bg-text/50 p-6">
               <div className="flex items-center gap-4">
                 <div className="p-3 rounded-xl bg-emerald-500/10">
                    <Zap className="h-5 w-5 text-emerald-400" />
                 </div>
                 <div>
-                   <p className="text-[10px] uppercase tracking-widest text-zinc-500 font-bold">Active Queue</p>
+                   <p className="text-[10px] uppercase tracking-widest text-text-muted0 font-bold">Active Queue</p>
                    <p className="text-2xl font-bold text-white">{queue.length}</p>
                 </div>
               </div>
            </div>
-           <div className="rounded-2xl border border-white/5 bg-zinc-900/50 p-6 opacity-50">
+           <div className="rounded-2xl border border-white/5 bg-text/50 p-6 opacity-50">
               <div className="flex items-center gap-4">
-                <div className="p-3 rounded-xl bg-zinc-500/10">
-                   <CheckCircle className="h-5 w-5 text-zinc-400" />
+                <div className="p-3 rounded-xl bg-bg-subtle0/10">
+                   <CheckCircle className="h-5 w-5 text-text" />
                 </div>
                 <div>
-                   <p className="text-[10px] uppercase tracking-widest text-zinc-500 font-bold">Total Led</p>
+                   <p className="text-[10px] uppercase tracking-widest text-text-muted0 font-bold">Total Led</p>
                    <p className="text-2xl font-bold text-white">0</p>
                 </div>
               </div>
            </div>
-           <div className="rounded-2xl border border-white/5 bg-zinc-900/50 p-6 opacity-50">
+           <div className="rounded-2xl border border-white/5 bg-text/50 p-6 opacity-50">
               <div className="flex items-center gap-4">
-                <div className="p-3 rounded-xl bg-zinc-500/10">
-                   <Users className="h-5 w-5 text-zinc-400" />
+                <div className="p-3 rounded-xl bg-bg-subtle0/10">
+                   <Users className="h-5 w-5 text-text" />
                 </div>
                 <div>
-                   <p className="text-[10px] uppercase tracking-widest text-zinc-500 font-bold">Rating</p>
+                   <p className="text-[10px] uppercase tracking-widest text-text-muted0 font-bold">Rating</p>
                    <p className="text-2xl font-bold text-white">5.0</p>
                 </div>
               </div>
@@ -128,15 +128,15 @@ export default function FacilitatorDashboard() {
           </h2>
 
           {loading ? (
-             <div className="flex flex-col items-center justify-center py-20 border border-white/5 rounded-3xl bg-zinc-900/30">
+             <div className="flex flex-col items-center justify-center py-20 border border-white/5 rounded-3xl bg-text/30">
                 <Loader2 className="h-8 w-8 animate-spin text-emerald-500 mb-4" />
-                <p className="text-zinc-500 text-sm">Connecting to secure queue...</p>
+                <p className="text-text-muted0 text-sm">Connecting to secure queue...</p>
              </div>
           ) : queue.length === 0 ? (
-             <div className="flex flex-col items-center justify-center py-20 border border-dashed border-white/10 rounded-3xl bg-zinc-900/30 text-center px-6">
-                <Shield className="h-12 w-12 text-zinc-800 mb-4" />
+             <div className="flex flex-col items-center justify-center py-20 border border-dashed border-white/10 rounded-3xl bg-text/30 text-center px-6">
+                <Shield className="h-12 w-12 text-text mb-4" />
                 <h3 className="text-white font-bold">Clear Skies</h3>
-                <p className="text-zinc-500 text-sm mt-1 max-w-xs">
+                <p className="text-text-muted0 text-sm mt-1 max-w-xs">
                    There are currently no sessions awaiting facilitation. You will be notified when a new request arrives.
                 </p>
              </div>
@@ -145,10 +145,10 @@ export default function FacilitatorDashboard() {
               {queue.map((session) => (
                 <div 
                   key={session.id}
-                  className="group relative flex items-center justify-between p-6 rounded-2xl border border-white/5 bg-zinc-900/50 hover:bg-zinc-900 transition-all hover:border-emerald-500/30"
+                  className="group relative flex items-center justify-between p-6 rounded-2xl border border-white/5 bg-text/50 hover:bg-text transition-all hover:border-emerald-500/30"
                 >
                   <div className="flex items-center gap-6">
-                    <div className="hidden sm:flex h-12 w-12 items-center justify-center rounded-xl bg-white/5 text-zinc-400 font-bold text-xs uppercase group-hover:bg-emerald-500/10 group-hover:text-emerald-400 transition-colors">
+                    <div className="hidden sm:flex h-12 w-12 items-center justify-center rounded-xl bg-surface/5 text-text font-bold text-xs uppercase group-hover:bg-emerald-500/10 group-hover:text-emerald-400 transition-colors">
                       {session.id.substring(0, 4)}
                     </div>
                     <div>
@@ -156,11 +156,11 @@ export default function FacilitatorDashboard() {
                         {session.serviceName}
                       </h3>
                       <div className="flex items-center gap-4 mt-1">
-                        <span className="text-xs text-zinc-500 flex items-center gap-1">
+                        <span className="text-xs text-text-muted0 flex items-center gap-1">
                           <Timer className="h-3 w-3" />
                           Starts: {new Date(session.startsAt).toLocaleString()}
                         </span>
-                        <span className="text-xs text-zinc-500 flex items-center gap-1">
+                        <span className="text-xs text-text-muted0 flex items-center gap-1">
                           <Zap className="h-3 w-3" />
                           Priority: Standard
                         </span>

@@ -15,8 +15,8 @@ function DonateCheckoutContent() {
 
   if (!clientSecret) {
     return (
-      <div className="p-8 rounded-xl border border-red-500/20 bg-red-500/5 text-center">
-        <p className="text-red-400 font-medium">Invalid donation session.</p>
+      <div className="p-8 rounded-xl border border-destructive/20 bg-destructive0/5 text-center">
+        <p className="text-destructive font-medium">Invalid donation session.</p>
       </div>
     );
   }
@@ -36,14 +36,14 @@ export default function DonateCheckoutClient() {
       <div className="max-w-xl mx-auto">
         <header className="mb-10 text-center">
           <div className="inline-flex items-center gap-2 mb-4">
-            <Lock className="w-4 h-4 text-zinc-500" />
-            <span className="text-xs font-mono uppercase tracking-widest text-zinc-500">Secure Donation</span>
+            <Lock className="w-4 h-4 text-text-muted0" />
+            <span className="text-xs font-mono uppercase tracking-widest text-text-muted0">Secure Donation</span>
           </div>
           <h1 className="text-3xl font-bold text-white">Complete Your Contribution</h1>
-          <p className="mt-3 text-zinc-400">Your support helps provide anonymous peer support to those in need.</p>
+          <p className="mt-3 text-text">Your support helps provide anonymous peer support to those in need.</p>
         </header>
 
-        <Suspense fallback={<div className="text-center text-zinc-500">Loading donation gateway...</div>}>
+        <Suspense fallback={<div className="text-center text-text-muted0">Loading donation gateway...</div>}>
           <DonateCheckoutContent />
         </Suspense>
       </div>

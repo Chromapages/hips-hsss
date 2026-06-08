@@ -4,38 +4,43 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
+        // All theme tokens cascade to the CSS variables defined in
+        // globals.css. In [data-theme="dark"], these resolve to the dark
+        // palette automatically. Static hex fallbacks (used when the
+        // variable is unresolved during initial paint) are kept for SSR
+        // safety.
         primary: {
-          DEFAULT: "#173B57",
-          dark: "#102A3D",
-          soft: "#2A5576",
-          foreground: "#FFFFFF",
+          DEFAULT: "var(--color-primary)",
+          dark: "var(--color-primary-active)",
+          soft: "var(--color-primary-hover)",
+          foreground: "var(--color-primary-foreground)",
         },
         accent: {
-          DEFAULT: "#C59A35",
-          dark: "#A67F28",
-          soft: "#DFC06A",
-          foreground: "#FFFFFF",
+          DEFAULT: "var(--color-accent)",
+          dark: "var(--color-accent-dark)",
+          soft: "var(--color-accent-soft)",
+          foreground: "var(--color-primary-foreground)",
         },
-        background: "#FFFFFF",
-        surface: "#F6F8FA",
-        "surface-alt": "#EEF3F6",
-        border: "#D6E0E8",
-        "text-primary": "#173B57",
-        "text-secondary": "#445A6C",
-        "text-muted": "#6F8291",
-        success: "#2F7A5F",
-        warning: "#A06A18",
-        destructive: "#9C3E3E",
+        background: "var(--color-bg)",
+        surface: "var(--color-bg-subtle)",
+        "surface-alt": "var(--color-surface-offset)",
+        border: "var(--color-border)",
+        "text-primary": "var(--color-text)",
+        "text-secondary": "var(--color-text-muted)",
+        "text-muted": "var(--color-text-muted)",
+        success: "var(--color-success)",
+        warning: "var(--color-warning)",
+        destructive: "var(--color-destructive)",
         muted: {
-          DEFAULT: "#F6F8FA",
-          foreground: "#6F8291",
+          DEFAULT: "var(--color-surface-offset)",
+          foreground: "var(--color-text-muted)",
         },
         secondary: {
-          DEFAULT: "#F6F8FA",
-          foreground: "#173B57",
+          DEFAULT: "var(--color-surface-offset)",
+          foreground: "var(--color-text)",
         },
-        input: "#D6E0E8",
-        ring: "#173B57",
+        input: "var(--color-border-strong)",
+        ring: "var(--color-primary)",
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
           foreground: "hsl(var(--sidebar-foreground))",
@@ -95,9 +100,13 @@ const config: Config = {
         pill: "9999px",
       },
       boxShadow: {
-        soft: "0 4px 18px rgba(23, 59, 87, 0.08)",
-        card: "0 10px 30px rgba(23, 59, 87, 0.10)",
-        elevated: "0 18px 50px rgba(23, 59, 87, 0.16)",
+        // Theme-aware shadows — these are the same rgba values for light, but
+        // a sibling @theme block in globals.css (--shadow-sm/md/lg) overrides
+        // them in [data-theme="dark"] with subtle white-tinted borders since
+        // dark drop-shadows are effectively invisible.
+        soft: "var(--shadow-sm)",
+        card: "var(--shadow-md)",
+        elevated: "var(--shadow-lg)",
       },
       maxWidth: {
         content: "1200px",

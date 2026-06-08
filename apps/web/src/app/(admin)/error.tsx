@@ -16,7 +16,7 @@ export default function AdminError({
   }, [error]);
 
   return (
-    <main className="grid min-h-screen place-items-center bg-zinc-900 p-6">
+    <main className="grid min-h-screen place-items-center bg-text p-6">
       <ErrorState
         title="Something went wrong"
         error="An error occurred in the admin section. Please try again."

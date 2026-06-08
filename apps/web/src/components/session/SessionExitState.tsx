@@ -21,13 +21,13 @@ export function SessionExitState({
 
   return (
     <div className="flex h-screen flex-col items-center justify-center bg-zinc-950 p-6 text-center text-white">
-      <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-full border border-red-500/20 bg-red-500/10">
-        <Icon className="h-10 w-10 text-red-400" />
+      <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-full border border-destructive/20 bg-destructive0/10">
+        <Icon className="h-10 w-10 text-destructive" />
       </div>
       <h1 className="text-3xl font-bold">{title}</h1>
-      <p className="mt-3 max-w-md text-zinc-400">{description}</p>
+      <p className="mt-3 max-w-md text-text">{description}</p>
       <button
-        className="mt-8 rounded-xl bg-[#173B57] px-8 py-3 font-medium text-white shadow-lg shadow-[#173B57]/20 transition-all hover:bg-[#173B57]"
+        className="mt-8 rounded-xl bg-primary px-8 py-3 font-medium text-white shadow-lg shadow-primary/20 transition-all hover:bg-primary"
         onClick={onAction}
         type="button"
       >

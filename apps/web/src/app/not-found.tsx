@@ -8,8 +8,8 @@ import { Home, ArrowLeft } from "lucide-react";
 export default function NotFound() {
   return (
     <main className="grid min-h-screen place-items-center bg-black p-6 text-white">
-      <div className="flex flex-col items-center justify-center p-12 text-center animate-in fade-in zoom-in-95 duration-500 bg-white/5 border border-white/10 rounded-[2.5rem] backdrop-blur-xl max-w-lg mx-auto shadow-2xl shadow-black/50">
-        <div className="flex h-24 w-24 items-center justify-center rounded-full bg-[#173B57]/10 text-[#173B57] mb-6 ring-1 ring-[#173B57]/20 shadow-[0_0_30px_rgba(99,102,241,0.15)]">
+      <div className="flex flex-col items-center justify-center p-12 text-center animate-in fade-in zoom-in-95 duration-500 bg-surface/5 border border-white/10 rounded-[2.5rem] backdrop-blur-xl max-w-lg mx-auto shadow-2xl shadow-black/50">
+        <div className="flex h-24 w-24 items-center justify-center rounded-full bg-primary/10 text-text mb-6 ring-1 ring-primary/20 shadow-[0_0_30px_rgba(99,102,241,0.15)]">
           <svg
             className="h-12 w-12"
             fill="none"
@@ -25,13 +25,13 @@ export default function NotFound() {
           </svg>
         </div>
         <h3 className="text-2xl font-bold text-white tracking-tight">Page not found</h3>
-        <p className="mt-4 text-zinc-400 leading-relaxed">
+        <p className="mt-4 text-text leading-relaxed">
           The page you are looking for does not exist or has been moved.
         </p>
         <div className="mt-8 flex gap-3">
           <Button
             asChild
-            className="h-12 px-8 bg-[#173B57] hover:bg-[#173B57] text-white rounded-2xl transition-all font-semibold"
+            className="h-12 px-8 bg-primary hover:bg-primary text-white rounded-2xl transition-all font-semibold"
           >
             <Link href="/">
               <Home className="mr-2 h-4 w-4" />
@@ -41,7 +41,7 @@ export default function NotFound() {
           <Button
             variant="ghost"
             onClick={() => window.history.back()}
-            className="h-12 px-8 text-zinc-500 hover:text-white hover:bg-white/5 rounded-2xl transition-all"
+            className="h-12 px-8 text-text-muted0 hover:text-white hover:bg-surface/5 rounded-2xl transition-all"
           >
             <ArrowLeft className="mr-2 h-4 w-4" />
             Go Back

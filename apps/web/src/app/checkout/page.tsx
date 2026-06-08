@@ -4,25 +4,25 @@ import dynamic from "next/dynamic";
 
 const CheckoutShell = dynamic(
   () => import("@/components/checkout/CheckoutShell").then((mod) => mod.CheckoutShell),
-  { ssr: false, loading: () => <div className="text-zinc-500 p-8">Loading checkout...</div> }
+  { ssr: false, loading: () => <div className="text-text-muted0 p-8">Loading checkout...</div> }
 );
 
 export default function CheckoutPage() {
   return (
-    <main className="min-h-screen bg-black text-white selection:bg-[#173B57]/30">
+    <main className="min-h-screen bg-black text-white selection:bg-primary/30">
       {/* Ambient Glow */}
       <div className="fixed top-0 right-1/4 w-[600px] h-[600px] bg-Gold-600/5 rounded-full blur-[140px] pointer-events-none" />
 
       <section className="relative z-10 mx-auto max-w-7xl px-6 pt-32 pb-24">
         <div className="max-w-3xl mb-12">
-          <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-[#173B57] mb-4 animate-in fade-in slide-in-from-bottom-2 duration-700">
+          <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-text mb-4 animate-in fade-in slide-in-from-bottom-2 duration-700">
             Final Step
           </p>
           <h1 className="font-heading text-3xl md:text-5xl font-extrabold tracking-tighter leading-[0.9] mb-8 animate-in fade-in slide-in-from-bottom-4 duration-1000">
             Complete your <br />
-            <span className="text-zinc-600">reservation.</span>
+            <span className="text-text">reservation.</span>
           </h1>
-          <p className="text-lg text-zinc-500 font-medium max-w-xl leading-relaxed animate-in fade-in slide-in-from-bottom-6 duration-1000">
+          <p className="text-lg text-text-muted0 font-medium max-w-xl leading-relaxed animate-in fade-in slide-in-from-bottom-6 duration-1000">
             Your billing information is handled securely via Stripe. H.I.P.S. ensures
             that this data is never connected to your session participation.
           </p>

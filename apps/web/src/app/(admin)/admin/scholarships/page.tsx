@@ -55,17 +55,17 @@ export default function AdminScholarshipsPage() {
     <div className="p-8">
       <header className="mb-8">
         <h1 className="text-3xl font-bold text-white">Scholarship Management</h1>
-        <p className="text-sm text-zinc-400 mt-2">Review and process financial assistance requests.</p>
+        <p className="text-sm text-text mt-2">Review and process financial assistance requests.</p>
       </header>
 
       {isLoading ? (
         <div className="flex justify-center py-20">
-          <Loader2 className="h-8 w-8 animate-spin text-[#173B57]" />
+          <Loader2 className="h-8 w-8 animate-spin text-text" />
         </div>
       ) : (
-        <div className="overflow-hidden rounded-xl border border-white/10 bg-zinc-900 shadow-2xl">
+        <div className="overflow-hidden rounded-xl border border-white/10 bg-text shadow-2xl">
           <table className="w-full text-left text-sm">
-            <thead className="bg-white/5 text-zinc-400 uppercase text-xs font-semibold tracking-wider">
+            <thead className="bg-surface/5 text-text uppercase text-xs font-semibold tracking-wider">
               <tr>
                 <th className="px-6 py-4">Applicant</th>
                 <th className="px-6 py-4">Requested</th>
@@ -76,22 +76,22 @@ export default function AdminScholarshipsPage() {
             </thead>
             <tbody className="divide-y divide-white/5">
               {scholarships.map((s) => (
-                <tr key={s.id} className="hover:bg-white/[0.02] transition-colors">
+                <tr key={s.id} className="hover:bg-surface/[0.02] transition-colors">
                   <td className="px-6 py-4">
                     <p className="font-medium text-white">{s.user.email}</p>
-                    <p className="text-xs text-zinc-500">{format(new Date(s.createdAt), 'MMM d, yyyy')}</p>
+                    <p className="text-xs text-text-muted0">{format(new Date(s.createdAt), 'MMM d, yyyy')}</p>
                   </td>
                   <td className="px-6 py-4 text-white font-mono">
                     ${s.requestedCents / 100}
                   </td>
                   <td className="px-6 py-4 max-w-xs">
-                    <p className="text-zinc-400 line-clamp-2 text-xs italic">"{s.note}"</p>
+                    <p className="text-text line-clamp-2 text-xs italic">"{s.note}"</p>
                   </td>
                   <td className="px-6 py-4">
                     <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold border ${
                       s.status === 'PENDING' ? 'bg-amber-500/10 text-amber-300 border-amber-500/20' :
                       s.status === 'APPROVED' ? 'bg-emerald-500/10 text-emerald-300 border-emerald-500/20' :
-                      'bg-red-500/10 text-red-300 border-red-500/20'
+                      'bg-destructive0/10 text-destructive border-destructive/20'
                     }`}>
                       {s.status}
                     </span>
@@ -110,14 +110,14 @@ export default function AdminScholarshipsPage() {
                         <button
                           onClick={() => handleUpdateStatus(s.id, 'DENIED')}
                           disabled={updatingId === s.id}
-                          className="p-2 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white transition-all disabled:opacity-50"
+                          className="p-2 rounded-lg bg-destructive0/10 text-destructive hover:bg-destructive0 hover:text-white transition-all disabled:opacity-50"
                           title="Deny"
                         >
                           <X className="w-4 h-4" />
                         </button>
                       </div>
                     ) : (
-                      <span className="text-zinc-600 text-xs">Processed</span>
+                      <span className="text-text text-xs">Processed</span>
                     )}
                   </td>
                 </tr>
@@ -125,7 +125,7 @@ export default function AdminScholarshipsPage() {
             </tbody>
           </table>
           {scholarships.length === 0 && (
-            <div className="p-20 text-center text-zinc-500">
+            <div className="p-20 text-center text-text-muted0">
               <AlertCircle className="mx-auto h-12 w-12 opacity-20 mb-4" />
               <p>No scholarship applications found.</p>
             </div>

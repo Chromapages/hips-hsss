@@ -21,7 +21,7 @@ export function VoiceControlsBar({
 }: VoiceControlsBarProps) {
   return (
     <footer className="flex items-center justify-center px-4 sm:px-6 py-4 sm:py-5 border-t border-white/10 bg-black/60 backdrop-blur-xl">
-      <div className="flex items-center gap-2 sm:gap-3 p-2 rounded-3xl border border-white/10 bg-white/[0.03]">
+      <div className="flex items-center gap-2 sm:gap-3 p-2 rounded-3xl border border-white/10 bg-surface/[0.03]">
         {/* Mute button */}
         <button
           id="btn-mute"
@@ -31,10 +31,10 @@ export function VoiceControlsBar({
           className={`
             flex items-center gap-2 sm:gap-3 px-4 sm:px-6 py-3 sm:py-4 
             rounded-2xl border border-white/10 font-bold transition-all 
-            hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-[#173B57]
+            hover:bg-surface/10 focus:outline-none focus:ring-2 focus:ring-primary
             ${isMuted 
-              ? 'bg-red-500/10 border-red-500/30 text-red-300' 
-              : 'border-white/10 text-white hover:bg-white/10'
+              ? 'bg-destructive0/10 border-destructive/30 text-destructive' 
+              : 'border-white/10 text-white hover:bg-surface/10'
             }
           `}
         >
@@ -55,10 +55,10 @@ export function VoiceControlsBar({
           className={`
             flex items-center gap-2 sm:gap-3 px-4 sm:px-6 py-3 sm:py-4 
             rounded-2xl border font-bold transition-all 
-            hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-[#173B57]
+            hover:bg-surface/10 focus:outline-none focus:ring-2 focus:ring-primary
             ${isHandRaised 
               ? 'bg-amber-500/15 border-amber-500/50 text-amber-200' 
-              : 'border-white/10 text-white hover:bg-white/10'
+              : 'border-white/10 text-white hover:bg-surface/10'
             }
           `}
         >
@@ -74,7 +74,7 @@ export function VoiceControlsBar({
           aria-label="Flag a safety concern"
           className="flex items-center gap-2 sm:gap-3 px-4 sm:px-6 py-3 sm:py-4 
             rounded-xl border border-white/10 font-bold transition-all 
-            hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-[#173B57]
+            hover:bg-surface/10 focus:outline-none focus:ring-2 focus:ring-primary
             text-white"
         >
           <span className="text-lg sm:text-xl">🚨</span>
@@ -86,8 +86,8 @@ export function VoiceControlsBar({
           onClick={onLeave}
           aria-label="Leave the session"
           className="flex items-center gap-2 sm:gap-3 px-4 sm:px-6 py-3 sm:py-4 
-            rounded-xl bg-red-600 text-white font-bold transition-all 
-            hover:bg-red-500 focus:outline-none focus:ring-2 focus:ring-red-500
+            rounded-xl bg-destructive text-white font-bold transition-all 
+            hover:bg-destructive0 focus:outline-none focus:ring-2 focus:ring-red-500
             ml-0 sm:ml-3 leave-btn"
         >
           <span className="text-lg sm:text-xl">📞</span>

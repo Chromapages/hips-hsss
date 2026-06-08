@@ -6,7 +6,7 @@ import { ScholarshipForm } from "@/components/forms/ScholarshipForm";
 export default function ScholarshipPageClient() {
   return (
     <AuthGuard>
-      <main className="min-h-screen bg-white text-primary">
+      <main className="min-h-screen bg-surface text-primary">
         <section className="mx-auto max-w-4xl px-5 py-12">
           {/* Section label - gold uppercase with tracking */}
           <p className="text-sm font-semibold uppercase tracking-wide text-accent brand-caps">

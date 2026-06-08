@@ -10,10 +10,10 @@ export default function FacilitatorError({
     <main className="min-h-screen bg-black text-white flex items-center justify-center px-6">
       <div className="max-w-md text-center">
         <h1 className="text-2xl font-bold mb-2">Facilitator Error</h1>
-        <p className="text-zinc-400 mb-6">Something went wrong in the facilitator dashboard.</p>
+        <p className="text-text mb-6">Something went wrong in the facilitator dashboard.</p>
         <button
           onClick={reset}
-          className="px-6 py-3 rounded-xl bg-[#173B57] hover:bg-[#173B57] font-bold text-white transition-colors"
+          className="px-6 py-3 rounded-xl bg-primary hover:bg-primary font-bold text-white transition-colors"
         >
           Try Again
         </button>

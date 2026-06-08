@@ -69,9 +69,9 @@ export function VoiceControlsBar({
 
   const idleButton = isLight
     ? "border border-border bg-surface text-primary hover:bg-surface-alt"
-    : "border border-white/5 bg-white/5 text-white hover:bg-white/10";
+    : "border border-white/5 bg-surface/5 text-white hover:bg-surface/10";
   const divider = isLight ? "border-l border-border" : "border-l border-white/10";
-  const dividerLine = isLight ? "bg-border" : "bg-white/10";
+  const dividerLine = isLight ? "bg-border" : "bg-surface/10";
   // Gestures removed
   const modalBackdrop = isLight
     ? "fixed inset-0 z-50 flex items-center justify-center bg-foreground/40 p-6 text-foreground backdrop-blur-2xl animate-in fade-in duration-300"
@@ -81,8 +81,8 @@ export function VoiceControlsBar({
     : "w-full max-w-md rounded-[2rem] border border-white/10 bg-zinc-950 p-10 animate-in zoom-in-95 duration-300";
   const modalCancel = isLight
     ? "h-14 flex-1 rounded-2xl border border-border bg-transparent font-bold hover:bg-surface transition-all"
-    : "h-14 flex-1 rounded-2xl border border-white/10 bg-transparent font-bold hover:bg-white/5 transition-all";
-  const modalLead = isLight ? "leading-relaxed text-text-muted" : "leading-relaxed text-zinc-400";
+    : "h-14 flex-1 rounded-2xl border border-white/10 bg-transparent font-bold hover:bg-surface/5 transition-all";
+  const modalLead = isLight ? "leading-relaxed text-text-muted" : "leading-relaxed text-text";
 
   return (
     <>
@@ -96,7 +96,7 @@ export function VoiceControlsBar({
               ? "cursor-wait opacity-50"
               : micEnabled
                 ? idleButton
-                : "border border-red-500/20 bg-red-500/10 text-red-500 hover:bg-red-500/20",
+                : "border border-destructive/20 bg-destructive0/10 text-destructive0 hover:bg-destructive0/20",
           ].join(" ")}
           disabled={micBusy}
           onClick={onToggleMute}
@@ -141,7 +141,7 @@ export function VoiceControlsBar({
                 showFxPanel
                   ? isLight
                     ? "border border-accent/40 bg-accent/15 text-accent"
-                    : "border border-[#173B57]/40 bg-[#173B57]/20 text-[#173B57]"
+                    : "border border-primary/40 bg-primary/20 text-text"
                   : idleButton,
               ].join(" ")}
             >
@@ -179,7 +179,7 @@ export function VoiceControlsBar({
         {/* Leave button */}
         <button
           aria-label="Leave session"
-          className="ml-1 flex h-14 items-center justify-center rounded-full bg-red-600 px-8 font-bold text-white shadow-lg shadow-red-900/40 transition-all hover:bg-red-500 hover:scale-105"
+          className="ml-1 flex h-14 items-center justify-center rounded-full bg-destructive px-8 font-bold text-white shadow-lg shadow-red-900/40 transition-all hover:bg-destructive0 hover:scale-105"
           onClick={handleLeaveClick}
           type="button"
         >
@@ -197,8 +197,8 @@ export function VoiceControlsBar({
           aria-labelledby="leave-modal-title"
         >
           <section className={modalCard}>
-            <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-full border border-red-500/20 bg-red-500/10">
-              <PhoneOff className="h-8 w-8 text-red-500" />
+            <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-full border border-destructive/20 bg-destructive0/10">
+              <PhoneOff className="h-8 w-8 text-destructive0" />
             </div>
             <h2
               className="font-heading mb-4 text-3xl font-extrabold tracking-tighter text-primary"
@@ -215,7 +215,7 @@ export function VoiceControlsBar({
                 Cancel
               </button>
               <button
-                className="h-14 flex-1 rounded-2xl bg-red-600 font-bold shadow-lg shadow-red-900/40 hover:bg-red-500 transition-all"
+                className="h-14 flex-1 rounded-2xl bg-destructive font-bold shadow-lg shadow-red-900/40 hover:bg-destructive0 transition-all"
                 onClick={handleConfirmLeave}
                 type="button"
               >
