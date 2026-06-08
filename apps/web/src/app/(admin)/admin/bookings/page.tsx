@@ -7,7 +7,7 @@ export default function AdminBookingsPage() {
         <h1 className="text-3xl font-bold text-white">Bookings Queue</h1>
       </div>
 
-      <div className="bg-zinc-900 border border-zinc-800 rounded-lg h-[600px] flex items-center justify-center">
+      <div className="bg-text border border-border-strong rounded-lg h-[600px] flex items-center justify-center">
         <EmptyState
           title="No Upcoming Bookings"
           description="There are currently no active bookings in the system for this filter period."

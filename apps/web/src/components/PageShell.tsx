@@ -11,14 +11,14 @@ const navItems = [
 
 export function PageShell({ children }: { children: ReactNode }) {
   return (
-    <main className="min-h-screen bg-white text-primary">
+    <main className="min-h-screen bg-surface text-primary">
       <a
         href="#content"
         className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-md focus:bg-primary focus:px-4 focus:py-3 focus:text-white focus:outline-none focus:ring-2 focus:ring-primary"
       >
         Skip to content
       </a>
-      <header className="border-b border-border bg-white sticky top-0 z-40">
+      <header className="border-b border-border bg-surface sticky top-0 z-40">
         <nav className="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-4 md:flex-row md:items-center md:justify-between md:px-8">
           <Link
             href="/"
@@ -85,7 +85,7 @@ export function StatusPanel({ state }: { state: "loading" | "empty" | "error" | 
       className={[
         "rounded-md border p-4 text-sm font-body",
         state === "error"
-          ? "border-destructive bg-red-50 text-destructive"
+          ? "border-destructive bg-destructive text-destructive"
           : "",
         state === "success"
           ? "border-success bg-emerald-50 text-success"
@@ -97,7 +97,7 @@ export function StatusPanel({ state }: { state: "loading" | "empty" | "error" | 
           ? "animate-pulse border-border bg-surface text-transparent"
           : "",
         state === "empty"
-          ? "border-border bg-white text-secondary"
+          ? "border-border bg-surface text-secondary"
           : "",
       ].join(" ")}
     >

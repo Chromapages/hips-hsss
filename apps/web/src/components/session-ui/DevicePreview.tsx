@@ -32,7 +32,7 @@ export function DevicePreview({
 
   return (
     <div className="space-y-4">
-      <div className="relative aspect-video w-full overflow-hidden rounded-2xl bg-zinc-900 ring-1 ring-border">
+      <div className="relative aspect-video w-full overflow-hidden rounded-2xl bg-text ring-1 ring-border">
         {cameraPermissionGranted && cameraStream ? (
           <>
             <video

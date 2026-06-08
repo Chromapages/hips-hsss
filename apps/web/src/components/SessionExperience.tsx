@@ -33,16 +33,16 @@ export function SessionExperience({ sessionId }: { sessionId: string }) {
     <main data-layer="session" className="min-h-screen bg-black text-white overflow-hidden relative">
       {/* Background Ambient Layers */}
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(99,102,241,0.08)_0%,transparent_70%)]" />
-      <div className="absolute top-[20%] left-[20%] w-[500px] h-[500px] bg-[#173B57]/10 rounded-full blur-[120px] mix-blend-screen animate-pulse" />
+      <div className="absolute top-[20%] left-[20%] w-[500px] h-[500px] bg-primary/10 rounded-full blur-[120px] mix-blend-screen animate-pulse" />
       <div className="absolute bottom-[10%] right-[10%] w-[600px] h-[600px] bg-Gold-500/10 rounded-full blur-[150px] mix-blend-screen" />
 
       <div className="lg:hidden flex min-h-screen items-center justify-center p-6 text-center relative z-20">
         <section className="max-w-md rounded-3xl border border-white/10 bg-black/60 p-10 backdrop-blur-3xl shadow-2xl">
-          <div className="w-16 h-16 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center mx-auto mb-6">
+          <div className="w-16 h-16 rounded-2xl bg-surface/5 border border-white/10 flex items-center justify-center mx-auto mb-6">
             <span className="text-2xl">💻</span>
           </div>
           <h1 className="font-heading text-2xl font-extrabold tracking-tight mb-4">Wider screen required</h1>
-          <p className="text-zinc-400 leading-relaxed">
+          <p className="text-text leading-relaxed">
             For your security and immersion, the Virtual Sanctuary requires a desktop or laptop screen.
           </p>
         </section>
@@ -51,8 +51,8 @@ export function SessionExperience({ sessionId }: { sessionId: string }) {
       <div className="hidden min-h-screen grid-rows-[auto_1fr_auto] lg:grid relative z-10">
         <header className="grid grid-cols-3 items-center border-b border-white/5 bg-black/40 backdrop-blur-2xl px-8 py-4 z-20">
           <div className="flex flex-col">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Session Token</p>
-            <p className="font-mono text-sm font-bold text-[#173B57]">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-text-muted0">Session Token</p>
+            <p className="font-mono text-sm font-bold text-text">
               anon-{sessionId.slice(0, 6)}
             </p>
           </div>
@@ -66,7 +66,7 @@ export function SessionExperience({ sessionId }: { sessionId: string }) {
           </div>
 
           <div className="flex items-center justify-end gap-3">
-            <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Network</span>
+            <span className="text-[10px] font-bold uppercase tracking-widest text-text-muted0">Network</span>
             <span className="inline-flex gap-1 items-end h-5" aria-label="Connection quality">
               <span className="h-2 w-1.5 rounded-sm bg-emerald-500" />
               <span className="h-3.5 w-1.5 rounded-sm bg-emerald-500" />
@@ -79,8 +79,8 @@ export function SessionExperience({ sessionId }: { sessionId: string }) {
           {/* Abstract Virtual Space */}
           <div className="relative w-full max-w-5xl aspect-video flex items-center justify-center">
             {/* The "Table" / Center piece */}
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[300px] rounded-[100%] border border-white/5 bg-white/[0.01] shadow-[inset_0_0_100px_rgba(255,255,255,0.02)] rotate-x-[60deg]" />
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[200px] rounded-[100%] border border-[#173B57]/10 bg-[#173B57]/[0.02] shadow-[0_0_50px_rgba(99,102,241,0.1)] rotate-x-[60deg]" />
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[300px] rounded-[100%] border border-white/5 bg-surface/[0.01] shadow-[inset_0_0_100px_rgba(255,255,255,0.02)] rotate-x-[60deg]" />
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[200px] rounded-[100%] border border-primary/10 bg-primary/[0.02] shadow-[0_0_50px_rgba(99,102,241,0.1)] rotate-x-[60deg]" />
             
             {/* Participants */}
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-[40%] w-[800px] flex justify-between items-center px-12 z-10">
@@ -89,7 +89,7 @@ export function SessionExperience({ sessionId }: { sessionId: string }) {
                   <div className="relative mb-6">
                     {/* Active Speaker Ring */}
                     {index === 0 && (
-                      <div className="absolute -inset-4 rounded-full border border-[#173B57]/30 animate-ping opacity-50" />
+                      <div className="absolute -inset-4 rounded-full border border-primary/30 animate-ping opacity-50" />
                     )}
                     
                     <div
@@ -100,7 +100,7 @@ export function SessionExperience({ sessionId }: { sessionId: string }) {
                       ].join(" ")}
                     >
                       {/* Inner avatar core */}
-                      <div className="w-16 h-16 rounded-full bg-white/20 blur-md mix-blend-overlay" />
+                      <div className="w-16 h-16 rounded-full bg-surface/20 blur-md mix-blend-overlay" />
                     </div>
                   </div>
                   
@@ -112,13 +112,13 @@ export function SessionExperience({ sessionId }: { sessionId: string }) {
                   <div className="mt-3">
                     {index === 0 ? (
                       <div className="flex gap-1 h-3 items-end">
-                        <span className="w-1 rounded-sm bg-[#173B57] animate-[bounce_1s_infinite_100ms] h-2" />
-                        <span className="w-1 rounded-sm bg-[#173B57] animate-[bounce_1s_infinite_200ms] h-3" />
-                        <span className="w-1 rounded-sm bg-[#173B57] animate-[bounce_1s_infinite_300ms] h-1.5" />
+                        <span className="w-1 rounded-sm bg-primary animate-[bounce_1s_infinite_100ms] h-2" />
+                        <span className="w-1 rounded-sm bg-primary animate-[bounce_1s_infinite_200ms] h-3" />
+                        <span className="w-1 rounded-sm bg-primary animate-[bounce_1s_infinite_300ms] h-1.5" />
                       </div>
                     ) : (
-                      <div className="w-4 h-4 rounded-full bg-white/10 flex items-center justify-center">
-                        <div className="w-1 h-1 rounded-full bg-red-500" />
+                      <div className="w-4 h-4 rounded-full bg-surface/10 flex items-center justify-center">
+                        <div className="w-1 h-1 rounded-full bg-destructive0" />
                       </div>
                     )}
                   </div>
@@ -142,30 +142,30 @@ export function SessionExperience({ sessionId }: { sessionId: string }) {
               className={[
                 "flex items-center gap-2 h-14 rounded-2xl px-6 font-bold text-sm transition-all",
                 muted 
-                  ? "bg-red-500/10 text-red-500 border border-red-500/20 hover:bg-red-500/20" 
-                  : "bg-white/5 text-white border border-white/5 hover:bg-white/10"
+                  ? "bg-destructive0/10 text-destructive0 border border-destructive/20 hover:bg-destructive0/20" 
+                  : "bg-surface/5 text-white border border-white/5 hover:bg-surface/10"
               ].join(" ")}
               onClick={() => setMuted((value) => !value)}
             >
               {muted ? "Unmuted" : "Mute Mic"}
             </button>
             
-            <div className="h-8 w-px bg-white/10 mx-2" />
+            <div className="h-8 w-px bg-surface/10 mx-2" />
             
             <select
               aria-label="Gesture"
-              className="h-14 rounded-2xl border border-white/5 bg-white/5 px-6 font-bold text-sm text-white focus:ring-1 focus:ring-[#173B57] focus:outline-none appearance-none hover:bg-white/10 transition-colors cursor-pointer"
+              className="h-14 rounded-2xl border border-white/5 bg-surface/5 px-6 font-bold text-sm text-white focus:ring-1 focus:ring-primary focus:outline-none appearance-none hover:bg-surface/10 transition-colors cursor-pointer"
               value={gesture}
               onChange={(event) => setGesture(event.target.value as AvatarGesture)}
             >
               {gestures.map((item) => (
-                <option key={item} value={item} className="bg-zinc-900 text-white">
+                <option key={item} value={item} className="bg-text text-white">
                   Express: {item.charAt(0).toUpperCase() + item.slice(1).replace('-', ' ')}
                 </option>
               ))}
             </select>
             
-            <div className="h-8 w-px bg-white/10 mx-2" />
+            <div className="h-8 w-px bg-surface/10 mx-2" />
 
             <button
               className="h-14 w-14 rounded-2xl border border-amber-500/20 bg-amber-500/10 flex items-center justify-center text-amber-500 hover:bg-amber-500/20 transition-all hover:scale-105"
@@ -176,7 +176,7 @@ export function SessionExperience({ sessionId }: { sessionId: string }) {
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
             </button>
             
-            <button className="h-14 rounded-2xl bg-red-600 px-8 font-bold text-white text-sm hover:bg-red-500 transition-all shadow-lg shadow-red-900/20 hover:scale-105 ml-2">
+            <button className="h-14 rounded-2xl bg-destructive px-8 font-bold text-white text-sm hover:bg-destructive0 transition-all shadow-lg shadow-red-900/20 hover:scale-105 ml-2">
               Leave
             </button>
           </div>

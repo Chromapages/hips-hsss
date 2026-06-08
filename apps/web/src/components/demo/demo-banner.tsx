@@ -36,15 +36,15 @@ export function DemoBanner({ onDisconnect, exitPath = '/join', variant = 'dark' 
   const isLight = variant === 'light';
   const badge = isLight
     ? 'flex items-center gap-2 rounded-full border border-accent/40 bg-accent/10 px-4 py-2 backdrop-blur-md shadow-md shadow-accent/20'
-    : 'flex items-center gap-2 rounded-full border border-[#D4AF37]/30 bg-[#0D2E2B]/90 px-4 py-2 backdrop-blur-md shadow-lg shadow-black/20';
-  const pingDot = isLight ? 'bg-accent' : 'bg-[#D4AF37]';
-  const staticDot = isLight ? 'bg-accent' : 'bg-[#D4AF37]';
+    : 'flex items-center gap-2 rounded-full border border-accent/30 bg-primary/90 px-4 py-2 backdrop-blur-md shadow-lg shadow-black/20';
+  const pingDot = isLight ? 'bg-accent' : 'bg-accent';
+  const staticDot = isLight ? 'bg-accent' : 'bg-accent';
   const badgeText = isLight
     ? 'text-xs font-bold uppercase tracking-[0.15em] text-accent'
-    : 'text-xs font-bold uppercase tracking-[0.15em] text-[#D4AF37]';
+    : 'text-xs font-bold uppercase tracking-[0.15em] text-accent';
   const exitBtn = isLight
     ? 'group flex items-center gap-2 rounded-full border border-border bg-background/80 px-4 py-2 text-sm font-semibold text-primary backdrop-blur-md transition-all hover:border-accent/40 hover:bg-surface active:scale-95'
-    : 'group flex items-center gap-2 rounded-full border border-white/10 bg-black/60 px-4 py-2 text-sm font-semibold text-white backdrop-blur-md transition-all hover:border-white/20 hover:bg-white/10 active:scale-95';
+    : 'group flex items-center gap-2 rounded-full border border-white/10 bg-black/60 px-4 py-2 text-sm font-semibold text-white backdrop-blur-md transition-all hover:border-white/20 hover:bg-surface/10 active:scale-95';
 
   return (
     <div
@@ -101,16 +101,16 @@ export function DemoBannerWithConfirm({
   const isLight = variant === 'light';
   const badge = isLight
     ? 'flex items-center gap-2 rounded-full border border-accent/40 bg-accent/10 px-4 py-2 backdrop-blur-md shadow-md shadow-accent/20'
-    : 'flex items-center gap-2 rounded-full border border-[#D4AF37]/30 bg-[#0D2E2B]/90 px-4 py-2 backdrop-blur-md shadow-lg shadow-black/20';
-  const pingDot = isLight ? 'bg-accent' : 'bg-[#D4AF37]';
-  const staticDot = isLight ? 'bg-accent' : 'bg-[#D4AF37]';
+    : 'flex items-center gap-2 rounded-full border border-accent/30 bg-primary/90 px-4 py-2 backdrop-blur-md shadow-lg shadow-black/20';
+  const pingDot = isLight ? 'bg-accent' : 'bg-accent';
+  const staticDot = isLight ? 'bg-accent' : 'bg-accent';
   const badgeText = isLight
     ? 'text-xs font-bold uppercase tracking-[0.15em] text-accent'
-    : 'text-xs font-bold uppercase tracking-[0.15em] text-[#D4AF37]';
-  const alertIcon = isLight ? 'h-3 w-3 text-accent/70' : 'h-3 w-3 text-[#D4AF37]/60';
+    : 'text-xs font-bold uppercase tracking-[0.15em] text-accent';
+  const alertIcon = isLight ? 'h-3 w-3 text-accent/70' : 'h-3 w-3 text-accent/60';
   const exitBtn = isLight
     ? 'group flex items-center gap-2 rounded-full border border-border bg-background/80 px-4 py-2 text-sm font-semibold text-primary backdrop-blur-md transition-all hover:border-accent/40 hover:bg-surface active:scale-95'
-    : 'group flex items-center gap-2 rounded-full border border-white/10 bg-black/60 px-4 py-2 text-sm font-semibold text-white backdrop-blur-md transition-all hover:border-white/20 hover:bg-white/10 active:scale-95';
+    : 'group flex items-center gap-2 rounded-full border border-white/10 bg-black/60 px-4 py-2 text-sm font-semibold text-white backdrop-blur-md transition-all hover:border-white/20 hover:bg-surface/10 active:scale-95';
 
   return (
     <div

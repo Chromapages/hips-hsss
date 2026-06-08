@@ -83,7 +83,7 @@ export function OrganizationIntakeForm() {
 
   if (isSubmitted) {
     return (
-      <div className="rounded-2xl bg-white border border-border p-12 text-center animate-in fade-in zoom-in-95 duration-500 overflow-hidden relative shadow-card">
+      <div className="rounded-2xl bg-surface border border-border p-12 text-center animate-in fade-in zoom-in-95 duration-500 overflow-hidden relative shadow-card">
         {/* Success Background Glow */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-64 h-64 bg-emerald-500/5 blur-[100px] -z-10" />
         
@@ -121,7 +121,7 @@ export function OrganizationIntakeForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-8 bg-white border border-border rounded-2xl p-8 md:p-10 shadow-card">
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-8 bg-surface border border-border rounded-2xl p-8 md:p-10 shadow-card">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
         {/* Left Column */}
         <div className="space-y-6">
@@ -131,7 +131,7 @@ export function OrganizationIntakeForm() {
               Organization Name
             </label>
             <Input placeholder="e.g. Acme Corp" {...register("orgName")} />
-            {errors.orgName && <p className="text-xs text-red-500 ml-1 font-body">{errors.orgName.message}</p>}
+            {errors.orgName && <p className="text-xs text-destructive0 ml-1 font-body">{errors.orgName.message}</p>}
           </div>
 
           <div className="space-y-2">
@@ -140,7 +140,7 @@ export function OrganizationIntakeForm() {
               Primary Contact
             </label>
             <Input placeholder="Full Name" {...register("contactName")} />
-            {errors.contactName && <p className="text-xs text-red-500 ml-1 font-body">{errors.contactName.message}</p>}
+            {errors.contactName && <p className="text-xs text-destructive0 ml-1 font-body">{errors.contactName.message}</p>}
           </div>
 
           <div className="space-y-2">
@@ -149,7 +149,7 @@ export function OrganizationIntakeForm() {
               Work Email
             </label>
             <Input type="email" placeholder="name@organization.org" {...register("email")} />
-            {errors.email && <p className="text-xs text-red-500 ml-1 font-body">{errors.email.message}</p>}
+            {errors.email && <p className="text-xs text-destructive0 ml-1 font-body">{errors.email.message}</p>}
           </div>
 
           <div className="pt-2 space-y-4">
@@ -166,7 +166,7 @@ export function OrganizationIntakeForm() {
               <div className="space-y-2 animate-in slide-in-from-top-2 duration-300">
                 <label className="text-xs font-bold font-ui uppercase tracking-wider text-text-primary ml-1">Tax ID (EIN)</label>
                 <Input placeholder="XX-XXXXXXX" {...register("ein")} />
-                {errors.ein && <p className="text-xs text-red-500 ml-1 font-body">{errors.ein.message}</p>}
+                {errors.ein && <p className="text-xs text-destructive0 ml-1 font-body">{errors.ein.message}</p>}
               </div>
             )}
           </div>
@@ -180,12 +180,12 @@ export function OrganizationIntakeForm() {
               <select
                 id="eventType"
                 {...register("eventType")}
-                className="w-full h-12 rounded-lg border border-border bg-white px-4 text-sm text-text-primary focus:ring-2 focus:ring-primary focus:border-primary/50 outline-none transition-all appearance-none cursor-pointer font-body"
+                className="w-full h-12 rounded-lg border border-border bg-surface px-4 text-sm text-text-primary focus:ring-2 focus:ring-primary focus:border-primary/50 outline-none transition-all appearance-none cursor-pointer font-body"
               >
-                <option value="" className="bg-white text-text-primary">Select event type</option>
-                <option value="WORKSHOP" className="bg-white text-text-primary">Interactive Workshop</option>
-                <option value="RECURRING" className="bg-white text-text-primary">Recurring Peer Support</option>
-                <option value="CONSULTANCY" className="bg-white text-text-primary">Care Navigation Setup</option>
+                <option value="" className="bg-surface text-text-primary">Select event type</option>
+                <option value="WORKSHOP" className="bg-surface text-text-primary">Interactive Workshop</option>
+                <option value="RECURRING" className="bg-surface text-text-primary">Recurring Peer Support</option>
+                <option value="CONSULTANCY" className="bg-surface text-text-primary">Care Navigation Setup</option>
               </select>
               <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-text-secondary" aria-hidden="true">
                 <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
@@ -193,7 +193,7 @@ export function OrganizationIntakeForm() {
                 </svg>
               </div>
             </div>
-            {errors.eventType && <p className="text-xs text-red-500 ml-1 font-body">{errors.eventType.message}</p>}
+            {errors.eventType && <p className="text-xs text-destructive0 ml-1 font-body">{errors.eventType.message}</p>}
           </div>
 
           <div className="space-y-2">
@@ -202,7 +202,7 @@ export function OrganizationIntakeForm() {
               Estimated Headcount
             </label>
             <Input type="number" {...register("headcount")} />
-            {errors.headcount && <p className="text-xs text-red-500 ml-1 font-body">{errors.headcount.message}</p>}
+            {errors.headcount && <p className="text-xs text-destructive0 ml-1 font-body">{errors.headcount.message}</p>}
           </div>
 
           <div className="grid grid-cols-2 gap-4">
@@ -212,12 +212,12 @@ export function OrganizationIntakeForm() {
                 Earliest Start
               </label>
               <Input type="date" {...register("preferredStart")} />
-              {errors.preferredStart && <p className="text-xs text-red-500 ml-1 font-body">{errors.preferredStart.message}</p>}
+              {errors.preferredStart && <p className="text-xs text-destructive0 ml-1 font-body">{errors.preferredStart.message}</p>}
             </div>
             <div className="space-y-2">
               <label className="text-xs font-bold font-ui uppercase tracking-wider text-text-primary ml-1">Latest End</label>
               <Input type="date" {...register("preferredEnd")} />
-              {errors.preferredEnd && <p className="text-xs text-red-500 ml-1 font-body">{errors.preferredEnd.message}</p>}
+              {errors.preferredEnd && <p className="text-xs text-destructive0 ml-1 font-body">{errors.preferredEnd.message}</p>}
             </div>
           </div>
         </div>

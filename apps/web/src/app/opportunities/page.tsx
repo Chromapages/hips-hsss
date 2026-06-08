@@ -81,17 +81,17 @@ export default function OpportunitiesPage() {
   return (
     <>
       <Navbar />
-      <main className="min-h-screen bg-white text-text-primary selection:bg-[#173B57]/30 overflow-x-hidden">
+      <main className="min-h-screen bg-surface text-text-primary selection:bg-primary/30 overflow-x-hidden">
         {/* Hero Section */}
         <section
-          className="relative bg-[#173B57] text-white py-24 md:py-32"
+          className="relative bg-primary text-white py-24 md:py-32"
           aria-labelledby="hero-title"
         >
           {/* Subtle design element */}
           <div className="absolute inset-0 opacity-10 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-white via-transparent to-transparent pointer-events-none" />
           
           <div className="max-w-[1200px] mx-auto px-6 text-center relative z-10">
-            <span className="inline-flex items-center rounded-full border border-accent/40 bg-accent/10 px-5 py-1.5 text-[10px] font-bold uppercase tracking-brand text-[#C59A35] font-ui mb-6">
+            <span className="inline-flex items-center rounded-full border border-accent/40 bg-accent/10 px-5 py-1.5 text-[10px] font-bold uppercase tracking-brand text-accent font-ui mb-6">
               Partnerships
             </span>
             <h1
@@ -106,14 +106,14 @@ export default function OpportunitiesPage() {
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <Button
                 asChild
-                className="h-12 px-8 rounded-full bg-[#C59A35] text-white hover:bg-[#A67F28] transition-all font-bold text-sm uppercase tracking-wide"
+                className="h-12 px-8 rounded-full bg-accent text-white hover:bg-accent transition-all font-bold text-sm uppercase tracking-wide"
               >
                 <Link href="/organizations">Partner With Us</Link>
               </Button>
               <Button
                 asChild
                 variant="outline"
-                className="h-12 px-8 rounded-full border-2 border-white bg-transparent text-white hover:bg-white hover:text-[#173B57] transition-all font-bold text-sm uppercase tracking-wide"
+                className="h-12 px-8 rounded-full border-2 border-white bg-transparent text-white hover:bg-surface hover:text-text transition-all font-bold text-sm uppercase tracking-wide"
               >
                 <a href="#programs">Learn More</a>
               </Button>
@@ -124,17 +124,17 @@ export default function OpportunitiesPage() {
         {/* Programs Section */}
         <section
           id="programs"
-          className="py-20 bg-white"
+          className="py-20 bg-surface"
           aria-labelledby="programs-title"
         >
           <div className="max-w-[1200px] mx-auto px-6">
             <div className="text-center mb-16">
-              <span className="text-sm font-semibold uppercase tracking-wide text-[#C59A35] brand-caps">
+              <span className="text-sm font-semibold uppercase tracking-wide text-accent brand-caps">
                 Our Programs
               </span>
               <h2
                 id="programs-title"
-                className="mt-3 font-heading text-3xl md:text-4xl font-bold text-[#173B57]"
+                className="mt-3 font-heading text-3xl md:text-4xl font-bold text-text"
               >
                 Partnership Pathways
               </h2>
@@ -147,16 +147,16 @@ export default function OpportunitiesPage() {
               {PROGRAMS.map((program) => (
                 <article
                   key={program.title}
-                  className="relative flex flex-col rounded-3xl border border-border bg-[#F6F8FA] p-8 shadow-soft transition-all hover:shadow-card"
+                  className="relative flex flex-col rounded-3xl border border-border bg-bg-subtle p-8 shadow-soft transition-all hover:shadow-card"
                 >
                   <div className="flex items-center gap-x-4 mb-6">
-                    <div className="rounded-xl bg-[#173B57]/10 p-3">
+                    <div className="rounded-xl bg-primary/10 p-3">
                       <program.icon
-                        className="h-6 w-6 text-[#173B57]"
+                        className="h-6 w-6 text-text"
                         aria-hidden="true"
                       />
                     </div>
-                    <h3 className="text-lg font-bold text-[#173B57] font-heading">
+                    <h3 className="text-lg font-bold text-text font-heading">
                       {program.title}
                     </h3>
                   </div>
@@ -172,7 +172,7 @@ export default function OpportunitiesPage() {
                     {program.features.map((feature) => (
                       <li key={feature} className="flex gap-x-3 items-center">
                         <CheckCircle
-                          className="h-5 w-4 flex-none text-[#C59A35]"
+                          className="h-5 w-4 flex-none text-accent"
                           aria-hidden="true"
                         />
                         {feature}
@@ -187,17 +187,17 @@ export default function OpportunitiesPage() {
 
         {/* How It Works Section */}
         <section
-          className="py-20 bg-[#F6F8FA] border-t border-border"
+          className="py-20 bg-bg-subtle border-t border-border"
           aria-labelledby="how-it-works-title"
         >
           <div className="max-w-[1200px] mx-auto px-6">
             <div className="text-center mb-16">
-              <span className="text-sm font-semibold uppercase tracking-wide text-[#C59A35] brand-caps">
+              <span className="text-sm font-semibold uppercase tracking-wide text-accent brand-caps">
                 Integration Process
               </span>
               <h2
                 id="how-it-works-title"
-                className="mt-3 font-heading text-3xl md:text-4xl font-bold text-[#173B57]"
+                className="mt-3 font-heading text-3xl md:text-4xl font-bold text-text"
               >
                 How It Works
               </h2>
@@ -206,7 +206,7 @@ export default function OpportunitiesPage() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-12 relative">
               {/* Connecting line for desktop layout */}
               <div
-                className="hidden md:block absolute top-12 left-[15%] right-[15%] h-0.5 bg-gradient-to-r from-transparent via-[#C59A35]/30 to-transparent pointer-events-none"
+                className="hidden md:block absolute top-12 left-[15%] right-[15%] h-0.5 bg-gradient-to-r from-transparent via-accent/30 to-transparent pointer-events-none"
                 aria-hidden="true"
               />
 
@@ -215,10 +215,10 @@ export default function OpportunitiesPage() {
                   key={step.number}
                   className="flex flex-col items-center text-center relative z-10"
                 >
-                  <div className="w-14 h-14 rounded-full bg-[#173B57] text-white flex items-center justify-center text-lg font-bold font-heading mb-6 shadow-sm">
+                  <div className="w-14 h-14 rounded-full bg-primary text-white flex items-center justify-center text-lg font-bold font-heading mb-6 shadow-sm">
                     {step.number}
                   </div>
-                  <h3 className="font-heading text-xl font-bold text-[#173B57] mb-3">
+                  <h3 className="font-heading text-xl font-bold text-text mb-3">
                     {step.title}
                   </h3>
                   <p className="text-sm text-text-secondary leading-relaxed font-body max-w-[280px]">
@@ -232,14 +232,14 @@ export default function OpportunitiesPage() {
 
         {/* Call to Action Footer */}
         <section
-          className="py-20 bg-[#173B57] text-white text-center border-t border-border relative overflow-hidden"
+          className="py-20 bg-primary text-white text-center border-t border-border relative overflow-hidden"
           aria-labelledby="cta-title"
         >
-          <div className="absolute inset-0 opacity-5 bg-[radial-gradient(ellipse_at_bottom,_var(--tw-gradient-stops))] from-[#C59A35] via-transparent to-transparent pointer-events-none" />
+          <div className="absolute inset-0 opacity-5 bg-[radial-gradient(ellipse_at_bottom,_var(--tw-gradient-stops))] from-accent via-transparent to-transparent pointer-events-none" />
           
           <div className="max-w-3xl mx-auto px-6 relative z-10">
             <ShieldCheck
-              className="mx-auto h-12 w-12 text-[#C59A35] mb-6"
+              className="mx-auto h-12 w-12 text-accent mb-6"
               aria-hidden="true"
             />
             <h2
@@ -253,7 +253,7 @@ export default function OpportunitiesPage() {
             </p>
             <Button
               asChild
-              className="h-12 px-8 rounded-full bg-[#C59A35] text-white hover:bg-[#A67F28] transition-all font-bold text-sm uppercase tracking-wide"
+              className="h-12 px-8 rounded-full bg-accent text-white hover:bg-accent transition-all font-bold text-sm uppercase tracking-wide"
             >
               <Link href="/organizations">
                 Get Started

@@ -125,7 +125,7 @@ export default function DashboardPage() {
         {/* Zone A: Stat Bar Skeleton */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="bg-white border border-border rounded-xl p-6 h-28 flex items-center justify-between">
+            <div key={i} className="bg-surface border border-border rounded-xl p-6 h-28 flex items-center justify-between">
               <div className="space-y-3">
                 <div className="h-3 w-28 bg-border rounded" />
                 <div className="h-8 w-16 bg-border rounded-md" />
@@ -136,7 +136,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Zone B: Hero Skeleton */}
-        <div className="h-48 bg-white border border-border rounded-xl p-8 flex flex-col justify-between">
+        <div className="h-48 bg-surface border border-border rounded-xl p-8 flex flex-col justify-between">
           <div className="space-y-3">
             <div className="h-5 w-24 bg-border rounded-full" />
             <div className="h-8 w-72 bg-border rounded-md" />
@@ -153,7 +153,7 @@ export default function DashboardPage() {
               <div className="h-6 w-36 bg-border rounded-md" />
               <div className="h-4 w-16 bg-border rounded" />
             </div>
-            <div className="h-80 bg-white border border-border rounded-xl p-6 space-y-4">
+            <div className="h-80 bg-surface border border-border rounded-xl p-6 space-y-4">
               <div className="h-10 bg-surface rounded-md" />
               <div className="h-12 bg-surface rounded-md" />
               <div className="h-12 bg-surface rounded-md" />
@@ -163,11 +163,11 @@ export default function DashboardPage() {
 
           {/* Sidebar Column */}
           <div className="space-y-6">
-            <div className="h-44 bg-white border border-border rounded-xl p-6 space-y-4">
+            <div className="h-44 bg-surface border border-border rounded-xl p-6 space-y-4">
               <div className="h-6 w-32 bg-border rounded-md" />
               <div className="h-12 bg-surface rounded-lg" />
             </div>
-            <div className="h-56 bg-white border border-border rounded-xl p-6 space-y-4">
+            <div className="h-56 bg-surface border border-border rounded-xl p-6 space-y-4">
               <div className="h-6 w-32 bg-border rounded-md" />
               <div className="h-12 bg-surface rounded-lg" />
               <div className="h-12 bg-surface rounded-lg" />
@@ -244,7 +244,7 @@ export default function DashboardPage() {
         {statsList.map(({ label, value, icon: Icon }) => (
           <article
             key={label}
-            className="bg-white border border-border rounded-xl p-6 shadow-soft flex items-center justify-between"
+            className="bg-surface border border-border rounded-xl p-6 shadow-soft flex items-center justify-between"
           >
             <div>
               <p className="text-[10px] font-bold uppercase tracking-wider text-text-secondary font-ui mb-1">{label}</p>
@@ -259,7 +259,7 @@ export default function DashboardPage() {
 
       {/* Zone B: Next Session Hero */}
       {dashboardData.nextSession ? (
-        <article className="relative overflow-hidden rounded-xl border border-border border-t-4 border-t-accent bg-white p-8 shadow-card flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+        <article className="relative overflow-hidden rounded-xl border border-border border-t-4 border-t-accent bg-surface p-8 shadow-card flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
           <div className="space-y-3">
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-accent/10 border border-accent/20 text-[10px] font-bold uppercase tracking-wider text-accent font-ui">
               <span>NEXT SESSION</span>
@@ -299,7 +299,7 @@ export default function DashboardPage() {
           </div>
         </article>
       ) : (
-        <article className="relative overflow-hidden rounded-xl border border-border border-t-4 border-t-primary bg-white p-10 shadow-soft text-center flex flex-col items-center justify-center">
+        <article className="relative overflow-hidden rounded-xl border border-border border-t-4 border-t-primary bg-surface p-10 shadow-soft text-center flex flex-col items-center justify-center">
           <div className="h-16 w-16 rounded-full bg-surface flex items-center justify-center mb-4">
             <ShieldCheck className="h-10 w-10 text-primary" aria-hidden="true" />
           </div>
@@ -317,7 +317,7 @@ export default function DashboardPage() {
               Browse Services
             </Link>
             <Link
-              className="inline-flex h-12 items-center justify-center rounded-pill border border-border bg-white text-text-primary hover:bg-surface px-8 text-sm font-bold shadow-soft transition-all hover:scale-[1.02] active:scale-95 whitespace-nowrap font-ui uppercase tracking-wider"
+              className="inline-flex h-12 items-center justify-center rounded-pill border border-border bg-surface text-text-primary hover:bg-surface px-8 text-sm font-bold shadow-soft transition-all hover:scale-[1.02] active:scale-95 whitespace-nowrap font-ui uppercase tracking-wider"
               href="/join"
             >
               Enter with Session ID
@@ -347,14 +347,14 @@ export default function DashboardPage() {
           <PackageBalanceCard packages={dashboardData.packages} />
 
           {/* Quick Actions Card */}
-          <article className="rounded-xl border border-border bg-white p-6 shadow-soft space-y-4">
+          <article className="rounded-xl border border-border bg-surface p-6 shadow-soft space-y-4">
             <h3 className="text-lg font-bold tracking-tight text-text-primary font-heading border-b border-border pb-3">
               Quick Actions
             </h3>
             <div className="space-y-3">
               <Link
                 href="/join"
-                className="flex items-center justify-between p-3.5 rounded-lg border border-border bg-white hover:border-accent/40 hover:bg-surface transition-all group"
+                className="flex items-center justify-between p-3.5 rounded-lg border border-border bg-surface hover:border-accent/40 hover:bg-surface transition-all group"
               >
                 <div className="flex flex-col">
                   <span className="text-sm font-semibold text-text-primary group-hover:text-primary transition-colors">Enter Session ID</span>
@@ -365,7 +365,7 @@ export default function DashboardPage() {
 
               <Link
                 href="/services"
-                className="flex items-center justify-between p-3.5 rounded-lg border border-border bg-white hover:border-accent/40 hover:bg-surface transition-all group"
+                className="flex items-center justify-between p-3.5 rounded-lg border border-border bg-surface hover:border-accent/40 hover:bg-surface transition-all group"
               >
                 <div className="flex flex-col">
                   <span className="text-sm font-semibold text-text-primary group-hover:text-primary transition-colors">Browse Services</span>
@@ -376,7 +376,7 @@ export default function DashboardPage() {
 
               <Link
                 href="/dashboard/downloads"
-                className="flex items-center justify-between p-3.5 rounded-lg border border-border bg-white hover:border-accent/40 hover:bg-surface transition-all group"
+                className="flex items-center justify-between p-3.5 rounded-lg border border-border bg-surface hover:border-accent/40 hover:bg-surface transition-all group"
               >
                 <div className="flex flex-col">
                   <span className="text-sm font-semibold text-text-primary group-hover:text-primary transition-colors">Download Resources</span>
@@ -390,9 +390,9 @@ export default function DashboardPage() {
       </div>
 
       {/* Zone D: Crisis Strip */}
-      <article className="bg-[#173B57]/5 border border-[#173B57]/10 rounded-xl p-5 flex flex-col md:flex-row items-center justify-between gap-4">
+      <article className="bg-primary/5 border border-primary/10 rounded-xl p-5 flex flex-col md:flex-row items-center justify-between gap-4">
         <div className="flex items-center gap-3.5 text-left">
-          <div className="h-10 w-10 rounded-lg bg-white flex items-center justify-center flex-shrink-0 shadow-soft">
+          <div className="h-10 w-10 rounded-lg bg-surface flex items-center justify-center flex-shrink-0 shadow-soft">
             <ShieldAlert className="h-5 w-5 text-destructive" aria-hidden="true" />
           </div>
           <div>
@@ -403,13 +403,13 @@ export default function DashboardPage() {
         <div className="flex items-center gap-3 w-full md:w-auto">
           <a
             href="tel:988"
-            className="flex-1 md:flex-none inline-flex h-10 items-center justify-center rounded-pill bg-[#9C3E3E] text-white px-5 text-xs font-bold font-ui uppercase tracking-wide transition-all hover:bg-[#9C3E3E]/90 active:scale-95 whitespace-nowrap shadow-soft"
+            className="flex-1 md:flex-none inline-flex h-10 items-center justify-center rounded-pill bg-destructive text-white px-5 text-xs font-bold font-ui uppercase tracking-wide transition-all hover:bg-destructive/90 active:scale-95 whitespace-nowrap shadow-soft"
           >
             Call or Text 988
           </a>
           <Link
             href="/crisis"
-            className="flex-1 md:flex-none inline-flex h-10 items-center justify-center rounded-pill border border-border bg-white text-text-primary px-5 text-xs font-bold font-ui uppercase tracking-wide transition-all hover:bg-surface active:scale-95 whitespace-nowrap shadow-soft"
+            className="flex-1 md:flex-none inline-flex h-10 items-center justify-center rounded-pill border border-border bg-surface text-text-primary px-5 text-xs font-bold font-ui uppercase tracking-wide transition-all hover:bg-surface active:scale-95 whitespace-nowrap shadow-soft"
           >
             Crisis Resources
           </Link>

@@ -24,6 +24,7 @@ const PROTECTED_PAGES = [
   { prefix: '/checkout', roles: [] },
   { prefix: '/session', roles: [] },
   { prefix: '/facilitator', roles: [ROLES.FACILITATOR, ROLES.ADMIN] },
+  { prefix: '/host', roles: [ROLES.FACILITATOR, ROLES.ADMIN] },
   { prefix: '/admin', roles: [ROLES.ADMIN] },
 ];
 
@@ -286,6 +287,7 @@ export const config = {
     '/checkout/:path*',
     '/session/:path*',
     '/facilitator/:path*',
+    '/host/:path*',
     '/admin/:path*',
   ],
 };

@@ -69,7 +69,7 @@ export function CrisisResourceOverlay({ onClose }: { onClose: () => void }) {
           </a>
           <p className="rounded-lg border border-white/30 p-4">Local emergency number: 911.</p>
         </div>
-        <button className="mt-8 min-h-11 rounded-xl bg-white px-4 font-semibold text-red-950" onClick={onClose} type="button">
+        <button className="mt-8 min-h-11 rounded-xl bg-surface px-4 font-semibold text-red-950" onClick={onClose} type="button">
           I am safe, close this
         </button>
       </section>

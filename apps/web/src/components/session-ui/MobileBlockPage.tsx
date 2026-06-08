@@ -39,17 +39,17 @@ export function MobileBlockPage({ returnUrl = "/dashboard" }: MobileBlockPagePro
         </svg>
       </div>
       <h1 className="text-2xl font-bold">Sessions require a laptop or desktop computer</h1>
-      <p className="mt-3 max-w-sm text-zinc-400">
+      <p className="mt-3 max-w-sm text-text">
         Your device screen is too small for the 3D session environment. Please switch to a
         device with a screen width of at least 1024 pixels.
       </p>
-      <div className="mt-4 rounded-xl border border-white/10 bg-white/5 px-4 py-2">
-        <p className="font-mono text-xs text-zinc-500">
+      <div className="mt-4 rounded-xl border border-white/10 bg-surface/5 px-4 py-2">
+        <p className="font-mono text-xs text-text-muted0">
           Current width: {viewportWidth}px | Required: ≥1024px
         </p>
       </div>
       <button
-        className="mt-8 rounded-xl bg-[#173B57] px-8 py-3 font-medium text-white shadow-lg shadow-[#173B57]/20 transition-all hover:bg-[#173B57]"
+        className="mt-8 rounded-xl bg-primary px-8 py-3 font-medium text-white shadow-lg shadow-primary/20 transition-all hover:bg-primary"
         onClick={() => router.push(returnUrl)}
         type="button"
       >

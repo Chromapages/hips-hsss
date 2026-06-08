@@ -61,13 +61,13 @@ function StatBlock({ stat }: { stat: StatItem }) {
       className="flex flex-col items-center text-center px-4 py-6 md:py-8 group"
     >
       {/* Icon */}
-      <div className="w-10 h-10 rounded-full bg-[#C59A35]/10 border border-[#C59A35]/20 flex items-center justify-center mb-5 group-hover:scale-110 transition-transform duration-200">
-        <Icon className="w-5 h-5 text-[#C59A35]" aria-hidden="true" />
+      <div className="w-10 h-10 rounded-full bg-accent/10 border border-accent/20 flex items-center justify-center mb-5 group-hover:scale-110 transition-transform duration-200">
+        <Icon className="w-5 h-5 text-accent" aria-hidden="true" />
       </div>
 
       {/* Animated counter */}
       <span
-        className="text-5xl md:text-6xl font-bold text-[#C59A35] tracking-tight leading-none mb-3 font-heading"
+        className="text-5xl md:text-6xl font-bold text-accent tracking-tight leading-none mb-3 font-heading"
         aria-live="polite"
         aria-label={`${stat.display}${stat.suffix} ${stat.label}`}
       >
@@ -75,12 +75,12 @@ function StatBlock({ stat }: { stat: StatItem }) {
       </span>
 
       {/* Label */}
-      <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#6F8291] mb-2 font-ui brand-caps">
+      <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-text-muted mb-2 font-ui brand-caps">
         {stat.label}
       </span>
 
       {/* Descriptor */}
-      <span className="text-sm text-[#445A6C] leading-relaxed max-w-[20ch] font-body">
+      <span className="text-sm text-text-muted leading-relaxed max-w-[20ch] font-body">
         {stat.descriptor}
       </span>
     </div>
@@ -94,7 +94,7 @@ export const ImpactStats = memo(function ImpactStats() {
   return (
     <section
       ref={sectionRef}
-      className="pt-16 md:pt-24 pb-24 md:pb-32 bg-[#F6F8FA] relative overflow-hidden"
+      className="pt-16 md:pt-24 pb-24 md:pb-32 bg-bg-subtle relative overflow-hidden"
       aria-label="Impact statistics"
     >
       {/* Subtle background texture */}
@@ -106,15 +106,15 @@ export const ImpactStats = memo(function ImpactStats() {
         {/* Section Intro */}
         <div className="text-center mb-12 md:mb-16">
           {/* Pill badge */}
-          <div className="inline-flex items-center gap-2 rounded-full border border-[#C59A35]/30 bg-[#C59A35]/5 backdrop-blur-xl px-4 py-1.5 mb-5">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#C59A35]" />
-            <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-[#C59A35] font-ui">
+          <div className="inline-flex items-center gap-2 rounded-full border border-accent/30 bg-accent/5 backdrop-blur-xl px-4 py-1.5 mb-5">
+            <span className="w-1.5 h-1.5 rounded-full bg-accent" />
+            <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-accent font-ui">
               Our Impact
             </span>
           </div>
 
           {/* Section intro sentence */}
-          <p className="text-base md:text-lg text-[#445A6C] leading-relaxed max-w-2xl mx-auto font-body">
+          <p className="text-base md:text-lg text-text-muted leading-relaxed max-w-2xl mx-auto font-body">
             Numbers that represent real people finding real support — without compromising who they are.
           </p>
         </div>
@@ -122,7 +122,7 @@ export const ImpactStats = memo(function ImpactStats() {
         {/* Stats Row */}
         <div className="relative">
           {/* Top border */}
-          <div className="border-t border-[#D6E0E8] mb-0" />
+          <div className="border-t border-border mb-0" />
 
           <div className="flex flex-col md:flex-row items-stretch md:items-center">
             {stats.map((stat, index) => (
@@ -135,7 +135,7 @@ export const ImpactStats = memo(function ImpactStats() {
                 {/* Vertical divider — between stats, hidden on mobile */}
                 {index < stats.length - 1 && (
                   <div
-                    className="hidden md:block w-px bg-[#D6E0E8] self-stretch my-4"
+                    className="hidden md:block w-px bg-border self-stretch my-4"
                     aria-hidden="true"
                   />
                 )}
@@ -143,7 +143,7 @@ export const ImpactStats = memo(function ImpactStats() {
                 {/* Horizontal divider — between rows on mobile */}
                 {index < stats.length - 1 && (
                   <div
-                    className="md:hidden border-t border-[#D6E0E8] mx-4"
+                    className="md:hidden border-t border-border mx-4"
                     aria-hidden="true"
                   />
                 )}
@@ -152,7 +152,7 @@ export const ImpactStats = memo(function ImpactStats() {
           </div>
 
           {/* Bottom border */}
-          <div className="border-t border-[#D6E0E8] mt-0" />
+          <div className="border-t border-border mt-0" />
         </div>
       </div>
     </section>

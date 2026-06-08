@@ -24,7 +24,7 @@ export function WebGLFallback({ reason }: WebGLFallbackProps) {
         </h2>
 
         {/* Description */}
-        <p className="mb-4 text-sm text-slate-400">
+        <p className="mb-4 text-sm text-text-muted">
           Your browser or device doesn't support WebGL, which is required for 
           the real-time voice visualization and avatar rendering in HIPS sessions.
         </p>
@@ -40,31 +40,31 @@ export function WebGLFallback({ reason }: WebGLFallbackProps) {
         )}
 
         {/* Help Section */}
-        <div className="mb-6 space-y-2 text-left rounded-xl border border-white/10 bg-white/[0.03] p-4">
-          <p className="text-xs font-bold uppercase tracking-widest text-slate-500">
+        <div className="mb-6 space-y-2 text-left rounded-xl border border-white/10 bg-surface/[0.03] p-4">
+          <p className="text-xs font-bold uppercase tracking-widest text-text-muted">
             What you can try
           </p>
-          <div className="flex items-start gap-3 text-sm text-slate-300">
+          <div className="flex items-start gap-3 text-sm text-text-muted">
             <span>🔄</span>
             <span>Update your browser to the latest version</span>
           </div>
-          <div className="flex items-start gap-3 text-sm text-slate-300">
+          <div className="flex items-start gap-3 text-sm text-text-muted">
             <span>🌐</span>
             <span>Try Chrome or Firefox if using a different browser</span>
           </div>
-          <div className="flex items-start gap-3 text-sm text-slate-300">
+          <div className="flex items-start gap-3 text-sm text-text-muted">
             <span>💻</span>
             <span>Enable hardware acceleration in your browser settings</span>
           </div>
-          <div className="flex items-start gap-3 text-sm text-slate-300">
+          <div className="flex items-start gap-3 text-sm text-text-muted">
             <span>🔌</span>
             <span>Make sure your graphics drivers are up to date</span>
           </div>
         </div>
 
         {/* Support Link */}
-        <div className="rounded-xl border border-[#173B57]/20 bg-[#173B57]/5 p-4">
-          <p className="text-sm text-[#173B57]">
+        <div className="rounded-xl border border-primary/20 bg-primary/5 p-4">
+          <p className="text-sm text-text">
             🛡️ Your safety and privacy are still protected. Voice masking can still 
             work with fallback audio-only mode on supported devices.
           </p>
@@ -72,11 +72,11 @@ export function WebGLFallback({ reason }: WebGLFallbackProps) {
 
         {/* Contact Support */}
         <div className="mt-6">
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-text-muted">
             Need help?{' '}
             <a 
               href="mailto:support@hips.foundation" 
-              className="text-[#173B57] hover:text-[#173B57] hover:underline"
+              className="text-text hover:text-text hover:underline"
             >
               Contact support@hips.foundation
             </a>

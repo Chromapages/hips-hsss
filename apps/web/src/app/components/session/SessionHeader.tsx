@@ -11,10 +11,10 @@ export function SessionHeader({ sessionId, anonId }: SessionHeaderProps) {
   return (
     <header className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-white/10 bg-black/50 backdrop-blur-xl">
       <div>
-        <p className="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-slate-500">
+        <p className="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-text-muted">
           Anonymous Room
         </p>
-        <p id="session-anon-id" className="font-mono text-sm text-[#173B57]">
+        <p id="session-anon-id" className="font-mono text-sm text-text">
           {anonId}
         </p>
       </div>
@@ -25,10 +25,10 @@ export function SessionHeader({ sessionId, anonId }: SessionHeaderProps) {
       </div>
 
       <div className="text-right">
-        <p className="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-slate-500">
+        <p className="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-text-muted">
           Room
         </p>
-        <p className="font-mono text-xs text-slate-400">{sessionId}</p>
+        <p className="font-mono text-xs text-text-muted">{sessionId}</p>
       </div>
     </header>
   );

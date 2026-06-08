@@ -11,7 +11,7 @@ export default function HomePage() {
   const [activeIndex, setActiveIndex] = useState(0)
 
   return (
-    <main className="min-h-screen bg-white text-text-primary selection:bg-[#173B57]/30 overflow-x-hidden">
+    <main className="min-h-screen bg-bg text-text-primary selection:bg-primary/30 overflow-x-hidden">
       <Navbar />
 
       {/* Hero Section */}
@@ -39,7 +39,7 @@ export default function HomePage() {
               <div className="inline-flex items-center gap-3 rounded-full border border-accent/40 bg-accent/10 backdrop-blur-xl px-5 py-2 mb-8 animate-in fade-in slide-in-from-bottom-4 duration-1000">
                 <span className="text-[9px] font-bold uppercase tracking-brand text-primary font-ui">New</span>
                 <span className="w-px h-3 bg-primary/50" />
-                <span className="text-[10px] font-medium text-slate-700 tracking-wide">First Anonymous Peer Support Network Live</span>
+                <span className="text-[10px] font-medium text-text-muted tracking-wide">First Anonymous Peer Support Network Live</span>
               </div>
 
               {/* H1 - Hero display headline (ExtraBold) */}
@@ -48,13 +48,13 @@ export default function HomePage() {
               </h1>
 
               {/* Subheadline - constrained mid-width column with muted color */}
-              <p className="text-lg md:text-xl text-slate-700 mb-10 max-w-xl leading-relaxed animate-in fade-in slide-in-from-bottom-10 duration-1000 delay-200 font-body">
+              <p className="text-lg md:text-xl text-text-muted mb-10 max-w-xl leading-relaxed animate-in fade-in slide-in-from-bottom-10 duration-1000 delay-200 font-body">
                 Expert peer support, coaching, and workshops in a completely anonymous, camera-free virtual environment. Built on hard-anonymity protocols.
               </p>
 
               {/* Dual CTA Layout */}
               <div className="flex flex-col sm:flex-row items-start gap-5 animate-in fade-in slide-in-from-bottom-12 duration-1000 delay-300">
-                <Button asChild className="h-14 px-10 rounded-full bg-[#173B57] text-white hover:bg-[#C59A35] hover:shadow-xl hover:shadow-[#C59A35]/20 hover:scale-[1.02] active:scale-95 transition-all duration-200 ease-in-out text-base font-bold group focus-visible:ring-2 focus-visible:ring-[#173B57] focus-visible:ring-offset-2">
+                <Button asChild className="h-14 px-10 rounded-full bg-primary text-primary-foreground hover:bg-accent hover:shadow-xl hover:shadow-accent/20 hover:scale-[1.02] active:scale-95 transition-all duration-200 ease-in-out text-base font-bold group focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
                   <Link href="/services">
                     Get Support
                     <ChevronRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform duration-200 ease-in-out" />
@@ -77,7 +77,7 @@ export default function HomePage() {
 
           {/* Partner / Trust Logo Strip — full width below grid */}
           <div className="animate-in fade-in slide-in-from-bottom-16 duration-1000 delay-400 mt-4">
-            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-700 mb-8 font-ui">Partnering with leading mental health organizations</p>
+            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-text-muted mb-8 font-ui">Partnering with leading mental health organizations</p>
             <div className="flex flex-wrap items-center justify-start gap-8 md:gap-12 opacity-30">
               {/* Placeholder partner logos - using text for now, replace with actual logo Image components */}
               {['HIMS', 'Mindful', 'Calm', 'Headspace', 'BetterHelp'].map((partner) => (
@@ -89,7 +89,7 @@ export default function HomePage() {
       </section>
 
       {/* How It Works */}
-      <section className="py-[clamp(3rem,5vw,6rem)] md:py-[clamp(4rem,7vw,8rem)] bg-[#EEF3F6] border-t border-[#D6E0E8]">
+      <section className="py-[clamp(3rem,5vw,6rem)] md:py-[clamp(4rem,7vw,8rem)] bg-bg-subtle border-t border-border">
         <div className="max-w-[1200px] mx-auto px-6">
           {/* Header — centered, compact */}
           <div className="text-center mb-20">
@@ -102,7 +102,7 @@ export default function HomePage() {
               From first click to feeling heard — in minutes.
             </h2>
             {/* Supporting paragraph */}
-            <p className="text-base md:text-lg text-slate-700 max-w-[60ch] mx-auto leading-relaxed font-body">
+            <p className="text-base md:text-lg text-text-muted max-w-[60ch] mx-auto leading-relaxed font-body">
               No sign-up wall. No identity check. Just a few steps to a completely private support session.
             </p>
           </div>
@@ -131,7 +131,7 @@ export default function HomePage() {
                 Create Your Session
               </h3>
               {/* Description */}
-              <p className="text-sm text-slate-700 leading-relaxed font-body max-w-[28ch] mx-auto">
+              <p className="text-sm text-text-muted leading-relaxed font-body max-w-[28ch] mx-auto">
                 Choose your session type — peer support, coaching, or a facilitated group. No account, no email, no identity. Just a temporary anonymous token.
               </p>
             </div>
@@ -151,7 +151,7 @@ export default function HomePage() {
                 Get Matched Instantly
               </h3>
               {/* Description */}
-              <p className="text-sm text-slate-700 leading-relaxed font-body max-w-[28ch] mx-auto">
+              <p className="text-sm text-text-muted leading-relaxed font-body max-w-[28ch] mx-auto">
                 Our safety engine reviews your session type and pairs you with a verified facilitator or peer group within seconds. Hard anonymity is enforced automatically.
               </p>
             </div>
@@ -171,7 +171,7 @@ export default function HomePage() {
                 Connect Safely and Privately
               </h3>
               {/* Description */}
-              <p className="text-sm text-slate-700 leading-relaxed font-body max-w-[28ch] mx-auto">
+              <p className="text-sm text-text-muted leading-relaxed font-body max-w-[28ch] mx-auto">
                 Enter your camera-free 3D avatar room. Your voice is masked in transit, your identity is never logged, and a human facilitator ensures the space stays safe.
               </p>
             </div>
@@ -188,7 +188,7 @@ export default function HomePage() {
             {/* Dual CTA — match hero button styles exactly */}
             <div className="flex flex-col sm:flex-row items-center justify-center gap-5">
               {/* Primary: Start Your Session */}
-              <Button asChild className="h-14 px-10 rounded-full bg-[#173B57] text-white hover:bg-[#C59A35] hover:shadow-xl hover:shadow-[#C59A35]/20 hover:scale-[1.02] active:scale-95 transition-all duration-200 ease-in-out text-base font-bold group focus-visible:ring-2 focus-visible:ring-[#173B57] focus-visible:ring-offset-2">
+              <Button asChild className="h-14 px-10 rounded-full bg-primary text-primary-foreground hover:bg-accent hover:shadow-xl hover:shadow-accent/20 hover:scale-[1.02] active:scale-95 transition-all duration-200 ease-in-out text-base font-bold group focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
                 <Link href="/services">
                   Start Your Session
                   <ChevronRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform duration-200" />
@@ -208,7 +208,7 @@ export default function HomePage() {
       </section>
 
       {/* Features Section — Two-Tier Interactive Layout */}
-      <section className="py-16 md:py-24 border-t border-zinc-200 bg-white relative">
+      <section className="py-16 md:py-24 border-t border-border bg-bg relative">
         <div className="max-w-[1200px] mx-auto px-6">
 
           {/* Section Header — centered, tight */}
@@ -222,7 +222,7 @@ export default function HomePage() {
               Built for true anonymity.
             </h2>
             {/* Supporting paragraph */}
-            <p className="text-base md:text-lg text-slate-700 max-w-2xl mx-auto leading-relaxed font-body">
+            <p className="text-base md:text-lg text-text-muted max-w-2xl mx-auto leading-relaxed font-body">
               Every layer of HSSS is engineered to protect who you are — so you can focus on being heard.
             </p>
           </div>
@@ -235,7 +235,7 @@ export default function HomePage() {
               className={`flex flex-col items-start gap-2 rounded-xl p-5 text-left transition-all duration-200 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${
                 activeIndex === 0
                   ? "bg-accent/10 border border-accent/30 shadow-sm"
-                  : "bg-white border border-zinc-200 hover:bg-muted"
+                  : "bg-surface border border-border hover:bg-muted"
               }`}
               aria-selected={activeIndex === 0}
               role="tab"
@@ -244,7 +244,7 @@ export default function HomePage() {
                 <Lock className="w-4 h-4 text-accent" />
               </div>
               <span className="text-sm font-bold text-primary font-heading leading-tight">Identity Vault</span>
-              <span className="text-xs text-slate-700 font-body leading-snug">Isolated, encrypted PII storage — zero trace</span>
+              <span className="text-xs text-text-muted font-body leading-snug">Isolated, encrypted PII storage — zero trace</span>
             </button>
 
             {/* Tab 1 — Avatar Privacy */}
@@ -253,7 +253,7 @@ export default function HomePage() {
               className={`flex flex-col items-start gap-2 rounded-xl p-5 text-left transition-all duration-200 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${
                 activeIndex === 1
                   ? "bg-accent/10 border border-accent/30 shadow-sm"
-                  : "bg-white border border-zinc-200 hover:bg-muted"
+                  : "bg-surface border border-border hover:bg-muted"
               }`}
               aria-selected={activeIndex === 1}
               role="tab"
@@ -262,7 +262,7 @@ export default function HomePage() {
                 <EyeOff className="w-4 h-4 text-accent" />
               </div>
               <span className="text-sm font-bold text-primary font-heading leading-tight">Avatar Privacy</span>
-              <span className="text-xs text-slate-700 font-body leading-snug">No cameras. Curated 3D avatars only.</span>
+              <span className="text-xs text-text-muted font-body leading-snug">No cameras. Curated 3D avatars only.</span>
             </button>
 
             {/* Tab 2 — Safety Engine */}
@@ -271,7 +271,7 @@ export default function HomePage() {
               className={`flex flex-col items-start gap-2 rounded-xl p-5 text-left transition-all duration-200 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${
                 activeIndex === 2
                   ? "bg-accent/10 border border-accent/30 shadow-sm"
-                  : "bg-white border border-zinc-200 hover:bg-muted"
+                  : "bg-surface border border-border hover:bg-muted"
               }`}
               aria-selected={activeIndex === 2}
               role="tab"
@@ -280,7 +280,7 @@ export default function HomePage() {
                 <Shield className="w-4 h-4 text-accent" />
               </div>
               <span className="text-sm font-bold text-primary font-heading leading-tight">Safety Engine</span>
-              <span className="text-xs text-slate-700 font-body leading-snug">Human-in-the-loop monitoring, zero identity exposure</span>
+              <span className="text-xs text-text-muted font-body leading-snug">Human-in-the-loop monitoring, zero identity exposure</span>
             </button>
 
             {/* Tab 3 — Session Token */}
@@ -289,7 +289,7 @@ export default function HomePage() {
               className={`flex flex-col items-start gap-2 rounded-xl p-5 text-left transition-all duration-200 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${
                 activeIndex === 3
                   ? "bg-accent/10 border border-accent/30 shadow-sm"
-                  : "bg-white border border-zinc-200 hover:bg-muted"
+                  : "bg-surface border border-border hover:bg-muted"
               }`}
               aria-selected={activeIndex === 3}
               role="tab"
@@ -298,7 +298,7 @@ export default function HomePage() {
                 <Key className="w-4 h-4 text-accent" />
               </div>
               <span className="text-sm font-bold text-primary font-heading leading-tight">Hard Anonymity</span>
-              <span className="text-xs text-slate-700 font-body leading-snug">Cryptographically enforced session tokens</span>
+              <span className="text-xs text-text-muted font-body leading-snug">Cryptographically enforced session tokens</span>
             </button>
           </div>
 
@@ -311,8 +311,8 @@ export default function HomePage() {
               <div
                 className={`rounded-xl border transition-all duration-200 ${
                   activeIndex === 0
-                    ? "bg-white border-primary/30 shadow-md"
-                    : "bg-white border-border hover:border-primary/20"
+                    ? "bg-surface border-primary/30 shadow-md"
+                    : "bg-surface border-border hover:border-primary/20"
                 }`}
               >
                 <button
@@ -324,7 +324,7 @@ export default function HomePage() {
                   id="accordion-tab-0"
                 >
                   <span className="text-sm font-bold text-primary font-heading">Identity Vault</span>
-                  <ChevronRight className={`w-4 h-4 text-slate-700 shrink-0 transition-transform duration-200 ${activeIndex === 0 ? "rotate-90" : ""}`} />
+                  <ChevronRight className={`w-4 h-4 text-text-muted shrink-0 transition-transform duration-200 ${activeIndex === 0 ? "rotate-90" : ""}`} />
                 </button>
                 <div
                   id="accordion-panel-0"
@@ -333,7 +333,7 @@ export default function HomePage() {
                   className={`overflow-hidden transition-all duration-300 ${activeIndex === 0 ? "max-h-48 opacity-100" : "max-h-0 opacity-0"}`}
                 >
                   <div className="px-6 pb-6">
-                    <p className="text-sm text-slate-700 font-body leading-relaxed mb-4">
+                    <p className="text-sm text-text-muted font-body leading-relaxed mb-4">
                       Your PII is stored in an isolated, encrypted vault that never touches session servers. No email, no name, no trace — ever. The architecture was designed by security engineers who understand that protection requires isolation, not just obfuscation.
                     </p>
                     <Button variant="ghost" asChild className="h-9 px-5 rounded-lg border border-primary/40 text-primary hover:bg-primary hover:text-white text-xs font-bold transition-all duration-200">
@@ -350,8 +350,8 @@ export default function HomePage() {
               <div
                 className={`rounded-xl border transition-all duration-200 ${
                   activeIndex === 1
-                    ? "bg-white border-primary/30 shadow-md"
-                    : "bg-white border-border hover:border-primary/20"
+                    ? "bg-surface border-primary/30 shadow-md"
+                    : "bg-surface border-border hover:border-primary/20"
                 }`}
               >
                 <button
@@ -363,7 +363,7 @@ export default function HomePage() {
                   id="accordion-tab-1"
                 >
                   <span className="text-sm font-bold text-primary font-heading">Avatar Native</span>
-                  <ChevronRight className={`w-4 h-4 text-slate-700 shrink-0 transition-transform duration-200 ${activeIndex === 1 ? "rotate-90" : ""}`} />
+                  <ChevronRight className={`w-4 h-4 text-text-muted shrink-0 transition-transform duration-200 ${activeIndex === 1 ? "rotate-90" : ""}`} />
                 </button>
                 <div
                   id="accordion-panel-1"
@@ -372,7 +372,7 @@ export default function HomePage() {
                   className={`overflow-hidden transition-all duration-300 ${activeIndex === 1 ? "max-h-48 opacity-100" : "max-h-0 opacity-0"}`}
                 >
                   <div className="px-6 pb-6">
-                    <p className="text-sm text-slate-700 font-body leading-relaxed mb-4">
+                    <p className="text-sm text-text-muted font-body leading-relaxed mb-4">
                       No cameras. You are represented by a curated 3D abstract avatar that protects your visual identity completely. Choose from a library of non-identifiable personas, each designed to express emotion without revealing anything about your real appearance.
                     </p>
                     <Button variant="ghost" asChild className="h-9 px-5 rounded-lg border border-primary/40 text-primary hover:bg-primary hover:text-white text-xs font-bold transition-all duration-200">
@@ -389,8 +389,8 @@ export default function HomePage() {
               <div
                 className={`rounded-xl border transition-all duration-200 ${
                   activeIndex === 2
-                    ? "bg-white border-primary/30 shadow-md"
-                    : "bg-white border-border hover:border-primary/20"
+                    ? "bg-surface border-primary/30 shadow-md"
+                    : "bg-surface border-border hover:border-primary/20"
                 }`}
               >
                 <button
@@ -402,7 +402,7 @@ export default function HomePage() {
                   id="accordion-tab-2"
                 >
                   <span className="text-sm font-bold text-primary font-heading">Safety Engine</span>
-                  <ChevronRight className={`w-4 h-4 text-slate-700 shrink-0 transition-transform duration-200 ${activeIndex === 2 ? "rotate-90" : ""}`} />
+                  <ChevronRight className={`w-4 h-4 text-text-muted shrink-0 transition-transform duration-200 ${activeIndex === 2 ? "rotate-90" : ""}`} />
                 </button>
                 <div
                   id="accordion-panel-2"
@@ -411,7 +411,7 @@ export default function HomePage() {
                   className={`overflow-hidden transition-all duration-300 ${activeIndex === 2 ? "max-h-48 opacity-100" : "max-h-0 opacity-0"}`}
                 >
                   <div className="px-6 pb-6">
-                    <p className="text-sm text-slate-700 font-body leading-relaxed mb-4">
+                    <p className="text-sm text-text-muted font-body leading-relaxed mb-4">
                       Human-in-the-loop safety monitoring detects distress signals without compromising anonymity. Trained facilitators observe behavioral patterns, never content, and can intervene without ever knowing who they are helping.
                     </p>
                     <Button variant="ghost" asChild className="h-9 px-5 rounded-lg border border-primary/40 text-primary hover:bg-primary hover:text-white text-xs font-bold transition-all duration-200">
@@ -428,8 +428,8 @@ export default function HomePage() {
               <div
                 className={`rounded-xl border transition-all duration-200 ${
                   activeIndex === 3
-                    ? "bg-white border-primary/30 shadow-md"
-                    : "bg-white border-border hover:border-primary/20"
+                    ? "bg-surface border-primary/30 shadow-md"
+                    : "bg-surface border-border hover:border-primary/20"
                 }`}
               >
                 <button
@@ -441,7 +441,7 @@ export default function HomePage() {
                   id="accordion-tab-3"
                 >
                   <span className="text-sm font-bold text-primary font-heading">Hard Anonymity</span>
-                  <ChevronRight className={`w-4 h-4 text-slate-700 shrink-0 transition-transform duration-200 ${activeIndex === 3 ? "rotate-90" : ""}`} />
+                  <ChevronRight className={`w-4 h-4 text-text-muted shrink-0 transition-transform duration-200 ${activeIndex === 3 ? "rotate-90" : ""}`} />
                 </button>
                 <div
                   id="accordion-panel-3"
@@ -450,7 +450,7 @@ export default function HomePage() {
                   className={`overflow-hidden transition-all duration-300 ${activeIndex === 3 ? "max-h-48 opacity-100" : "max-h-0 opacity-0"}`}
                 >
                   <div className="px-6 pb-6">
-                    <p className="text-sm text-slate-700 font-body leading-relaxed mb-4">
+                    <p className="text-sm text-text-muted font-body leading-relaxed mb-4">
                       Session tokens are cryptographically enforced and carry zero linkage to identity. Tokens expire automatically, leave no audit trail, and are signed with short-lived keys that cannot be correlated across sessions.
                     </p>
                     <Button variant="ghost" asChild className="h-9 px-5 rounded-lg border border-primary/40 text-primary hover:bg-primary hover:text-white text-xs font-bold transition-all duration-200">
@@ -468,7 +468,7 @@ export default function HomePage() {
             <div className="relative">
               <>
                 {activeIndex === 0 && (
-                  <div className="rounded-2xl overflow-hidden shadow-lg border border-zinc-200 min-h-[380px] lg:min-h-[440px] relative animate-in fade-in zoom-in-95 duration-300">
+                  <div className="rounded-2xl overflow-hidden shadow-lg border border-border min-h-[380px] lg:min-h-[440px] relative animate-in fade-in zoom-in-95 duration-300">
                     <Image
                       src="https://images.unsplash.com/photo-1555949963-ff9fe0c870eb?w=1200&q=85"
                       alt="Identity Vault — encrypted security architecture"
@@ -488,7 +488,7 @@ export default function HomePage() {
                 )}
 
                 {activeIndex === 1 && (
-                  <div className="rounded-2xl overflow-hidden shadow-lg border border-zinc-200 min-h-[380px] lg:min-h-[440px] relative animate-in fade-in zoom-in-95 duration-300">
+                  <div className="rounded-2xl overflow-hidden shadow-lg border border-border min-h-[380px] lg:min-h-[440px] relative animate-in fade-in zoom-in-95 duration-300">
                     <Image
                       src="https://images.unsplash.com/photo-1633265486064-1c3c5b5e1d9c?w=1200&q=85"
                       alt="Avatar Privacy — anonymous digital identity"
@@ -499,15 +499,15 @@ export default function HomePage() {
                       placeholder="blur"
                       blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAn/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9kADAMBAAIRAxEAPwAAAGAAAAAB//9k="
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#213d53]/80 via-[#213d53]/20 to-transparent flex flex-col items-center justify-end p-8">
-                      <p className="text-[#C59A35] text-[10px] font-bold uppercase tracking-widest font-ui mb-2">Avatar Native</p>
+                    <div className="absolute inset-0 bg-gradient-to-t from-primary/80 via-primary/20 to-transparent flex flex-col items-center justify-end p-8">
+                      <p className="text-accent text-[10px] font-bold uppercase tracking-widest font-ui mb-2">Avatar Native</p>
                       <p className="text-white/90 text-sm font-body text-center max-w-[28ch] leading-relaxed">Your identity is expressed only through a curated abstract avatar — never your actual face or appearance.</p>
                     </div>
                   </div>
                 )}
 
                 {activeIndex === 2 && (
-                  <div className="rounded-2xl overflow-hidden shadow-lg border border-zinc-200 min-h-[380px] lg:min-h-[440px] relative animate-in fade-in zoom-in-95 duration-300">
+                  <div className="rounded-2xl overflow-hidden shadow-lg border border-border min-h-[380px] lg:min-h-[440px] relative animate-in fade-in zoom-in-95 duration-300">
                     <Image
                       src="https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?w=1200&q=85"
                       alt="Safety Engine — human monitoring with anonymity"
@@ -518,15 +518,15 @@ export default function HomePage() {
                       placeholder="blur"
                       blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAn/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9kADAMBAAIRAxEAPwAAAGAAAAAB//9k="
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#2F7A5F]/80 via-[#2F7A5F]/20 to-transparent flex flex-col items-center justify-end p-8">
-                      <p className="text-[#2F7A5F] text-[10px] font-bold uppercase tracking-widest font-ui mb-2">Safety Engine</p>
+                    <div className="absolute inset-0 bg-gradient-to-t from-success/80 via-success/20 to-transparent flex flex-col items-center justify-end p-8">
+                      <p className="text-success text-[10px] font-bold uppercase tracking-widest font-ui mb-2">Safety Engine</p>
                       <p className="text-white/90 text-sm font-body text-center max-w-[28ch] leading-relaxed">Behavioral safety monitoring with human oversight — keeping sessions safe without ever accessing identity.</p>
                     </div>
                   </div>
                 )}
 
                 {activeIndex === 3 && (
-                  <div className="rounded-2xl overflow-hidden shadow-lg border border-zinc-200 min-h-[380px] lg:min-h-[440px] relative animate-in fade-in zoom-in-95 duration-300">
+                  <div className="rounded-2xl overflow-hidden shadow-lg border border-border min-h-[380px] lg:min-h-[440px] relative animate-in fade-in zoom-in-95 duration-300">
                     <Image
                       src="https://images.unsplash.com/photo-1638775513788-3b4b8a6c0e5f?w=1200&q=85"
                       alt="Hard Anonymity — cryptographic session tokens"
@@ -537,8 +537,8 @@ export default function HomePage() {
                       placeholder="blur"
                       blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAn/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9kADAMBAAIRAxEAPwAAAGAAAAAB//9k="
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#213d53]/80 via-[#213d53]/20 to-transparent flex flex-col items-center justify-end p-8">
-                      <p className="text-[#C59A35] text-[10px] font-bold uppercase tracking-widest font-ui mb-2">Hard Anonymity</p>
+                    <div className="absolute inset-0 bg-gradient-to-t from-primary/80 via-primary/20 to-transparent flex flex-col items-center justify-end p-8">
+                      <p className="text-accent text-[10px] font-bold uppercase tracking-widest font-ui mb-2">Hard Anonymity</p>
                       <p className="text-white/90 text-sm font-body text-center max-w-[28ch] leading-relaxed">Every session token is ephemeral, cryptographically signed, and completely unlinkable across visits.</p>
                     </div>
                   </div>

@@ -111,24 +111,24 @@ export const CrisisEscalation: React.FC<CrisisEscalationProps> = ({
         />
       </div>
 
-      <div className="relative z-10 w-full max-w-2xl p-6 mx-4 bg-white/5 border border-white/10 rounded-xl shadow-2xl backdrop-blur-xl">
+      <div className="relative z-10 w-full max-w-2xl p-6 mx-4 bg-surface/5 border border-white/10 rounded-xl shadow-2xl backdrop-blur-xl">
         <div className="flex flex-col items-center text-center space-y-6">
           <div
-            className="p-4 bg-red-500/20 rounded-full border border-red-500/30 animate-pulse"
+            className="p-4 bg-destructive0/20 rounded-full border border-destructive/30 animate-pulse"
             aria-hidden="true"
           >
-            <ShieldAlert className="w-12 h-12 text-red-500" />
+            <ShieldAlert className="w-12 h-12 text-destructive0" />
           </div>
 
           <div className="space-y-2">
             <h1 id="crisis-title" className="text-3xl font-bold text-white tracking-tight">
               Crisis Support Protocol Activated
             </h1>
-            <p id="crisis-desc" className="text-zinc-400 text-lg">
+            <p id="crisis-desc" className="text-text text-lg">
               A serious safety concern was detected. This session is currently paused for your well-being.
             </p>
             {reason && (
-              <p className="text-sm text-red-200/80">Reason: {reason}</p>
+              <p className="text-sm text-destructive/80">Reason: {reason}</p>
             )}
           </div>
 
@@ -153,7 +153,7 @@ export const CrisisEscalation: React.FC<CrisisEscalationProps> = ({
               <p className="text-xl font-medium text-teal-400 uppercase tracking-widest animate-pulse">
                 {breathStage.replace("HoldOut", "Hold")}
               </p>
-              <p className="text-sm text-zinc-500">Box Breathing for grounding</p>
+              <p className="text-sm text-text-muted0">Box Breathing for grounding</p>
             </div>
           </div>
 
@@ -171,7 +171,7 @@ export const CrisisEscalation: React.FC<CrisisEscalationProps> = ({
               href="https://988lifeline.org/chat/"
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center justify-center gap-3 p-4 bg-white/10 hover:bg-white/20 text-white rounded-xl transition-all font-medium border border-white/10"
+              className="flex items-center justify-center gap-3 p-4 bg-surface/10 hover:bg-surface/20 text-white rounded-xl transition-all font-medium border border-white/10"
               aria-label="Chat online with 988 Suicide and Crisis Lifeline"
             >
               <Heart className="w-5 h-5" />
@@ -179,21 +179,21 @@ export const CrisisEscalation: React.FC<CrisisEscalationProps> = ({
             </a>
           </div>
 
-          <div className="flex items-center gap-2 text-xs text-zinc-500">
+          <div className="flex items-center gap-2 text-xs text-text-muted0">
             <Lock className="w-3 h-3" />
             <span>Your safety is our priority. This support state is non-dismissible for your protection.</span>
           </div>
 
           <div className="flex flex-col gap-3 w-full pt-2 border-t border-white/10">
             <button
-              className="h-12 rounded-xl border border-white/10 bg-transparent px-6 font-bold text-white transition-all hover:bg-white/5 focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-black"
+              className="h-12 rounded-xl border border-white/10 bg-transparent px-6 font-bold text-white transition-all hover:bg-surface/5 focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-black"
               onClick={onStayInSession}
               type="button"
             >
               Stay in session
             </button>
             <button
-              className="h-12 rounded-xl bg-red-600 px-6 font-bold text-white transition-all hover:bg-red-500 shadow-lg shadow-red-900/40"
+              className="h-12 rounded-xl bg-destructive px-6 font-bold text-white transition-all hover:bg-destructive0 shadow-lg shadow-red-900/40"
               onClick={onEndSession}
               type="button"
             >

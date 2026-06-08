@@ -190,9 +190,9 @@ export function FacilitatorSessionView({
         <div className="relative min-w-0 overflow-hidden bg-[radial-gradient(circle_at_50%_20%,rgba(99,102,241,0.16),transparent_45%),black]">
           {/* Placeholder for AvatarCanvas - would be integrated with Three.js */}
           <div className="flex h-full items-center justify-center">
-            <div className="text-center text-zinc-500">
+            <div className="text-center text-text-muted0">
               <p className="text-sm">Virtual Sanctuary</p>
-              <p className="mt-2 font-mono text-xs text-[#173B57]">
+              <p className="mt-2 font-mono text-xs text-text">
                 {participants.length} participant{participants.length !== 1 ? "s" : ""}
               </p>
             </div>
@@ -201,7 +201,7 @@ export function FacilitatorSessionView({
           {/* Task 5.10 — Active speaker ring overlay */}
           {activeSpeakerIdentity && (
             <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-              <div className="h-64 w-64 animate-pulse rounded-full border-2 border-[#173B57]/30 opacity-50" />
+              <div className="h-64 w-64 animate-pulse rounded-full border-2 border-primary/30 opacity-50" />
             </div>
           )}
         </div>
@@ -212,7 +212,7 @@ export function FacilitatorSessionView({
           {canFacilitate ? (
             <div className="border-b border-white/10 p-4">
               <div className="flex items-center justify-between">
-                <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-text-muted0">
                   Facilitator Queue
                 </p>
                 <span className="rounded-full bg-amber-500/10 px-2 py-1 text-xs font-bold text-amber-200">
@@ -221,18 +221,18 @@ export function FacilitatorSessionView({
               </div>
               <div className="mt-3 space-y-2">
                 {raisedHands.size === 0 ? (
-                  <p className="text-sm text-zinc-500">No raised hands.</p>
+                  <p className="text-sm text-text-muted0">No raised hands.</p>
                 ) : (
                   Array.from(raisedHands).map((identity) => (
                     <div
                       key={identity}
-                      className="flex items-center justify-between rounded-2xl border border-white/10 bg-white/[0.03] px-3 py-2"
+                      className="flex items-center justify-between rounded-2xl border border-white/10 bg-surface/[0.03] px-3 py-2"
                     >
-                      <span className="font-mono text-xs text-zinc-300">
+                      <span className="font-mono text-xs text-text-muted">
                         anon-{identity.slice(0, 8)}
                       </span>
                       <button
-                        className="rounded-full border border-white/10 px-3 py-1 text-xs font-bold text-zinc-300 hover:bg-white/10"
+                        className="rounded-full border border-white/10 px-3 py-1 text-xs font-bold text-text-muted hover:bg-surface/10"
                         onClick={() => publishControlMessage("HAND_LOWERED")}
                         type="button"
                       >
@@ -245,10 +245,10 @@ export function FacilitatorSessionView({
             </div>
           ) : (
             <div className="border-b border-white/10 p-4">
-              <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-text-muted0">
                 Hand Queue
               </p>
-              <p className="mt-1 text-sm text-zinc-400">
+              <p className="mt-1 text-sm text-text">
                 Raise your hand when you would like facilitator attention.
               </p>
             </div>
@@ -256,14 +256,14 @@ export function FacilitatorSessionView({
 
           {/* Participant list */}
           <div className="flex-1 overflow-y-auto p-4">
-            <p className="mb-3 text-[10px] font-bold uppercase tracking-widest text-zinc-500">
+            <p className="mb-3 text-[10px] font-bold uppercase tracking-widest text-text-muted0">
               Participants
             </p>
             <div className="space-y-2">
               {participantList.map((p) => (
                 <div
                   key={p.identity}
-                  className="flex items-center gap-3 rounded-xl bg-white/[0.03] p-3"
+                  className="flex items-center gap-3 rounded-xl bg-surface/[0.03] p-3"
                 >
                   <div
                     className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold`}
@@ -275,15 +275,15 @@ export function FacilitatorSessionView({
                     <p className="font-mono text-sm">
                       anon-{p.identity.slice(0, 8)}
                     </p>
-                    <p className="text-xs text-zinc-500">
+                    <p className="text-xs text-text-muted0">
                       {p.isLocal ? "You" : "Peer"}
                     </p>
                   </div>
                   {p.isSpeaking && (
                     <div className="flex h-3 items-end gap-0.5">
-                      <span className="h-2 w-1 animate-bounce rounded-sm bg-[#173B57]" style={{ animationDelay: "0ms" }} />
-                      <span className="h-3 w-1 animate-bounce rounded-sm bg-[#173B57]" style={{ animationDelay: "100ms" }} />
-                      <span className="h-1.5 w-1 animate-bounce rounded-sm bg-[#173B57]" style={{ animationDelay: "200ms" }} />
+                      <span className="h-2 w-1 animate-bounce rounded-sm bg-primary" style={{ animationDelay: "0ms" }} />
+                      <span className="h-3 w-1 animate-bounce rounded-sm bg-primary" style={{ animationDelay: "100ms" }} />
+                      <span className="h-1.5 w-1 animate-bounce rounded-sm bg-primary" style={{ animationDelay: "200ms" }} />
                     </div>
                   )}
                 </div>
@@ -295,13 +295,13 @@ export function FacilitatorSessionView({
           {canFacilitate ? (
             <div className="border-t border-white/10 p-4">
               <div className="flex items-center gap-2 mb-2">
-                <MessageSquare className="h-4 w-4 text-zinc-500" />
-                <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">
+                <MessageSquare className="h-4 w-4 text-text-muted0" />
+                <p className="text-[10px] font-bold uppercase tracking-widest text-text-muted0">
                   Session Notes
                 </p>
               </div>
               <textarea
-                className="w-full resize-none rounded-xl border border-white/10 bg-white/5 p-3 text-sm text-zinc-200 placeholder-zinc-500 focus:border-[#173B57]/50 focus:outline-none focus:ring-1 focus:ring-[#173B57]/20"
+                className="w-full resize-none rounded-xl border border-white/10 bg-surface/5 p-3 text-sm text-text-muted placeholder-zinc-500 focus:border-primary/50 focus:outline-none focus:ring-1 focus:ring-primary/20"
                 placeholder="Notes for this session (not persisted)..."
                 rows={3}
                 value={facilitatorNotes}
@@ -336,19 +336,19 @@ export function FacilitatorSessionView({
             <h2 className="font-heading mb-4 text-2xl font-bold tracking-tighter">
               Leave this session?
             </h2>
-            <p className="leading-relaxed text-zinc-400">
+            <p className="leading-relaxed text-text">
               Your audio will stop and you will return to the dashboard.
             </p>
             <div className="mt-8 flex gap-4">
               <button
-                className="h-12 flex-1 rounded-2xl border border-white/10 font-bold hover:bg-white/5"
+                className="h-12 flex-1 rounded-2xl border border-white/10 font-bold hover:bg-surface/5"
                 onClick={() => setConfirmLeave(false)}
                 type="button"
               >
                 Cancel
               </button>
               <button
-                className="h-12 flex-1 rounded-2xl bg-red-600 font-bold hover:bg-red-500"
+                className="h-12 flex-1 rounded-2xl bg-destructive font-bold hover:bg-destructive0"
                 onClick={leaveSession}
                 type="button"
               >

@@ -43,7 +43,7 @@ export function SessionHistoryTable({ sessions = [] }: { sessions?: SessionHisto
   }
 
   return (
-    <div className="overflow-x-auto rounded-xl border border-border bg-white shadow-soft">
+    <div className="overflow-x-auto rounded-xl border border-border bg-surface shadow-soft">
       <table className="w-full text-left text-sm font-body">
         <thead className="bg-surface text-text-secondary font-ui text-xs uppercase tracking-wider">
           <tr>

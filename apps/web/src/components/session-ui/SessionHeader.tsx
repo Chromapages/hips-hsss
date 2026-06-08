@@ -34,14 +34,14 @@ function QualityIndicator({
   quality: "good" | "fair" | "poor";
   variant: "light" | "dark";
 }) {
-  const idleColor = variant === "light" ? "bg-border" : "bg-zinc-700";
+  const idleColor = variant === "light" ? "bg-border" : "bg-text";
   return (
     <div className="flex items-center gap-2">
       <span
         className={
           variant === "light"
             ? "text-[10px] font-bold uppercase tracking-widest text-text-muted"
-            : "text-[10px] font-bold uppercase tracking-widest text-zinc-500"
+            : "text-[10px] font-bold uppercase tracking-widest text-text-muted0"
         }
       >
         Network
@@ -57,7 +57,7 @@ function QualityIndicator({
               ? "bg-emerald-500"
               : quality === "fair"
                 ? "bg-amber-500"
-                : "bg-red-500",
+                : "bg-destructive0",
           ].join(" ")}
         />
         <span
@@ -94,9 +94,9 @@ export function SessionHeader({
   const wrapperClass = isLight
     ? "flex items-center justify-between border-b border-border bg-background/80 px-6 py-4 backdrop-blur-2xl"
     : "flex items-center justify-between border-b border-white/10 bg-black/70 px-6 py-4 backdrop-blur-2xl";
-  const mutedLabel = isLight ? "text-text-muted" : "text-zinc-500";
+  const mutedLabel = isLight ? "text-text-muted" : "text-text-muted0";
   const primaryText = isLight ? "text-primary" : "text-white";
-  const secondaryText = isLight ? "text-text-secondary" : "text-zinc-400";
+  const secondaryText = isLight ? "text-text-secondary" : "text-text";
   const safetyText = isLight ? "text-success" : "text-emerald-300";
 
   return (
@@ -110,7 +110,7 @@ export function SessionHeader({
         </p>
         <p
           className={`font-mono text-sm font-bold ${
-            isLight ? "text-accent" : "text-[#173B57]"
+            isLight ? "text-accent" : "text-text"
           }`}
         >
           anon-{anonymousHandle.slice(0, 8)}
@@ -131,12 +131,12 @@ export function SessionHeader({
                   ? "bg-emerald-400"
                   : connectionQuality === "fair"
                     ? "bg-amber-400"
-                    : "bg-red-400",
+                    : "bg-destructive",
               ].join(" ")}
             />
             <span
               className={`text-xs font-bold ${
-                isLight ? "text-text-secondary" : "text-zinc-400"
+                isLight ? "text-text-secondary" : "text-text"
               }`}
             >
               {connectionLabel}
@@ -159,7 +159,7 @@ export function SessionHeader({
           </p>
           <p
             className={`font-mono text-xs ${
-              isLight ? "text-text-muted" : "text-zinc-400"
+              isLight ? "text-text-muted" : "text-text"
             }`}
           >
             {roomName.slice(0, 12)}

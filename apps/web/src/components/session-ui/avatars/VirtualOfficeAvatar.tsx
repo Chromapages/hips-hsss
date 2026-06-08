@@ -176,7 +176,7 @@ export default function VirtualOfficeAvatar({
       {/* Local indicator */}
       {isLocal ? (
         <Html center position={[0, -1.65, 0]}>
-          <div className="rounded-full border border-white/15 bg-white/5 px-3 py-1 text-[11px] font-bold text-white/60 backdrop-blur-sm">
+          <div className="rounded-full border border-white/15 bg-surface/5 px-3 py-1 text-[11px] font-bold text-white/60 backdrop-blur-sm">
             You
           </div>
         </Html>

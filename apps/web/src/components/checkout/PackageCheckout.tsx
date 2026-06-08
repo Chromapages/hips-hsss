@@ -45,7 +45,7 @@ function CheckoutForm({ amount, packageName, onClose }: { amount: number, packag
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="mb-6">
         <h3 className="text-xl font-bold text-white">{packageName}</h3>
-        <p className="text-sm text-zinc-400">Total Due: ${amount.toFixed(2)} USD</p>
+        <p className="text-sm text-text">Total Due: ${amount.toFixed(2)} USD</p>
       </div>
 
       <PaymentElement 
@@ -55,7 +55,7 @@ function CheckoutForm({ amount, packageName, onClose }: { amount: number, packag
       />
 
       {errorMessage && (
-        <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-sm">
+        <div className="p-3 bg-destructive0/10 border border-destructive/20 rounded-xl text-destructive text-sm">
           {errorMessage}
         </div>
       )}
@@ -64,7 +64,7 @@ function CheckoutForm({ amount, packageName, onClose }: { amount: number, packag
         <button
           type="submit"
           disabled={!stripe || isProcessing}
-          className="w-full bg-[#173B57] hover:bg-[#173B57] disabled:opacity-50 text-white font-bold py-4 rounded-xl transition-all shadow-lg shadow-[#173B57]/20 flex items-center justify-center gap-2"
+          className="w-full bg-primary hover:bg-primary disabled:opacity-50 text-white font-bold py-4 rounded-xl transition-all shadow-lg shadow-primary/20 flex items-center justify-center gap-2"
         >
           {isProcessing ? (
             <>
@@ -76,7 +76,7 @@ function CheckoutForm({ amount, packageName, onClose }: { amount: number, packag
           )}
         </button>
         
-        <div className="flex items-center justify-center gap-4 text-[10px] text-zinc-500 uppercase tracking-widest font-bold">
+        <div className="flex items-center justify-center gap-4 text-[10px] text-text-muted0 uppercase tracking-widest font-bold">
            <div className="flex items-center gap-1">
              <Lock className="h-3 w-3" />
              Encrypted
@@ -136,7 +136,7 @@ export function PackageCheckout({ packageId, onClose }: { packageId: 'SINGLE' | 
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
         <div className="flex flex-col items-center gap-4">
-          <Loader2 className="h-10 w-10 animate-spin text-[#173B57]" />
+          <Loader2 className="h-10 w-10 animate-spin text-text" />
           <p className="text-white font-medium">Securing connection to Stripe...</p>
         </div>
       </div>
@@ -145,10 +145,10 @@ export function PackageCheckout({ packageId, onClose }: { packageId: 'SINGLE' | 
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4">
-      <div className="relative w-full max-w-lg overflow-hidden rounded-3xl bg-zinc-900 border border-white/10 shadow-2xl">
+      <div className="relative w-full max-w-lg overflow-hidden rounded-3xl bg-text border border-white/10 shadow-2xl">
         <button
           onClick={onClose}
-          className="absolute right-4 top-4 z-10 p-2 text-zinc-500 hover:text-white transition-colors"
+          className="absolute right-4 top-4 z-10 p-2 text-text-muted0 hover:text-white transition-colors"
         >
           <X className="h-6 w-6" />
         </button>

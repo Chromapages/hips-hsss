@@ -82,11 +82,11 @@ export const SidebarUserFooter = ({
   if (isLoading) {
     return (
       <div className="pt-3 mt-1 px-2">
-        <div className="flex items-center gap-3 rounded-lg bg-white/5 px-3 py-2.5 animate-pulse">
-          <div className="h-9 w-9 rounded-full bg-white/10 shrink-0" />
+        <div className="flex items-center gap-3 rounded-lg bg-surface/5 px-3 py-2.5 animate-pulse">
+          <div className="h-9 w-9 rounded-full bg-surface/10 shrink-0" />
           <div className="flex-1 flex flex-col gap-1.5">
-            <div className="h-3 w-24 bg-white/10 rounded" />
-            <div className="h-2.5 w-12 bg-white/10 rounded" />
+            <div className="h-3 w-24 bg-surface/10 rounded" />
+            <div className="h-2.5 w-12 bg-surface/10 rounded" />
           </div>
         </div>
       </div>
@@ -104,7 +104,7 @@ export const SidebarUserFooter = ({
     return (
       <div className="pt-3 mt-1">
         <div className="group-data-[collapsible=icon]:hidden px-2">
-          <div className="rounded-xl border border-white/10 bg-white/5 px-3 py-3">
+          <div className="rounded-xl border border-white/10 bg-surface/5 px-3 py-3">
             <div className="flex items-center gap-3">
               <div
                 aria-hidden="true"
@@ -147,7 +147,7 @@ export const SidebarUserFooter = ({
     <div className="pt-3 mt-1">
       {/* Expanded state — hidden when sidebar is icon-only */}
       <div className="group-data-[collapsible=icon]:hidden px-2">
-        <div className="rounded-xl border border-white/10 bg-white/5 px-3 py-3">
+        <div className="rounded-xl border border-white/10 bg-surface/5 px-3 py-3">
           <div className="flex items-center gap-3">
           {/* Avatar */}
             <div
@@ -178,7 +178,7 @@ export const SidebarUserFooter = ({
             <Link
               href="/dashboard/settings"
               aria-label="View profile settings"
-              className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs text-white/60 transition-colors duration-150 hover:bg-white/5 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1 focus-visible:ring-offset-primary"
+              className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs text-white/60 transition-colors duration-150 hover:bg-surface/5 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1 focus-visible:ring-offset-primary"
             >
               <User size={13} aria-hidden="true" />
               <span>Profile Settings</span>
@@ -188,7 +188,7 @@ export const SidebarUserFooter = ({
               onClick={handleLogout}
               disabled={isPending}
               aria-label="Sign out of your account"
-              className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs text-white/60 transition-colors duration-150 hover:bg-white/5 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1 focus-visible:ring-offset-primary disabled:cursor-not-allowed disabled:opacity-50"
+              className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs text-white/60 transition-colors duration-150 hover:bg-surface/5 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1 focus-visible:ring-offset-primary disabled:cursor-not-allowed disabled:opacity-50"
             >
               <LogOut size={13} aria-hidden="true" />
               <span>{isPending ? "Signing out..." : "Sign out"}</span>
@@ -229,7 +229,7 @@ export const SidebarUserFooter = ({
             </DropdownMenuLabel>
             <DropdownMenuItem
               asChild
-              className="px-2.5 py-1.5 text-xs text-white/60 focus:bg-white/5 focus:text-white rounded-md"
+              className="px-2.5 py-1.5 text-xs text-white/60 focus:bg-surface/5 focus:text-white rounded-md"
             >
               <Link href="/dashboard/settings">
                 <User size={13} aria-hidden="true" />
@@ -239,7 +239,7 @@ export const SidebarUserFooter = ({
             <DropdownMenuItem
               onClick={handleLogout}
               disabled={isPending}
-              className="px-2.5 py-1.5 text-xs text-white/60 focus:bg-white/5 focus:text-white rounded-md"
+              className="px-2.5 py-1.5 text-xs text-white/60 focus:bg-surface/5 focus:text-white rounded-md"
             >
               <LogOut size={13} aria-hidden="true" />
               <span>{isPending ? "Signing out…" : "Sign out"}</span>

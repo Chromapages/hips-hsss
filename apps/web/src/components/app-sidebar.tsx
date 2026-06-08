@@ -2,7 +2,6 @@
 
 import * as React from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { usePathname } from "next/navigation";
 import {
   BadgeCheck,
@@ -11,7 +10,6 @@ import {
   Package,
   Settings,
   Timer,
-  ShoppingBag,
   ShieldAlert,
   Users,
   Award,
@@ -53,10 +51,9 @@ const participantNav: NavItem[] = [
   { title: "Overview", href: "/dashboard", icon: LayoutDashboard, exactMatch: true },
   { title: "Sessions", href: "/dashboard/sessions", icon: Timer },
   { title: "Packages", href: "/dashboard/packages", icon: Package },
-  { title: "Downloads", href: "/dashboard/downloads", icon: Download },
-  { title: "Get Sessions", href: "/services", icon: ShoppingBag },
   { title: "Partnerships", href: "/organizations", icon: Building2 },
-  { title: "Donate", href: "/dashboard/donate", icon: Heart },
+  { title: "Donate", href: "/donate", icon: Heart },
+  { title: "Downloads", href: "/dashboard/downloads", icon: Download },
   { title: "Settings", href: "/dashboard/settings", icon: Settings },
 ];
 
@@ -102,8 +99,8 @@ const NavItemRow = ({ item, isActive }: { item: NavItem; isActive: boolean }) =>
         className={cn(
           "rounded-xl border transition-all duration-200 py-2.5 pl-3 pr-3 shadow-none relative overflow-hidden group/btn",
           isActive
-            ? "border-accent/20 bg-white/[0.08] text-white"
-            : "border-transparent text-white/70 hover:border-white/[0.06] hover:bg-white/[0.04] hover:text-white",
+            ? "border-accent/20 bg-surface/[0.08] text-white"
+            : "border-transparent text-white/70 hover:border-white/[0.06] hover:bg-surface/[0.04] hover:text-white",
           "[&_svg]:!size-[18px] [&_svg]:shrink-0",
           isActive
             ? "[&_svg]:text-accent [&_svg]:[stroke-width:2.2]"
@@ -190,7 +187,7 @@ export function AppSidebar() {
       <SidebarHeader className="border-b border-white/6 px-3 pb-4 pt-4 group-data-[collapsible=icon]:px-2 group-data-[collapsible=icon]:py-2">
         <Link
           href={homeHref}
-          className="flex min-h-[84px] items-center gap-3 rounded-2xl border border-white/8 bg-white/[0.04] px-3 transition-[padding,background-color,border-color] duration-200 hover:border-white/14 hover:bg-white/[0.06] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1 focus-visible:ring-offset-primary group-data-[collapsible=icon]:min-h-[40px] group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0 group-data-[collapsible=icon]:border-0 group-data-[collapsible=icon]:bg-transparent"
+          className="flex min-h-[84px] items-center gap-3 rounded-2xl border border-white/8 bg-surface/[0.04] px-3 transition-[padding,background-color,border-color] duration-200 hover:border-white/14 hover:bg-surface/[0.06] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1 focus-visible:ring-offset-primary group-data-[collapsible=icon]:min-h-[40px] group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0 group-data-[collapsible=icon]:border-0 group-data-[collapsible=icon]:bg-transparent"
           aria-label={`Go to ${consoleLabel}`}
         >
           <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-accent/25 bg-accent/12 text-accent group-data-[collapsible=icon]:h-8 group-data-[collapsible=icon]:w-8 group-data-[collapsible=icon]:rounded-lg">
@@ -199,17 +196,7 @@ export function AppSidebar() {
           </div>
 
           <div className="min-w-0 flex-1 group-data-[collapsible=icon]:hidden">
-            <Image
-              src="/hipslogo.png"
-              alt="HIPS Foundation"
-              width={88}
-              height={36}
-              className="mb-2 h-6 w-auto shrink-0 object-contain brightness-[1.18] contrast-[1.08]"
-            />
             <span className="block truncate text-[11px] font-bold uppercase tracking-[0.22em] text-accent font-ui leading-none">
-              HIPS Foundation
-            </span>
-            <span className="mt-1 block truncate text-[11px] font-medium text-white/58 leading-none">
               {consoleLabel}
             </span>
           </div>

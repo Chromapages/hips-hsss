@@ -52,21 +52,21 @@ export default function AboutPage() {
   return (
     <>
       <Navbar />
-      <main className="min-h-screen bg-white text-primary selection:bg-[#173B57]/30 overflow-x-hidden">
+      <main className="min-h-screen bg-surface text-primary selection:bg-primary/30 overflow-x-hidden">
         
         {/* Hero Section */}
         <section 
-          className="relative bg-white pt-24 pb-20 border-b border-border"
+          className="relative bg-surface pt-24 pb-20 border-b border-border"
           aria-labelledby="hero-title"
         >
           <div className="max-w-[1200px] mx-auto px-6">
             <div className="max-w-3xl">
-              <span className="inline-flex items-center rounded-full border border-accent/40 bg-accent/10 px-5 py-1.5 text-[10px] font-bold uppercase tracking-brand text-[#C59A35] font-ui mb-6">
+              <span className="inline-flex items-center rounded-full border border-accent/40 bg-accent/10 px-5 py-1.5 text-[10px] font-bold uppercase tracking-brand text-accent font-ui mb-6">
                 Who We Are
               </span>
               <h1 
                 id="hero-title" 
-                className="font-heading text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-[#173B57] mb-6 leading-tight"
+                className="font-heading text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-text mb-6 leading-tight"
               >
                 Safe Spaces Built <br />on Shared Experience
               </h1>
@@ -76,7 +76,7 @@ export default function AboutPage() {
               <div className="flex flex-col sm:flex-row gap-4">
                 <Button 
                   asChild
-                  className="h-12 px-8 rounded-full bg-[#173B57] text-white hover:bg-[#C59A35] transition-all font-bold text-sm uppercase tracking-wide"
+                  className="h-12 px-8 rounded-full bg-primary text-white hover:bg-accent transition-all font-bold text-sm uppercase tracking-wide"
                 >
                   <Link href="/services">
                     Get Support
@@ -86,7 +86,7 @@ export default function AboutPage() {
                 <Button 
                   asChild
                   variant="outline"
-                  className="h-12 px-8 rounded-full border-[#173B57] text-[#173B57] hover:bg-zinc-50 transition-all font-bold text-sm uppercase tracking-wide"
+                  className="h-12 px-8 rounded-full border-primary text-text hover:bg-bg-subtle transition-all font-bold text-sm uppercase tracking-wide"
                 >
                   <Link href="/donate">Support Our Mission</Link>
                 </Button>
@@ -96,14 +96,14 @@ export default function AboutPage() {
         </section>
 
         {/* Our Story / Motivation */}
-        <section className="py-24 bg-white border-b border-border">
+        <section className="py-24 bg-surface border-b border-border">
           <div className="max-w-[1200px] mx-auto px-6">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-start">
               <div>
-                <span className="text-[10px] font-bold uppercase tracking-brand text-[#C59A35] font-ui mb-3 block">
+                <span className="text-[10px] font-bold uppercase tracking-brand text-accent font-ui mb-3 block">
                   The Problem We Solve
                 </span>
-                <h2 className="font-heading text-3xl font-bold text-[#173B57] mb-6 leading-tight">
+                <h2 className="font-heading text-3xl font-bold text-text mb-6 leading-tight">
                   Overcoming the Silence of High-Stakes Careers
                 </h2>
                 <div className="space-y-6 text-text-secondary font-body leading-relaxed text-base">
@@ -116,33 +116,33 @@ export default function AboutPage() {
                 </div>
               </div>
               
-              <div className="bg-zinc-50 p-8 md:p-12 rounded-3xl border border-border shadow-sm">
-                <h3 className="font-heading text-2xl font-bold text-[#173B57] mb-6">Our Operating Mandates</h3>
+              <div className="bg-bg-subtle p-8 md:p-12 rounded-3xl border border-border shadow-sm">
+                <h3 className="font-heading text-2xl font-bold text-text mb-6">Our Operating Mandates</h3>
                 <ul className="space-y-4">
                   <li className="flex gap-4">
-                    <div className="flex-shrink-0 w-6 h-6 rounded-full bg-[#C59A35]/10 flex items-center justify-center text-[#C59A35] font-bold text-xs mt-1">
+                    <div className="flex-shrink-0 w-6 h-6 rounded-full bg-accent/10 flex items-center justify-center text-accent font-bold text-xs mt-1">
                       ✓
                     </div>
                     <div>
-                      <h4 className="font-heading font-bold text-sm text-[#173B57] mb-1">Strict Anonymity Boundaries</h4>
+                      <h4 className="font-heading font-bold text-sm text-text mb-1">Strict Anonymity Boundaries</h4>
                       <p className="text-text-secondary text-xs font-body leading-relaxed">No tracking, no history linking, and dynamic handle generation.</p>
                     </div>
                   </li>
                   <li className="flex gap-4">
-                    <div className="flex-shrink-0 w-6 h-6 rounded-full bg-[#C59A35]/10 flex items-center justify-center text-[#C59A35] font-bold text-xs mt-1">
+                    <div className="flex-shrink-0 w-6 h-6 rounded-full bg-accent/10 flex items-center justify-center text-accent font-bold text-xs mt-1">
                       ✓
                     </div>
                     <div>
-                      <h4 className="font-heading font-bold text-sm text-[#173B57] mb-1">Peer Empowerment Only</h4>
+                      <h4 className="font-heading font-bold text-sm text-text mb-1">Peer Empowerment Only</h4>
                       <p className="text-text-secondary text-xs font-body leading-relaxed">Focus on active listening and shared experiences rather than clinical diagnostics.</p>
                     </div>
                   </li>
                   <li className="flex gap-4">
-                    <div className="flex-shrink-0 w-6 h-6 rounded-full bg-[#C59A35]/10 flex items-center justify-center text-[#C59A35] font-bold text-xs mt-1">
+                    <div className="flex-shrink-0 w-6 h-6 rounded-full bg-accent/10 flex items-center justify-center text-accent font-bold text-xs mt-1">
                       ✓
                     </div>
                     <div>
-                      <h4 className="font-heading font-bold text-sm text-[#173B57] mb-1">Financial Integrity</h4>
+                      <h4 className="font-heading font-bold text-sm text-text mb-1">Financial Integrity</h4>
                       <p className="text-text-secondary text-xs font-body leading-relaxed">All public donations directly purchase session matching credits for scholarship recipients.</p>
                     </div>
                   </li>
@@ -153,13 +153,13 @@ export default function AboutPage() {
         </section>
 
         {/* Our Pillars */}
-        <section className="py-24 bg-zinc-50 border-b border-border">
+        <section className="py-24 bg-bg-subtle border-b border-border">
           <div className="max-w-[1200px] mx-auto px-6">
             <div className="text-center max-w-2xl mx-auto mb-20">
-              <span className="text-[10px] font-bold uppercase tracking-brand text-[#C59A35] font-ui mb-3 block">
+              <span className="text-[10px] font-bold uppercase tracking-brand text-accent font-ui mb-3 block">
                 Foundational Principles
               </span>
-              <h2 className="font-heading text-3xl md:text-4xl font-bold text-[#173B57] mb-4">
+              <h2 className="font-heading text-3xl md:text-4xl font-bold text-text mb-4">
                 What Sets the H.I.P.S. Sanctuary Apart
               </h2>
               <p className="text-text-secondary font-body leading-relaxed">
@@ -173,16 +173,16 @@ export default function AboutPage() {
                 return (
                   <div 
                     key={index} 
-                    className="p-8 bg-white border border-border rounded-3xl shadow-sm flex flex-col md:flex-row gap-6 items-start"
+                    className="p-8 bg-surface border border-border rounded-3xl shadow-sm flex flex-col md:flex-row gap-6 items-start"
                   >
-                    <div className="w-12 h-12 rounded-2xl bg-zinc-50 border border-border flex items-center justify-center text-[#C59A35] flex-shrink-0">
+                    <div className="w-12 h-12 rounded-2xl bg-bg-subtle border border-border flex items-center justify-center text-accent flex-shrink-0">
                       <PillarIcon className="w-6 h-6" />
                     </div>
                     <div className="space-y-2">
-                      <h3 className="font-heading text-xl font-bold text-[#173B57]">
+                      <h3 className="font-heading text-xl font-bold text-text">
                         {pillar.title}
                       </h3>
-                      <p className="text-[#52525B] text-sm font-body leading-relaxed">
+                      <p className="text-text-muted text-sm font-body leading-relaxed">
                         {pillar.description}
                       </p>
                     </div>
@@ -194,14 +194,14 @@ export default function AboutPage() {
         </section>
 
         {/* Nonprofit Transparency Block */}
-        <section className="py-24 bg-white border-b border-border">
+        <section className="py-24 bg-surface border-b border-border">
           <div className="max-w-[1200px] mx-auto px-6">
-            <div className="bg-[#173B57] text-white p-8 md:p-16 rounded-3xl border border-border shadow-md relative overflow-hidden">
-              <div className="absolute inset-0 opacity-5 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-[#C59A35] via-transparent to-transparent pointer-events-none" />
+            <div className="bg-primary text-white p-8 md:p-16 rounded-3xl border border-border shadow-md relative overflow-hidden">
+              <div className="absolute inset-0 opacity-5 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-accent via-transparent to-transparent pointer-events-none" />
               
               <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
                 <div className="lg:col-span-8 space-y-6">
-                  <span className="inline-flex items-center rounded-full border border-white/20 bg-white/10 px-4 py-1 text-xs font-bold uppercase tracking-wider text-[#C59A35] font-ui">
+                  <span className="inline-flex items-center rounded-full border border-white/20 bg-surface/10 px-4 py-1 text-xs font-bold uppercase tracking-wider text-accent font-ui">
                     Transparency & Governance
                   </span>
                   <h2 className="font-heading text-3xl md:text-4xl font-bold leading-tight">
@@ -211,34 +211,34 @@ export default function AboutPage() {
                     The H.I.P.S. Foundation operates as a transparent non-profit entity. Your donations are tax-deductible to the extent permitted by law, and our reports are publicly listed. We commit to dedicating at least 85% of all funds raised directly to peer support services and scholarship matching.
                   </p>
                   <div className="flex flex-wrap gap-4 pt-2">
-                    <span className="bg-white/10 px-4 py-2 rounded-lg text-xs font-bold font-ui text-[#C59A35]">
+                    <span className="bg-surface/10 px-4 py-2 rounded-lg text-xs font-bold font-ui text-accent">
                       EIN: 88-1234567
                     </span>
-                    <span className="bg-white/10 px-4 py-2 rounded-lg text-xs font-bold font-ui text-[#C59A35]">
+                    <span className="bg-surface/10 px-4 py-2 rounded-lg text-xs font-bold font-ui text-accent">
                       GuideStar Gold Standard Alignment
                     </span>
                   </div>
                 </div>
 
                 <div className="lg:col-span-4 flex flex-col gap-4">
-                  <div className="p-6 bg-white/5 rounded-2xl border border-white/10">
-                    <h3 className="font-heading font-bold text-lg mb-2 text-[#C59A35]">Financials</h3>
+                  <div className="p-6 bg-surface/5 rounded-2xl border border-white/10">
+                    <h3 className="font-heading font-bold text-lg mb-2 text-accent">Financials</h3>
                     <p className="text-white/60 text-xs font-body mb-4">View our annual budgets, filing receipts, and distribution audits.</p>
                     <Link 
                       href="/compliance" 
-                      className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[#C59A35] hover:text-white transition-colors font-ui"
+                      className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-accent hover:text-white transition-colors font-ui"
                     >
                       <FileText className="w-4 h-4" />
                       View Postings
                     </Link>
                   </div>
 
-                  <div className="p-6 bg-white/5 rounded-2xl border border-white/10">
-                    <h3 className="font-heading font-bold text-lg mb-2 text-[#C59A35]">Partnerships</h3>
+                  <div className="p-6 bg-surface/5 rounded-2xl border border-white/10">
+                    <h3 className="font-heading font-bold text-lg mb-2 text-accent">Partnerships</h3>
                     <p className="text-white/60 text-xs font-body mb-4">Learn about sponsoring H.I.P.S. scholarship cohorts for your industry group.</p>
                     <Link 
                       href="/opportunities" 
-                      className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[#C59A35] hover:text-white transition-colors font-ui"
+                      className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-accent hover:text-white transition-colors font-ui"
                     >
                       <Globe className="w-4 h-4" />
                       Partner Portal
@@ -252,17 +252,17 @@ export default function AboutPage() {
 
         {/* Call to Action Footer */}
         <section 
-          className="py-20 bg-zinc-50 text-center border-t border-border relative overflow-hidden"
+          className="py-20 bg-bg-subtle text-center border-t border-border relative overflow-hidden"
           aria-labelledby="about-cta-title"
         >
           <div className="max-w-3xl mx-auto px-6">
             <Heart 
-              className="mx-auto h-12 w-12 text-[#C59A35] mb-6" 
+              className="mx-auto h-12 w-12 text-accent mb-6" 
               aria-hidden="true"
             />
             <h2 
               id="about-cta-title" 
-              className="font-heading text-3xl md:text-4xl font-bold mb-4 text-[#173B57]"
+              className="font-heading text-3xl md:text-4xl font-bold mb-4 text-text"
             >
               Take the Next Step With Us
             </h2>
@@ -272,7 +272,7 @@ export default function AboutPage() {
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button 
                 asChild
-                className="h-12 px-8 rounded-full bg-[#173B57] text-white hover:bg-[#C59A35] transition-all font-bold text-sm uppercase tracking-wide"
+                className="h-12 px-8 rounded-full bg-primary text-white hover:bg-accent transition-all font-bold text-sm uppercase tracking-wide"
               >
                 <Link href="/services">
                   Request Support
@@ -282,7 +282,7 @@ export default function AboutPage() {
               <Button 
                 asChild
                 variant="outline"
-                className="h-12 px-8 rounded-full border-[#173B57] text-[#173B57] hover:bg-zinc-50 transition-all font-bold text-sm uppercase tracking-wide"
+                className="h-12 px-8 rounded-full border-primary text-text hover:bg-bg-subtle transition-all font-bold text-sm uppercase tracking-wide"
               >
                 <Link href="/donate">Donate to Scholarship</Link>
               </Button>

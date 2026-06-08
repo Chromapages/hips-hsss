@@ -22,7 +22,7 @@ export function EmptyState({
 }: EmptyStateProps) {
   return (
     <div className="flex flex-col items-center justify-center p-8 text-center animate-in fade-in zoom-in duration-500">
-      <div className="flex h-20 w-20 items-center justify-center rounded-full bg-muted text-primary mb-4 border border-border shadow-[0_10px_30px_rgba(23,59,87,0.10)]">
+      <div className="flex h-20 w-20 items-center justify-center rounded-full bg-muted text-primary mb-4 border border-border shadow-card">
         <Icon className="h-10 w-10" />
       </div>
       <h3 className="mt-4 text-xl font-semibold text-primary">{title}</h3>

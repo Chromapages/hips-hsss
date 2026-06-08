@@ -19,7 +19,7 @@ export default function ServiceDetailError({
     <main className="grid min-h-screen place-items-center bg-primary text-white p-6">
       <div
         role="alert"
-        className="flex flex-col items-center justify-center p-12 text-center bg-white/5 border border-white/10 rounded-[2.5rem] backdrop-blur-xl max-w-lg mx-auto shadow-2xl shadow-black/50"
+        className="flex flex-col items-center justify-center p-12 text-center bg-surface/5 border border-white/10 rounded-[2.5rem] backdrop-blur-xl max-w-lg mx-auto shadow-2xl shadow-black/50"
       >
         <div className="flex h-24 w-24 items-center justify-center rounded-full bg-destructive/10 text-destructive mb-6 ring-1 ring-destructive/20">
           <AlertTriangle className="h-12 w-12" aria-hidden="true" />
@@ -45,7 +45,7 @@ export default function ServiceDetailError({
           </button>
           <Link
             href="/services"
-            className="inline-flex items-center justify-center h-12 px-8 text-white/70 hover:text-white hover:bg-white/5 rounded-full transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-primary"
+            className="inline-flex items-center justify-center h-12 px-8 text-white/70 hover:text-white hover:bg-surface/5 rounded-full transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-primary"
           >
             <ArrowLeft className="mr-2 h-4 w-4" aria-hidden="true" />
             Back to catalog

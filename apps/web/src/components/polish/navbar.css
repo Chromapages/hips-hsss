@@ -1,0 +1,316 @@
+/* =========================================================================
+   Navbar — component-scoped animations and interaction states.
+
+   The Navbar.tsx component owns the markup and class toggling. This file
+   declares the pseudo-element underlines, dropdown transitions, drawer
+   slide-in, and the .is-scrolled elevation. Class names are stable
+   (data-attribute driven) so the component can toggle state declaratively.
+
+   All motion uses transform / opacity only — never layout-triggering
+   properties — and respects prefers-reduced-motion.
+   ========================================================================= */
+
+/* -------------------------------------------------------------------------
+   Top bar
+   ------------------------------------------------------------------------- */
+
+.hips-nav {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background-color: oklch(from var(--color-bg) l c h / 0.85);
+  -webkit-backdrop-filter: blur(12px) saturate(140%);
+  backdrop-filter: blur(12px) saturate(140%);
+  border-bottom: 1px solid transparent;
+  transition: border-color var(--duration-base) var(--ease-out-quint),
+              box-shadow var(--duration-base) var(--ease-out-quint),
+              background-color var(--duration-base) var(--ease-out-quint);
+}
+
+.hips-nav--scrolled {
+  border-bottom-color: oklch(from var(--color-text) l c h / 0.08);
+  box-shadow: var(--shadow-sm);
+}
+
+/* -------------------------------------------------------------------------
+   Desktop nav link — animated underline + color transition
+   ------------------------------------------------------------------------- */
+
+.hips-nav-link {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  color: var(--color-text-muted);
+  transition: color 180ms var(--ease-out-quint);
+  padding: var(--space-2) 0;
+}
+
+.hips-nav-link::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 2px;
+  background-color: var(--color-primary);
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform var(--duration-base) var(--ease-out-quint);
+  border-radius: 1px;
+}
+
+.hips-nav-link:hover,
+.hips-nav-link:focus-visible {
+  color: var(--color-text);
+}
+
+.hips-nav-link:hover::after,
+.hips-nav-link:focus-visible::after {
+  transform: scaleX(1);
+}
+
+.hips-nav-link[data-active="true"] {
+  color: var(--color-primary);
+}
+
+.hips-nav-link[data-active="true"]::after {
+  transform: scaleX(1);
+}
+
+/* -------------------------------------------------------------------------
+   Theme toggle
+   ------------------------------------------------------------------------- */
+
+.hips-theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+  border-radius: var(--radius-md);
+  color: var(--color-text);
+  transition: background-color var(--duration-base) var(--ease-out-quint),
+              color var(--duration-base) var(--ease-out-quint);
+}
+
+.hips-theme-toggle:hover,
+.hips-theme-toggle:focus-visible {
+  background-color: var(--color-surface-offset);
+}
+
+.hips-theme-toggle:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 3px;
+}
+
+/* -------------------------------------------------------------------------
+   Dropdown menus
+   ------------------------------------------------------------------------- */
+
+.hips-dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 50%;
+  transform: translate(-50%, 0);
+  min-width: 220px;
+  background-color: var(--color-bg);
+  border: 1px solid oklch(from var(--color-text) l c h / 0.08);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  padding: var(--space-2) 0;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 180ms ease, transform 180ms ease;
+  z-index: 60;
+}
+
+.hips-dropdown[data-open="true"] {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translate(-50%, 0);
+}
+
+.hips-dropdown-item {
+  position: relative;
+  display: block;
+  padding: var(--space-3) var(--space-4);
+  color: var(--color-text);
+  font-size: var(--text-sm);
+  transition: color var(--duration-fast) var(--ease-out-quint),
+              background-color var(--duration-fast) var(--ease-out-quint);
+}
+
+.hips-dropdown-item::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background-color: var(--color-primary);
+  transform: scaleY(0);
+  transform-origin: center;
+  transition: transform var(--duration-fast) var(--ease-out-quint);
+}
+
+.hips-dropdown-item:hover,
+.hips-dropdown-item:focus-visible {
+  color: var(--color-primary);
+  background-color: var(--color-surface-offset);
+  outline: none;
+}
+
+.hips-dropdown-item:hover::before,
+.hips-dropdown-item:focus-visible::before {
+  transform: scaleY(1);
+}
+
+.hips-dropdown-item[data-active="true"] {
+  color: var(--color-primary);
+}
+
+/* -------------------------------------------------------------------------
+   Mobile drawer
+   ------------------------------------------------------------------------- */
+
+.hips-drawer-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 55;
+  background-color: oklch(0 0 0 / 0.4);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--duration-slow) var(--ease-out-quint);
+}
+
+.hips-drawer-backdrop[data-open="true"] {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.hips-drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  height: 100dvh;
+  width: min(320px, 100vw);
+  z-index: 60;
+  background-color: var(--color-bg);
+  border-left: 1px solid var(--color-divider);
+  transform: translateX(100%);
+  transition: transform var(--duration-slow) var(--ease-out-quint);
+  display: flex;
+  flex-direction: column;
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.hips-drawer[data-open="true"] {
+  transform: translateX(0);
+}
+
+.hips-drawer-link {
+  display: block;
+  padding: var(--space-3) var(--space-4);
+  color: var(--color-text);
+  border-bottom: 1px solid var(--color-divider);
+  border-left: 2px solid transparent;
+  transition: color var(--duration-fast) var(--ease-out-quint),
+              background-color var(--duration-fast) var(--ease-out-quint);
+}
+
+.hips-drawer-link[data-active="true"] {
+  color: var(--color-primary);
+  border-left-color: var(--color-primary);
+}
+
+.hips-drawer-link:hover,
+.hips-drawer-link:focus-visible {
+  background-color: var(--color-surface-offset);
+  outline: none;
+}
+
+/* CTA in drawer — full width, 44px touch target */
+.hips-drawer-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-md);
+  background-color: var(--color-primary);
+  color: var(--color-text-inverse);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  width: 100%;
+  transition: background-color var(--duration-base) var(--ease-out-quint),
+              transform var(--duration-fast) var(--ease-out-quint);
+}
+
+.hips-drawer-cta:hover {
+  background-color: var(--color-primary-hover);
+}
+
+.hips-drawer-cta:active {
+  background-color: var(--color-primary-active);
+  transform: scale(0.97);
+}
+
+/* -------------------------------------------------------------------------
+   Top-bar CTA — visible only at >=768px
+   ------------------------------------------------------------------------- */
+
+.hips-top-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-md);
+  background-color: var(--color-primary);
+  color: var(--color-text-inverse);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  transition: background-color var(--duration-base) var(--ease-out-quint),
+              transform var(--duration-fast) var(--ease-out-quint);
+}
+
+.hips-top-cta:hover {
+  background-color: var(--color-primary-hover);
+}
+
+.hips-top-cta:active {
+  background-color: var(--color-primary-active);
+  transform: scale(0.97);
+}
+
+.hips-top-cta:focus-visible,
+.hips-nav-link:focus-visible,
+.hips-drawer-link:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 3px;
+  border-radius: var(--radius-sm);
+}
+
+/* -------------------------------------------------------------------------
+   Reduced motion — disable all decorative motion
+   ------------------------------------------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+  .hips-nav,
+  .hips-nav-link,
+  .hips-nav-link::after,
+  .hips-dropdown,
+  .hips-dropdown-item,
+  .hips-drawer,
+  .hips-drawer-backdrop,
+  .hips-drawer-link,
+  .hips-drawer-cta,
+  .hips-top-cta,
+  .hips-theme-toggle {
+    transition-duration: 0.001ms !important;
+    animation-duration: 0.001ms !important;
+  }
+}

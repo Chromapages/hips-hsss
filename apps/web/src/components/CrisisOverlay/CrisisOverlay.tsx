@@ -107,7 +107,7 @@ export function CrisisOverlay({
           <h1 id="crisis-title" className="font-heading text-4xl md:text-5xl font-extrabold tracking-tighter text-white mb-4">
             You are not alone.
           </h1>
-          <p className="text-xl text-zinc-400">
+          <p className="text-xl text-text">
             Professional help is available right now.
           </p>
         </div>
@@ -120,38 +120,38 @@ export function CrisisOverlay({
           {CRISIS_RESOURCES.map((resource) => (
             <li key={resource.href}>
               <a
-                className="flex flex-col items-center justify-center text-center rounded-[2rem] border border-white/10 bg-white/5 p-8 transition-all hover:bg-white/10 hover:border-amber-500/30 group"
+                className="flex flex-col items-center justify-center text-center rounded-[2rem] border border-white/10 bg-surface/5 p-8 transition-all hover:bg-surface/10 hover:border-amber-500/30 group"
                 href={resource.href}
                 aria-label={`${resource.label} — ${resource.action}`}
               >
-                <div className="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center mb-4 group-hover:scale-110 group-hover:bg-amber-500/20 group-hover:text-amber-500 transition-all">
+                <div className="w-12 h-12 rounded-2xl bg-surface/5 border border-white/10 flex items-center justify-center mb-4 group-hover:scale-110 group-hover:bg-amber-500/20 group-hover:text-amber-500 transition-all">
                   {resource.href.startsWith("tel:") ? (
-                    <PhoneCall className="w-5 h-5 text-zinc-400 group-hover:text-amber-500 transition-colors" aria-hidden="true" />
+                    <PhoneCall className="w-5 h-5 text-text group-hover:text-amber-500 transition-colors" aria-hidden="true" />
                   ) : (
-                    <MessageSquare className="w-5 h-5 text-zinc-400 group-hover:text-amber-500 transition-colors" aria-hidden="true" />
+                    <MessageSquare className="w-5 h-5 text-text group-hover:text-amber-500 transition-colors" aria-hidden="true" />
                   )}
                 </div>
                 <span className="block font-bold text-white text-xl mb-1">{resource.label}</span>
-                <span className="text-sm text-zinc-500 font-bold uppercase tracking-widest">{resource.action}</span>
+                <span className="text-sm text-text-muted0 font-bold uppercase tracking-widest">{resource.action}</span>
               </a>
             </li>
           ))}
           <li className="md:col-span-2 rounded-2xl border border-white/5 bg-black/50 p-5 text-center flex flex-col items-center justify-center">
-            <span className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest mb-1">Local Resource Fallback</span>
-            <span className="text-sm font-medium text-zinc-400">Searching nearest responders in {region}, {country}</span>
+            <span className="text-[10px] font-bold text-text uppercase tracking-widest mb-1">Local Resource Fallback</span>
+            <span className="text-sm font-medium text-text">Searching nearest responders in {region}, {country}</span>
           </li>
         </ul>
 
         <div className="flex flex-col gap-4 sm:flex-row justify-center border-t border-white/10 pt-8">
           <button
-            className="h-14 rounded-2xl border border-white/10 bg-transparent px-8 font-bold text-white transition-all hover:bg-white/5 focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-black"
+            className="h-14 rounded-2xl border border-white/10 bg-transparent px-8 font-bold text-white transition-all hover:bg-surface/5 focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-black"
             onClick={onStayInSession}
             ref={closeButtonRef}
           >
             Stay in session
           </button>
           <button
-            className="h-14 rounded-2xl bg-red-600 px-8 font-bold text-white transition-all hover:bg-red-500 shadow-xl shadow-red-900/40"
+            className="h-14 rounded-2xl bg-destructive px-8 font-bold text-white transition-all hover:bg-destructive0 shadow-xl shadow-red-900/40"
             onClick={onEndSession}
           >
             End session safely

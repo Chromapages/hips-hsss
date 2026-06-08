@@ -31,30 +31,30 @@ export default function CrisisPage() {
   }, []);
 
   return (
-    <main className="min-h-screen bg-white text-primary selection:bg-primary/30 overflow-x-hidden">
+    <main className="min-h-screen bg-surface text-primary selection:bg-primary/30 overflow-x-hidden">
       <Navbar />
 
       {/* Hero Section */}
       <section className="relative pt-20 pb-16 md:pt-32 md:pb-24 overflow-hidden">
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[120%] h-[600px] bg-[radial-gradient(circle_at_50%_0%,rgba(239,68,68,0.15)_0%,transparent_70%)] -z-10" />
-        <div className="absolute top-[30%] -left-[10%] w-[40%] h-[400px] bg-red-600/5 blur-[120px] rounded-full -z-10 animate-pulse" />
+        <div className="absolute top-[30%] -left-[10%] w-[40%] h-[400px] bg-destructive/5 blur-[120px] rounded-full -z-10 animate-pulse" />
 
         <div className="container mx-auto px-6 text-center relative">
           <div
-            className="inline-flex items-center gap-2 rounded-full border border-red-500/20 bg-red-50 backdrop-blur-xl px-4 py-1.5 text-xs font-bold text-red-600 mb-10 animate-in fade-in slide-in-from-bottom-4 duration-1000 brand-caps"
+            className="inline-flex items-center gap-2 rounded-full border border-destructive/20 bg-destructive backdrop-blur-xl px-4 py-1.5 text-xs font-bold text-destructive mb-10 animate-in fade-in slide-in-from-bottom-4 duration-1000 brand-caps"
             role="status"
             aria-live="polite"
           >
-            <span className="flex h-2 w-2 rounded-full bg-red-500 animate-ping" />
+            <span className="flex h-2 w-2 rounded-full bg-destructive0 animate-ping" />
             Crisis Support Available 24/7
           </div>
 
           <div className="flex flex-col items-center justify-center mb-8">
             <div
-              className="p-6 bg-red-50 rounded-3xl border border-red-200 mb-8 animate-pulse"
+              className="p-6 bg-destructive rounded-3xl border border-destructive mb-8 animate-pulse"
               aria-hidden="true"
             >
-              <ShieldAlert className="w-16 h-16 text-red-500" />
+              <ShieldAlert className="w-16 h-16 text-destructive0" />
             </div>
 
             {/* H1 - serif heading */}
@@ -109,10 +109,10 @@ export default function CrisisPage() {
 
           <div className="grid md:grid-cols-2 gap-6">
             {/* 988 Lifeline */}
-            <div className="p-8 rounded-3xl bg-white border border-border hover:border-red-500/30 transition-all group">
+            <div className="p-8 rounded-3xl bg-surface border border-border hover:border-destructive/30 transition-all group">
               <div className="flex items-start gap-4 mb-6">
-                <div className="p-3 bg-red-50 rounded-xl border border-red-200">
-                  <Phone className="w-6 h-6 text-red-500" />
+                <div className="p-3 bg-destructive rounded-xl border border-destructive">
+                  <Phone className="w-6 h-6 text-destructive0" />
                 </div>
                 <div>
                   {/* H3 - serif heading */}
@@ -126,7 +126,7 @@ export default function CrisisPage() {
               <div className="flex flex-col sm:flex-row gap-3">
                 <a
                   href="tel:988"
-                  className="flex items-center justify-center gap-2 px-6 py-3 bg-red-600 hover:bg-red-500 text-white rounded-xl font-bold transition-all shadow-lg shadow-red-900/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white font-ui uppercase tracking-wide"
+                  className="flex items-center justify-center gap-2 px-6 py-3 bg-destructive hover:bg-destructive0 text-white rounded-xl font-bold transition-all shadow-lg shadow-red-900/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white font-ui uppercase tracking-wide"
                   aria-label="Call 988 Suicide and Crisis Lifeline"
                 >
                   <Phone className="w-4 h-4" />
@@ -144,7 +144,7 @@ export default function CrisisPage() {
             </div>
 
             {/* Crisis Text Line */}
-            <div className="p-8 rounded-3xl bg-white border border-border hover:border-emerald-500/30 transition-all group">
+            <div className="p-8 rounded-3xl bg-surface border border-border hover:border-emerald-500/30 transition-all group">
               <div className="flex items-start gap-4 mb-6">
                 <div className="p-3 bg-emerald-50 rounded-xl border border-emerald-200">
                   <MessageCircle className="w-6 h-6 text-emerald-600" />
@@ -169,7 +169,7 @@ export default function CrisisPage() {
             </div>
 
             {/* 988 Chat */}
-            <div className="p-8 rounded-3xl bg-white border border-border hover:border-primary/30 transition-all group">
+            <div className="p-8 rounded-3xl bg-surface border border-border hover:border-primary/30 transition-all group">
               <div className="flex items-start gap-4 mb-6">
                 <div className="p-3 bg-primary/10 rounded-xl border border-primary/20">
                   <Heart className="w-6 h-6 text-primary" />
@@ -197,7 +197,7 @@ export default function CrisisPage() {
             </div>
 
             {/* International Resources */}
-            <div className="p-8 rounded-3xl bg-white border border-border hover:border-accent/30 transition-all group">
+            <div className="p-8 rounded-3xl bg-surface border border-border hover:border-accent/30 transition-all group">
               <div className="flex items-start gap-4 mb-6">
                 <div className="p-3 bg-accent/10 rounded-xl border border-accent/20">
                   <ExternalLink className="w-6 h-6 text-accent" />

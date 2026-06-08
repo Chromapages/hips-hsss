@@ -76,14 +76,14 @@ function DemoLobby({ onEnter, error, loading }: { onEnter: () => void; error: st
             Demo Mode
           </div>
           <h1 className="font-heading text-3xl font-extrabold tracking-tight">Welcome to the Demo</h1>
-          <p className="text-sm text-zinc-500">
+          <p className="text-sm text-text-muted0">
             This is a sandboxed environment where you can explore the session features without joining a real session.
           </p>
         </div>
 
-        <div className="space-y-4 rounded-2xl border border-white/10 bg-white/5 p-6">
-          <h2 className="text-sm font-bold uppercase tracking-wider text-zinc-400">What you can do in the demo:</h2>
-          <ul className="space-y-2 text-sm text-zinc-300 text-left">
+        <div className="space-y-4 rounded-2xl border border-white/10 bg-surface/5 p-6">
+          <h2 className="text-sm font-bold uppercase tracking-wider text-text">What you can do in the demo:</h2>
+          <ul className="space-y-2 text-sm text-text-muted text-left">
             <li className="flex items-start gap-2">
               <span className="text-emerald-400">•</span>
               Test your microphone and camera
@@ -104,7 +104,7 @@ function DemoLobby({ onEnter, error, loading }: { onEnter: () => void; error: st
         </div>
 
         {error && (
-          <div className="rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+          <div className="rounded-xl border border-destructive/20 bg-destructive0/10 px-4 py-3 text-sm text-destructive">
             {error}
           </div>
         )}
@@ -120,7 +120,7 @@ function DemoLobby({ onEnter, error, loading }: { onEnter: () => void; error: st
           </span>
         </button>
 
-        <p className="text-center text-xs text-zinc-600">
+        <p className="text-center text-xs text-text">
           Demo sessions are isolated and do not connect to real users.
         </p>
       </div>
@@ -383,8 +383,8 @@ function DemoRoomContent({ roomName }: { roomName: string }) {
 
         <aside className="grid min-h-0 grid-rows-[auto_1fr] border-l border-white/10 bg-zinc-950">
           <div className="border-b border-white/10 p-4">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Demo Info</p>
-            <p className="mt-1 text-sm text-zinc-400">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-text-muted0">Demo Info</p>
+            <p className="mt-1 text-sm text-text">
               This is a sandboxed demo environment. No real sessions or data are involved.
             </p>
           </div>
@@ -543,7 +543,7 @@ function MicSelectorModal({ isOpen, initialError, onConfirm, onClose }: MicSelec
       aria-labelledby="mic-modal-title"
       className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
     >
-      <div className="relative w-full max-w-md rounded-3xl border border-white/10 bg-zinc-900 text-white shadow-2xl overflow-hidden">
+      <div className="relative w-full max-w-md rounded-3xl border border-white/10 bg-text text-white shadow-2xl overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-white/10">
           <div className="flex items-center gap-3">
@@ -554,12 +554,12 @@ function MicSelectorModal({ isOpen, initialError, onConfirm, onClose }: MicSelec
               <h2 id="mic-modal-title" className="text-base font-bold text-white">
                 Microphone Setup
               </h2>
-              <p className="text-xs text-zinc-400">Select your microphone before entering</p>
+              <p className="text-xs text-text">Select your microphone before entering</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="flex h-8 w-8 items-center justify-center rounded-full text-zinc-400 hover:bg-zinc-800 hover:text-white transition-colors"
+            className="flex h-8 w-8 items-center justify-center rounded-full text-text hover:bg-text hover:text-white transition-colors"
             aria-label="Close microphone setup"
             type="button"
           >
@@ -599,11 +599,11 @@ function MicSelectorModal({ isOpen, initialError, onConfirm, onClose }: MicSelec
           {permissionGranted && !permissionError && (
             <>
               <div className="space-y-2">
-                <label htmlFor="mic-device-select" className="text-xs font-bold uppercase tracking-widest text-zinc-400">
+                <label htmlFor="mic-device-select" className="text-xs font-bold uppercase tracking-widest text-text">
                   Select Microphone
                 </label>
                 {devices.length === 0 ? (
-                  <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-zinc-800 px-4 py-3 text-sm text-zinc-400">
+                  <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-text px-4 py-3 text-sm text-text">
                     <Info className="h-4 w-4 shrink-0" />
                     No microphones detected. Please connect one and retry.
                   </div>
@@ -612,7 +612,7 @@ function MicSelectorModal({ isOpen, initialError, onConfirm, onClose }: MicSelec
                     id="mic-device-select"
                     value={selectedId}
                     onChange={(e) => handleDeviceChange(e.target.value)}
-                    className="w-full rounded-xl border border-white/10 bg-zinc-800 px-4 py-3 text-sm text-white focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all"
+                    className="w-full rounded-xl border border-white/10 bg-text px-4 py-3 text-sm text-white focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all"
                   >
                     {devices.map((d) => (
                       <option key={d.deviceId} value={d.deviceId}>
@@ -625,7 +625,7 @@ function MicSelectorModal({ isOpen, initialError, onConfirm, onClose }: MicSelec
 
               {/* Live Volume Meter */}
               <div className="space-y-2">
-                <p className="text-xs font-bold uppercase tracking-widest text-zinc-400">
+                <p className="text-xs font-bold uppercase tracking-widest text-text">
                   Microphone Test — speak to check
                 </p>
                 <div className="h-3 w-full overflow-hidden rounded-full bg-zinc-855 border border-white/10">
@@ -639,7 +639,7 @@ function MicSelectorModal({ isOpen, initialError, onConfirm, onClose }: MicSelec
                     }}
                   />
                 </div>
-                <p className="text-[10px] text-zinc-400">
+                <p className="text-[10px] text-text">
                   {volumeBarWidth > 5
                     ? <span className="text-emerald-400 font-semibold">✓ Audio detected</span>
                     : 'Waiting for audio input…'}
@@ -660,7 +660,7 @@ function MicSelectorModal({ isOpen, initialError, onConfirm, onClose }: MicSelec
           <button
             onClick={onClose}
             type="button"
-            className="rounded-xl px-5 py-2.5 text-sm font-semibold text-zinc-400 hover:bg-zinc-800 transition-colors"
+            className="rounded-xl px-5 py-2.5 text-sm font-semibold text-text hover:bg-text transition-colors"
           >
             Cancel
           </button>
@@ -752,23 +752,23 @@ function DemoRoomInner({ roomName }: { token?: string; roomName: string }) {
         <div className="w-full max-w-md space-y-6 text-center">
           {error ? (
             <>
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-bold uppercase tracking-widest">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-destructive0/10 border border-destructive/20 text-destructive text-xs font-bold uppercase tracking-widest">
                 Error
               </div>
               <h1 className="text-2xl font-bold">Failed to Join Demo</h1>
-              <p className="text-sm text-zinc-400">{error}</p>
+              <p className="text-sm text-text">{error}</p>
               <button
                 onClick={handleEnter}
-                className="w-full h-12 rounded-xl bg-[#173B57] font-bold text-white hover:bg-[#173B57] transition-colors"
+                className="w-full h-12 rounded-xl bg-primary font-bold text-white hover:bg-primary transition-colors"
                 type="button"
               >
                 Try Again
               </button>
             </>
           ) : (
-            <div className="flex items-center justify-center gap-3 rounded-2xl border border-white/10 bg-white/[0.03] px-5 py-4">
+            <div className="flex items-center justify-center gap-3 rounded-2xl border border-white/10 bg-surface/[0.03] px-5 py-4">
               <Loader2 className="h-5 w-5 animate-spin text-emerald-300" />
-              <span className="text-sm font-bold uppercase tracking-widest text-zinc-400">
+              <span className="text-sm font-bold uppercase tracking-widest text-text">
                 {loading ? 'Joining Demo...' : 'Preparing Demo...'}
               </span>
             </div>
@@ -831,9 +831,9 @@ export function DemoRoomClient() {
     <Suspense
       fallback={
         <div className="flex h-screen items-center justify-center bg-black text-white">
-          <div className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.03] px-5 py-4">
+          <div className="flex items-center gap-3 rounded-2xl border border-white/10 bg-surface/[0.03] px-5 py-4">
             <Loader2 className="h-5 w-5 animate-spin text-emerald-300" />
-            <span className="text-sm font-bold uppercase tracking-widest text-zinc-400">
+            <span className="text-sm font-bold uppercase tracking-widest text-text">
               Preparing Demo
             </span>
           </div>

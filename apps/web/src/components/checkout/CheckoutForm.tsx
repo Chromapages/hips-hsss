@@ -53,7 +53,7 @@ export function CheckoutForm({ amount }: { amount: number }) {
       </div>
 
       {elementError && (
-        <div className="p-4 rounded-2xl bg-red-500/5 border border-red-500/10 text-red-400 text-xs font-bold uppercase tracking-widest text-center animate-in shake-in duration-300">
+        <div className="p-4 rounded-2xl bg-destructive0/5 border border-destructive/10 text-destructive text-xs font-bold uppercase tracking-widest text-center animate-in shake-in duration-300">
           {elementError}
         </div>
       )}
@@ -64,7 +64,7 @@ export function CheckoutForm({ amount }: { amount: number }) {
         </div>
         <div>
           <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-emerald-400 mb-1">Encrypted Gateway</p>
-          <p className="text-xs text-zinc-500 leading-relaxed font-medium">
+          <p className="text-xs text-text-muted0 leading-relaxed font-medium">
             Your connection is secured with 256-bit encryption. Payment details are handled exclusively by Stripe.
           </p>
         </div>
@@ -72,7 +72,7 @@ export function CheckoutForm({ amount }: { amount: number }) {
 
       <button
         disabled={isLoading || !stripe || !elements}
-        className="group relative w-full h-16 items-center justify-center overflow-hidden rounded-[1.5rem] bg-white font-bold tracking-tighter text-black transition-all hover:scale-[1.01] active:scale-[0.99] disabled:opacity-30 disabled:hover:scale-100"
+        className="group relative w-full h-16 items-center justify-center overflow-hidden rounded-[1.5rem] bg-surface font-bold tracking-tighter text-black transition-all hover:scale-[1.01] active:scale-[0.99] disabled:opacity-30 disabled:hover:scale-100"
       >
         <div className="absolute inset-0 bg-gradient-to-r from-#173B57 to-Gold-500 opacity-0 transition-opacity group-hover:opacity-10" />
         {isLoading ? (
@@ -86,7 +86,7 @@ export function CheckoutForm({ amount }: { amount: number }) {
       </button>
 
       {message && (
-        <div className="p-4 rounded-2xl bg-red-500/5 border border-red-500/10 text-red-400 text-xs font-bold uppercase tracking-widest text-center animate-in shake-in duration-300">
+        <div className="p-4 rounded-2xl bg-destructive0/5 border border-destructive/10 text-destructive text-xs font-bold uppercase tracking-widest text-center animate-in shake-in duration-300">
           {message}
         </div>
       )}
