@@ -17,6 +17,7 @@ import {
   Server,
   Download,
   Heart,
+  Bug,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import {
@@ -71,6 +72,7 @@ const adminNav: NavItem[] = [
   { title: "User Ops", href: "/admin/users", icon: Users },
   { title: "Safety Feed", href: "/admin/safety", icon: ShieldAlert },
   { title: "Grants", href: "/admin/scholarships", icon: Award },
+  { title: "Technical Logs", href: "/admin/errors", icon: Bug },
   { title: "Settings", href: "/dashboard/settings", icon: Settings },
 ];
 

@@ -3,9 +3,10 @@ import { AccessToken } from 'livekit-server-sdk';
 import crypto from 'crypto';
 import { z } from 'zod';
 import * as admin from 'firebase-admin';
-import { db } from '@/lib/firebase-admin';
+import { db, isFirebaseAdminReady } from '@/lib/firebase-admin';
 import { checkRateLimit, getRateLimitHeaders } from '@/lib/rate-limit';
 import { authorizeSessionAccess } from '@/lib/session-authz';
+import { verifyFirebaseIdToken } from '@/lib/auth-edge';
 
 const palettes = ['coastal', 'sunrise', 'forest'] as const;
 
@@ -139,11 +140,26 @@ export async function POST(req: NextRequest) {
 
     // Verify the session exists before any authz work — single 404 closes the
     // session-existence oracle for unauthenticated callers.
-    const sessionDoc = await db.collection('phase5_sessions').doc(sessionId).get();
-    if (!sessionDoc.exists) {
-      return NextResponse.json({ error: 'Session not found' }, { status: 404 });
+    const adminReady = isFirebaseAdminReady();
+    let sessionData: Partial<Phase5Session> = {};
+
+    if (process.env.NODE_ENV === 'development' && (!adminReady || sessionId === 'prototype-demo-room')) {
+      sessionData = {
+        id: sessionId,
+        status: 'active',
+        startsAt: new Date(Date.now() - 5 * 60 * 1000).toISOString(),
+        endsAt: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
+      };
+    } else {
+      if (!adminReady) {
+        return NextResponse.json({ error: 'Firebase Admin SDK not initialized' }, { status: 500 });
+      }
+      const sessionDoc = await db.collection('phase5_sessions').doc(sessionId).get();
+      if (!sessionDoc.exists) {
+        return NextResponse.json({ error: 'Session not found' }, { status: 404 });
+      }
+      sessionData = sessionDoc.data() as Partial<Phase5Session>;
     }
-    const sessionData = sessionDoc.data() as Partial<Phase5Session>;
 
     // Authorize the caller. The helper accepts either a Firebase ID token (the
     // session creator, the facilitator, or anyone previously recorded in
@@ -185,18 +201,20 @@ export async function POST(req: NextRequest) {
     const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour max
 
     // Session lifecycle — ensure session exists and transition to active
-    let session: Phase5Session;
-    try {
-      session = await getOrCreateSession(sessionId);
-      if (session.status === 'pending') {
-        await transitionSession(sessionId, 'active');
-        session.status = 'active';
-        session.activeAt = new Date().toISOString();
+    let session: Partial<Phase5Session> = { id: sessionId, status: 'active', createdAt: new Date().toISOString(), participantCount: 0, flagged: false };
+    if (adminReady) {
+      try {
+        const sessionRecord = await getOrCreateSession(sessionId);
+        if (sessionRecord.status === 'pending') {
+          await transitionSession(sessionId, 'active');
+          sessionRecord.status = 'active';
+          sessionRecord.activeAt = new Date().toISOString();
+        }
+        session = sessionRecord;
+      } catch (err) {
+        // Non-fatal: continue with token issuance even if Firestore unavailable
+        console.warn('[LiveKitAPI] Session lifecycle error:', err);
       }
-    } catch (err) {
-      // Non-fatal: continue with token issuance even if Firestore unavailable
-      console.warn('[LiveKitAPI] Session lifecycle error:', err);
-      session = { id: sessionId, status: 'active', createdAt: new Date().toISOString(), participantCount: 0, flagged: false };
     }
 
     console.log(`[LiveKitAPI] Issuing token for room: ${roomName}, identity: ${anonymousIdentity}`);
@@ -215,9 +233,22 @@ export async function POST(req: NextRequest) {
     });
 
     // Add metadata forFacilitator identification
+    let userRole = 'PARTICIPANT';
+    if (principal.kind === 'firebase' && token) {
+      try {
+        const decoded = await verifyFirebaseIdToken(token);
+        if (decoded.role) {
+          userRole = decoded.role as string;
+        }
+      } catch (err) {
+        console.warn('[LiveKitAPI] Failed to verify token for role:', err);
+      }
+    }
+
     at.metadata = JSON.stringify({
       joinedAt: new Date().toISOString(),
       sessionId,
+      role: userRole,
     });
 
     const tokenJwt = await at.toJwt();
@@ -226,7 +257,7 @@ export async function POST(req: NextRequest) {
     // We persist the (sessionId, firebaseUid) → anonymousIdentity mapping
     // explicitly so the reconnect endpoint can look up the original identity
     // server-side without trusting client input. See H7 in the audit report.
-    if (anonymousIdentity) {
+    if (anonymousIdentity && adminReady) {
       try {
         const sessionDocRef = db.collection('phase5_sessions').doc(sessionId);
         await sessionDocRef.update({

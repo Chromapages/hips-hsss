@@ -21,6 +21,7 @@ interface AvatarConfig {
   raisedHand: boolean;
   styleIndex: number; // 0-11 maps to different bob amplitudes / proportions
   gesture: AvatarGesture;
+  isHost?: boolean;
 }
 
 // 12 avatar styles with different proportions and bob amplitudes
@@ -72,6 +73,7 @@ export default function VirtualOfficeAvatar({
   raisedHand,
   styleIndex,
   gesture = "idle",
+  isHost = false,
 }: AvatarConfig) {
   const groupRef = useRef<Group>(null);
   const headMatRef = useRef<MeshStandardMaterial>(null);
@@ -169,6 +171,16 @@ export default function VirtualOfficeAvatar({
         <Html center position={[0, 2.1, 0]}>
           <div className="rounded-full border border-amber-300/40 bg-amber-400/15 px-3 py-1 text-xs font-bold text-amber-100 shadow-xl backdrop-blur-xl">
             ✋ Hand raised
+          </div>
+        </Html>
+      ) : null}
+
+      {/* Host badge */}
+      {isHost ? (
+        <Html center position={[0, 1.65, 0]}>
+          <div className="rounded-full border border-[#C59A35]/50 bg-[#C59A35]/20 px-3 py-1 text-xs font-bold text-[#fde68a] shadow-xl backdrop-blur-xl flex items-center gap-1 select-none">
+            <span>👑</span>
+            <span className="font-ui uppercase tracking-wider text-[10px]">Host</span>
           </div>
         </Html>
       ) : null}

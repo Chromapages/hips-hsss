@@ -173,6 +173,18 @@ export default function AvatarCanvas({
 
         const isSpeaking = participant.isSpeaking || participant.identity === activeSpeakerIdentity;
 
+        // Check if host role is in metadata or sessionStorage (practice mode fallback)
+        let isHost = false;
+        if (participant.metadata) {
+          try {
+            const parsed = JSON.parse(participant.metadata);
+            isHost = parsed.role === 'FACILITATOR' || parsed.role === 'ADMIN';
+          } catch {}
+        }
+        if (isLocal && !isHost && typeof window !== 'undefined') {
+          isHost = sessionStorage.getItem('hips-host-role') === 'true';
+        }
+
         return (
           <VirtualOfficeAvatar
             color={color}
@@ -183,6 +195,7 @@ export default function AvatarCanvas({
             raisedHand={raisedHands.has(participant.identity)}
             styleIndex={isLocal ? avatar.style : index + 1}
             gesture={isLocal ? gesture : ("idle" as AvatarGesture)}
+            isHost={isHost}
           />
         );
       })}

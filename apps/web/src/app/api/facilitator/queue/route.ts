@@ -30,22 +30,38 @@ export async function GET(req: NextRequest) {
     const sessionsSnapshot = await db.collection('sessions')
       .where('status', '==', 'SCHEDULED')
       .where('facilitatorId', '==', null)
-      .orderBy('startsAt', 'asc')
-      .limit(50)
       .get();
 
     const queue = sessionsSnapshot.docs.map(doc => {
       const data = doc.data();
+      const serviceName = data.serviceName || 'Support Session';
+      
+      // Dynamic priority elevation based on service name characteristics
+      let priority = data.priority || 'STANDARD';
+      const nameLower = serviceName.toLowerCase();
+      if (nameLower.includes('crisis') || nameLower.includes('intervention')) {
+        priority = 'CRISIS';
+      } else if (nameLower.includes('mentoring') || nameLower.includes('grief')) {
+        priority = 'URGENT';
+      }
+
       return {
         id: doc.id,
-        serviceName: data.serviceName || 'Support Session',
-        startsAt: data.startsAt, // Standardized in Firestore
+        serviceName,
+        startsAt: data.startsAt,
         createdAt: data.createdAt,
+        priority,
       };
     });
 
-    // Sort by soonest first
-    queue.sort((a, b) => new Date(a.startsAt).getTime() - new Date(b.startsAt).getTime());
+    // Sort: CRISIS first, then URGENT, then STANDARD. Tie-breaker is startsAt ascending
+    const priorityOrder: Record<string, number> = { CRISIS: 1, URGENT: 2, STANDARD: 3 };
+    queue.sort((a, b) => {
+      const pA = priorityOrder[a.priority] || 3;
+      const pB = priorityOrder[b.priority] || 3;
+      if (pA !== pB) return pA - pB;
+      return new Date(a.startsAt).getTime() - new Date(b.startsAt).getTime();
+    });
 
     return NextResponse.json({ queue });
 
