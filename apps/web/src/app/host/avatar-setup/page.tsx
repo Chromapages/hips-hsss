@@ -63,6 +63,19 @@ const VOICE_OPTIONS: VoiceOption[] = [
   { id: "custom", label: "Custom", semitones: 0, description: "Set your own semitone shift" },
 ];
 
+// Reverb impulse response generator
+function buildReverbIR(ctx: AudioContext, durationSec: number, decay: number): AudioBuffer {
+  const len = Math.max(1, Math.floor(ctx.sampleRate * durationSec));
+  const ir = ctx.createBuffer(2, len, ctx.sampleRate);
+  for (let ch = 0; ch < 2; ch++) {
+    const data = ir.getChannelData(ch);
+    for (let i = 0; i < len; i++) {
+      data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, decay);
+    }
+  }
+  return ir;
+}
+
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export default function AvatarSetupPage() {
@@ -93,32 +106,146 @@ export default function AvatarSetupPage() {
     setIsPreviewing(true);
     setIsSpeaking(true);
 
+    let ctx: AudioContext | null = null;
+    let stream: MediaStream | null = null;
+
     try {
       // Request mic access and play back through voice processor for 3 seconds
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const ctx = new AudioContext();
+      stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+      ctx = new AudioCtx();
       const source = ctx.createMediaStreamSource(stream);
 
-      // Simple passthrough for now — full granular shift via voice-mask-processor
-      const dest = ctx.createMediaStreamDestination();
-      source.connect(dest);
+      const highpass = ctx.createBiquadFilter();
+      highpass.type = "highpass";
+      highpass.frequency.value = 90;
 
-      // Play back the stream to the user
-      const audio = new Audio();
-      audio.srcObject = dest.stream;
-      audio.play();
+      const lowpass = ctx.createBiquadFilter();
+      lowpass.type = "lowpass";
+      lowpass.frequency.value = selectedVoice.id === "deep" ? 5000 : 7000;
+      if (selectedVoice.id === "high") {
+        highpass.frequency.value = 150;
+      }
+
+      const compressor = ctx.createDynamicsCompressor();
+      compressor.threshold.value = -22;
+      compressor.knee.value = 20;
+      compressor.ratio.value = 2.8;
+      compressor.attack.value = 0.003;
+      compressor.release.value = 0.22;
+
+      const convolver = ctx.createConvolver();
+      const dryGain = ctx.createGain();
+      const wetGain = ctx.createGain();
+
+      const dryLevel = selectedVoice.id === "deep" ? 0.8 : (selectedVoice.id === "high" ? 0.85 : 0.78);
+      const wetLevel = selectedVoice.id === "deep" ? 0.2 : (selectedVoice.id === "high" ? 0.15 : 0.22);
+
+      dryGain.gain.value = dryLevel;
+      wetGain.gain.value = wetLevel;
+
+      // Reverb duration/decay based on UI selection
+      const reverbDuration = reverbLevel === "low" ? 0.4 : (reverbLevel === "high" ? 1.5 : 0.75);
+      const reverbDecay = reverbLevel === "low" ? 3.5 : (reverbLevel === "high" ? 1.8 : 2.8);
+
+      try {
+        convolver.buffer = buildReverbIR(ctx, reverbDuration, reverbDecay);
+      } catch (e) {
+        console.warn("Reverb IR failed:", e);
+      }
+
+      // Check if AudioWorklet is supported
+      if (ctx.audioWorklet) {
+        const workletSource = `
+          class HipsPitchShiftProcessor extends AudioWorkletProcessor {
+            constructor(options) {
+              super();
+              const semitones = options.processorOptions?.semitones ?? 4;
+              this.ratio = Math.pow(2, semitones / 12);
+              this.SIZE = 8192;
+              this.MASK = this.SIZE - 1;
+              this.HALF = this.SIZE >> 1;
+              this.buf = new Float32Array(this.SIZE);
+              this.wp  = this.HALF * 2;
+              this.rp1 = 0;
+              this.rp2 = this.HALF;
+            }
+            lerp(pos) {
+              const i = (pos | 0) & this.MASK;
+              const j = (i + 1) & this.MASK;
+              const f = pos - (pos | 0);
+              return this.buf[i] + (this.buf[j] - this.buf[i]) * f;
+            }
+            win(rp) {
+              const phase = ((rp % this.HALF) + this.HALF) % this.HALF;
+              return 0.5 - 0.5 * Math.cos(6.2831853 * phase / this.HALF);
+            }
+            resetIfNeeded(rp) {
+              const delay = (this.wp - rp + this.SIZE * 8) % this.SIZE;
+              if (delay < 64 || delay > this.SIZE - 64) {
+                return this.wp - this.HALF;
+              }
+              return rp;
+            }
+            process(inputs, outputs) {
+              const src = inputs[0]?.[0];
+              const dst = outputs[0]?.[0];
+              if (!src || !dst) return true;
+              for (let i = 0; i < src.length; i++) {
+                this.buf[this.wp & this.MASK] = src[i];
+                this.wp++;
+                dst[i] = this.lerp(this.rp1) * this.win(this.rp1)
+                       + this.lerp(this.rp2) * this.win(this.rp2);
+                this.rp1 += this.ratio;
+                this.rp2 += this.ratio;
+                this.rp1 = this.resetIfNeeded(this.rp1);
+                this.rp2 = this.resetIfNeeded(this.rp2 + this.HALF) - this.HALF;
+              }
+              return true;
+            }
+          }
+          registerProcessor('hips-pitch-shift', HipsPitchShiftProcessor);
+        `;
+        const blob = new Blob([workletSource], { type: "application/javascript" });
+        const workletUrl = URL.createObjectURL(blob);
+        await ctx.audioWorklet.addModule(workletUrl);
+
+        const pitchShiftNode = new AudioWorkletNode(ctx, "hips-pitch-shift", {
+          processorOptions: { semitones: effectiveSemitones },
+        });
+
+        source.connect(highpass);
+        highpass.connect(pitchShiftNode);
+        pitchShiftNode.connect(lowpass);
+        lowpass.connect(compressor);
+        URL.revokeObjectURL(workletUrl);
+      } else {
+        // Fallback to passthrough filter chain if no worklet support
+        source.connect(highpass);
+        highpass.connect(lowpass);
+        lowpass.connect(compressor);
+      }
+
+      compressor.connect(dryGain);
+      compressor.connect(convolver);
+      dryGain.connect(ctx.destination);
+      convolver.connect(wetGain);
+      wetGain.connect(ctx.destination);
 
       setTimeout(() => {
-        stream.getTracks().forEach((t) => t.stop());
-        ctx.close();
+        if (stream) stream.getTracks().forEach((t) => t.stop());
+        if (ctx) ctx.close();
         setIsSpeaking(false);
         setIsPreviewing(false);
       }, 3000);
-    } catch {
+    } catch (err) {
+      console.error("Preview voice failed:", err);
+      if (stream) stream.getTracks().forEach((t) => t.stop());
+      if (ctx) ctx.close();
       setIsSpeaking(false);
       setIsPreviewing(false);
     }
-  }, [isPreviewing]);
+  }, [isPreviewing, effectiveSemitones, selectedVoice.id, reverbLevel]);
 
   const handleSave = async () => {
     setSaving(true);

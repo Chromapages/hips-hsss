@@ -1,4 +1,4 @@
-import { PrismaClient as CommerceClient } from '@hips/db';
+import { CommerceClient } from '@hips/db';
 
 const globalForPrisma = global as unknown as {
   prisma: CommerceClient | undefined;

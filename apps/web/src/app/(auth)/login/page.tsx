@@ -75,6 +75,13 @@ export default function LoginPage() {
     setLoading(true);
     setError(null);
 
+    if (process.env.NODE_ENV === "development" && email === "client@hips.org" && password === "password") {
+      // Mock client bypass for local testing
+      document.cookie = "hips-auth-token=mock-token-client; path=/; max-age=86400";
+      window.location.href = from;
+      return;
+    }
+
     if (!firebaseReady || !auth) {
       setError("Authentication temporarily unavailable. Please try again.");
       setLoading(false);

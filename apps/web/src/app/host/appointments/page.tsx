@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useAuth } from "@/components/auth/AuthProvider";
 import {
   ArrowLeft,
   CalendarDays,
@@ -11,6 +12,7 @@ import {
   XCircle,
   Play,
   ChevronRight,
+  Loader2,
 } from "lucide-react";
 
 export const dynamic = "force-dynamic";
@@ -86,18 +88,41 @@ const ITEMS_PER_PAGE = 8;
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export default function HostAppointmentsPage() {
+  const { getToken } = useAuth();
+  const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<"upcoming" | "past">("upcoming");
   const [page, setPage] = useState(1);
 
-  const upcoming = ALL_APPOINTMENTS.filter(
+  useEffect(() => {
+    const loadAppointments = async () => {
+      try {
+        const token = await getToken();
+        if (!token) return;
+
+        const res = await fetch("/api/host/appointments", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const data = await res.json();
+        setAppointments(data.appointments || []);
+      } catch (error) {
+        console.error("Failed to load appointments:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadAppointments();
+  }, [getToken]);
+
+  const upcoming = appointments.filter(
     (a) => a.status === "UPCOMING" || a.status === "IN_PROGRESS"
   );
-  const past = ALL_APPOINTMENTS.filter(
+  const past = appointments.filter(
     (a) => a.status === "COMPLETED" || a.status === "CANCELLED"
   );
 
   const activeList = activeTab === "upcoming" ? upcoming : past;
-  const totalPages = Math.ceil(activeList.length / ITEMS_PER_PAGE);
+  const totalPages = Math.max(1, Math.ceil(activeList.length / ITEMS_PER_PAGE));
   const paginatedList = activeList.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
 
   const handleTabChange = (tab: "upcoming" | "past") => {
@@ -152,7 +177,11 @@ export default function HostAppointmentsPage() {
         role="tabpanel"
         aria-label={`${activeTab} appointments`}
       >
-        {paginatedList.length === 0 ? (
+        {loading ? (
+          <div className="flex items-center justify-center py-20 rounded-2xl border border-border bg-surface shadow-sm">
+            <Loader2 className="w-8 h-8 animate-spin text-accent" />
+          </div>
+        ) : paginatedList.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 rounded-2xl border border-dashed border-border bg-surface text-center px-6">
             <CalendarDays className="w-10 h-10 text-text-muted mb-3" aria-hidden="true" />
             <p className="font-bold text-text text-sm">No appointments</p>

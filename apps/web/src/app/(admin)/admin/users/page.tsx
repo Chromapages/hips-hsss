@@ -59,61 +59,65 @@ export default function UserManagementPage() {
   return (
     <div className="mx-auto max-w-7xl px-6 py-12">
       <header className="mb-12">
-        <h1 className="font-heading text-4xl font-extrabold text-white">User <span className="text-text">Operations</span></h1>
-        <p className="mt-4 text-text">Manage platform permissions and verify lead credentials.</p>
+        <h1 className="font-heading text-4xl font-extrabold text-foreground">
+          User <span className="text-accent">Operations</span>
+        </h1>
+        <p className="mt-4 text-muted-foreground">Manage platform permissions and verify lead credentials.</p>
       </header>
 
       <div className="mb-8 relative max-w-md">
-        <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-text-muted0" />
+        <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
         <input
           type="text"
           placeholder="Search by email or ID..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full bg-text border border-white/10 rounded-2xl py-3 pl-12 pr-4 text-white focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all"
+          className="w-full bg-card border border-border rounded-2xl py-3 pl-12 pr-4 text-foreground focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all"
         />
       </div>
 
       {isLoading ? (
-        <div className="flex justify-center py-20"><Loader2 className="animate-spin text-text" /></div>
+        <div className="flex justify-center py-20">
+          <Loader2 className="animate-spin text-primary" />
+        </div>
       ) : (
-        <div className="overflow-hidden rounded-3xl border border-white/5 bg-text/50">
+        <div className="overflow-hidden rounded-3xl border border-border bg-card shadow-lg">
           <table className="w-full text-left">
             <thead>
-              <tr className="border-b border-white/5 bg-surface/5 text-xs font-bold uppercase tracking-widest text-text-muted0">
+              <tr className="border-b border-border bg-muted/20 text-xs font-bold uppercase tracking-widest text-muted-foreground">
                 <th className="px-6 py-4">Identity</th>
                 <th className="px-6 py-4">Role</th>
                 <th className="px-6 py-4">Joined</th>
                 <th className="px-6 py-4 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-white/5">
+            <tbody className="divide-y divide-border">
               {filteredUsers.map(user => (
-                <tr key={user.id} className="group hover:bg-surface/[0.02] transition-all">
+                <tr key={user.id} className="group hover:bg-muted/5 transition-all">
                   <td className="px-6 py-4">
                     <div className="flex flex-col">
-                      <span className="font-bold text-white">{user.email || 'Anonymous'}</span>
-                      <span className="text-[10px] font-mono text-text">{user.id}</span>
+                      <span className="font-bold text-foreground">{user.email || 'Anonymous'}</span>
+                      <span className="text-[10px] font-mono text-muted-foreground">{user.id}</span>
                     </div>
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-2">
                       {user.role === 'ADMIN' ? (
-                        <ShieldAlert className="h-4 w-4 text-rose-400" />
+                        <ShieldAlert className="h-4 w-4 text-rose-500" />
                       ) : user.role === 'FACILITATOR' ? (
-                        <ShieldCheck className="h-4 w-4 text-emerald-400" />
+                        <ShieldCheck className="h-4 w-4 text-emerald-500" />
                       ) : (
-                        <Shield className="h-4 w-4 text-text-muted0" />
+                        <Shield className="h-4 w-4 text-muted-foreground" />
                       )}
                       <span className={`text-xs font-bold ${
-                        user.role === 'ADMIN' ? 'text-rose-400' :
-                        user.role === 'FACILITATOR' ? 'text-emerald-400' : 'text-text'
+                        user.role === 'ADMIN' ? 'text-rose-500' :
+                        user.role === 'FACILITATOR' ? 'text-emerald-500' : 'text-foreground'
                       }`}>
                         {user.role}
                       </span>
                     </div>
                   </td>
-                  <td className="px-6 py-4 text-sm text-text-muted0">
+                  <td className="px-6 py-4 text-sm text-muted-foreground">
                     {user.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'Unknown'}
                   </td>
                   <td className="px-6 py-4 text-right">
@@ -121,7 +125,7 @@ export default function UserManagementPage() {
                       disabled={updatingId === user.id}
                       value={user.role}
                       onChange={(e) => updateRole(user.id, e.target.value)}
-                      className="bg-black border border-white/10 rounded-lg text-xs font-bold text-white px-2 py-1 outline-none focus:border-primary transition-all cursor-pointer"
+                      className="bg-background border border-border rounded-lg text-xs font-bold text-foreground px-3 py-1.5 outline-none focus:border-primary transition-all cursor-pointer"
                     >
                       <option value="PARTICIPANT">PARTICIPANT</option>
                       <option value="FACILITATOR">FACILITATOR</option>

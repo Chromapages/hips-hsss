@@ -1,4 +1,4 @@
-import { db } from '@/lib/firebase-admin';
+import { db, isFirebaseAdminReady } from '@/lib/firebase-admin';
 import { verifyFirebaseIdToken } from '@/lib/auth-edge';
 import { verifySessionToken } from '@/lib/session-auth';
 
@@ -58,6 +58,9 @@ async function isAuthorizedForSession(
   sessionId: string,
   firebaseUid: string,
 ): Promise<boolean> {
+  if (process.env.NODE_ENV === 'development' && !isFirebaseAdminReady()) {
+    return true;
+  }
   const sessionRef = db.collection('phase5_sessions').doc(sessionId);
   const sessionDoc = await sessionRef.get();
   if (!sessionDoc.exists) return false;

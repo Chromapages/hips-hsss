@@ -81,6 +81,23 @@ function roleCanFacilitate(role: string | null): role is Extract<UserRole, 'FACI
   return role === 'FACILITATOR' || role === 'ADMIN';
 }
 
+async function reportSessionError(message: string, severity: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL', sessionId?: string) {
+  try {
+    await fetch('/api/error/report', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        message,
+        sessionId,
+        severity,
+        userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : 'Server',
+      }),
+    });
+  } catch (err) {
+    console.error('Failed to send error report:', err);
+  }
+}
+
 export default function SessionRoom({
   sessionId,
   prefetchedToken,
@@ -114,7 +131,9 @@ export default function SessionRoom({
       try {
         const devices = await Room.getLocalDevices('audioinput');
         if (devices.length === 0) {
-          setMediaError('No microphone detected on your device. Please plug in a microphone and retry.');
+          const msg = 'No microphone detected on your device. Please plug in a microphone and retry.';
+          setMediaError(msg);
+          void reportSessionError(msg, 'HIGH', sessionId);
           return;
         }
 
@@ -122,13 +141,13 @@ export default function SessionRoom({
         stream.getTracks().forEach(track => track.stop());
       } catch (err: any) {
         console.error('[SessionRoom] Media device check failed:', err);
-        setMediaError(
-          'Microphone access blocked. Please enable microphone permissions in your browser settings to join the session.'
-        );
+        const msg = 'Microphone access blocked. Please enable microphone permissions in your browser settings to join the session.';
+        setMediaError(msg);
+        void reportSessionError(`Media device check failed: ${err.message || err}`, 'HIGH', sessionId);
       }
     }
     checkDevicesAndPermissions();
-  }, []);
+  }, [sessionId]);
 
   useEffect(() => {
     // Skip fetch if a token was pre-supplied via sessionStorage or query param.
@@ -171,7 +190,9 @@ export default function SessionRoom({
         }
       } catch (err) {
         if (!cancelled) {
-          setError(err instanceof Error ? err.message : 'Failed to connect to the session.');
+          const errMsg = err instanceof Error ? err.message : 'Failed to connect to the session.';
+          setError(errMsg);
+          void reportSessionError(`Token fetch failed: ${errMsg}`, 'CRITICAL', sessionId);
         }
       }
     }
@@ -261,7 +282,9 @@ export default function SessionRoom({
           style={{ height: '100vh', backgroundColor: '#030712' }}
           onError={(err) => {
             console.error('[LiveKitRoom] Connection error:', err);
-            setError(err.message || 'Failed to connect to the session.');
+            const errMsg = err.message || 'Failed to connect to the session.';
+            setError(errMsg);
+            void reportSessionError(`LiveKit Room Connection error (prefetched): ${errMsg}`, 'CRITICAL', sessionId);
           }}
         >
           <SessionContent
@@ -307,7 +330,9 @@ export default function SessionRoom({
       style={{ height: '100vh', backgroundColor: '#030712' }}
       onError={(err) => {
         console.error('[LiveKitRoom] Connection error:', err);
-        setError(err.message || 'Failed to connect to the session.');
+        const errMsg = err.message || 'Failed to connect to the session.';
+        setError(errMsg);
+        void reportSessionError(`LiveKit Room Connection error: ${errMsg}`, 'CRITICAL', sessionId);
       }}
     >
       <SessionContent
@@ -534,6 +559,7 @@ function SessionContent({
       setMicEnabled(false);
       const errMsg = err instanceof Error ? err.message : String(err);
       toast.error(`Microphone failed to start: ${errMsg}`);
+      void reportSessionError(`Microphone publication failed: ${errMsg}`, 'HIGH', roomName);
     } finally {
       setMicBusy(false);
     }

@@ -14,8 +14,10 @@ const PROTECTED_PATTERNS = [
   '/api/sessions/book',
   '/api/sessions/cancel',
   '/api/sessions/flag',
+  '/api/sessions/feedback',
   '/api/scholarships',
   '/api/facilitator',
+  '/api/host',
 ];
 
 // Protected page route configs (role requirements)
@@ -128,6 +130,18 @@ async function getPublicKeys() {
 }
 
 async function verifyToken(token: string): Promise<{ sub: string; role?: string } | null> {
+  if (process.env.NODE_ENV === 'development' && token.startsWith('mock-token-')) {
+    const rolePart = token.split('-')[2]; // 'host' or 'client' or 'admin'
+    const role = rolePart === 'host'
+      ? ROLES.FACILITATOR
+      : (rolePart === 'admin' ? ROLES.ADMIN : ROLES.PARTICIPANT);
+    const result: { sub: string; role?: string } = { sub: 'mock-uid-123' };
+    if (role) {
+      result.role = role;
+    }
+    return result;
+  }
+
   const projectId = process.env.FIREBASE_PROJECT_ID || process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
   if (!projectId) return null;
 
@@ -147,7 +161,11 @@ async function verifyToken(token: string): Promise<{ sub: string; role?: string 
       audience: projectId,
     });
 
-    return { sub: payload.sub as string, role: payload.role as string | undefined };
+    const result: { sub: string; role?: string } = { sub: payload.sub as string };
+    if (payload.role !== undefined) {
+      result.role = payload.role as string;
+    }
+    return result;
   } catch {
     return null;
   }
@@ -211,7 +229,7 @@ export async function middleware(request: NextRequest) {
       }
 
       if (protectedPage.roles.length > 0) {
-        if (!payload.role || !protectedPage.roles.includes(payload.role)) {
+        if (!payload.role || !protectedPage.roles.includes(payload.role as any)) {
           return NextResponse.redirect(new URL('/dashboard', request.url));
         }
       }
@@ -266,6 +284,13 @@ export async function middleware(request: NextRequest) {
 
     // Facilitator routes
     if (pathname.startsWith('/api/facilitator')) {
+      if (payload.role !== ROLES.FACILITATOR && payload.role !== ROLES.ADMIN) {
+        return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+      }
+    }
+
+    // Host routes (same role requirement as facilitator)
+    if (pathname.startsWith('/api/host')) {
       if (payload.role !== ROLES.FACILITATOR && payload.role !== ROLES.ADMIN) {
         return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
       }

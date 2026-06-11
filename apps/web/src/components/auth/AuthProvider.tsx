@@ -35,6 +35,28 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const firebaseReady = !!auth;
 
   useEffect(() => {
+    if (process.env.NODE_ENV === 'development') {
+      const mockCookieToken = typeof window !== 'undefined'
+        ? document.cookie.split('; ').find(row => row.startsWith('hips-auth-token='))?.split('=')[1]
+        : null;
+      if (mockCookieToken && mockCookieToken.startsWith('mock-token-')) {
+        const isHost = mockCookieToken === 'mock-token-host';
+        const isAdmin = mockCookieToken === 'mock-token-admin';
+        setUser({
+          uid: isAdmin ? 'mock-admin-uid-123' : (isHost ? 'mock-host-uid-123' : 'mock-client-uid-123'),
+          email: isAdmin ? 'admin@hips.org' : (isHost ? 'host@hips.org' : 'client@hips.org'),
+          displayName: isAdmin ? 'Demo Admin' : (isHost ? 'Demo Host' : 'Demo Client'),
+          emailVerified: true,
+          isAnonymous: false,
+          metadata: {},
+          providerData: [],
+        } as any);
+        setRole(isAdmin ? 'ADMIN' : (isHost ? 'FACILITATOR' : 'PARTICIPANT'));
+        setLoading(false);
+        return;
+      }
+    }
+
     if (!auth) {
       setLoading(false);
       return;
@@ -127,6 +149,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   const getToken = async (): Promise<string | null> => {
+    if (process.env.NODE_ENV === 'development') {
+      const mockCookieToken = typeof window !== 'undefined'
+        ? document.cookie.split('; ').find(row => row.startsWith('hips-auth-token='))?.split('=')[1]
+        : null;
+      if (mockCookieToken && mockCookieToken.startsWith('mock-token-')) {
+        return mockCookieToken;
+      }
+    }
     if (!auth?.currentUser) return null;
     // Bound token retrieval so a hung Firebase SDK call cannot deadlock
     // any consumer (e.g., dashboard SWR fetcher) waiting on this promise.
@@ -144,6 +174,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const logout = async () => {
+    if (process.env.NODE_ENV === 'development') {
+      document.cookie = 'hips-auth-token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+      setUser(null);
+      setRole(null);
+    }
     if (auth) {
       await auth.signOut();
     }

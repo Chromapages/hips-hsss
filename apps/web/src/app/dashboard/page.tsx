@@ -19,6 +19,8 @@ import {
 } from "lucide-react";
 import { PackageBalanceCard } from "@/components/dashboard/PackageBalanceCard";
 import { SessionHistoryTable } from "@/components/dashboard/SessionHistoryTable";
+import { ParticipantJourney } from "@/components/dashboard/ParticipantJourney";
+import { SessionFeedbackCard } from "@/components/dashboard/SessionFeedbackCard";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { useSWRData } from "@/hooks/useSWR";
 import { format } from "date-fns";
@@ -65,6 +67,7 @@ export default function DashboardPage() {
   const { getToken, loading: authLoading } = useAuth();
   const router = useRouter();
   const [errorDismissed, setErrorDismissed] = useState(false);
+  const [feedbackDismissed, setFeedbackDismissed] = useState(false);
 
   const { data, error, isLoading, mutate } = useSWRData<DashboardData>(authLoading ? null : 'dashboard', {
     revalidateOnFocus: false,
@@ -183,9 +186,15 @@ export default function DashboardPage() {
 
   const dashboardData = data ?? emptyDashboardData;
 
-  const completedCount = dashboardData.sessions.filter(
+  const completedSessions = dashboardData.sessions.filter(
     s => s.status === 'COMPLETED'
-  ).length;
+  );
+  const completedCount = completedSessions.length;
+  const recentCompletedSession = completedSessions[0];
+  const showFeedbackPrompt = recentCompletedSession &&
+    !feedbackDismissed &&
+    typeof window !== "undefined" &&
+    localStorage.getItem(`hips-feedback-submitted-${recentCompletedSession.id}`) !== "true";
 
   const statsList = [
     { label: "Upcoming Sessions", value: dashboardData.stats.upcoming.toString(), icon: Timer },
@@ -330,6 +339,14 @@ export default function DashboardPage() {
       <div className="grid gap-8 lg:grid-cols-[1fr_360px]">
         {/* Main Column */}
         <div className="space-y-6">
+          {showFeedbackPrompt && (
+            <SessionFeedbackCard
+              sessionId={recentCompletedSession.id}
+              serviceName={recentCompletedSession.service}
+              getToken={getToken}
+              onSubmitted={() => setFeedbackDismissed(true)}
+            />
+          )}
           <div className="flex items-center justify-between px-1">
             <h3 className="text-xl font-bold tracking-tight text-text-primary font-heading">Session History</h3>
             <Link 
@@ -344,6 +361,7 @@ export default function DashboardPage() {
 
         {/* Sidebar Column */}
         <aside className="space-y-6">
+          <ParticipantJourney completedCount={completedCount} />
           <PackageBalanceCard packages={dashboardData.packages} />
 
           {/* Quick Actions Card */}

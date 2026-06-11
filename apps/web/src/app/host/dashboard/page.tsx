@@ -13,7 +13,10 @@ import {
   ArrowRight,
   Loader2,
   Play,
+  DollarSign,
 } from "lucide-react";
+import { WellbeingCheckIn } from "@/components/host/WellbeingCheckIn";
+import { AvailabilityCalendar } from "@/components/host/AvailabilityCalendar";
 
 export const dynamic = "force-dynamic";
 
@@ -89,7 +92,7 @@ const statusStyles: Record<AppointmentStatus, string> = {
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export default function HostDashboard() {
-  const { user } = useAuth();
+  const { user, getToken } = useAuth();
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(true);
   const [avatarConfigured, setAvatarConfigured] = useState(false);
@@ -101,13 +104,24 @@ export default function HostDashboard() {
       : null;
     setAvatarConfigured(!!savedAvatar);
 
-    // Load appointments (mock — replace with Firestore fetch)
-    const timer = setTimeout(() => {
-      setAppointments(getMockAppointments());
-      setLoading(false);
-    }, 500);
-    return () => clearTimeout(timer);
-  }, []);
+    const loadAppointments = async () => {
+      try {
+        const token = await getToken();
+        if (!token) return;
+
+        const res = await fetch("/api/host/appointments", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const data = await res.json();
+        setAppointments(data.appointments || []);
+      } catch (error) {
+        console.error("Failed to load appointments:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadAppointments();
+  }, [getToken]);
 
   const firstName = user?.displayName?.split(" ")[0] ?? "Host";
   const todayCount = appointments.filter((a) => a.status === "UPCOMING" || a.status === "IN_PROGRESS").length;
@@ -281,6 +295,41 @@ export default function HostDashboard() {
 
         {/* Right sidebar */}
         <aside className="space-y-5" aria-label="Quick actions">
+          {/* Wellbeing pulse */}
+          <WellbeingCheckIn />
+
+          {/* Availability schedule */}
+          <AvailabilityCalendar getToken={getToken} />
+
+          {/* Earnings Summary card */}
+          <div className="rounded-2xl border border-border bg-surface p-6 shadow-sm">
+            <h3 className="font-ui text-[10px] font-bold uppercase tracking-widest text-text-muted mb-4">
+              Earnings Summary
+            </h3>
+            <div className="space-y-3">
+              <div className="flex justify-between items-center py-1.5 border-b border-border">
+                <span className="text-xs text-text-muted font-body">Session Rate</span>
+                <span className="text-sm font-bold text-text">$35.00</span>
+              </div>
+              <div className="flex justify-between items-center py-1.5 border-b border-border">
+                <span className="text-xs text-text-muted font-body">Completed Sessions</span>
+                <span className="text-sm font-bold text-text">
+                  {appointments.filter(a => a.status === 'COMPLETED').length}
+                </span>
+              </div>
+              <div className="flex justify-between items-center py-1.5 border-b border-border">
+                <span className="text-xs text-text-muted font-body">Total Paid</span>
+                <span className="text-sm font-bold text-text">
+                  ${(appointments.filter(a => a.status === 'COMPLETED').length * 35).toFixed(2)}
+                </span>
+              </div>
+              <div className="flex justify-between items-center py-1.5">
+                <span className="text-xs text-text-muted font-body">Pending Payout</span>
+                <span className="text-sm font-bold text-accent">$70.00</span>
+              </div>
+            </div>
+          </div>
+
           {/* Avatar & Voice Setup card */}
           <div className="rounded-2xl border border-border bg-surface p-6">
             <h3 className="font-ui text-[10px] font-bold uppercase tracking-widest text-text-muted mb-4">
