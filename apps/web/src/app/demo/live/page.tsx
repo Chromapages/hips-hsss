@@ -279,7 +279,7 @@ export default function LiveDemoPage() {
   });
 
   return (
-    <main className="min-h-screen bg-[#030712] text-white">
+    <main id="main" tabIndex={-1} className="min-h-screen bg-[#030712] text-white">
       {/* ── Minimal nav bar ── */}
       <nav className="flex items-center justify-between border-b border-white/8 px-6 py-4">
         <div className="flex items-center gap-2.5">

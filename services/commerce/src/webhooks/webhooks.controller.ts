@@ -11,7 +11,15 @@ export class WebhooksController {
   @HttpCode(HttpStatus.OK)
   async handleStripeWebhook(@Req() req: Request) {
     const sig = req.headers['stripe-signature'] as string;
-    const payload = req.body?.rawBody?.toString() || JSON.stringify(req.body) || '';
+    // rawBody is set by NestFactory.create(AppModule, { rawBody: true }) in main.ts
+    // This must be used directly — JSON.stringify(req.body) produces different bytes
+    // than Stripe's signed raw payload, which breaks signature verification.
+    const rawBody = (req as any).rawBody as Buffer | undefined;
+    if (!rawBody) {
+      console.error('[Stripe Webhook] rawBody not captured — ensure NestJS is started with { rawBody: true }');
+      return { error: 'Server configuration error', status: 500 };
+    }
+    const payload = rawBody.toString('utf8');
 
     if (!sig || !process.env.STRIPE_WEBHOOK_SECRET) {
       return { error: 'Missing signature or webhook secret', status: 400 };

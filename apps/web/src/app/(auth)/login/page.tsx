@@ -6,13 +6,13 @@ import { auth } from "@/lib/firebase-client";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { useAuth } from "@/components/auth/AuthProvider";
 import Link from "next/link";
-import { Loader2, Mail, Lock, ArrowRight, Shield, ChevronDown, X } from "lucide-react";
+import { Loader2, Mail, Lock, ArrowRight, Shield, ChevronDown, X, Eye, EyeOff } from "lucide-react";
+import { getSafeRedirect } from "@/lib/redirect-utils";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 type FirebaseAuthError = Error & { code?: string };
 
-// Org access code — in production this would be env-var driven or fetched from /api/config
-// For the demo it's a static passphrase the host coordinator distributes.
-const HOST_ACCESS_CODE = process.env.NEXT_PUBLIC_HOST_ACCESS_CODE ?? "HIPS-HOST-2025";
+
 
 const getLoginErrorMessage = (err: unknown): string => {
   const authError = err instanceof Error ? (err as FirebaseAuthError) : null;
@@ -40,16 +40,20 @@ const getLoginErrorMessage = (err: unknown): string => {
 export default function LoginPage() {
   const router = useRouter();
   const pathname = usePathname();
-  const { user, loading: authLoading, firebaseReady } = useAuth();
+  const { user, role, loading: authLoading, firebaseReady } = useAuth();
   const searchParams = useSearchParams();
-  const from = searchParams.get("from") || "/dashboard";
+  const from = getSafeRedirect(searchParams.get("from"), "/dashboard");
 
   const showForm = pathname === "/login" || pathname === "/signup";
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const errorRef = useRef<HTMLDivElement>(null);
+  const hostErrorRef = useRef<HTMLDivElement>(null);
 
   // Host access gate state
   const [showHostGate, setShowHostGate] = useState(false);
@@ -59,10 +63,29 @@ export default function LoginPage() {
   const hostCodeRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (!authLoading && user) {
-      router.replace(from);
+    if (error) {
+      errorRef.current?.focus();
     }
-  }, [user, authLoading, router, from]);
+  }, [error]);
+
+  useEffect(() => {
+    if (hostCodeError) {
+      hostErrorRef.current?.focus();
+    }
+  }, [hostCodeError]);
+
+  useEffect(() => {
+    if (!authLoading && user) {
+      const destination = from !== "/dashboard"
+        ? from
+        : role === "SUPER_ADMIN" || role === "ADMIN"
+          ? "/admin"
+          : role === "FACILITATOR"
+            ? "/facilitator"
+            : "/dashboard";
+      router.replace(destination);
+    }
+  }, [user, role, authLoading, router, from]);
 
   useEffect(() => {
     if (showHostGate) {
@@ -75,13 +98,6 @@ export default function LoginPage() {
     setLoading(true);
     setError(null);
 
-    if (process.env.NODE_ENV === "development" && email === "client@hips.org" && password === "password") {
-      // Mock client bypass for local testing
-      document.cookie = "hips-auth-token=mock-token-client; path=/; max-age=86400";
-      window.location.href = from;
-      return;
-    }
-
     if (!firebaseReady || !auth) {
       setError("Authentication temporarily unavailable. Please try again.");
       setLoading(false);
@@ -89,28 +105,82 @@ export default function LoginPage() {
     }
 
     try {
-      await signInWithEmailAndPassword(auth, email, password);
-      router.push(from);
+      const credential = await signInWithEmailAndPassword(auth, email, password);
+      // Layer 4: after Firebase auth, decide whether MFA is required.
+      // We hit /api/auth/mfa/session with the freshly-issued ID token.
+      const idToken = await credential.user.getIdToken();
+      const mfaRes = await fetch("/api/auth/mfa/session", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${idToken}`,
+        },
+        body: JSON.stringify({ destination: from }),
+      });
+
+      if (!mfaRes.ok) {
+        // If the MFA session check itself fails, treat the user as
+        // authenticated and let the existing redirect logic run.
+        setLoading(false);
+        return;
+      }
+
+      const mfaData = (await mfaRes.json()) as {
+        status: "authenticated" | "mfa_required" | "mfa_setup_required";
+        pendingToken?: string;
+        destination?: string | null;
+      };
+
+      if (mfaData.status === "mfa_required" && mfaData.pendingToken) {
+        // Persist the pendingToken across the redirect via query string —
+        // the /mfa-verify page reads it back. Do NOT store in localStorage.
+        const verifyUrl = new URL("/mfa-verify", window.location.origin);
+        verifyUrl.searchParams.set("token", mfaData.pendingToken);
+        if (mfaData.destination) {
+          verifyUrl.searchParams.set("from", mfaData.destination);
+        }
+        window.location.href = verifyUrl.toString();
+        return;
+      }
+
+      if (mfaData.status === "mfa_setup_required") {
+        const setupUrl = new URL("/mfa-setup", window.location.origin);
+        if (mfaData.destination) setupUrl.searchParams.set("from", mfaData.destination);
+        window.location.href = setupUrl.toString();
+        return;
+      }
+
+      // status === "authenticated" — fall through to the role-based redirect
+      // in the existing useEffect.
+      setLoading(false);
     } catch (err: unknown) {
       setError(getLoginErrorMessage(err));
       setLoading(false);
     }
   };
 
-  const handleVerifyHostCode = (e: React.FormEvent) => {
+  const handleVerifyHostCode = async (e: React.FormEvent) => {
     e.preventDefault();
     setHostCodeLoading(true);
     setHostCodeError(null);
 
-    // Simulate a brief validation delay for UX
-    setTimeout(() => {
-      if (hostCode.trim().toUpperCase() === HOST_ACCESS_CODE.toUpperCase()) {
+    try {
+      const res = await fetch("/api/auth/host-challenge", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code: hostCode.trim() }),
+      });
+
+      if (res.ok) {
         router.push("/login/host");
       } else {
         setHostCodeError("Incorrect access code. Contact your coordinator for the current code.");
         setHostCodeLoading(false);
       }
-    }, 600);
+    } catch (error) {
+      setHostCodeError("An error occurred. Please try again.");
+      setHostCodeLoading(false);
+    }
   };
 
   const handleToggleHostGate = () => {
@@ -122,7 +192,7 @@ export default function LoginPage() {
   if (authLoading && !showForm) {
     return (
       <div className="flex min-h-72 items-center justify-center">
-        <Loader2 className="h-6 w-6 animate-spin text-primary" />
+        <Loader2 className="h-6 w-6 motion-safe:animate-spin text-primary" />
       </div>
     );
   }
@@ -158,6 +228,9 @@ export default function LoginPage() {
               onChange={(e) => setEmail(e.target.value)}
               placeholder="name@example.com"
               aria-label="Email address"
+              aria-invalid={!!error}
+              aria-describedby={error ? "login-error" : undefined}
+              autoComplete="email"
               className="w-full h-14 bg-bg-subtle border border-border rounded-2xl pl-12 pr-4 text-sm font-medium text-text focus:outline-none focus:border-primary/50 focus:bg-surface transition-all placeholder:text-text font-body"
             />
           </div>
@@ -182,24 +255,43 @@ export default function LoginPage() {
             <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-text group-focus-within:text-primary transition-colors" />
             <input
               id="login-password"
-              type="password"
+              type={showPassword ? "text" : "password"}
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
               aria-label="Password"
-              className="w-full h-14 bg-bg-subtle border border-border rounded-2xl pl-12 pr-4 text-sm font-medium text-text focus:outline-none focus:border-primary/50 focus:bg-surface transition-all placeholder:text-text font-body"
+              aria-invalid={!!error}
+              aria-describedby={error ? "login-error" : undefined}
+              autoComplete="current-password"
+              className="w-full h-14 bg-bg-subtle border border-border rounded-2xl pl-12 pr-12 text-sm font-medium text-text focus:outline-none focus:border-primary/50 focus:bg-surface transition-all placeholder:text-text font-body"
             />
+            <button
+              type="button"
+              onClick={() => setShowPassword((prev) => !prev)}
+              aria-label={showPassword ? "Hide password" : "Show password"}
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-text hover:text-primary transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 rounded-lg p-1"
+            >
+              {showPassword ? (
+                <EyeOff className="w-4 h-4" />
+              ) : (
+                <Eye className="w-4 h-4" />
+              )}
+            </button>
           </div>
         </div>
 
         {error && (
-          <div
-            role="alert"
-            className="p-4 rounded-xl bg-destructive border border-destructive text-destructive text-[10px] font-bold uppercase tracking-widest text-center font-ui"
+          <Alert
+            ref={errorRef}
+            variant="destructive"
+            tabIndex={-1}
+            id="login-error"
+            className="focus:outline-none focus:ring-1 focus:ring-red-500 rounded-2xl"
           >
-            {error}
-          </div>
+            <AlertTitle>Login Failed</AlertTitle>
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
         )}
 
         <button
@@ -209,7 +301,7 @@ export default function LoginPage() {
           className="group flex w-full h-16 items-center justify-center rounded-[1.5rem] border border-border bg-surface font-bold tracking-tighter text-black shadow-sm transition-all duration-200 ease-in-out hover:border-primary hover:bg-primary hover:text-white hover:shadow-xl hover:shadow-primary/25 active:scale-[0.99] disabled:opacity-30 disabled:hover:border-border disabled:hover:bg-surface disabled:hover:text-black disabled:hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 font-ui uppercase"
         >
           {loading ? (
-            <Loader2 className="w-5 h-5 animate-spin mx-auto" />
+            <Loader2 className="w-5 h-5 motion-safe:animate-spin mx-auto" />
           ) : (
             <div className="flex items-center justify-center gap-2">
               <span className="text-lg">Sign In</span>
@@ -253,8 +345,9 @@ export default function LoginPage() {
         <div
           id="host-gate-panel"
           aria-hidden={!showHostGate}
+          inert={!showHostGate}
           className={`overflow-hidden transition-all duration-300 ease-in-out ${
-            showHostGate ? "max-h-72 opacity-100 mt-4" : "max-h-0 opacity-0"
+            showHostGate ? "max-h-80 opacity-100 mt-4" : "max-h-0 opacity-0"
           }`}
         >
           <div className="rounded-2xl border border-accent/30 bg-accent/5 p-5">
@@ -279,15 +372,23 @@ export default function LoginPage() {
                   onChange={(e) => setHostCode(e.target.value)}
                   placeholder="Enter host access code"
                   aria-label="Host access code"
+                  aria-invalid={!!hostCodeError}
+                  aria-describedby={hostCodeError ? "host-code-error" : undefined}
                   autoComplete="off"
                   className="w-full h-12 bg-surface border border-accent/40 rounded-xl pl-10 pr-4 text-sm font-mono font-medium text-text focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/30 transition-all placeholder:text-text uppercase tracking-widest"
                 />
               </div>
 
               {hostCodeError && (
-                <p role="alert" className="text-[10px] text-destructive font-bold uppercase tracking-wide font-ui">
-                  {hostCodeError}
-                </p>
+                <Alert
+                  ref={hostErrorRef}
+                  variant="destructive"
+                  tabIndex={-1}
+                  id="host-code-error"
+                  className="focus:outline-none focus:ring-1 focus:ring-red-500 rounded-xl p-3"
+                >
+                  <AlertDescription>{hostCodeError}</AlertDescription>
+                </Alert>
               )}
 
               <button
@@ -297,7 +398,7 @@ export default function LoginPage() {
                 className="w-full h-11 flex items-center justify-center gap-2 rounded-xl bg-primary text-white text-xs font-bold uppercase tracking-wider font-ui transition-all hover:bg-primary-active disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 {hostCodeLoading ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <Loader2 className="w-4 h-4 motion-safe:animate-spin" />
                 ) : (
                   <>
                     <Shield className="w-3.5 h-3.5" />

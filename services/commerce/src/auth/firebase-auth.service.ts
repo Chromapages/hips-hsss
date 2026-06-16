@@ -39,7 +39,7 @@ export class FirebaseAuthService {
    */
   async verifyIdToken(idToken: string): Promise<admin.auth.DecodedIdToken> {
     const app = getFirebaseApp();
-    return admin.auth(app).verifyIdToken(idToken);
+    return admin.auth(app).verifyIdToken(idToken, true);
   }
 
   /**

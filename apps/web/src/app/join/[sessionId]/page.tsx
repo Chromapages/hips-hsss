@@ -34,7 +34,7 @@ export default async function JoinPage({ params }: JoinPageProps) {
           </div>
         }
       >
-        <main className="min-h-screen bg-background text-foreground antialiased selection:bg-primary/20">
+        <main id="main" tabIndex={-1} className="min-h-screen bg-background text-foreground antialiased selection:bg-primary/20">
           <div className="fixed top-1/4 right-1/3 h-[500px] w-[500px] rounded-full bg-accent/10 blur-[120px] pointer-events-none" />
 
           <div className="relative z-10 mx-auto max-w-7xl px-6 py-20 sm:px-8 lg:px-10">

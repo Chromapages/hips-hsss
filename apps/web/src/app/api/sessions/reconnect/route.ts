@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getDb } from '@/lib/firebase-admin';
 import { AccessToken } from 'livekit-server-sdk';
 import crypto from 'crypto';
-import { verifyFirebaseIdToken } from '@/lib/auth-edge';
+import { verifyFirebaseIdToken } from '@/lib/firebase-auth';
 import * as admin from 'firebase-admin';
 
 /**
@@ -32,13 +32,7 @@ function calculateBackoff(attemptNumber: number): number {
   return Math.round(delay + jitter);
 }
 
-interface ReconnectRecord {
-  sessionId: string;
-  originalIdentity: string;
-  reconnectCount: number;
-  lastReconnectAt: string;
-  expiresAt: string;
-}
+import { ReconnectRecord, ReconnectRecordSchema, Phase5SessionSchema } from '@/lib/schemas/session';
 
 async function getReconnectRecord(sessionId: string, identity: string): Promise<ReconnectRecord | null> {
   const db = getDb();
@@ -47,7 +41,9 @@ async function getReconnectRecord(sessionId: string, identity: string): Promise<
   const docRef = db.collection('session_reconnects').doc(`${sessionId}_${identity}`);
   const doc = await docRef.get();
   if (!doc.exists) return null;
-  return doc.data() as ReconnectRecord;
+  const parsed = ReconnectRecordSchema.safeParse(doc.data());
+  if (!parsed.success) return null;
+  return parsed.data;
 }
 
 
@@ -98,7 +94,8 @@ export async function POST(req: NextRequest) {
         .doc(`${sessionId}_${firebaseUid}`)
         .get();
       if (participantDoc.exists) {
-        originalIdentity = participantDoc.data()?.anonymousIdentity ?? null;
+        const data = participantDoc.data();
+        originalIdentity = typeof data?.anonymousIdentity === 'string' ? data.anonymousIdentity : null;
       }
     } catch (err) {
       console.warn('[SessionReconnect] Could not read participant mapping:', err);
@@ -108,9 +105,12 @@ export async function POST(req: NextRequest) {
       // Fallback: check if they are the facilitator of the session
       try {
         const sessionDoc = await db.collection('phase5_sessions').doc(sessionId).get();
-        if (sessionDoc.exists && sessionDoc.data()?.facilitatorId === firebaseUid) {
-          const apiSecret = process.env.LIVEKIT_API_SECRET || '';
-          originalIdentity = crypto.createHmac('sha256', apiSecret).update(firebaseUid).digest('hex');
+        if (sessionDoc.exists) {
+          const parsed = Phase5SessionSchema.safeParse({ id: sessionDoc.id, ...sessionDoc.data() });
+          if (parsed.success && (parsed.data.facilitatorId === firebaseUid || parsed.data.metadata?.facilitatorId === firebaseUid)) {
+            const apiSecret = process.env.LIVEKIT_API_SECRET || '';
+            originalIdentity = crypto.createHmac('sha256', apiSecret).update(firebaseUid).digest('hex');
+          }
         }
       } catch (err) {
         console.warn('[SessionReconnect] Could not check facilitator status:', err);
@@ -164,7 +164,10 @@ export async function POST(req: NextRequest) {
     try {
       const sessionRef = db.collection('phase5_sessions').doc(sessionId);
       const sessionDoc = await sessionRef.get();
-      sessionActive = sessionDoc.exists && sessionDoc.data()?.status === 'active';
+      if (sessionDoc.exists) {
+        const parsed = Phase5SessionSchema.safeParse({ id: sessionDoc.id, ...sessionDoc.data() });
+        sessionActive = parsed.success && parsed.data.status === 'active';
+      }
     } catch (err) {
       console.warn('[SessionReconnect] Could not verify session:', err);
       return NextResponse.json(

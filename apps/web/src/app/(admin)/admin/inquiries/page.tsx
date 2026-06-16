@@ -5,6 +5,7 @@ import { useAuth } from "@/components/auth/AuthProvider";
 import { useFetchWithTimeout } from "@/hooks/useFetchWithTimeout";
 import { Mail, Loader2, AlertCircle, ExternalLink } from "lucide-react";
 import { format } from "date-fns";
+import { AdminErrorBanner } from "@/components/admin/AdminErrorBanner";
 
 type Inquiry = {
   id: string;
@@ -16,12 +17,19 @@ type Inquiry = {
   createdAt: string;
 };
 
+type PaginatedInquiries = {
+  data: Inquiry[];
+  total: number;
+  take: number;
+  skip: number;
+};
+
 export default function AdminInquiriesPage() {
-  const { data, isLoading } = useFetchWithTimeout<Inquiry[]>('/api/admin/inquiries');
+  const { data: response, isLoading, error, refetch } = useFetchWithTimeout<PaginatedInquiries>('/api/admin/inquiries');
   const { getToken } = useAuth();
   const [updatingId, setUpdatingId] = useState<string | null>(null);
 
-  const inquiries = Array.isArray(data) ? data : [];
+  const inquiries = response?.data ?? [];
 
   const handleUpdateStatus = async (id: string, status: string) => {
     setUpdatingId(id);
@@ -43,6 +51,7 @@ export default function AdminInquiriesPage() {
         const json = await res.json().catch(() => ({}));
         throw new Error(json.error || 'Update failed');
       }
+      refetch();
     } catch (error) {
       console.error('Update failed:', error);
     } finally {
@@ -59,6 +68,8 @@ export default function AdminInquiriesPage() {
           <p className="text-muted-foreground mt-2">Manage partnership leads and training requests.</p>
         </div>
       </header>
+
+      <AdminErrorBanner error={error} onRetry={refetch} context="inquiries" />
 
       {isLoading ? (
         <div className="flex justify-center py-20">

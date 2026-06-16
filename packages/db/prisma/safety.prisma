@@ -8,16 +8,54 @@ datasource db {
   url      = env("SAFETY_DATABASE_URL")
 }
 
+enum SafetySeverity {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum SafetyCategory {
+  HARM
+  SELF_HARM
+  HARASSMENT
+  DISCLOSURE
+}
+
+enum MitigationAction {
+  WARNING
+  MUTE
+  KICK
+  ESCALATE
+}
+
+enum EscalationLevel {
+  watch
+  urgent
+  crisis
+}
+
+enum EscalationSource {
+  keyword
+  manual
+}
+
+enum EscalationStatus {
+  open
+  reviewing
+  resolved
+}
+
 model SafetyAlert {
-  id               String   @id @default(uuid()) @db.Uuid
+  id               String         @id @default(uuid()) @db.Uuid
   sessionId        String
-  severity         String   // LOW, MEDIUM, HIGH, CRITICAL
-  category         String   // HARM, SELF_HARM, HARASSMENT, DISCLOSURE
+  severity         SafetySeverity
+  category         SafetyCategory
   anonymizedReason String
-  transcriptChunk  String?  @db.Text
-  isResolved       Boolean  @default(false)
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  transcriptChunk  String?        @db.Text
+  isResolved       Boolean        @default(false)
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
 
   mitigations      SafetyMitigation[]
   escalations      EscalationQueue[]
@@ -29,26 +67,30 @@ model SafetyAlert {
 }
 
 model KeywordRule {
-  id        String   @id @default(uuid()) @db.Uuid
-  term      String   @unique
-  severity  String
-  category  String
-  enabled   Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id        String        @id @default(uuid()) @db.Uuid
+  term      String        @unique
+  severity  SafetySeverity
+  category  SafetyCategory
+  enabled   Boolean       @default(true)
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
 
   @@index([enabled])
+  @@index([severity])
+  @@index([category])
 }
 
 model SafetyMitigation {
-  id        String   @id @default(uuid()) @db.Uuid
-  alertId   String   @db.Uuid
-  action    String   // WARNING, MUTE, KICK, ESCALATE
+  id        String         @id @default(uuid()) @db.Uuid
+  alertId   String         @db.Uuid
+  action    MitigationAction
   success   Boolean
   metadata  Json?
-  createdAt DateTime @default(now())
+  createdAt DateTime       @default(now())
 
-  alert     SafetyAlert @relation(fields: [alertId], references: [id], onDelete: Cascade)
+  alert     SafetyAlert   @relation(fields: [alertId], references: [id], onDelete: Cascade, map: "SafetyMitigation_alertId_fkey")
+
+  @@index([alertId])
 }
 
 model SafetyStrike {
@@ -58,6 +100,7 @@ model SafetyStrike {
   count         Int      @default(1)
   lastStrikeAt  DateTime @default(now())
   createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
   @@unique([sessionId, participantId])
 }
@@ -65,24 +108,25 @@ model SafetyStrike {
 model SafetyAuditLog {
   id        String   @id @default(uuid()) @db.Uuid
   action    String
-  actor     String
-  metadata  Json
+  actor    String
+  metadata Json
   createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 // Persisted escalation queue - replaces in-memory queue
 model EscalationQueue {
-  id            String       @id @default(uuid()) @db.Uuid
-  sessionRef    String
-  level         String       // watch, urgent, crisis
-  source        String       // keyword, manual
-  summary       String
-  status        String       @default("open") // open, reviewing, resolved
+  id              String          @id @default(uuid()) @db.Uuid
+  sessionRef     String
+  level          EscalationLevel
+  source         EscalationSource
+  summary        String
+  status         EscalationStatus @default(open)
   reviewerHandle String?
-  createdAt     DateTime     @default(now())
-  updatedAt     DateTime     @updatedAt
-  alertId       String?      @db.Uuid
-  alert         SafetyAlert? @relation(fields: [alertId], references: [id])
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  alertId        String?         @db.Uuid
+  alert          SafetyAlert?    @relation(fields: [alertId], references: [id], onDelete: SetNull)
 
   @@index([status])
   @@index([sessionRef])

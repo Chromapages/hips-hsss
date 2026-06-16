@@ -31,9 +31,13 @@ export class VaultController {
     @Param('ref') subjectRef: string,
     @Headers('x-vault-secret') secret: string,
     @Query('actor') actor: string,
-    @Query('purpose') purpose: string
+    @Query('purpose') purpose: string,
+    @Query('requestId') requestId?: string
   ) {
     this.validateSecret(secret);
+    if (requestId !== undefined) {
+      return this.vaultService.getRecord(subjectRef, actor, purpose, requestId);
+    }
     return this.vaultService.getRecord(subjectRef, actor, purpose);
   }
 

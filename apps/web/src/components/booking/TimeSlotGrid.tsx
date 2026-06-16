@@ -71,11 +71,11 @@ export function TimeSlotGrid({
 
   return (
     <section className="rounded-[2rem] border border-white/5 bg-zinc-950 p-8 shadow-2xl relative overflow-hidden group">
-      <div className="absolute -top-12 -right-12 w-32 h-32 bg-Gold-500/10 rounded-full blur-[40px]" />
+      <div className="absolute -top-12 -right-12 w-32 h-32 bg-gold/10 rounded-full blur-[40px]" />
       
       <div className="flex items-center justify-between mb-8 relative z-10">
         <h2 className="font-heading text-2xl font-bold tracking-tighter text-white">Select Time</h2>
-        <p className="text-xs font-bold text-text-muted0">{slots.length} Slots</p>
+        <p className="text-xs font-bold text-muted-foreground">{slots.length} Slots</p>
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2 relative z-10">
@@ -107,7 +107,7 @@ export function TimeSlotGrid({
         ) : (
           <div className="col-span-full py-12 flex flex-col items-center justify-center text-center opacity-50">
             <Moon className="w-8 h-8 text-text mb-3" />
-            <p className="text-xs font-bold uppercase tracking-widest text-text-muted0">Fully Booked</p>
+            <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Fully Booked</p>
           </div>
         )}
       </div>
@@ -116,7 +116,7 @@ export function TimeSlotGrid({
         <div className="w-8 h-8 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
           <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
         </div>
-        <p className="text-[10px] font-bold uppercase tracking-widest text-text-muted0">
+        <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
           Peer guide availability synced live
         </p>
       </div>

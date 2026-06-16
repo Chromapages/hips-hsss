@@ -84,6 +84,12 @@ export default function RootLayout({
         <script dangerouslySetInnerHTML={{ __html: themeBootstrapScript }} />
       </head>
       <body className="min-h-full flex flex-col pb-[env(safe-area-inset-bottom)] font-body text-text-primary" suppressHydrationWarning>
+        <a
+          href="#main"
+          className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[9999] focus:px-4 focus:py-2 focus:rounded-lg focus:bg-primary focus:text-white focus:font-bold"
+        >
+          Skip to main content
+        </a>
         <ThemeProvider>
           <AuthProvider>
             <ToastProvider>

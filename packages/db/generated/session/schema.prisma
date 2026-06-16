@@ -23,6 +23,7 @@ enum AuditEventType {
   SAFETY_FLAGGED
   SAFETY_MITIGATION
   SESSION_ENDED
+  FACILITATOR_FLAG
 }
 
 model SessionRecord {
@@ -52,6 +53,8 @@ model GroupSessionRecord {
 
   @@index([moderatorAnonId])
   @@index([status])
+  @@index([startsAt])
+  @@index([endsAt])
 }
 
 model AuditEvent {
@@ -60,8 +63,10 @@ model AuditEvent {
   subjectId String
   metadata  Json
   createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
 
   @@index([eventType])
   @@index([subjectId])
   @@index([createdAt])
+  @@index([eventType, subjectId])
 }

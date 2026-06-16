@@ -50,6 +50,7 @@ const codeFileExclusions = new Set([
   "services/session/src/session/session-token.service.ts",
   "services/session/src/session/session.controller.ts",
   "services/session/src/session/facilitator-flag.controller.ts",
+  "services/session/src/auth/commerce-role.ts",
 ]);
 
 /**

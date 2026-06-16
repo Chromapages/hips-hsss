@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDb } from '@/lib/firebase-admin';
-import { verifyFirebaseIdToken } from '@/lib/auth-edge';
-import { ROLES } from '@/lib/roles';
+import { requireAdmin } from '@/lib/admin-auth';
+import { createServiceToken, SCOPES, AUDIENCES } from '@/lib/auth/serviceToken';
+
+const SAFETY_SERVICE_URL = process.env.SAFETY_SERVICE_URL || 'http://localhost:3003';
 
 export async function GET(req: NextRequest) {
   const db = getDb();
@@ -9,28 +11,10 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Service temporarily unavailable' }, { status: 503 });
   }
 
+  const { error } = await requireAdmin(req);
+  if (error) return error;
+
   try {
-    const authHeader = req.headers.get('Authorization');
-    const token = authHeader?.startsWith('Bearer ') ? authHeader.split(' ')[1] : null;
-
-    if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-
-    const decodedToken = await verifyFirebaseIdToken(token);
-    const firebaseUid = typeof decodedToken.sub === 'string' ? decodedToken.sub : null;
-
-    if (!firebaseUid) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    // Check Admin Role in Firestore
-    const userRef = db.collection('users').doc(firebaseUid);
-    const userDoc = await userRef.get();
-    const user = userDoc.data();
-
-    if (!user || user.role !== ROLES.ADMIN) {
-      return NextResponse.json({ error: 'Forbidden: Admin access required' }, { status: 403 });
-    }
-
     // Aggregate stats from Firestore in parallel
     // Use count() aggregation for large collections to avoid scanning all documents
     const [
@@ -38,23 +22,34 @@ export async function GET(req: NextRequest) {
       scholarshipsCount,
       inquiriesCount,
       usersCount,
-      packagesSnapshot,
-      alertsSnapshot,
     ] = await Promise.all([
-      db.collection('sessions').where('status', '==', 'SCHEDULED').count().get(),
+      db.collection('sessions').where('status', '==', 'ACTIVE').count().get(),
       db.collection('scholarships').where('status', '==', 'APPROVED').count().get(),
-      db.collection('inquiries').count().get(),
+      db.collection('contact_inquiries').count().get(),
       db.collection('users').count().get(),
-      db.collection('packages').select('amount').get(),
-      db.collection('safetyAlerts').orderBy('createdAt', 'desc').limit(5).get(),
     ]);
 
-    let totalRevenue = 0;
-    packagesSnapshot.docs.forEach(doc => {
-      totalRevenue += (doc.data().amount || 0);
-    });
+    // Fetch alerts from the safety service
+    let recentAlerts: any[] = [];
+    try {
+      const jwt = await createServiceToken([SCOPES.SAFETY_REPORT], AUDIENCES.SAFETY, {
+        subject: 'hips-web',
+        ref: 'admin-proxy',
+      });
+      const safetyResponse = await fetch(`${SAFETY_SERVICE_URL}/safety/alerts`, {
+        headers: {
+          'Authorization': `Bearer ${jwt}`,
+        },
+      });
+      if (safetyResponse.ok) {
+        const alerts = await safetyResponse.json();
+        recentAlerts = Array.isArray(alerts) ? alerts.slice(0, 5) : [];
+      }
+    } catch (err) {
+      console.error('Failed to fetch safety alerts for stats:', err);
+    }
 
-    // 3. Fetch last 30 days of sessions to build growth velocity chart
+    // Fetch last 30 days of sessions to build growth velocity chart
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
@@ -72,25 +67,18 @@ export async function GET(req: NextRequest) {
       }
     });
 
-    // Generate last 30 days list with baseline mock data + real data
+    // Generate last 30 days list with real data
     const growthData = [];
     for (let i = 29; i >= 0; i--) {
       const date = new Date();
       date.setDate(date.getDate() - i);
       const dateStr = date.toISOString().substring(0, 10);
       
-      // Determine baseline mock count (deterministic based on date hash)
-      let hash = 0;
-      for (let j = 0; j < dateStr.length; j++) {
-        hash = dateStr.charCodeAt(j) + ((hash << 5) - hash);
-      }
-      const baselineMock = (Math.abs(hash) % 8) + 3; // 3 to 10 baseline sessions
-      
       const realCount = dailyCounts[dateStr] || 0;
       
       growthData.push({
         date: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-        sessions: baselineMock + realCount,
+        sessions: realCount,
       });
     }
 
@@ -99,9 +87,10 @@ export async function GET(req: NextRequest) {
       scholarships: scholarshipsCount.data().count,
       inquiries: inquiriesCount.data().count,
       totalUsers: usersCount.data().count,
-      totalRevenue: totalRevenue.toFixed(2),
-      recentAlerts: alertsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })),
+      totalRevenue: "0.00 (Pending reconciliation)",
+      recentAlerts,
       growthData,
+      dataFreshnessAt: new Date().toISOString(),
     });
   } catch (error: unknown) {
     console.error('[AdminStats] Error:', error instanceof Error ? error.message : error);

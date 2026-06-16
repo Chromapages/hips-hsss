@@ -89,7 +89,7 @@ export function BookingSummaryBar({
             disabled={isBooking}
             className="group relative inline-flex h-14 items-center justify-center overflow-hidden rounded-2xl bg-surface px-8 font-bold tracking-tighter text-black transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:hover:scale-100"
           >
-            <div className="absolute inset-0 bg-gradient-to-r from-#173B57 to-Gold-500 opacity-0 transition-opacity group-hover:opacity-10" />
+            <div className="absolute inset-0 bg-gradient-to-r from-[#173B57] to-gold opacity-0 transition-opacity group-hover:opacity-10" />
             {isBooking ? (
               <div className="flex items-center gap-2">
                 <Loader2 className="h-5 w-5 animate-spin" />

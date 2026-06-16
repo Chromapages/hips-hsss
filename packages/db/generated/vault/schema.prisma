@@ -39,10 +39,28 @@ model VaultAccessLog {
   subjectRef String
   purpose    VaultAccessPurpose
   actorRef   String
+  action     String?
   requestId  String
   createdAt  DateTime           @default(now())
 
   @@index([subjectRef])
   @@index([purpose])
+  @@index([createdAt])
+}
+
+model VaultAccessRequest {
+  id            String    @id @default(uuid()) @db.Uuid
+  subjectRef    String
+  requesterRef  String
+  justification String
+  status        String    @default("PENDING")
+  accessedAt    DateTime?
+  metadata      Json      @default("{}")
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([subjectRef])
+  @@index([requesterRef])
+  @@index([status])
   @@index([createdAt])
 }

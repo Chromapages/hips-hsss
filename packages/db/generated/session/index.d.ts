@@ -50,7 +50,8 @@ export const AuditEventType: {
   ROOM_LEFT: 'ROOM_LEFT',
   SAFETY_FLAGGED: 'SAFETY_FLAGGED',
   SAFETY_MITIGATION: 'SAFETY_MITIGATION',
-  SESSION_ENDED: 'SESSION_ENDED'
+  SESSION_ENDED: 'SESSION_ENDED',
+  FACILITATOR_FLAG: 'FACILITATOR_FLAG'
 };
 
 export type AuditEventType = (typeof AuditEventType)[keyof typeof AuditEventType]
@@ -2893,6 +2894,7 @@ export namespace Prisma {
     eventType: $Enums.AuditEventType | null
     subjectId: string | null
     createdAt: Date | null
+    updatedAt: Date | null
   }
 
   export type AuditEventMaxAggregateOutputType = {
@@ -2900,6 +2902,7 @@ export namespace Prisma {
     eventType: $Enums.AuditEventType | null
     subjectId: string | null
     createdAt: Date | null
+    updatedAt: Date | null
   }
 
   export type AuditEventCountAggregateOutputType = {
@@ -2908,6 +2911,7 @@ export namespace Prisma {
     subjectId: number
     metadata: number
     createdAt: number
+    updatedAt: number
     _all: number
   }
 
@@ -2917,6 +2921,7 @@ export namespace Prisma {
     eventType?: true
     subjectId?: true
     createdAt?: true
+    updatedAt?: true
   }
 
   export type AuditEventMaxAggregateInputType = {
@@ -2924,6 +2929,7 @@ export namespace Prisma {
     eventType?: true
     subjectId?: true
     createdAt?: true
+    updatedAt?: true
   }
 
   export type AuditEventCountAggregateInputType = {
@@ -2932,6 +2938,7 @@ export namespace Prisma {
     subjectId?: true
     metadata?: true
     createdAt?: true
+    updatedAt?: true
     _all?: true
   }
 
@@ -3013,6 +3020,7 @@ export namespace Prisma {
     subjectId: string
     metadata: JsonValue
     createdAt: Date
+    updatedAt: Date
     _count: AuditEventCountAggregateOutputType | null
     _min: AuditEventMinAggregateOutputType | null
     _max: AuditEventMaxAggregateOutputType | null
@@ -3038,6 +3046,7 @@ export namespace Prisma {
     subjectId?: boolean
     metadata?: boolean
     createdAt?: boolean
+    updatedAt?: boolean
   }, ExtArgs["result"]["auditEvent"]>
 
   export type AuditEventSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
@@ -3046,6 +3055,7 @@ export namespace Prisma {
     subjectId?: boolean
     metadata?: boolean
     createdAt?: boolean
+    updatedAt?: boolean
   }, ExtArgs["result"]["auditEvent"]>
 
   export type AuditEventSelectScalar = {
@@ -3054,6 +3064,7 @@ export namespace Prisma {
     subjectId?: boolean
     metadata?: boolean
     createdAt?: boolean
+    updatedAt?: boolean
   }
 
 
@@ -3066,6 +3077,7 @@ export namespace Prisma {
       subjectId: string
       metadata: Prisma.JsonValue
       createdAt: Date
+      updatedAt: Date
     }, ExtArgs["result"]["auditEvent"]>
     composites: {}
   }
@@ -3464,6 +3476,7 @@ export namespace Prisma {
     readonly subjectId: FieldRef<"AuditEvent", 'String'>
     readonly metadata: FieldRef<"AuditEvent", 'Json'>
     readonly createdAt: FieldRef<"AuditEvent", 'DateTime'>
+    readonly updatedAt: FieldRef<"AuditEvent", 'DateTime'>
   }
     
 
@@ -3799,7 +3812,8 @@ export namespace Prisma {
     eventType: 'eventType',
     subjectId: 'subjectId',
     metadata: 'metadata',
-    createdAt: 'createdAt'
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
   };
 
   export type AuditEventScalarFieldEnum = (typeof AuditEventScalarFieldEnum)[keyof typeof AuditEventScalarFieldEnum]
@@ -4065,6 +4079,7 @@ export namespace Prisma {
     subjectId?: StringFilter<"AuditEvent"> | string
     metadata?: JsonFilter<"AuditEvent">
     createdAt?: DateTimeFilter<"AuditEvent"> | Date | string
+    updatedAt?: DateTimeFilter<"AuditEvent"> | Date | string
   }
 
   export type AuditEventOrderByWithRelationInput = {
@@ -4073,6 +4088,7 @@ export namespace Prisma {
     subjectId?: SortOrder
     metadata?: SortOrder
     createdAt?: SortOrder
+    updatedAt?: SortOrder
   }
 
   export type AuditEventWhereUniqueInput = Prisma.AtLeast<{
@@ -4084,6 +4100,7 @@ export namespace Prisma {
     subjectId?: StringFilter<"AuditEvent"> | string
     metadata?: JsonFilter<"AuditEvent">
     createdAt?: DateTimeFilter<"AuditEvent"> | Date | string
+    updatedAt?: DateTimeFilter<"AuditEvent"> | Date | string
   }, "id">
 
   export type AuditEventOrderByWithAggregationInput = {
@@ -4092,6 +4109,7 @@ export namespace Prisma {
     subjectId?: SortOrder
     metadata?: SortOrder
     createdAt?: SortOrder
+    updatedAt?: SortOrder
     _count?: AuditEventCountOrderByAggregateInput
     _max?: AuditEventMaxOrderByAggregateInput
     _min?: AuditEventMinOrderByAggregateInput
@@ -4106,6 +4124,7 @@ export namespace Prisma {
     subjectId?: StringWithAggregatesFilter<"AuditEvent"> | string
     metadata?: JsonWithAggregatesFilter<"AuditEvent">
     createdAt?: DateTimeWithAggregatesFilter<"AuditEvent"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"AuditEvent"> | Date | string
   }
 
   export type SessionRecordCreateInput = {
@@ -4268,6 +4287,7 @@ export namespace Prisma {
     subjectId: string
     metadata: JsonNullValueInput | InputJsonValue
     createdAt?: Date | string
+    updatedAt?: Date | string
   }
 
   export type AuditEventUncheckedCreateInput = {
@@ -4276,6 +4296,7 @@ export namespace Prisma {
     subjectId: string
     metadata: JsonNullValueInput | InputJsonValue
     createdAt?: Date | string
+    updatedAt?: Date | string
   }
 
   export type AuditEventUpdateInput = {
@@ -4284,6 +4305,7 @@ export namespace Prisma {
     subjectId?: StringFieldUpdateOperationsInput | string
     metadata?: JsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type AuditEventUncheckedUpdateInput = {
@@ -4292,6 +4314,7 @@ export namespace Prisma {
     subjectId?: StringFieldUpdateOperationsInput | string
     metadata?: JsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type AuditEventCreateManyInput = {
@@ -4300,6 +4323,7 @@ export namespace Prisma {
     subjectId: string
     metadata: JsonNullValueInput | InputJsonValue
     createdAt?: Date | string
+    updatedAt?: Date | string
   }
 
   export type AuditEventUpdateManyMutationInput = {
@@ -4308,6 +4332,7 @@ export namespace Prisma {
     subjectId?: StringFieldUpdateOperationsInput | string
     metadata?: JsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type AuditEventUncheckedUpdateManyInput = {
@@ -4316,6 +4341,7 @@ export namespace Prisma {
     subjectId?: StringFieldUpdateOperationsInput | string
     metadata?: JsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type UuidFilter<$PrismaModel = never> = {
@@ -4521,6 +4547,7 @@ export namespace Prisma {
     subjectId?: SortOrder
     metadata?: SortOrder
     createdAt?: SortOrder
+    updatedAt?: SortOrder
   }
 
   export type AuditEventMaxOrderByAggregateInput = {
@@ -4528,6 +4555,7 @@ export namespace Prisma {
     eventType?: SortOrder
     subjectId?: SortOrder
     createdAt?: SortOrder
+    updatedAt?: SortOrder
   }
 
   export type AuditEventMinOrderByAggregateInput = {
@@ -4535,6 +4563,7 @@ export namespace Prisma {
     eventType?: SortOrder
     subjectId?: SortOrder
     createdAt?: SortOrder
+    updatedAt?: SortOrder
   }
 
   export type EnumAuditEventTypeWithAggregatesFilter<$PrismaModel = never> = {

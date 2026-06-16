@@ -1,3 +1,4 @@
+import 'server-only';
 import * as admin from 'firebase-admin';
 import * as fs from 'fs';
 
@@ -223,13 +224,13 @@ export const adminAuth = {
     }
     return auth.setCustomUserClaims(uid, claims);
   },
-  verifyIdToken: (token: string) => {
+  verifyIdToken: (token: string, checkRevoked = false) => {
     const auth = getAuth();
     if (!auth) {
       console.warn('[FirebaseAdmin] adminAuth unavailable — credentials missing');
       return Promise.reject(new Error('Firebase Admin SDK not initialized'));
     }
-    return auth.verifyIdToken(token);
+    return auth.verifyIdToken(token, checkRevoked);
   },
 };
 

@@ -144,7 +144,8 @@ exports.Prisma.AuditEventScalarFieldEnum = {
   eventType: 'eventType',
   subjectId: 'subjectId',
   metadata: 'metadata',
-  createdAt: 'createdAt'
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
 };
 
 exports.Prisma.SortOrder = {
@@ -180,7 +181,8 @@ exports.AuditEventType = exports.$Enums.AuditEventType = {
   ROOM_LEFT: 'ROOM_LEFT',
   SAFETY_FLAGGED: 'SAFETY_FLAGGED',
   SAFETY_MITIGATION: 'SAFETY_MITIGATION',
-  SESSION_ENDED: 'SESSION_ENDED'
+  SESSION_ENDED: 'SESSION_ENDED',
+  FACILITATOR_FLAG: 'FACILITATOR_FLAG'
 };
 
 exports.Prisma.ModelName = {

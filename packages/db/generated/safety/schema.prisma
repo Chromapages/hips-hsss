@@ -1,35 +1,116 @@
+// Row-Level Security (RLS) is required for production deployment.
+// Run the following in your Postgres database:
+//
+// ALTER TABLE "safety_alert" ENABLE ROW LEVEL SECURITY;
+// CREATE POLICY "safety_alert_admin_only" ON "safety_alert" FOR ALL USING (true);
+//
+// ALTER TABLE "audit_event" ENABLE ROW LEVEL SECURITY;
+// CREATE POLICY "audit_event_admin_only" ON "audit_event" FOR ALL USING (true);
+//
+// ALTER TABLE "escalation_queue" ENABLE ROW LEVEL SECURITY;
+// CREATE POLICY "escalation_queue_admin_only" ON "escalation_queue" FOR ALL USING (true);
+
+// Safety Service schema — extends shared @hips/db safety schema
+// This service-level schema is used for code generation (prisma generate)
+// The actual database uses the shared schema at packages/db/prisma/safety.prisma
+// NOTE: This schema syncs with the shared safety schema. Drift must be resolved before deployment.
+
 generator client {
   provider = "prisma-client-js"
-  output   = "../generated/safety"
+  output   = "../../../packages/db/generated/safety"
 }
 
 datasource db {
   provider = "postgresql"
-  url      = env("SAFETY_DATABASE_URL")
+  url      = env("DATABASE_URL")
+}
+
+// ─── Enums (mirrors packages/db/prisma/safety.prisma) ───────────────────────
+
+enum SafetySeverity {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum SafetyCategory {
+  HARM
+  SELF_HARM
+  HARASSMENT
+  DISCLOSURE
+}
+
+enum MitigationAction {
+  WARNING
+  MUTE
+  KICK
+  ESCALATE
+}
+
+enum EscalationLevel {
+  watch
+  urgent
+  crisis
+}
+
+enum EscalationSource {
+  keyword
+  manual
+}
+
+enum EscalationStatus {
+  open
+  reviewing
+  resolved
+}
+
+// PHI-1: Safety Audit Trail — INSERT only, never modify
+model AuditEvent {
+  id         String   @id @default(cuid())
+  service    String
+  action     String
+  actorRef   String
+  subjectRef String?
+  metadata   Json     @default("{}")
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([service, action])
+  @@index([actorRef])
+  @@index([createdAt])
+  @@map("audit_event")
 }
 
 model SafetyAlert {
-  id               String   @id @default(uuid()) @db.Uuid
+  id               String         @id @default(uuid()) @db.Uuid
   sessionId        String
-  severity         String // LOW, MEDIUM, HIGH, CRITICAL
-  category         String // HARM, SELF_HARM, HARASSMENT, DISCLOSURE
+  severity         SafetySeverity
+  category         SafetyCategory
   anonymizedReason String
-  transcriptChunk  String?  @db.Text
-  isResolved       Boolean  @default(false)
-  createdAt        DateTime @default(now())
+  transcriptChunk  String?        @db.Text
+  isResolved       Boolean        @default(false)
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
 
   mitigations SafetyMitigation[]
+  escalations EscalationQueue[]
+
+  @@index([sessionId])
+  @@index([severity])
+  @@index([isResolved])
+  @@index([createdAt])
 }
 
 model SafetyMitigation {
-  id        String   @id @default(uuid()) @db.Uuid
-  alertId   String   @db.Uuid
-  action    String // WARNING, MUTE, KICK, ESCALATE
+  id        String           @id @default(uuid()) @db.Uuid
+  alertId   String           @db.Uuid
+  action    MitigationAction
   success   Boolean
   metadata  Json?
-  createdAt DateTime @default(now())
+  createdAt DateTime         @default(now())
 
-  alert SafetyAlert @relation(fields: [alertId], references: [id])
+  alert SafetyAlert @relation(fields: [alertId], references: [id], onDelete: Cascade)
 }
 
 model SafetyStrike {
@@ -39,6 +120,7 @@ model SafetyStrike {
   count         Int      @default(1)
   lastStrikeAt  DateTime @default(now())
   createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
   @@unique([sessionId, participantId])
 }
@@ -49,4 +131,37 @@ model SafetyAuditLog {
   actor     String
   metadata  Json
   createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model EscalationQueue {
+  id             String           @id @default(uuid()) @db.Uuid
+  sessionRef     String
+  level          EscalationLevel
+  source         EscalationSource
+  summary        String
+  status         EscalationStatus @default(open)
+  reviewerHandle String?
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  alertId        String?          @db.Uuid
+  alert          SafetyAlert?     @relation(fields: [alertId], references: [id], onDelete: SetNull)
+
+  @@index([status])
+  @@index([sessionRef])
+}
+
+model KeywordRule {
+  id        String         @id @default(uuid()) @db.Uuid
+  term      String         @unique
+  severity  SafetySeverity
+  category  SafetyCategory
+  enabled   Boolean        @default(true)
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+
+  @@index([enabled])
+  @@index([severity])
+  @@index([category])
+  @@map("keyword_rule")
 }

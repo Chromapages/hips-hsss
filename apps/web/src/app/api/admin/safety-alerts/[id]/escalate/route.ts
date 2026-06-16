@@ -1,26 +1,31 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { getPrisma } from '@/lib/prisma';
-import { verifyFirebaseIdToken } from '@/lib/auth-edge';
-import { ROLES } from '@/lib/roles';
-import { extractBearerToken } from '@/lib/extract-token';
+import { requireAdmin } from '@/lib/admin-auth';
+import { createServiceToken, SCOPES, AUDIENCES } from '@/lib/auth/serviceToken';
+import { writeAuditEvent } from '@/lib/admin-audit';
 
 const escalateSchema = z.object({
   reason: z.string().min(10, 'Justification must be at least 10 characters'),
 });
 
 const SAFETY_SERVICE_URL = process.env.SAFETY_SERVICE_URL || 'http://localhost:3003';
-const SESSION_SERVICE_SECRET = process.env.SESSION_SERVICE_SECRET;
 
-async function callSafetyService(endpoint: string, body: unknown) {
-  const response = await fetch(`${SAFETY_SERVICE_URL}${endpoint}`, {
-    method: 'POST',
+async function callSafetyService(endpoint: string, method: 'GET' | 'POST', body?: unknown) {
+  const jwt = await createServiceToken([SCOPES.SAFETY_REPORT], AUDIENCES.SAFETY, {
+    subject: 'hips-web',
+    ref: 'admin-proxy',
+  });
+  const options: RequestInit = {
+    method,
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${SESSION_SERVICE_SECRET}`,
+      'Authorization': `Bearer ${jwt}`,
     },
-    body: JSON.stringify(body),
-  });
+  };
+  if (body !== undefined) {
+    options.body = JSON.stringify(body);
+  }
+  const response = await fetch(`${SAFETY_SERVICE_URL}${endpoint}`, options);
 
   if (!response.ok) {
     const text = await response.text();
@@ -30,31 +35,12 @@ async function callSafetyService(endpoint: string, body: unknown) {
   return response.json();
 }
 
-async function verifyAdmin(req: NextRequest) {
-  const token = extractBearerToken(req.headers.get('authorization'));
-  if (!token) return null;
-
-  try {
-    const payload = await verifyFirebaseIdToken(token);
-    const firebaseUid = typeof payload.sub === 'string' ? payload.sub : null;
-    if (!firebaseUid) return null;
-
-    const user = await getPrisma().user.findUnique({ where: { firebaseUid } });
-    if (user?.role !== ROLES.ADMIN) return null;
-    return user;
-  } catch {
-    return null;
-  }
-}
-
 export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const admin = await verifyAdmin(req);
-  if (!admin) {
-    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-  }
+  const { admin, error } = await requireAdmin(req);
+  if (error) return error;
 
   try {
     const body = await req.json();
@@ -69,9 +55,25 @@ export async function POST(
     const { id } = await params;
     const { reason } = result.data;
 
-    const escalated = await callSafetyService(`/safety/alerts/${id}/escalate`, {
-      actorId: admin.id,
+    const escalated = await callSafetyService(`/safety/alerts/${id}/escalate`, 'POST', {
+      actorId: admin.uid,
       reason,
+    });
+
+    const ip = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || undefined;
+    const userAgent = req.headers.get('user-agent') || undefined;
+    await writeAuditEvent({
+      actorId: admin.uid,
+      actorEmail: admin.email || 'unknown',
+      action: 'SAFETY_ALERT_ESCALATE',
+      targetType: 'SAFETY_ALERT',
+      targetId: id,
+      before: null,
+      after: { escalated: true },
+      justification: reason,
+      result: 'SUCCESS',
+      ip,
+      userAgent,
     });
 
     return NextResponse.json({ success: true, ...escalated });
@@ -86,14 +88,12 @@ export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const admin = await verifyAdmin(req);
-  if (!admin) {
-    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-  }
+  const { error } = await requireAdmin(req);
+  if (error) return error;
 
   try {
     const { id } = await params;
-    const alert = await callSafetyService(`/safety/alerts/${id}`, undefined);
+    const alert = await callSafetyService(`/safety/alerts-by-id/${id}`, 'GET');
     return NextResponse.json(alert);
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Internal Server Error';

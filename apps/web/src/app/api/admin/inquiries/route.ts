@@ -1,28 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { verifyFirebaseIdToken } from '@/lib/auth-edge';
-
-async function verifyAdmin(req: NextRequest) {
-  const authHeader = req.headers.get('authorization');
-  const token = authHeader?.startsWith('Bearer ') ? authHeader.split(' ')[1] : null;
-  if (!token) return null;
-
-  try {
-    const payload = await verifyFirebaseIdToken(token);
-    const firebaseUid = typeof payload.sub === 'string' ? payload.sub : null;
-    if (!firebaseUid) return null;
-
-    const user = await prisma.user.findUnique({ where: { firebaseUid } });
-    if (user?.role !== 'ADMIN') return null;
-    return user;
-  } catch {
-    return null;
-  }
-}
+import { requireAdmin } from '@/lib/admin-auth';
 
 export async function GET(req: NextRequest) {
-  const admin = await verifyAdmin(req);
-  if (!admin) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  const { error } = await requireAdmin(req);
+  if (error) return error;
 
   const { searchParams } = new URL(req.url);
   const take = Math.min(parseInt(searchParams.get('take') ?? '50', 10), 100);

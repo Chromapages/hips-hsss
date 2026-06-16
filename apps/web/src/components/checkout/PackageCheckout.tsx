@@ -8,9 +8,12 @@ import {
   useElements,
 } from '@stripe/react-stripe-js';
 import { getStripe } from '@/lib/stripe-client';
+import { cn } from '@/lib/utils';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { X, Loader2, ShieldCheck, Lock } from 'lucide-react';
 import { toast } from 'sonner';
+import { asError } from '@/lib/errors';
+import { DemoPaymentForm } from './DemoPaymentForm';
 
 function CheckoutForm({ amount, packageName, onClose }: { amount: number, packageName: string, onClose: () => void }) {
   const stripe = useStripe();
@@ -55,7 +58,7 @@ function CheckoutForm({ amount, packageName, onClose }: { amount: number, packag
       />
 
       {errorMessage && (
-        <div className="p-3 bg-destructive0/10 border border-destructive/20 rounded-xl text-destructive text-sm">
+        <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-xl text-destructive text-sm">
           {errorMessage}
         </div>
       )}
@@ -76,7 +79,7 @@ function CheckoutForm({ amount, packageName, onClose }: { amount: number, packag
           )}
         </button>
         
-        <div className="flex items-center justify-center gap-4 text-[10px] text-text-muted0 uppercase tracking-widest font-bold">
+        <div className="flex items-center justify-center gap-4 text-[10px] text-muted-foreground uppercase tracking-widest font-bold">
            <div className="flex items-center gap-1">
              <Lock className="h-3 w-3" />
              Encrypted
@@ -123,8 +126,8 @@ export function PackageCheckout({ packageId, onClose }: { packageId: 'SINGLE' | 
 
         setClientSecret(data.clientSecret);
         setPackageInfo({ name: data.packageName, amount: data.amount });
-      } catch (err: any) {
-        toast.error('Failed to initialize checkout: ' + err.message);
+      } catch (err: unknown) {
+        toast.error('Failed to initialize checkout: ' + asError(err).message);
         onClose();
       }
     }
@@ -148,28 +151,38 @@ export function PackageCheckout({ packageId, onClose }: { packageId: 'SINGLE' | 
       <div className="relative w-full max-w-lg overflow-hidden rounded-3xl bg-text border border-white/10 shadow-2xl">
         <button
           onClick={onClose}
-          className="absolute right-4 top-4 z-10 p-2 text-text-muted0 hover:text-white transition-colors"
+          className="absolute right-4 top-4 z-10 p-2 text-muted-foreground hover:text-white transition-colors"
         >
           <X className="h-6 w-6" />
         </button>
 
         <div className="p-8">
-          <Elements 
-            stripe={getStripe()} 
-            options={{ 
-              clientSecret,
-              appearance: {
-                theme: 'night',
-                labels: 'floating',
-              }
-            }}
-          >
-            <CheckoutForm 
-              amount={packageInfo.amount} 
-              packageName={packageInfo.name} 
-              onClose={onClose} 
+          {clientSecret.startsWith('demo_') ? (
+            <DemoPaymentForm
+              clientSecret={clientSecret}
+              onSuccess={() => {
+                window.location.href = `${window.location.origin}/dashboard?purchase=success`;
+              }}
+              onCancel={onClose}
             />
-          </Elements>
+          ) : (
+            <Elements 
+              stripe={getStripe()} 
+              options={{ 
+                clientSecret,
+                appearance: {
+                  theme: 'night',
+                  labels: 'floating',
+                }
+              }}
+            >
+              <CheckoutForm 
+                amount={packageInfo.amount} 
+                packageName={packageInfo.name} 
+                onClose={onClose} 
+              />
+            </Elements>
+          )}
         </div>
       </div>
     </div>

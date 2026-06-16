@@ -5,6 +5,8 @@ import { Html } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
 import { type Group, MeshStandardMaterial } from 'three';
 
+import { useReducedMotion } from '@/hooks/useReducedMotion';
+
 interface AbstractAvatarProps {
   color: string;
   isLocal: boolean;
@@ -25,6 +27,7 @@ export default function AbstractAvatar({
   const groupRef = useRef<Group>(null);
   const headMatRef = useRef<MeshStandardMaterial>(null);
   const bodyMatRef = useRef<MeshStandardMaterial>(null);
+  const reduced = useReducedMotion();
 
   // Unique phase offset per avatar so they don't all bob in sync
   const phaseOffset = (styleIndex * 1.37) % (Math.PI * 2);
@@ -33,18 +36,22 @@ export default function AbstractAvatar({
   useFrame((state) => {
     if (!groupRef.current) return;
 
-    // Slow vertical float
-    groupRef.current.position.set(
-      position[0],
-      position[1] + Math.sin(state.clock.elapsedTime * 0.75 + phaseOffset) * 0.14,
-      position[2],
-    );
+    // Slow vertical float - disabled in reduced motion
+    if (reduced) {
+      groupRef.current.position.set(position[0], position[1], position[2]);
+    } else {
+      groupRef.current.position.set(
+        position[0],
+        position[1] + Math.sin(state.clock.elapsedTime * 0.75 + phaseOffset) * 0.14,
+        position[2],
+      );
+    }
 
     const targetHead = isSpeaking
-      ? 0.55 + Math.sin(state.clock.elapsedTime * 7.5) * 0.3
+      ? 0.55 + (reduced ? 0 : Math.sin(state.clock.elapsedTime * 7.5) * 0.3)
       : isLocal ? 0.14 : 0.07;
     const targetBody = isSpeaking
-      ? 0.45 + Math.sin(state.clock.elapsedTime * 7.5) * 0.22
+      ? 0.45 + (reduced ? 0 : Math.sin(state.clock.elapsedTime * 7.5) * 0.22)
       : isLocal ? 0.11 : 0.05;
 
     if (headMatRef.current) {

@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { getDb } from '@/lib/firebase-admin';
-import { verifyFirebaseIdToken } from '@/lib/auth-edge';
+import { verifyFirebaseIdToken } from '@/lib/firebase-auth';
 import { sendSessionCancellationEmail } from '@/emails';
 import { getStripeServerClient } from '@/lib/stripe';
+import { requireRole } from '@/lib/request-auth';
+import { FACILITATOR_ROLES } from '@/lib/roles';
 
 const cancelSchema = z.object({
   sessionId: z.string(),
@@ -81,6 +83,10 @@ export async function POST(req: NextRequest) {
 
       if (!isOwner && !isFacilitator) {
         return NextResponse.json({ error: 'Forbidden: not authorized to cancel this session' }, { status: 403 });
+      }
+      if (isFacilitator && !isOwner) {
+        const roleResult = await requireRole(req, ...FACILITATOR_ROLES);
+        if (roleResult.error) return roleResult.error;
       }
 
       const sanitizedDetails = reasonDetails ? sanitizeInput(reasonDetails) : '';

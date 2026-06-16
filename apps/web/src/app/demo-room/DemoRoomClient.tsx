@@ -76,7 +76,7 @@ function DemoLobby({ onEnter, error, loading }: { onEnter: () => void; error: st
             Demo Mode
           </div>
           <h1 className="font-heading text-3xl font-extrabold tracking-tight">Welcome to the Demo</h1>
-          <p className="text-sm text-text-muted0">
+          <p className="text-sm text-muted-foreground">
             This is a sandboxed environment where you can explore the session features without joining a real session.
           </p>
         </div>
@@ -104,7 +104,7 @@ function DemoLobby({ onEnter, error, loading }: { onEnter: () => void; error: st
         </div>
 
         {error && (
-          <div className="rounded-xl border border-destructive/20 bg-destructive0/10 px-4 py-3 text-sm text-destructive">
+          <div className="rounded-xl border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm text-destructive">
             {error}
           </div>
         )}
@@ -352,7 +352,7 @@ function DemoRoomContent({ roomName }: { roomName: string }) {
   };
 
   return (
-    <main className="grid h-screen grid-rows-[auto_1fr_auto] overflow-hidden bg-black text-white">
+    <main id="main" tabIndex={-1} className="grid h-screen grid-rows-[auto_1fr_auto] overflow-hidden bg-black text-white">
       <SessionHeader
         anonymousHandle="demo-user"
         sessionSeconds={sessionSeconds}
@@ -383,7 +383,7 @@ function DemoRoomContent({ roomName }: { roomName: string }) {
 
         <aside className="grid min-h-0 grid-rows-[auto_1fr] border-l border-white/10 bg-zinc-950">
           <div className="border-b border-white/10 p-4">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-text-muted0">Demo Info</p>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Demo Info</p>
             <p className="mt-1 text-sm text-text">
               This is a sandboxed demo environment. No real sessions or data are involved.
             </p>
@@ -752,7 +752,7 @@ function DemoRoomInner({ roomName }: { token?: string; roomName: string }) {
         <div className="w-full max-w-md space-y-6 text-center">
           {error ? (
             <>
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-destructive0/10 border border-destructive/20 text-destructive text-xs font-bold uppercase tracking-widest">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-destructive/10 border border-destructive/20 text-destructive text-xs font-bold uppercase tracking-widest">
                 Error
               </div>
               <h1 className="text-2xl font-bold">Failed to Join Demo</h1>

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { getDb } from '@/lib/firebase-admin';
-import { verifyFirebaseIdToken } from '@/lib/auth-edge';
+import { verifyFirebaseIdToken } from '@/lib/firebase-auth';
 import { addHours, isBefore, startOfHour } from 'date-fns';
 import { sendBookingConfirmationEmail } from '@/emails';
 

@@ -52,7 +52,7 @@ export default function SessionLoading() {
       </div>
 
       <div className="fade-in-delay flex flex-col items-center gap-1 text-center">
-        <p className="text-xs font-medium text-text-muted0">Your voice will be anonymized</p>
+        <p className="text-xs font-medium text-muted-foreground">Your voice will be anonymized</p>
         <p className="text-xs text-text">You are safe here</p>
       </div>
     </div>

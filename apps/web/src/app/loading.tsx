@@ -2,7 +2,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 export default function Loading() {
   return (
-    <main className="min-h-screen bg-black p-6 text-white flex flex-col">
+    <main id="main" tabIndex={-1} className="min-h-screen bg-black p-6 text-white flex flex-col">
       <div className="mx-auto w-full max-w-7xl space-y-12 pt-24 animate-in fade-in duration-700">
         <div className="space-y-4">
           <Skeleton className="h-10 w-64 bg-surface/5 border border-white/5" />

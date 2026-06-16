@@ -1,4 +1,16 @@
-import { Controller, Post, Get, Body, Req, HttpCode, HttpStatus, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Get,
+  Body,
+  Req,
+  HttpCode,
+  HttpStatus,
+  UseGuards,
+  BadRequestException,
+  UnauthorizedException,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import { Request } from 'express';
 import { CommerceService } from './commerce.service.js';
 import { FirebaseAuthService } from '../auth/firebase-auth.service.js';
@@ -10,11 +22,6 @@ import {
   purchasePackageSchema,
 } from '../dto/commerce.dto.js';
 import { ThrottlerGuard } from '@nestjs/throttler';
-
-// Simple auth guard placeholder - in production would verify Firebase JWT
-class OptionalAuthGuard {
-  async canActivate(): Promise<boolean> { return true; }
-}
 
 @Controller()
 export class CommerceController {
@@ -45,14 +52,14 @@ export class CommerceController {
 
     const result = createDonationSchema.safeParse(body);
     if (!result.success) {
-      return { error: 'Invalid input', status: 400 };
+      throw new BadRequestException('Invalid input');
     }
 
     try {
       return await this.commerceService.createDonationIntent(userId, result.data);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Internal Server Error';
-      return { error: message, status: 500 };
+      throw new InternalServerErrorException(message);
     }
   }
 
@@ -66,7 +73,7 @@ export class CommerceController {
     const token = authHeader?.startsWith('Bearer ') ? authHeader.split(' ')[1] : null;
 
     if (!token) {
-      return { error: 'Unauthorized', status: 401 };
+      throw new UnauthorizedException('Unauthorized');
     }
 
     let firebaseUid: string | null = null;
@@ -75,23 +82,23 @@ export class CommerceController {
       // This properly validates the token signature and expiration
       firebaseUid = await this.firebaseAuth.getUidFromToken(token);
     } catch {
-      return { error: 'Unauthorized', status: 401 };
+      throw new UnauthorizedException('Unauthorized');
     }
 
     if (!firebaseUid) {
-      return { error: 'Unauthorized', status: 401 };
+      throw new UnauthorizedException('Unauthorized');
     }
 
     const result = createSessionIntentSchema.safeParse(body);
     if (!result.success) {
-      return { error: 'Invalid input', status: 400 };
+      throw new BadRequestException('Invalid input');
     }
 
     try {
       return await this.commerceService.createSessionPaymentIntent(result.data, firebaseUid);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Internal Server Error';
-      return { error: message, status: 500 };
+      throw new InternalServerErrorException(message);
     }
   }
 
@@ -105,7 +112,7 @@ export class CommerceController {
     const token = authHeader?.startsWith('Bearer ') ? authHeader.split(' ')[1] : null;
 
     if (!token) {
-      return { error: 'Unauthorized', status: 401 };
+      throw new UnauthorizedException('Unauthorized');
     }
 
     let firebaseUid: string | null = null;
@@ -113,23 +120,23 @@ export class CommerceController {
       // PRODUCTION READY: Verify Firebase ID token using Firebase Admin SDK
       firebaseUid = await this.firebaseAuth.getUidFromToken(token);
     } catch {
-      return { error: 'Unauthorized', status: 401 };
+      throw new UnauthorizedException('Unauthorized');
     }
 
     if (!firebaseUid) {
-      return { error: 'Unauthorized', status: 401 };
+      throw new UnauthorizedException('Unauthorized');
     }
 
     const result = createPackageIntentSchema.safeParse(body);
     if (!result.success) {
-      return { error: 'Invalid package selection', status: 400 };
+      throw new BadRequestException('Invalid package selection');
     }
 
     try {
       return await this.commerceService.createPackageIntent(firebaseUid, result.data);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Internal Server Error';
-      return { error: message, status: 500 };
+      throw new InternalServerErrorException(message);
     }
   }
 
@@ -141,7 +148,7 @@ export class CommerceController {
     const token = authHeader?.startsWith('Bearer ') ? authHeader.split(' ')[1] : null;
 
     if (!token) {
-      return { error: 'Unauthorized', status: 401 };
+      throw new UnauthorizedException('Unauthorized');
     }
 
     let firebaseUid: string | null = null;
@@ -149,23 +156,23 @@ export class CommerceController {
       // PRODUCTION READY: Verify Firebase ID token using Firebase Admin SDK
       firebaseUid = await this.firebaseAuth.getUidFromToken(token);
     } catch {
-      return { error: 'Unauthorized', status: 401 };
+      throw new UnauthorizedException('Unauthorized');
     }
 
     if (!firebaseUid) {
-      return { error: 'Unauthorized', status: 401 };
+      throw new UnauthorizedException('Unauthorized');
     }
 
     const result = purchasePackageSchema.safeParse(body);
     if (!result.success) {
-      return { error: 'Invalid input', details: result.error.format(), status: 400 };
+      throw new BadRequestException({ message: 'Invalid input', details: result.error.format() });
     }
 
     try {
       return { success: true, package: await this.commerceService.purchasePackage(firebaseUid, result.data) };
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Internal Server Error';
-      return { error: message, status: 500 };
+      throw new InternalServerErrorException(message);
     }
   }
 
@@ -177,14 +184,14 @@ export class CommerceController {
   async createOrgInquiry(@Body() body: unknown) {
     const result = createOrgInquirySchema.safeParse(body);
     if (!result.success) {
-      return { error: 'Invalid input', details: result.error.format(), status: 400 };
+      throw new BadRequestException({ message: 'Invalid input', details: result.error.format() });
     }
 
     try {
       return await this.commerceService.createOrgInquiry(result.data);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Internal Server Error';
-      return { error: message, status: 500 };
+      throw new InternalServerErrorException(message);
     }
   }
 
@@ -196,7 +203,7 @@ export class CommerceController {
     const token = authHeader?.startsWith('Bearer ') ? authHeader.split(' ')[1] : null;
 
     if (!token) {
-      return { error: 'Unauthorized', status: 401 };
+      throw new UnauthorizedException('Unauthorized');
     }
 
     try {
@@ -204,12 +211,12 @@ export class CommerceController {
       const userId = await this.firebaseAuth.getUidFromToken(token);
 
       if (!userId) {
-        return { error: 'Unauthorized', status: 401 };
+        throw new UnauthorizedException('Unauthorized');
       }
 
       return await this.commerceService.getDonationsByUser(userId);
     } catch {
-      return { error: 'Unauthorized', status: 401 };
+      throw new UnauthorizedException('Unauthorized');
     }
   }
 
@@ -219,7 +226,7 @@ export class CommerceController {
     const token = authHeader?.startsWith('Bearer ') ? authHeader.split(' ')[1] : null;
 
     if (!token) {
-      return { error: 'Unauthorized', status: 401 };
+      throw new UnauthorizedException('Unauthorized');
     }
 
     try {
@@ -227,12 +234,12 @@ export class CommerceController {
       const userId = await this.firebaseAuth.getUidFromToken(token);
 
       if (!userId) {
-        return { error: 'Unauthorized', status: 401 };
+        throw new UnauthorizedException('Unauthorized');
       }
 
       return await this.commerceService.getPackagesByUser(userId);
     } catch {
-      return { error: 'Unauthorized', status: 401 };
+      throw new UnauthorizedException('Unauthorized');
     }
   }
 }

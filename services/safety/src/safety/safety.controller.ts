@@ -1,7 +1,7 @@
-import { Controller, Post, Body, Get, Param, UseGuards, BadRequestException } from '@nestjs/common';
+import { Controller, Post, Body, Get, Param, UseGuards, BadRequestException, HttpException, HttpStatus, Patch, NotFoundException } from '@nestjs/common';
 import { SafetyService } from './safety.service.js';
 import { ServiceAuthGuard } from './service-auth.guard.js';
-import { IngestTranscriptSchema, ManualFlagSchema, EscalateAlertSchema } from './safety.schemas.js';
+import { IngestTranscriptSchema, ManualFlagSchema, EscalateAlertSchema, UpdateAlertStatusSchema } from './safety.schemas.js';
 
 @Controller('safety')
 @UseGuards(ServiceAuthGuard)
@@ -41,6 +41,33 @@ export class SafetyController {
     return this.safetyService.findAllAlerts();
   }
 
+  @Get('alerts-by-id/:id')
+  async getAlertById(@Param('id') id: string) {
+    const alert = await this.safetyService.findAlertById(id);
+    if (!alert) throw new NotFoundException('Alert not found');
+    return alert;
+  }
+
+  @Patch('alerts/:id/status')
+  async updateAlertStatus(
+    @Param('id') id: string,
+    @Body() body: unknown
+  ) {
+    const result = UpdateAlertStatusSchema.safeParse(body);
+    if (!result.success) {
+      throw new BadRequestException(result.error.errors);
+    }
+    const { status, actorId, reason } = result.data;
+    try {
+      return await this.safetyService.updateAlertStatus(id, status, actorId, reason);
+    } catch (err) {
+      if (err instanceof Error && err.message === 'Alert not found') {
+        throw new NotFoundException('Alert not found');
+      }
+      throw err;
+    }
+  }
+
   @Post('alerts/:id/escalate')
   async escalateAlert(
     @Param('id') id: string,
@@ -52,5 +79,19 @@ export class SafetyController {
     }
     const { actorId, reason } = result.data;
     return this.safetyService.triggerCrisisProtocol(id, actorId, reason);
+  }
+
+  @Post('crisis-access')
+  async crisisAccess(@Body() body: unknown) {
+    // Human-initiated crisis protocol trigger stub
+    // Returns 503 Service Unavailable since vault integration is pending.
+    throw new HttpException(
+      {
+        message: 'Crisis access service is currently unavailable. Vault integration is pending.',
+        error: 'Service Unavailable',
+        statusCode: HttpStatus.SERVICE_UNAVAILABLE,
+      },
+      HttpStatus.SERVICE_UNAVAILABLE
+    );
   }
 }

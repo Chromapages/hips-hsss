@@ -3,10 +3,12 @@
 import { useMemo, useState } from "react";
 import { CreditCard } from "lucide-react";
 
+import { formatCurrency as formatCurrencyCent } from "@/lib/format";
+
 const tiers = [0, 10, 25, 50] as const;
 
 function formatCurrency(amount: number) {
-  return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
+  return formatCurrencyCent(amount * 100);
 }
 
 export function CheckoutShell() {
@@ -25,7 +27,7 @@ export function CheckoutShell() {
           <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
-                <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-text-muted0 ml-1" htmlFor="cardholder-name">Cardholder Name</label>
+                <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground ml-1" htmlFor="cardholder-name">Cardholder Name</label>
                 <input
                   id="cardholder-name"
                   type="text"
@@ -35,7 +37,7 @@ export function CheckoutShell() {
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-text-muted0 ml-1" htmlFor="card-number">Card Number</label>
+                <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground ml-1" htmlFor="card-number">Card Number</label>
                 <input
                   id="card-number"
                   type="text"
@@ -51,7 +53,7 @@ export function CheckoutShell() {
 
             <div className="grid grid-cols-3 gap-6">
               <div className="col-span-2 space-y-2">
-                <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-text-muted0 ml-1" htmlFor="expiry-date">Expiry Date</label>
+                <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground ml-1" htmlFor="expiry-date">Expiry Date</label>
                 <input
                   id="expiry-date"
                   type="text"
@@ -62,7 +64,7 @@ export function CheckoutShell() {
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-text-muted0 ml-1" htmlFor="cvc">CVC</label>
+                <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground ml-1" htmlFor="cvc">CVC</label>
                 <input
                   id="cvc"
                   type="text"
@@ -99,7 +101,7 @@ export function CheckoutShell() {
             disabled={!ack}
             className="mt-8 group relative w-full h-16 items-center justify-center overflow-hidden rounded-[1.5rem] bg-surface font-bold tracking-tighter text-black transition-all hover:scale-[1.01] active:scale-[0.99] disabled:opacity-30 disabled:hover:scale-100"
           >
-            <div className="absolute inset-0 bg-gradient-to-r from-#173B57 to-Gold-500 opacity-0 transition-opacity group-hover:opacity-10" />
+            <div className="absolute inset-0 bg-gradient-to-r from-[#173B57] to-gold opacity-0 transition-opacity group-hover:opacity-10" />
             <span className="relative z-10 text-lg">Complete Booking • {formatCurrency(total)}</span>
           </button>
         </div>
@@ -111,7 +113,7 @@ export function CheckoutShell() {
           
           <div className="space-y-4">
             <div className="flex justify-between items-center text-sm">
-              <span className="text-text-muted0 font-bold uppercase tracking-widest text-[10px]">Session Fee</span>
+              <span className="text-muted-foreground font-bold uppercase tracking-widest text-[10px]">Session Fee</span>
               <span className="text-white font-bold">{formatCurrency(50)}</span>
             </div>
 
@@ -126,7 +128,7 @@ export function CheckoutShell() {
                       "h-12 rounded-xl border text-[10px] font-bold tracking-widest transition-all duration-300",
                       donation === tier
                         ? "bg-primary border-primary text-white shadow-lg shadow-primary/40"
-                        : "bg-surface/5 border-white/5 text-text-muted0 hover:border-white/20 hover:text-white",
+                        : "bg-surface/5 border-white/5 text-muted-foreground hover:border-white/20 hover:text-white",
                     ].join(" ")}
                   >
                     {tier === 0 ? "NONE" : formatCurrency(tier)}
@@ -137,7 +139,7 @@ export function CheckoutShell() {
 
             <div className="pt-6 border-t border-white/5 flex justify-between items-end">
               <div>
-                <p className="text-[10px] font-bold uppercase tracking-widest text-text-muted0 mb-1">Total Amount</p>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1">Total Amount</p>
                 <p className="text-3xl font-bold tracking-tighter text-white">{formatCurrency(total)}</p>
               </div>
               <div className="text-right">
@@ -153,7 +155,7 @@ export function CheckoutShell() {
           </div>
           <div>
             <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-emerald-400 mb-1">Secure Transaction</p>
-            <p className="text-[10px] leading-relaxed text-text-muted0 font-medium italic">
+            <p className="text-[10px] leading-relaxed text-muted-foreground font-medium italic">
               Your billing data is never linked to your session audio or anonymous handles.
             </p>
           </div>

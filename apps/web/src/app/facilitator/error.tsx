@@ -7,7 +7,7 @@ export default function FacilitatorError({
   reset: () => void;
 }) {
   return (
-    <main className="min-h-screen flex items-center justify-center px-6 text-foreground">
+    <main id="main" tabIndex={-1} className="min-h-screen flex items-center justify-center px-6 text-foreground">
       <div className="max-w-md text-center">
         <h1 className="text-2xl font-bold mb-2">Facilitator Error</h1>
         <p className="text-muted-foreground mb-6">Something went wrong in the facilitator dashboard.</p>

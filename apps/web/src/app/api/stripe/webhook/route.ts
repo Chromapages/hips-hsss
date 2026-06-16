@@ -1,52 +1,108 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getStripeServerClient } from '@/lib/stripe';
 import { getDb } from '@/lib/firebase-admin';
 import Stripe from 'stripe';
 import { sendEmail } from '@/lib/email';
+import { verifyWebhookSignature } from '@/lib/webhooks/verify';
+import { registerEventId } from '@/lib/webhooks/idempotency';
+import { logSecurityEvent } from '@/lib/security/audit';
+import { logger, safeError } from '@/lib/logger';
+
+/**
+ * Stripe webhook handler — Layer 5.
+ *
+ * Pipeline (every step is required):
+ *  1. Read the raw body. The Stripe SDK requires exact bytes for the
+ *     signature check; JSON.parse → JSON.stringify would invalidate it.
+ *  2. verifyWebhookSignature({ provider: 'stripe' }) — covers signature
+ *     and the ±5-min timestamp window.
+ *  3. registerEventId(event.id) — Redis-backed dedup with 24h TTL.
+ *     Duplicate deliveries (Stripe retries) are acknowledged with 200
+ *     and not re-processed.
+ *  4. Hand the event to a fire-and-forget processor. The route returns
+ *     200 immediately so Stripe doesn't retry; transient failures inside
+ *     the processor are logged but do not affect the response.
+ *  5. Signature failures are logged to the security audit log.
+ */
+
+const ENDPOINT = '/api/stripe/webhook';
 
 export async function POST(req: NextRequest) {
-  const db = getDb();
-  if (!db) {
-    return NextResponse.json({ error: 'Service temporarily unavailable' }, { status: 503 });
-  }
-
   const payload = await req.text();
   const sig = req.headers.get('stripe-signature');
 
-  if (!sig || !process.env.STRIPE_WEBHOOK_SECRET) {
-    return NextResponse.json({ error: 'Missing signature or webhook secret' }, { status: 400 });
-  }
+  // 1+2: Verify signature and timestamp window.
+  const verification = verifyWebhookSignature({
+    provider: 'stripe',
+    body: payload,
+    signature: sig,
+    endpoint: ENDPOINT,
+  });
 
-  let event: Stripe.Event;
+  if (!verification.ok) {
+    // 5: Audit log the failure.
+    await logSecurityEvent({
+      eventType: 'WEBHOOK_SIGNATURE_FAILED',
+      outcome: 'FAILURE',
+      targetType: 'webhook',
+      targetId: ENDPOINT,
+      failureReason: verification.reason,
+      metadata: { provider: 'stripe', detail: verification.detail },
+      ip: req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? undefined,
+      userAgent: req.headers.get('user-agent') ?? undefined,
+    });
 
-  try {
-    const stripe = getStripeServerClient();
-    event = stripe.webhooks.constructEvent(
-      payload,
-      sig,
-      process.env.STRIPE_WEBHOOK_SECRET
+    const status = verification.reason === 'misconfigured' ? 500 : 400;
+    return NextResponse.json(
+      { error: `Webhook verification failed: ${verification.reason}` },
+      { status },
     );
-  } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : 'Internal Server Error';
-    console.error('Webhook signature verification failed.', message);
-    return NextResponse.json({ error: `Webhook Error: ${message}` }, { status: 400 });
   }
 
-  // Handle the event
+  const event = verification.event as Stripe.Event;
+
+  // 3: Idempotency — claim the event id. If we've seen it, return 200
+  // without re-processing. This is the protection against Stripe's
+  // automatic retry on a 5xx we previously returned.
+  const { firstSeen } = await registerEventId(`stripe:${event.id}`);
+  if (!firstSeen) {
+    return NextResponse.json({ received: true, replay: true });
+  }
+
+  // 4: Hand off to background processing. The route returns 200 fast;
+  // processing errors are logged but do not change the response. The
+  // processor is in-process for now (setImmediate). When a real queue
+  // is added (BullMQ/Inngest/etc), swap this single call out.
+  setImmediate(() => {
+    processStripeEvent(event).catch((err) => {
+      logger.error('Stripe webhook processing failed', {
+        eventId: event.id,
+        eventType: event.type,
+        error: safeError(err),
+      });
+    });
+  });
+
+  return NextResponse.json({ received: true });
+}
+
+// ─── Background processor ──────────────────────────────────────────────────
+
+async function processStripeEvent(event: Stripe.Event): Promise<void> {
+  const db = getDb();
+  if (!db) {
+    logger.warn('Stripe webhook: Firebase Admin not initialized; cannot process event', {
+      eventId: event.id,
+    });
+    return;
+  }
+
   switch (event.type) {
     case 'payment_intent.succeeded': {
       const paymentIntent = event.data.object as Stripe.PaymentIntent;
       const { type, sessionId, userId, tier, credits, packageName } = paymentIntent.metadata;
 
       if (type === 'DONATION') {
-        // Idempotency: skip if donation with this stripePaymentId already exists
-        const existingDonation = await db.collection('donations')
-          .where('stripePaymentId', '==', paymentIntent.id)
-          .limit(1)
-          .get();
-        if (!existingDonation.empty) {
-          console.log(`[Stripe Webhook] Donation already recorded for payment ${paymentIntent.id}, skipping`);
-        } else {
+        try {
           await db.collection('donations').add({
             amountCents: paymentIntent.amount,
             tier: tier || 'GENERAL',
@@ -54,19 +110,16 @@ export async function POST(req: NextRequest) {
             userId: userId || null,
             createdAt: new Date().toISOString(),
           });
-          console.log(`[Stripe Webhook] Donation recorded in Firestore: ${paymentIntent.amount} cents`);
+        } catch (err) {
+          logger.error('Stripe webhook: failed to record donation', { error: safeError(err) });
         }
       } else if (type === 'PACKAGE_PURCHASE') {
-        // Handle Session Package Purchase
+        if (!userId) {
+          logger.error('Stripe webhook: PACKAGE_PURCHASE missing userId', { paymentIntentId: paymentIntent.id });
+          return;
+        }
+        const numCredits = parseInt(credits || '0', 10);
         try {
-          if (!userId) {
-            return NextResponse.json({ error: 'Missing package purchaser' }, { status: 400 });
-          }
-
-          const numCredits = parseInt(credits || '0');
-
-          // Create a new package entry for the user
-          // For simplicity, each purchase adds a new "Package" document
           await db.collection('packages').add({
             userId,
             serviceName: packageName || 'Session Pack',
@@ -77,14 +130,15 @@ export async function POST(req: NextRequest) {
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString(),
           });
-
-          console.log(`[Stripe Webhook] Package purchase fulfilled for ${userId}: ${numCredits} credits`);
-
-          // Send confirmation email
+        } catch (err) {
+          logger.error('Stripe webhook: failed to record package purchase', { error: safeError(err) });
+          return;
+        }
+        // Send confirmation email (best-effort)
+        try {
           const userRef = db.collection('users').doc(userId);
           const userDoc = await userRef.get();
           const user = userDoc.data();
-
           if (user?.email) {
             await sendEmail({
               to: user.email,
@@ -99,55 +153,48 @@ export async function POST(req: NextRequest) {
               `,
             });
           }
-        } catch (error: unknown) {
-          const message = error instanceof Error ? error.message : 'Internal Server Error';
-          console.error(`[Stripe Webhook] Failed to fulfill package purchase for ${userId}:`, message);
-          return NextResponse.json({ error: 'Package fulfillment failed' }, { status: 500 });
+        } catch (err) {
+          logger.warn('Stripe webhook: confirmation email failed', { error: safeError(err) });
         }
       } else if (sessionId) {
-        // Update session in Firestore
         try {
           const sessionRef = db.collection('sessions').doc(sessionId);
           const sessionDoc = await sessionRef.get();
-
           if (!sessionDoc.exists) {
-            console.error(`[Stripe Webhook] Session ${sessionId} not found`);
-            return NextResponse.json({ error: 'Session not found' }, { status: 404 });
+            logger.error('Stripe webhook: session not found', { sessionId });
+            return;
           }
-
           const session = sessionDoc.data();
-
           await sessionRef.update({
             stripePaymentId: paymentIntent.id,
             status: 'SCHEDULED',
             updatedAt: new Date().toISOString(),
           });
 
-          console.log(`[Stripe Webhook] Payment succeeded for session ${sessionId}`);
-
-          // Send confirmation email
-          const userRef = db.collection('users').doc(session?.userId);
-          const userDoc = await userRef.get();
-          const user = userDoc.data();
-
-          if (user?.email) {
-            await sendEmail({
-              to: user.email,
-              subject: `Session Confirmed: ${session?.serviceName}`,
-              html: `
-                <h1>Your session is confirmed!</h1>
-                <p>Hello,</p>
-                <p>Your booking for <strong>${session?.serviceName}</strong> has been successfully paid and scheduled.</p>
-                <p><strong>Starts At:</strong> ${new Date(session?.startsAt).toLocaleString()}</p>
-                <p>You can join your anonymous session room from your dashboard at the scheduled time.</p>
-                <p>Thank you for using H.I.P.S.</p>
-              `,
-            });
+          // Confirmation email (best-effort)
+          try {
+            const userRef = db.collection('users').doc(session?.userId);
+            const userDoc = await userRef.get();
+            const user = userDoc.data();
+            if (user?.email) {
+              await sendEmail({
+                to: user.email,
+                subject: `Session Confirmed: ${session?.serviceName}`,
+                html: `
+                  <h1>Your session is confirmed!</h1>
+                  <p>Hello,</p>
+                  <p>Your booking for <strong>${session?.serviceName}</strong> has been successfully paid and scheduled.</p>
+                  <p><strong>Starts At:</strong> ${new Date(session?.startsAt).toLocaleString()}</p>
+                  <p>You can join your anonymous session room from your dashboard at the scheduled time.</p>
+                  <p>Thank you for using H.I.P.S.</p>
+                `,
+              });
+            }
+          } catch (err) {
+            logger.warn('Stripe webhook: session confirmation email failed', { error: safeError(err) });
           }
-        } catch (error: unknown) {
-          const message = error instanceof Error ? error.message : 'Internal Server Error';
-          console.error(`[Stripe Webhook] Failed to update session or send email for ${sessionId}:`, message);
-          return NextResponse.json({ error: 'Post-payment processing failed' }, { status: 500 });
+        } catch (err) {
+          logger.error('Stripe webhook: failed to update session', { error: safeError(err), sessionId });
         }
       }
       break;
@@ -155,17 +202,19 @@ export async function POST(req: NextRequest) {
     case 'payment_intent.payment_failed': {
       const paymentIntent = event.data.object as Stripe.PaymentIntent;
       const sessionId = paymentIntent.metadata.sessionId;
-
       if (sessionId) {
-        await db.collection('sessions').doc(sessionId).update({
-          status: 'CANCELLED',
-          updatedAt: new Date().toISOString(),
-        });
-        console.warn(`[Stripe Webhook] Payment failed for session ${sessionId}`);
+        try {
+          await db.collection('sessions').doc(sessionId).update({
+            status: 'CANCELLED',
+            updatedAt: new Date().toISOString(),
+          });
+        } catch (err) {
+          logger.error('Stripe webhook: failed to cancel session on payment failure', { error: safeError(err) });
+        }
       }
       break;
     }
+    default:
+      logger.info('Stripe webhook: unhandled event type', { eventType: event.type, eventId: event.id });
   }
-
-  return NextResponse.json({ received: true });
 }

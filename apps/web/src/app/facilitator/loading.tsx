@@ -1,6 +1,6 @@
 export default function FacilitatorLoading() {
   return (
-    <main className="min-h-screen px-6 py-12 text-foreground">
+    <main id="main" tabIndex={-1} className="min-h-screen px-6 py-12 text-foreground">
       <div className="max-w-4xl mx-auto space-y-8">
         <div className="space-y-2">
           <div className="h-8 w-64 bg-muted rounded-lg animate-pulse" />

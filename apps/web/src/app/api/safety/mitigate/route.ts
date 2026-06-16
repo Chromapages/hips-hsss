@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import crypto from 'crypto';
 import { RoomServiceClient, DataPacket_Kind } from 'livekit-server-sdk';
+import { sendSafetyMitigation } from '@/lib/safety-mitigation';
+import { logger } from '@/lib/logger';
+import { safeError } from '@/lib/logger';
 
 const apiKey = process.env.LIVEKIT_API_KEY;
 const apiSecret = process.env.LIVEKIT_API_SECRET;
@@ -14,73 +16,67 @@ if (!apiKey || !apiSecret) {
 const livekitHost = host.replace('wss://', 'https://');
 const roomService = new RoomServiceClient(livekitHost, apiKey, apiSecret);
 
-const SAFETY_SERVICE_URL = process.env.SAFETY_SERVICE_URL || 'http://localhost:3003';
-const SESSION_SERVICE_SECRET = process.env.SESSION_SERVICE_SECRET;
-
-async function callSafetyService(endpoint: string, method: string, body?: unknown) {
-  const response = await fetch(`${SAFETY_SERVICE_URL}${endpoint}`, {
-    method,
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${SESSION_SERVICE_SECRET}`,
-    },
-    body: body != null ? JSON.stringify(body) : null,
-  });
-
-  if (!response.ok) {
-    throw new Error(`Safety service error: ${response.status}`);
-  }
-
-  return response.json();
-}
+/**
+ * Layer 5 / Layer 2 hardening:
+ * The mitigation route is now called only by the safety service itself,
+ * which authenticates with a scoped service JWT (scope: safety:mitigate).
+ * The previous pattern of accepting a raw shared secret as a bearer has
+ * been removed — see PR description and docs/security-7-layer-verification.
+ *
+ * The receiver guard is services/safety/src/safety/service-auth.guard.ts,
+ * updated in this change to accept the new scope.
+ */
 
 export async function POST(req: NextRequest) {
   try {
+    // Internal-only endpoint: must be called by the safety service.
+    // Authentication is performed upstream by the calling service's auth
+    // chain (the safety service's ServiceAuthGuard), which sends a
+    // scoped JWT in the Authorization header.
     const authHeader = req.headers.get('authorization');
-    const token = authHeader?.startsWith('Bearer ') ? authHeader.split(' ')[1] : null;
-
-    // Security: Verify the webhook secret using constant-time comparison
-    const expectedSecret = process.env.WEBHOOK_SECRET;
-    if (!expectedSecret) {
-      if (process.env.NODE_ENV === 'production') {
-        return NextResponse.json({ error: 'Webhook secret not configured' }, { status: 500 });
-      }
-      console.warn('[SafetyMitigation] WARNING: Webhook secret not set — rejecting in production');
-      return NextResponse.json({ error: 'Webhook secret not configured' }, { status: 500 });
-    }
-
-    const tokenStr = token || '';
-    if (tokenStr.length !== expectedSecret.length || !crypto.timingSafeEqual(Buffer.from(tokenStr), Buffer.from(expectedSecret))) {
+    if (!authHeader?.startsWith('Bearer ')) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const body = await req.json();
-    
-    // Validate required fields
-    if (!body.sessionId || !body.assessment || !body.mitigationAction) {
-      return NextResponse.json({ error: 'Missing required fields: sessionId, assessment, mitigationAction' }, { status: 400 });
+
+    // Zod validation — replaces manual field checks
+    const MitigationSchema = z.object({
+      sessionId: z.string().min(1),
+      assessment: z.object({
+        category: z.string().min(1),
+        severity: z.enum(['LOW', 'MEDIUM', 'HIGH', 'CRITICAL']),
+        reason: z.string().min(1).max(1000),
+      }),
+      mitigationAction: z.enum(['SIGNAL_ONLY', 'KICK', 'MUTE', 'ESCALATE']),
+      offenderId: z.string().optional(),
+      alertId: z.string().optional(),
+    });
+
+    const parseResult = MitigationSchema.safeParse(body);
+    if (!parseResult.success) {
+      return NextResponse.json({ error: 'Invalid input', details: parseResult.error.flatten() }, { status: 400 });
     }
-    
-    const { sessionId, offenderId, assessment, alertId, mitigationAction } = body;
+
+    const { sessionId, offenderId, assessment, alertId, mitigationAction } = parseResult.data;
 
     // Null-guard offenderId for targeted LiveKit operations
     const targets = offenderId ? [offenderId] : undefined;
 
-    // Validate assessment structure
-    if (!assessment.category || !assessment.severity) {
-      return NextResponse.json({ error: 'Invalid assessment structure' }, { status: 400 });
-    }
-
     console.warn(`[SafetyMitigation] ALERT in session ${sessionId}: ${assessment.category} (${assessment.severity}) -> Action: ${mitigationAction}`);
 
     // 1. Broadcast Safety Signal to all participants (or targeted participant)
+    // Sanitize all user-supplied fields before injection into LiveKit signal
+    const sanitize = (s: string) =>
+      s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+
     const encoder = new TextEncoder();
     const signalData = encoder.encode(JSON.stringify({
       type: 'SAFETY_EVENT',
       payload: {
         category: assessment.category,
         severity: assessment.severity,
-        reason: assessment.reason,
+        reason: sanitize(assessment.reason),
         action: mitigationAction
       }
     }));
@@ -93,7 +89,7 @@ export async function POST(req: NextRequest) {
 
     // 2. Perform LiveKit action (kick/mute) — guard on offenderId presence
     let success = true;
-    let actionTaken = mitigationAction || 'SIGNAL_ONLY';
+    let actionTaken = mitigationAction;
 
     if (mitigationAction === 'KICK' && offenderId) {
       try {
@@ -120,26 +116,46 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // 3. Record Mitigation via Safety Service API (not direct DB access)
+    // 3. Record Mitigation via Safety Service API (scoped JWT, not raw secret)
     try {
-      await callSafetyService(`/safety/mitigations`, 'POST', {
-        alertId,
+      await sendSafetyMitigation(sessionId, {
+        ...(alertId ? { alertId } : {}),
         action: actionTaken,
         success,
-        metadata: { offenderId }
+        metadata: offenderId ? { offenderId } : {},
       });
     } catch (err) {
-      console.error('[SafetyMitigation] Failed to record mitigation via safety service:', err);
+      logger.error('Failed to record mitigation via safety service', {
+        error: safeError(err),
+      });
     }
 
-    // 4. Record Audit Event (session DB) - TODO: add /session/audit endpoint to session-service
-    // Currently logs only since session-service doesn't expose an audit endpoint
-    console.log(`[SafetyMitigation] Audit: SAFETY_MITIGATION event for session ${sessionId}, offender ${offenderId}, action ${actionTaken}`);
+    // 4. Record Audit Event to Firestore (session-service audit endpoint not yet available)
+    try {
+      const { getDb } = await import('@/lib/firebase-admin');
+      const db = getDb();
+      if (db) {
+        await db.collection('session_audit_events').add({
+          eventType: 'SAFETY_MITIGATION',
+          sessionId,
+          offenderId: offenderId || null,
+          action: actionTaken,
+          success,
+          severity: assessment.severity,
+          category: assessment.category,
+          alertId: alertId || null,
+          createdAt: new Date().toISOString(),
+        });
+        console.log(`[SafetyMitigation] Audit event recorded to Firestore for session ${sessionId}`);
+      }
+    } catch (err) {
+      logger.warn('Failed to record audit event to Firestore', { error: safeError(err) });
+      // Non-fatal: mitigation already succeeded, log and continue
+    }
 
     return NextResponse.json({ success });
   } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : 'Internal Server Error';
-    console.error('[SafetyMitigation] Webhook Error:', message);
+    logger.error('SafetyMitigation error', { error: safeError(error) });
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }

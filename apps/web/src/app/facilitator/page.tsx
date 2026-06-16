@@ -7,6 +7,7 @@ export const dynamic = "force-dynamic";
 import { useAuth } from '@/components/auth/AuthProvider';
 import { Timer, Users, Shield, Zap, Loader2, CheckCircle, ArrowRight } from 'lucide-react';
 import { toast } from 'sonner';
+import { asError } from '@/lib/errors';
 type QueueItem = {
   id: string;
   serviceName: string;
@@ -92,8 +93,8 @@ export default function FacilitatorDashboard() {
 
       toast.success('Session claimed successfully!');
       loadQueue(); // Refresh queue
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to claim session');
+    } catch (error: unknown) {
+      toast.error(asError(error).message || 'Failed to claim session');
     } finally {
       setIsClaiming(null);
     }

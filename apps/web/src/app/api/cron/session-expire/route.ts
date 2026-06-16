@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/firebase-admin';
+import { Phase5SessionSchema } from '@/lib/schemas/session';
+import { verifyCronSecret } from '@/lib/security/cron';
 const SESSION_COLLECTION = 'phase5_sessions';
 const SESSION_TOKEN_TTL_MS = (60 * 60 * 1000) + (5 * 60 * 1000); // 1 hour + 5 minutes buffer
 
@@ -12,13 +14,7 @@ const SESSION_TOKEN_TTL_MS = (60 * 60 * 1000) + (5 * 60 * 1000); // 1 hour + 5 m
  * Safe to run every 5 minutes; idempotent (only transitions active sessions).
  */
 export async function GET(req: NextRequest) {
-  const cronSecret = process.env.CRON_SECRET;
-  if (!cronSecret) {
-    console.error('[Cron] CRON_SECRET not configured');
-    return NextResponse.json({ error: 'Cron secret not configured' }, { status: 500 });
-  }
-  const requestUrl = new URL(req.url);
-  if (requestUrl.searchParams.get('secret') !== cronSecret) {
+  if (!verifyCronSecret(req)) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 
@@ -34,7 +30,9 @@ export async function GET(req: NextRequest) {
     let expiredCount = 0;
 
     for (const doc of snapshot.docs) {
-      const data = doc.data() as { activeAt?: string };
+      const parsed = Phase5SessionSchema.safeParse({ id: doc.id, ...doc.data() });
+      if (!parsed.success) continue;
+      const data = parsed.data;
 
       if (data.activeAt) {
         const activeMs = Date.now() - new Date(data.activeAt).getTime();

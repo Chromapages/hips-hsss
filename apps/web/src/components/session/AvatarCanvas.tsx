@@ -27,7 +27,7 @@ function AudioOnlyFallback({ roomName }: { avatar: AvatarProfile; roomName: stri
         the session.
       </p>
       <div className="mt-6 rounded-2xl border border-white/10 bg-surface/[0.03] px-6 py-4">
-        <p className="text-xs font-bold uppercase tracking-widest text-text-muted0">Session Active</p>
+        <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Session Active</p>
         <p className="mt-1 font-mono text-sm text-text">anon-{roomName.slice(0, 8)}</p>
       </div>
     </div>
@@ -173,18 +173,14 @@ export default function AvatarCanvas({
 
         const isSpeaking = participant.isSpeaking || participant.identity === activeSpeakerIdentity;
 
-        // Check if host role is in metadata or sessionStorage (practice mode fallback)
+        // Metadata is issued server-side from the authoritative Commerce role.
         let isHost = false;
         if (participant.metadata) {
           try {
             const parsed = JSON.parse(participant.metadata);
-            isHost = parsed.role === 'FACILITATOR' || parsed.role === 'ADMIN';
+            isHost = ['FACILITATOR', 'ADMIN', 'SUPER_ADMIN'].includes(parsed.role);
           } catch {}
         }
-        if (isLocal && !isHost && typeof window !== 'undefined') {
-          isHost = sessionStorage.getItem('hips-host-role') === 'true';
-        }
-
         return (
           <VirtualOfficeAvatar
             color={color}

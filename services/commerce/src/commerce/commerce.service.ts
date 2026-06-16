@@ -10,17 +10,12 @@ import {
   PurchasePackageDto,
 } from '../dto/commerce.dto.js';
 
+import { PACKAGES } from '@hips/types';
+
 // Resend email client
 const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'admin@hips-support.org';
 const FROM_EMAIL = 'H.I.P.S. <notifications@hips-support.org>';
-
-// Package definitions (mirrored from Next.js)
-const PACKAGES = {
-  SINGLE: { priceCents: 5000, credits: 1, name: 'Single Session' },
-  ESSENTIAL: { priceCents: 22500, credits: 5, name: 'Essential Pack (5)' },
-  SANCTUARY: { priceCents: 40000, credits: 10, name: 'Sanctuary Pack (10)' },
-};
 
 // DonationTier enum values
 const DONATION_TIER_VALUES = ['SUPPORTER', 'BUILDER', 'SUSTAINER', 'CATALYST'] as const;
@@ -170,26 +165,19 @@ export class CommerceService {
   private async getOrCreateGenericPackageService(): Promise<string> {
     const SERVICE_SLUG = 'generic-session-package';
 
-    // Try to find existing service
-    let service = await this.prisma.service.findUnique({
+    const service = await this.prisma.service.upsert({
       where: { slug: SERVICE_SLUG },
+      update: {},
+      create: {
+        slug: SERVICE_SLUG,
+        name: 'Generic Session Package',
+        category: 'INDIVIDUAL_SUPPORT',
+        priceCents: 0, // No direct price - sold via packages
+        scholarshipMinCents: 0,
+        scholarshipMaxCents: 0,
+        active: true,
+      },
     });
-
-    if (!service) {
-      // Create a generic session package service
-      service = await this.prisma.service.create({
-        data: {
-          slug: SERVICE_SLUG,
-          name: 'Generic Session Package',
-          category: 'INDIVIDUAL_SUPPORT',
-          priceCents: 0, // No direct price - sold via packages
-          scholarshipMinCents: 0,
-          scholarshipMaxCents: 0,
-          active: true,
-        },
-      });
-      console.log(`[Commerce] Created generic package service: ${service.id}`);
-    }
 
     return service.id;
   }
@@ -228,7 +216,7 @@ export class CommerceService {
   // ========== SESSION PAYMENT FULFILLMENT (from webhook) ==========
 
   async fulfillSessionPayment(sessionId: string, stripePaymentId: string) {
-    return this.prisma.session.update({
+    return await this.prisma.session.update({
       where: { id: sessionId },
       data: {
         stripePaymentId,
@@ -238,7 +226,7 @@ export class CommerceService {
   }
 
   async cancelSessionPayment(sessionId: string) {
-    return this.prisma.session.update({
+    return await this.prisma.session.update({
       where: { id: sessionId },
       data: {
         status: 'CANCELLED',
@@ -249,6 +237,10 @@ export class CommerceService {
   // ========== ORG INQUIRIES ==========
 
   async createOrgInquiry(dto: CreateOrgInquiryDto) {
+    // HTML-escape all user fields before email interpolation to prevent XSS in email clients
+    const escapeHtml = (s: unknown) =>
+      String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+
     const inquiry = await this.prisma.orgInquiry.create({
       data: {
         orgName: dto.orgName,
@@ -276,15 +268,15 @@ export class CommerceService {
           subject: `New Org Inquiry: ${dto.orgName} (${dto.eventType}, ${dto.headcount} ppl)`,
           html: `
             <h2>New Organization Inquiry</h2>
-            <p><strong>Organization:</strong> ${dto.orgName}${dto.isNonprofit ? ' (501(c)(3))' : ''}</p>
-            <p><strong>Contact:</strong> ${dto.contactName}</p>
-            <p><strong>Email:</strong> <a href="mailto:${dto.email}">${dto.email}</a></p>
-            <p><strong>Event Type:</strong> ${dto.eventType}</p>
+            <p><strong>Organization:</strong> ${escapeHtml(dto.orgName)}${dto.isNonprofit ? ' (501(c)(3)' : ''}</p>
+            <p><strong>Contact:</strong> ${escapeHtml(dto.contactName)}</p>
+            <p><strong>Email:</strong> <a href="mailto:${escapeHtml(dto.email)}">${escapeHtml(dto.email)}</a></p>
+            <p><strong>Event Type:</strong> ${escapeHtml(dto.eventType)}</p>
             <p><strong>Headcount:</strong> ${dto.headcount}</p>
             <p><strong>Preferred Window:</strong> ${start} → ${end}</p>
-            ${dto.ein ? `<p><strong>EIN:</strong> ${dto.ein}</p>` : ''}
+            ${dto.ein ? `<p><strong>EIN:</strong> ${escapeHtml(dto.ein)}</p>` : ''}
             <p><strong>Message:</strong></p>
-            <p>${dto.message || 'No message provided'}</p>
+            <p>${dto.message ? escapeHtml(dto.message) : 'No message provided'}</p>
             <hr>
             <p><em>This inquiry was submitted via the HIPS platform.</em></p>
           `,

@@ -1,8 +1,10 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { getDb } from '@/lib/firebase-admin';
 import type { QueryDocumentSnapshot } from 'firebase-admin/firestore';
 import { sendSessionReminder24HEmail } from '@/emails';
 import { addHours, startOfHour } from 'date-fns';
+import { logger } from '@/lib/logger';
+import { verifyCronSecret } from '@/lib/security/cron';
 
 /**
  * Cron: 24h Session Reminder
@@ -17,13 +19,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Service temporarily unavailable' }, { status: 503 });
   }
 
-  const cronSecret = process.env.CRON_SECRET;
-  if (!cronSecret) {
-    console.error('[Cron 24h] CRON_SECRET not configured');
-    return NextResponse.json({ error: 'Cron secret not configured' }, { status: 500 });
-  }
-  const url = new URL(req.url);
-  if (url.searchParams.get('secret') !== cronSecret) {
+  if (!verifyCronSecret(req)) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 
@@ -55,12 +51,12 @@ export async function GET(req: NextRequest) {
         const user = userMap.get(session.userId as string);
 
         if (!user?.email) {
-          console.warn(`[Cron 24h] No email for user ${session.userId}`);
+          logger.warn(`[Cron 24h] No email for user`, { userIdSuffix: (session.userId as string).slice(-6) });
           return null;
         }
 
         if (session.lastReminder24h) {
-          console.log(`[Cron 24h] Already reminded session ${doc.id}, skipping`);
+          logger.info(`[Cron 24h] Already reminded session, skipping`, { sessionId: doc.id });
           return null;
         }
 
@@ -85,7 +81,10 @@ export async function GET(req: NextRequest) {
         });
 
         await doc.ref.update({ lastReminder24h: new Date().toISOString() });
-        console.log(`[Cron 24h] Reminder sent for session ${doc.id} to ${user.email}`);
+        logger.info(`[Cron 24h] Reminder sent for session`, {
+          sessionId: doc.id,
+          emailDomain: user.email.split('@')[1],
+        });
         return doc.id;
       })
     );
@@ -95,7 +94,9 @@ export async function GET(req: NextRequest) {
     ).length;
     return NextResponse.json({ sent: succeeded, total: snapshot.size });
   } catch (error: unknown) {
-    console.error('[Cron 24h] Error:', error instanceof Error ? error.message : error);
+    logger.error('[Cron 24h] Error', {
+      error: error instanceof Error ? error.message : String(error)
+    });
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }

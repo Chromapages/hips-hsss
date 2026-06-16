@@ -81,7 +81,7 @@ export default function OpportunitiesPage() {
   return (
     <>
       <Navbar />
-      <main className="min-h-screen bg-surface text-text-primary selection:bg-primary/30 overflow-x-hidden">
+      <main id="main" tabIndex={-1} className="min-h-screen bg-surface text-text-primary selection:bg-primary/30 overflow-x-hidden">
         {/* Hero Section */}
         <section
           className="relative bg-primary text-white py-24 md:py-32"

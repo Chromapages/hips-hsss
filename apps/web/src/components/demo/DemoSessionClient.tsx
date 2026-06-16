@@ -31,7 +31,7 @@ export function SessionControls({
           aria-pressed={isMuted}
           className={`ctrl-btn flex items-center gap-2 sm:gap-3 px-4 sm:px-6 py-3 sm:py-4 rounded-2xl border font-bold transition-all hover:bg-surface/10 ${
             isMuted
-              ? 'bg-destructive0/10 border-destructive/30 text-destructive'
+              ? 'bg-destructive/10 border-destructive/30 text-destructive'
               : 'border-white/10 text-white'
           }`}
         >
@@ -66,7 +66,7 @@ export function SessionControls({
         <button
           onClick={onLeave}
           aria-label="Leave the session"
-          className="flex items-center gap-2 sm:gap-3 px-4 sm:px-6 py-3 sm:py-4 rounded-xl bg-destructive text-white font-bold transition-all hover:bg-destructive0 ml-0 sm:ml-3 leave-btn"
+          className="flex items-center gap-2 sm:gap-3 px-4 sm:px-6 py-3 sm:py-4 rounded-xl bg-destructive text-white font-bold transition-all hover:bg-destructive/80 ml-0 sm:ml-3 leave-btn"
         >
           <PhoneOff className="w-5 h-5" />
           <span className="text-sm sm:text-base">Leave</span>
@@ -122,7 +122,7 @@ export function FlagModal({ onClose, onSubmit }: FlagModalProps) {
           </button>
           <button
             onClick={handleSubmit}
-            className="flex-1 py-3 rounded-xl bg-destructive text-white font-bold hover:bg-destructive0 focus:outline-none focus:ring-2 focus:ring-red-500"
+            className="flex-1 py-3 rounded-xl bg-destructive text-white font-bold hover:bg-destructive/80 focus:outline-none focus:ring-2 focus:ring-red-500"
           >
             Submit Flag
           </button>
@@ -164,7 +164,7 @@ export function LeaveModal({ onClose, onConfirm }: LeaveModalProps) {
           </button>
           <button
             onClick={onConfirm}
-            className="flex-1 py-3 rounded-xl bg-destructive text-white font-bold hover:bg-destructive0 focus:outline-none focus:ring-2 focus:ring-red-500"
+            className="flex-1 py-3 rounded-xl bg-destructive text-white font-bold hover:bg-destructive/80 focus:outline-none focus:ring-2 focus:ring-red-500"
           >
             Leave Session
           </button>
@@ -236,7 +236,7 @@ export function ConnectingScreen({ anonId }: ConnectingScreenProps) {
   return (
     <div className="screen flex-col items-center justify-center min-h-screen px-4 sm:px-6">
       <div className="fade-in text-center">
-        <div className="w-16 h-16 border-4 border-primary/30 border-t-#173B57 rounded-full spin mx-auto mb-6" />
+        <div className="w-16 h-16 border-4 border-primary/30 border-t-[#173B57] rounded-full spin mx-auto mb-6" />
         <h2 className="font-heading text-2xl sm:text-3xl font-extrabold mb-3">
           Preparing your anonymous room...
         </h2>
@@ -339,7 +339,7 @@ export function LandingScreen({ onStart }: LandingScreenProps) {
     <div className="screen active flex-col items-center justify-center min-h-screen px-4 sm:px-6 text-center">
       <div className="fade-in max-w-2xl">
         <div className="flex items-center justify-center gap-3 mb-8">
-          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-#173B57 to-Gold-600 flex items-center justify-center text-2xl font-bold">
+          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#173B57] to-gold flex items-center justify-center text-2xl font-bold">
             H
           </div>
           <span className="text-2xl font-bold tracking-tight">H.I.P.S.</span>

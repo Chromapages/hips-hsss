@@ -16,7 +16,7 @@ import {
   DollarSign,
 } from "lucide-react";
 import { WellbeingCheckIn } from "@/components/host/WellbeingCheckIn";
-import { AvailabilityCalendar } from "@/components/host/AvailabilityCalendar";
+import { HostAvailabilitySlots } from "@/components/host/HostAvailabilitySlots";
 
 export const dynamic = "force-dynamic";
 
@@ -85,7 +85,7 @@ const formatTime = (iso: string): string =>
 const statusStyles: Record<AppointmentStatus, string> = {
   UPCOMING: "bg-indigo-500/10 text-indigo-600 border-indigo-200",
   IN_PROGRESS: "bg-emerald-500/10 text-emerald-600 border-emerald-200",
-  COMPLETED: "bg-bg-subtle text-text-muted0 border-border",
+  COMPLETED: "bg-bg-subtle text-muted-foreground border-border",
   CANCELLED: "bg-destructive text-destructive border-destructive",
 };
 
@@ -280,7 +280,7 @@ export default function HostDashboard() {
                   </div>
 
                   <Link
-                    href={`/session/host-${appt.id}?role=host`}
+                    href={`/session/host-${appt.id}`}
                     aria-label={`Join session with ${appt.clientHandle}`}
                     className="shrink-0 flex items-center gap-1.5 px-4 py-2 rounded-xl bg-primary text-white text-xs font-bold font-ui hover:bg-primary-active transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100"
                   >
@@ -299,7 +299,7 @@ export default function HostDashboard() {
           <WellbeingCheckIn />
 
           {/* Availability schedule */}
-          <AvailabilityCalendar getToken={getToken} />
+          <HostAvailabilitySlots getToken={getToken} />
 
           {/* Earnings Summary card */}
           <div className="rounded-2xl border border-border bg-surface p-6 shadow-sm">

@@ -149,6 +149,7 @@ export const Navbar = React.memo(function Navbar() {
     if (focusable.length === 0) return;
     const first = focusable[0];
     const last = focusable[focusable.length - 1];
+    if (!first || !last) return;
 
     const onTab = (e: KeyboardEvent) => {
       if (e.key !== 'Tab') return;
@@ -280,6 +281,8 @@ export const Navbar = React.memo(function Navbar() {
               height={220}
               className="object-contain"
               quality={85}
+              sizes="(max-width: 768px) 80px, 220px"
+              priority
             />
             {role && role !== 'PARTICIPANT' && (
               <span className="bg-primary/10 border border-primary/20 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-widest text-primary brand-caps">

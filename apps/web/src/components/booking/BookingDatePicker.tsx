@@ -6,7 +6,7 @@ function iso(date: Date) {
   return date.toISOString().slice(0, 10);
 }
 
-export function AvailabilityCalendar({
+export function BookingDatePicker({
   onSelect,
 }: {
   onSelect: (date: string) => void;
@@ -30,7 +30,7 @@ export function AvailabilityCalendar({
       
       <div className="flex items-center justify-between mb-8 relative z-10">
         <h2 className="font-heading text-2xl font-bold tracking-tighter text-white">Select Date</h2>
-        <div className="px-3 py-1 rounded-full bg-surface/5 border border-white/10 text-[10px] font-bold uppercase tracking-widest text-text-muted0">
+        <div className="px-3 py-1 rounded-full bg-surface/5 border border-white/10 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
           Weekday Only
         </div>
       </div>

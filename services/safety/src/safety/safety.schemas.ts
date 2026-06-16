@@ -23,3 +23,11 @@ export const EscalateAlertSchema = z.object({
 });
 
 export type EscalateAlertDto = z.infer<typeof EscalateAlertSchema>;
+
+export const UpdateAlertStatusSchema = z.object({
+  status: z.enum(['OPEN', 'RESOLVED']),
+  actorId: z.string().min(1),
+  reason: z.string().min(3, 'Reason must be at least 3 characters').max(500),
+});
+
+export type UpdateAlertStatusDto = z.infer<typeof UpdateAlertStatusSchema>;

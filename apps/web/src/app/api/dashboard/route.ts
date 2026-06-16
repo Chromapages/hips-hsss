@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { adminAuth } from '@/lib/firebase-admin';
+import { verifyFirebaseIdToken } from '@/lib/firebase-auth';
 
 // Lazy import to avoid initialization at module load time
 import { getDb } from '@/lib/firebase-admin';
@@ -91,7 +91,7 @@ export async function GET(req: NextRequest) {
 
     if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-    const payload = await adminAuth.verifyIdToken(token);
+    const payload = await verifyFirebaseIdToken(token);
     const userId = payload.uid;
 
     // Look up the user's internal anonymous ID and fetch data in parallel

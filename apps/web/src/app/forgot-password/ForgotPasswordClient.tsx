@@ -1,10 +1,31 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { sendPasswordResetEmail } from "firebase/auth";
 import { auth } from "@/lib/firebase-client";
 import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+
+type FirebaseAuthError = Error & { code?: string };
+
+const getResetErrorMessage = (err: unknown): string => {
+  const authError = err instanceof Error ? (err as FirebaseAuthError) : null;
+
+  switch (authError?.code) {
+    case "auth/invalid-email":
+      return "Invalid email address. Please check and try again.";
+    case "auth/user-not-found":
+      // Return a general message to prevent user enumeration
+      return "If an account exists for this email, we have sent a reset link.";
+    case "auth/network-request-failed":
+      return "Connection error. Please check your internet and try again.";
+    default:
+      return authError?.code
+        ? authError.message || "An unexpected error occurred. Please try again."
+        : "Failed to send reset email. Please try again.";
+  }
+};
 
 export default function ForgotPasswordClient() {
   const [email, setEmail] = useState("");
@@ -12,6 +33,21 @@ export default function ForgotPasswordClient() {
   const [sent, setSent] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
+
+  const successRef = useRef<HTMLDivElement>(null);
+  const errorRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (sent) {
+      successRef.current?.focus();
+    }
+  }, [sent]);
+
+  useEffect(() => {
+    if (error) {
+      errorRef.current?.focus();
+    }
+  }, [error]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -26,15 +62,12 @@ export default function ForgotPasswordClient() {
       await sendPasswordResetEmail(auth, email);
       setSent(true);
     } catch (err: unknown) {
-      if (err instanceof Error) {
-        if (err.message.includes("user-not-found")) {
-          setSent(true);
-          return;
-        }
-        setError(err.message);
-      } else {
-        setError("Failed to send reset email. Please try again.");
+      const authError = err as FirebaseAuthError;
+      if (authError?.code === "auth/user-not-found") {
+        setSent(true);
+        return;
       }
+      setError(getResetErrorMessage(err));
     } finally {
       setLoading(false);
     }
@@ -42,8 +75,14 @@ export default function ForgotPasswordClient() {
 
   if (sent) {
     return (
-      <main className="min-h-screen bg-black text-white flex items-center justify-center">
-        <div className="w-full max-w-md px-4 text-center">
+      <main id="main" tabIndex={-1} className="min-h-screen bg-black text-white flex items-center justify-center">
+        <div
+          ref={successRef}
+          tabIndex={-1}
+          className="w-full max-w-md px-4 text-center focus:outline-none focus:ring-1 focus:ring-emerald-500 rounded-2xl p-6"
+          role="status"
+          aria-live="polite"
+        >
           <div className="mb-8">
             <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-emerald-500/10 border border-emerald-500/20 mb-6">
               <svg className="w-8 h-8 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -57,7 +96,7 @@ export default function ForgotPasswordClient() {
           </div>
           <button
             onClick={() => router.push("/login")}
-            className="text-text hover:text-text text-sm font-medium"
+            className="text-text hover:text-text text-sm font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-lg px-3 py-1.5"
           >
             Return to sign in
           </button>
@@ -67,7 +106,7 @@ export default function ForgotPasswordClient() {
   }
 
   return (
-    <main className="min-h-screen bg-black text-white flex items-center justify-center">
+    <main id="main" tabIndex={-1} className="min-h-screen bg-black text-white flex items-center justify-center">
       <div className="w-full max-w-md px-4">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold mb-2">Reset Password</h1>
@@ -87,14 +126,24 @@ export default function ForgotPasswordClient() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="w-full px-4 py-3 bg-text border border-border-strong rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary/50 text-white placeholder:text-text-muted0"
+              aria-invalid={!!error}
+              aria-describedby={error ? "reset-error" : undefined}
+              autoComplete="email"
+              className="w-full px-4 py-3 bg-text border border-border-strong rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary/50 text-white placeholder:text-muted-foreground"
               placeholder="you@example.com"
             />
           </div>
           {error && (
-            <p className="text-destructive text-sm bg-destructive0/10 border border-destructive/20 rounded-lg px-4 py-2">
-              {error}
-            </p>
+            <Alert
+              ref={errorRef}
+              variant="destructive"
+              tabIndex={-1}
+              id="reset-error"
+              className="focus:outline-none focus:ring-1 focus:ring-red-500 rounded-xl"
+            >
+              <AlertTitle>Reset Failed</AlertTitle>
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
           )}
           <button
             type="submit"
@@ -103,7 +152,7 @@ export default function ForgotPasswordClient() {
           >
             {loading ? (
               <>
-                <Loader2 className="w-5 h-5 animate-spin" />
+                <Loader2 className="w-5 h-5 motion-safe:animate-spin" />
                 Sending...
               </>
             ) : (

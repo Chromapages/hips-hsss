@@ -1,5 +1,5 @@
 import { db, isFirebaseAdminReady } from '@/lib/firebase-admin';
-import { verifyFirebaseIdToken } from '@/lib/auth-edge';
+import { verifyFirebaseIdToken } from '@/lib/firebase-auth';
 import { verifySessionToken } from '@/lib/session-auth';
 
 export type SessionPrincipal =

@@ -6,7 +6,7 @@ import { OrganizationIntakeForm } from "@/components/forms/OrganizationIntakeFor
 const OrganizationsPageClient = () => {
   return (
     <AuthGuard>
-      <main className="min-h-screen bg-surface text-text-primary selection:bg-primary/20">
+      <main id="main" tabIndex={-1} className="min-h-screen bg-surface text-text-primary selection:bg-primary/20">
         <section className="mx-auto max-w-4xl px-6 py-16 flex flex-col items-center">
           {/* Category Badge - Gold uppercase with tracking */}
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-accent/10 border border-accent/20 text-[10px] font-bold uppercase tracking-widest text-accent font-ui mb-4">

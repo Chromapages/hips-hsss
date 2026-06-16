@@ -123,8 +123,36 @@ exports.Prisma.UserScalarFieldEnum = {
   email: 'email',
   role: 'role',
   deletedAt: 'deletedAt',
+  suspendedAt: 'suspendedAt',
+  suspendedBy: 'suspendedBy',
+  suspensionReason: 'suspensionReason',
+  mfaEnabled: 'mfaEnabled',
+  mfaSecretEnc: 'mfaSecretEnc',
+  mfaSecretIv: 'mfaSecretIv',
+  mfaSecretTag: 'mfaSecretTag',
+  mfaEnrolledAt: 'mfaEnrolledAt',
+  lastMfaVerifiedAt: 'lastMfaVerifiedAt',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
+};
+
+exports.Prisma.MfaBackupCodeScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  codeHash: 'codeHash',
+  usedAt: 'usedAt',
+  createdAt: 'createdAt'
+};
+
+exports.Prisma.MfaPendingTokenScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  tokenHash: 'tokenHash',
+  purpose: 'purpose',
+  destination: 'destination',
+  expiresAt: 'expiresAt',
+  consumedAt: 'consumedAt',
+  createdAt: 'createdAt'
 };
 
 exports.Prisma.ServiceScalarFieldEnum = {
@@ -160,6 +188,7 @@ exports.Prisma.PackageScalarFieldEnum = {
   serviceId: 'serviceId',
   totalSessions: 'totalSessions',
   usedSessions: 'usedSessions',
+  stripePaymentId: 'stripePaymentId',
   expiresAt: 'expiresAt',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
@@ -182,7 +211,8 @@ exports.Prisma.DonationScalarFieldEnum = {
   tier: 'tier',
   amountCents: 'amountCents',
   stripePaymentId: 'stripePaymentId',
-  createdAt: 'createdAt'
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
 };
 
 exports.Prisma.OrgInquiryScalarFieldEnum = {
@@ -190,21 +220,70 @@ exports.Prisma.OrgInquiryScalarFieldEnum = {
   orgName: 'orgName',
   contactName: 'contactName',
   email: 'email',
+  status: 'status',
   isNonprofit: 'isNonprofit',
   ein: 'ein',
   eventType: 'eventType',
   headcount: 'headcount',
   preferredStart: 'preferredStart',
   preferredEnd: 'preferredEnd',
-  status: 'status',
   message: 'message',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 };
 
+exports.Prisma.AdminAuditLogScalarFieldEnum = {
+  id: 'id',
+  correlationId: 'correlationId',
+  actorId: 'actorId',
+  actorEmail: 'actorEmail',
+  action: 'action',
+  targetType: 'targetType',
+  targetId: 'targetId',
+  before: 'before',
+  after: 'after',
+  justification: 'justification',
+  result: 'result',
+  ip: 'ip',
+  userAgent: 'userAgent',
+  createdAt: 'createdAt'
+};
+
+exports.Prisma.AttachmentScalarFieldEnum = {
+  id: 'id',
+  ownerId: 'ownerId',
+  namespace: 'namespace',
+  storageKey: 'storageKey',
+  filename: 'filename',
+  mimeType: 'mimeType',
+  sizeBytes: 'sizeBytes',
+  uploadedAt: 'uploadedAt'
+};
+
+exports.Prisma.SecurityEventLogScalarFieldEnum = {
+  id: 'id',
+  eventType: 'eventType',
+  outcome: 'outcome',
+  correlationId: 'correlationId',
+  actorId: 'actorId',
+  actorRole: 'actorRole',
+  targetType: 'targetType',
+  targetId: 'targetId',
+  failureReason: 'failureReason',
+  ip: 'ip',
+  userAgent: 'userAgent',
+  metadata: 'metadata',
+  createdAt: 'createdAt'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
+};
+
+exports.Prisma.NullableJsonNullValueInput = {
+  DbNull: Prisma.DbNull,
+  JsonNull: Prisma.JsonNull
 };
 
 exports.Prisma.QueryMode = {
@@ -216,12 +295,19 @@ exports.Prisma.NullsOrder = {
   first: 'first',
   last: 'last'
 };
+
+exports.Prisma.JsonNullValueFilter = {
+  DbNull: Prisma.DbNull,
+  JsonNull: Prisma.JsonNull,
+  AnyNull: Prisma.AnyNull
+};
 exports.UserRole = exports.$Enums.UserRole = {
   PARTICIPANT: 'PARTICIPANT',
   LEADER: 'LEADER',
   ORGBUYER: 'ORGBUYER',
   FACILITATOR: 'FACILITATOR',
-  ADMIN: 'ADMIN'
+  ADMIN: 'ADMIN',
+  SUPER_ADMIN: 'SUPER_ADMIN'
 };
 
 exports.ServiceCategory = exports.$Enums.ServiceCategory = {
@@ -253,12 +339,6 @@ exports.DonationTier = exports.$Enums.DonationTier = {
   CATALYST: 'CATALYST'
 };
 
-exports.OrgInquiryEventType = exports.$Enums.OrgInquiryEventType = {
-  WORKSHOP: 'WORKSHOP',
-  RECURRING: 'RECURRING',
-  CONSULTANCY: 'CONSULTANCY'
-};
-
 exports.InquiryStatus = exports.$Enums.InquiryStatus = {
   NEW: 'NEW',
   CONTACTED: 'CONTACTED',
@@ -266,14 +346,25 @@ exports.InquiryStatus = exports.$Enums.InquiryStatus = {
   CLOSED: 'CLOSED'
 };
 
+exports.OrgInquiryEventType = exports.$Enums.OrgInquiryEventType = {
+  WORKSHOP: 'WORKSHOP',
+  RECURRING: 'RECURRING',
+  CONSULTANCY: 'CONSULTANCY'
+};
+
 exports.Prisma.ModelName = {
   User: 'User',
+  MfaBackupCode: 'MfaBackupCode',
+  MfaPendingToken: 'MfaPendingToken',
   Service: 'Service',
   Session: 'Session',
   Package: 'Package',
   Scholarship: 'Scholarship',
   Donation: 'Donation',
-  OrgInquiry: 'OrgInquiry'
+  OrgInquiry: 'OrgInquiry',
+  AdminAuditLog: 'AdminAuditLog',
+  Attachment: 'Attachment',
+  SecurityEventLog: 'SecurityEventLog'
 };
 
 /**

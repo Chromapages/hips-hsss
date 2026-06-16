@@ -20,6 +20,10 @@ export class IpAllowlistMiddleware implements NestMiddleware {
   constructor(private configService: ConfigService) {}
 
   use(req: Request, res: Response, next: NextFunction): void {
+    if (req.path === '/health') {
+      return next();
+    }
+
     const allowlist = this.configService.get<string>('VAULT_IP_ALLOWLIST');
     const nodeEnv = this.configService.get<string>('NODE_ENV') || 'development';
 

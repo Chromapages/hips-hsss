@@ -52,7 +52,7 @@ export default function AboutPage() {
   return (
     <>
       <Navbar />
-      <main className="min-h-screen bg-surface text-primary selection:bg-primary/30 overflow-x-hidden">
+      <main id="main" tabIndex={-1} className="min-h-screen bg-surface text-primary selection:bg-primary/30 overflow-x-hidden">
         
         {/* Hero Section */}
         <section 
@@ -134,7 +134,7 @@ export default function AboutPage() {
                     </div>
                     <div>
                       <h4 className="font-heading font-bold text-sm text-text mb-1">Peer Empowerment Only</h4>
-                      <p className="text-text-secondary text-xs font-body leading-relaxed">Focus on active listening and shared experiences rather than clinical diagnostics.</p>
+                      <p className="text-text-secondary text-xs font-body leading-relaxed">Focus on active listening and shared experiences rather than medical or diagnostic labels.</p>
                     </div>
                   </li>
                   <li className="flex gap-4">

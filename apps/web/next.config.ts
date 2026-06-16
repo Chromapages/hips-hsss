@@ -72,6 +72,36 @@ const cspDirectives = [
 
 const nextConfig: NextConfig = {
   transpilePackages: ["@hips/types"],
+  // Tell webpack to handle the `node:` URI scheme used by Node.js built-in
+  // modules. Without this, the edge runtime compilation fails with
+  //   UnhandledSchemeError: Reading from "node:crypto" is not handled by plugins
+  // whenever a nodejs-only module is in the import graph of the edge bundle
+  // — even when the import is gated behind `process.env.NEXT_RUNTIME === 'nodejs'`.
+  // We use `IgnorePlugin` to make webpack skip `node:*` requests entirely
+  // during edge compilation; the modules are only ever executed on nodejs.
+  webpack(config: any, { isServer, nextRuntime }) {
+    if (nextRuntime === "edge" && config.module) {
+      // Make webpack ignore the `node:` scheme by treating it as an empty
+      // resource. Edge bundles never execute these modules (the runtime
+      // check in instrumentation.ts prevents that), so leaving them as
+      // no-ops is safe.
+      const ignorePlugin = new (require("webpack").IgnorePlugin)({
+        resourceRegExp: /^node:/,
+      });
+      config.plugins = config.plugins ?? [];
+      config.plugins.push(ignorePlugin);
+    }
+
+    // Configure webpack to resolve ESM-style relative imports with .js extensions
+    // to their corresponding .ts/.tsx files during bundling.
+    config.resolve = config.resolve || {};
+    config.resolve.extensionAlias = {
+      ...config.resolve.extensionAlias,
+      ".js": [".ts", ".tsx", ".js", ".jsx"],
+    };
+
+    return config;
+  },
   // Image optimization
   images: {
     formats: ['image/avif', 'image/webp'],

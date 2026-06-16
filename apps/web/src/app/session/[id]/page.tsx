@@ -2,8 +2,23 @@
 
 import { Suspense, useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
-import SessionRoom from '@/components/session/SessionRoom';
+import dynamic from 'next/dynamic';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
+
+const SessionRoom = dynamic(
+  () => import('@/components/session/SessionRoom'),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="flex h-screen items-center justify-center bg-black text-white">
+        <div className="flex items-center gap-3 rounded-2xl border border-white/10 bg-surface/[0.03] px-5 py-4">
+          <div className="h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+          <span className="text-sm font-bold uppercase tracking-widest text-text">Loading Room</span>
+        </div>
+      </div>
+    ),
+  }
+);
 
 function SessionRoomContent({ sessionId }: { sessionId: string }) {
   // Read the LiveKit token from sessionStorage — the /join/[sessionId] page

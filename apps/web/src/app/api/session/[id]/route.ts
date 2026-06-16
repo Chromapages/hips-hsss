@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { db, isFirebaseAdminReady } from '@/lib/firebase-admin';
 import { authorizeSessionAccess } from '@/lib/session-authz';
+import { requireRole } from '@/lib/request-auth';
+import { FACILITATOR_ROLES } from '@/lib/roles';
 
 /**
  * Phase 5 — Session Lifecycle Manager: Session Operations (5.3)
@@ -13,27 +15,9 @@ import { authorizeSessionAccess } from '@/lib/session-authz';
  *   active → flagged (when safety concern raised)
  */
 
-type SessionStatus = 'pending' | 'active' | 'ended' | 'flagged';
+import { Phase5Session, Phase5SessionSchema } from '@/lib/schemas/session';
 
-interface Phase5Session {
-  id: string;
-  status: SessionStatus;
-  createdAt: string;
-  activeAt?: string;
-  endedAt?: string;
-  participantCount: number;
-  maxParticipants: number;
-  roomName: string;
-  flagged: boolean;
-  flaggedBy?: string;
-  flaggedReason?: string;
-  flaggedAt?: string;
-  metadata?: {
-    serviceType?: string;
-    facilitatorId?: string;
-    [key: string]: unknown;
-  };
-}
+type SessionStatus = 'pending' | 'active' | 'ended' | 'flagged';
 
 const updateSessionSchema = z.object({
   status: z.enum(['active', 'ended', 'flagged']).optional(),
@@ -41,7 +25,7 @@ const updateSessionSchema = z.object({
   participantCount: z.number().int().min(0).optional(),
   flaggedBy: z.string().optional(),
   flaggedReason: z.string().optional(),
-  metadata: z.record(z.unknown()).optional(),
+  metadata: z.record(z.string(), z.unknown()).optional(),
 });
 
 // Valid state transitions
@@ -63,7 +47,9 @@ async function getSession(sessionId: string): Promise<Phase5Session | null> {
   try {
     const doc = await getSessionRef(sessionId).get();
     if (!doc.exists) return null;
-    return doc.data() as Phase5Session;
+    const parsed = Phase5SessionSchema.safeParse({ id: doc.id, ...doc.data() });
+    if (!parsed.success) return null;
+    return parsed.data;
   } catch (err) {
     console.warn('[SessionOps] Could not read session');
     return null;
@@ -157,26 +143,28 @@ export async function PATCH(
       return NextResponse.json({ error: 'Session not found' }, { status: 404 });
     }
 
-    // Determine if the caller is the owner/facilitator
+    // Determine if the caller is the assigned facilitator.
     const firebaseUid = authKind.kind === 'firebase' ? authKind.uid : null;
-    const isOwnerOrFacilitator =
+    const isAssignedFacilitator =
       firebaseUid &&
       (session.metadata?.facilitatorId === firebaseUid ||
-        session.metadata?.userId === firebaseUid ||
         session.metadata?.createdBy === firebaseUid ||
-        (session as any).userId === firebaseUid ||
-        (session as any).facilitatorId === firebaseUid ||
-        (session as any).createdBy === firebaseUid);
+        session.facilitatorId === firebaseUid ||
+        session.createdBy === firebaseUid);
 
     // H3: Restrict status/metadata modifications to owner/facilitator
     const isModifyingState = newStatus !== undefined || action === 'end';
     const isWritingMetadata = metadata !== undefined || flaggedBy !== undefined || flaggedReason !== undefined;
 
-    if ((isModifyingState || isWritingMetadata) && !isOwnerOrFacilitator) {
-      return NextResponse.json(
-        { error: 'Forbidden: only the session owner or facilitator can modify metadata or end the session' },
-        { status: 403 }
-      );
+    if (isModifyingState || isWritingMetadata) {
+      const roleResult = await requireRole(req, ...FACILITATOR_ROLES);
+      if (roleResult.error) return roleResult.error;
+      if (!isAssignedFacilitator || roleResult.user.uid !== firebaseUid) {
+        return NextResponse.json(
+          { error: 'Forbidden: only the assigned facilitator can modify state or metadata' },
+          { status: 403 }
+        );
+      }
     }
 
     let finalStatus = session.status;
@@ -211,7 +199,7 @@ export async function PATCH(
           if (session.status === 'active') {
             finalStatus = 'flagged';
             updateData.flagged = true;
-            if (flaggedBy !== undefined) updateData.flaggedBy = flaggedBy;
+            updateData.flaggedBy = firebaseUid || 'system';
             if (flaggedReason !== undefined) updateData.flaggedReason = flaggedReason;
             updateData.flaggedAt = now;
           }
@@ -233,7 +221,7 @@ export async function PATCH(
         updateData.endedAt = now;
       } else if (newStatus === 'flagged') {
         updateData.flagged = true;
-        if (flaggedBy !== undefined) updateData.flaggedBy = flaggedBy;
+        updateData.flaggedBy = firebaseUid || 'system';
         if (flaggedReason !== undefined) updateData.flaggedReason = flaggedReason;
         updateData.flaggedAt = now;
       }
@@ -309,20 +297,20 @@ export async function DELETE(
       return NextResponse.json({ error: 'Session not found' }, { status: 404 });
     }
 
-    // Determine if the caller is the owner/facilitator
+    // Ending/deleting a session is facilitator-only.
     const firebaseUid = authKind.kind === 'firebase' ? authKind.uid : null;
-    const isOwnerOrFacilitator =
+    const isAssignedFacilitator =
       firebaseUid &&
       (session.metadata?.facilitatorId === firebaseUid ||
-        session.metadata?.userId === firebaseUid ||
         session.metadata?.createdBy === firebaseUid ||
-        (session as any).userId === firebaseUid ||
-        (session as any).facilitatorId === firebaseUid ||
-        (session as any).createdBy === firebaseUid);
+        session.facilitatorId === firebaseUid ||
+        session.createdBy === firebaseUid);
 
-    if (!isOwnerOrFacilitator) {
+    const roleResult = await requireRole(req, ...FACILITATOR_ROLES);
+    if (roleResult.error) return roleResult.error;
+    if (!isAssignedFacilitator || roleResult.user.uid !== firebaseUid) {
       return NextResponse.json(
-        { error: 'Forbidden: only the session owner or facilitator can end the session' },
+        { error: 'Forbidden: only the assigned facilitator can end the session' },
         { status: 403 }
       );
     }

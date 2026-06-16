@@ -3,6 +3,7 @@ import { UnauthorizedException } from '@nestjs/common';
 import { SessionTokenController } from './session-token.controller.js';
 import { SessionTokenService } from './session-token.service.js';
 import { SessionTokenStore } from '../session-token-store.js';
+import { hashOwnerUid } from './anonymisation.js';
 
 const { mockVerifyIdToken } = vi.hoisted(() => ({ mockVerifyIdToken: vi.fn() }));
 vi.mock('../firebase-init.js', () => ({
@@ -15,7 +16,7 @@ const FAKE_SESSION_ID = 'sess_abc123ref';
 const mockSession = {
   id: 'uuid-session-1',
   sessionId: FAKE_SESSION_ID,
-  anonymousParticipantId: FAKE_UID,
+  anonymousParticipantId: hashOwnerUid(FAKE_UID),
   status: 'PENDING',
   startsAt: new Date('2026-05-26T12:00:00Z'),
   endsAt: new Date('2026-05-26T13:00:00Z'),

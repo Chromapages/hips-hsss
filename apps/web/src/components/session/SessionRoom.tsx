@@ -36,6 +36,7 @@ import type { AvatarGesture } from '../session-ui/avatars/VirtualOfficeAvatar';
 import { SessionExitState } from './SessionExitState';
 import { RaisedHandQueue } from './RaisedHandQueue';
 import type { VoicePreset } from '@/lib/voice-mask-presets';
+import { asError } from '@/lib/errors';
 
 type LiveKitTokenResponse = {
   token: string;
@@ -139,11 +140,12 @@ export default function SessionRoom({
 
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
         stream.getTracks().forEach(track => track.stop());
-      } catch (err: any) {
-        console.error('[SessionRoom] Media device check failed:', err);
+      } catch (err: unknown) {
+        const errorObj = asError(err);
+        console.error('[SessionRoom] Media device check failed:', errorObj);
         const msg = 'Microphone access blocked. Please enable microphone permissions in your browser settings to join the session.';
         setMediaError(msg);
-        void reportSessionError(`Media device check failed: ${err.message || err}`, 'HIGH', sessionId);
+        void reportSessionError(`Media device check failed: ${errorObj.message}`, 'HIGH', sessionId);
       }
     }
     checkDevicesAndPermissions();
@@ -705,7 +707,7 @@ function SessionContent({
             <RaisedHandQueue raisedHands={raisedHandList} onLowerHand={lowerHand} />
           ) : (
             <div className="border-b border-white/10 p-4">
-              <p className="text-[10px] font-bold uppercase tracking-widest text-text-muted0">Hand Queue</p>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Hand Queue</p>
               <p className="mt-1 text-sm text-text">
                 Raise your hand when you would like facilitator attention.
               </p>
@@ -714,7 +716,7 @@ function SessionContent({
           <SafetyMonitor sessionId={roomName} onCrisis={onCrisis} onKick={onKick} />
           {canFacilitate ? (
             <div className="border-t border-white/10 p-4">
-              <p className="text-[10px] font-bold uppercase tracking-widest text-text-muted0">Facilitator Notes</p>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Facilitator Notes</p>
               <textarea
                 className="mt-2 w-full resize-none rounded-xl border border-white/10 bg-surface/5 p-3 text-sm text-text-muted placeholder-zinc-500 focus:border-primary/50 focus:outline-none focus:ring-1 focus:ring-primary/20"
                 placeholder="Session notes (not persisted)..."

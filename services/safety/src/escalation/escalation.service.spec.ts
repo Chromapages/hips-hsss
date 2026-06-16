@@ -22,6 +22,7 @@ describe('EscalationQueueService', () => {
   let service: EscalationQueueService;
 
   const mockSafetyPrisma = {
+    $transaction: vi.fn((cb) => cb(mockSafetyPrisma)),
     safetyAlert: {
       findMany: vi.fn(),
       findUnique: vi.fn(),

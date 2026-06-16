@@ -15,11 +15,11 @@ export type EscalationRecord = {
   createdAt: Date;
 };
 
-function toDbLevel(level: EscalationLevel): string {
+function toDbLevel(level: EscalationLevel) {
   switch (level) {
-    case 'CRITICAL': return 'crisis';
-    case 'HIGH': return 'urgent';
-    default: return 'watch';
+    case 'CRITICAL': return 'crisis' as const;
+    case 'HIGH': return 'urgent' as const;
+    default: return 'watch' as const;
   }
 }
 

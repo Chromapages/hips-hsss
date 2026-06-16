@@ -114,15 +114,14 @@ describe('VaultCryptoService - DEK Round-Trip', () => {
     expect(true).toBe(true);
   });
 
-  it('should use mock encryption when VAULT_KMS_KEY_ID is not set', async () => {
+  it('should throw an error when VAULT_KMS_KEY_ID is not set', async () => {
     const serviceWithoutKeyId = new VaultCryptoService({
       get: () => null,
     } as any);
 
     const plaintext = 'Dev mode data';
-    const encrypted = await serviceWithoutKeyId.encrypt(plaintext);
-    const decrypted = await serviceWithoutKeyId.decrypt(encrypted);
-
-    expect(decrypted).toBe(plaintext);
+    await expect(serviceWithoutKeyId.encrypt(plaintext)).rejects.toThrow(
+      'VAULT_KMS_KEY_ID not configured — encryption unavailable'
+    );
   });
 });

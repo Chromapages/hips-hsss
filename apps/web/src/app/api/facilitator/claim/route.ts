@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getDb, getAdminAuth } from '@/lib/firebase-admin';
+import { getDb } from '@/lib/firebase-admin';
 import { z } from 'zod';
+import { requireRole } from '@/lib/request-auth';
+import { FACILITATOR_ROLES } from '@/lib/roles';
 
 const claimSchema = z.object({
   sessionId: z.string(),
@@ -12,26 +14,11 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Service temporarily unavailable' }, { status: 503 });
   }
 
-  const auth = getAdminAuth();
-  if (!auth) {
-    return NextResponse.json({ error: 'Service temporarily unavailable' }, { status: 503 });
-  }
+  const authResult = await requireRole(req, ...FACILITATOR_ROLES);
+  if (authResult.error) return authResult.error;
 
   try {
-    // 1. Verify Authentication & Role
-    const authHeader = req.headers.get('authorization');
-    const token = authHeader?.startsWith('Bearer ') ? authHeader.split(' ')[1] : null;
-
-    if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-
-    const payload = await auth.verifyIdToken(token);
-    const role = (payload.role as string) || 'PARTICIPANT';
-
-    if (role !== 'FACILITATOR' && role !== 'ADMIN') {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-    }
-
-    const userId = payload.uid;
+    const userId = authResult.user.uid;
 
     // 2. Validate Input
     const body = await req.json();

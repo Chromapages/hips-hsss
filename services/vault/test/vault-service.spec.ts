@@ -34,6 +34,7 @@ describe('VaultService Integration', () => {
         }),
         update: vi.fn().mockResolvedValue({}),
         findMany: vi.fn().mockResolvedValue([]),
+        updateMany: vi.fn().mockResolvedValue({ count: 0 }),
       },
       vaultAccessLog: {
         create: vi.fn().mockResolvedValue({
@@ -184,40 +185,24 @@ describe('VaultService Integration', () => {
           actorRef: 'admin',
           purpose: 'RECORD_READ',
           action: 'PII_ACCESS',
-          metadata: {},
+          requestId: expect.any(String),
         },
       });
     });
 
-    it('should accept metadata with access logs', async () => {
+    it('should accept requestId with access logs', async () => {
       const input: VaultAccessInput = {
         subjectRef: 'subject-001',
         actorRef: 'admin',
         purpose: 'SESSION_INIT',
-        metadata: { sessionId: 'sess-123' },
+        requestId: 'custom-req-123',
       };
 
       await service.logAccess(input);
 
       expect(mockPrisma.vaultAccessLog.create).toHaveBeenCalledWith({
         data: expect.objectContaining({
-          metadata: { sessionId: 'sess-123' },
-        }),
-      });
-    });
-
-    it('should use empty object as default metadata', async () => {
-      const input: VaultAccessInput = {
-        subjectRef: 'subject-001',
-        actorRef: 'admin',
-        purpose: 'TEST',
-      };
-
-      await service.logAccess(input);
-
-      expect(mockPrisma.vaultAccessLog.create).toHaveBeenCalledWith({
-        data: expect.objectContaining({
-          metadata: {},
+          requestId: 'custom-req-123',
         }),
       });
     });
@@ -225,53 +210,35 @@ describe('VaultService Integration', () => {
 
   describe('expireOldIpAddresses', () => {
     it('should expire IP addresses older than 30 days', async () => {
-      mockPrisma.identityRecord.findMany.mockResolvedValueOnce([
-        {
-          id: 'record-1',
-          subjectRef: 'subject-001',
-          encryptedIpAddress: Buffer.from('encrypted:192.168.1.1'),
-        },
-      ]);
+      mockPrisma.identityRecord.updateMany.mockResolvedValueOnce({ count: 1 });
 
       await service.expireOldIpAddresses();
 
-      expect(mockPrisma.identityRecord.update).toHaveBeenCalledWith({
-        where: { id: 'record-1' },
+      expect(mockPrisma.identityRecord.updateMany).toHaveBeenCalledWith({
+        where: {
+          ipExpiresAt: { lt: expect.any(Date) },
+          encryptedIpAddress: { not: null },
+        },
         data: { encryptedIpAddress: null, ipExpiresAt: null },
-      });
-
-      expect(mockPrisma.vaultAccessLog.create).toHaveBeenCalledWith({
-        data: expect.objectContaining({
-          action: 'IP_EXPIRY',
-        }),
       });
     });
   });
 
   describe('expireOldDeviceFingerprints', () => {
     it('should expire device fingerprints older than 90 days', async () => {
-      mockPrisma.identityRecord.findMany.mockResolvedValueOnce([
-        {
-          id: 'record-1',
-          subjectRef: 'subject-001',
-          encryptedDeviceFingerprint: Buffer.from('encrypted:fp-123'),
-        },
-      ]);
+      mockPrisma.identityRecord.updateMany.mockResolvedValueOnce({ count: 1 });
 
       await service.expireOldDeviceFingerprints();
 
-      expect(mockPrisma.identityRecord.update).toHaveBeenCalledWith({
-        where: { id: 'record-1' },
+      expect(mockPrisma.identityRecord.updateMany).toHaveBeenCalledWith({
+        where: {
+          deviceFingerprintExpiresAt: { lt: expect.any(Date) },
+          encryptedDeviceFingerprint: { not: null },
+        },
         data: {
           encryptedDeviceFingerprint: null,
           deviceFingerprintExpiresAt: null,
         },
-      });
-
-      expect(mockPrisma.vaultAccessLog.create).toHaveBeenCalledWith({
-        data: expect.objectContaining({
-          action: 'DEVICE_FINGERPRINT_EXPIRY',
-        }),
       });
     });
   });

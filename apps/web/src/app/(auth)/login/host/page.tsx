@@ -8,6 +8,7 @@ import { useAuth } from "@/components/auth/AuthProvider";
 import Link from "next/link";
 import { Loader2, Mail, Lock, ArrowRight, Shield, ArrowLeft } from "lucide-react";
 import { ROLES } from "@/lib/roles";
+import { setAuthCookie } from "@/lib/auth-cookies";
 
 type FirebaseAuthError = Error & { code?: string };
 
@@ -41,7 +42,7 @@ export default function HostLoginPage() {
   // If already logged in as a host/admin, redirect to host dashboard
   useEffect(() => {
     if (!authLoading && user) {
-      if (role === ROLES.FACILITATOR || role === ROLES.ADMIN) {
+      if (role === ROLES.FACILITATOR || role === ROLES.ADMIN || role === ROLES.SUPER_ADMIN) {
         router.replace("/host/dashboard");
       } else if (role === ROLES.PARTICIPANT) {
         // Logged in but not a host — show unauthorized message
@@ -55,19 +56,6 @@ export default function HostLoginPage() {
     setLoading(true);
     setError(null);
 
-    if (process.env.NODE_ENV === "development" && password === "password") {
-      if (email === "host@hips.org") {
-        document.cookie = "hips-auth-token=mock-token-host; path=/; max-age=86400";
-        window.location.href = "/host/dashboard";
-        return;
-      }
-      if (email === "admin@hips.org") {
-        document.cookie = "hips-auth-token=mock-token-admin; path=/; max-age=86400";
-        window.location.href = "/admin";
-        return;
-      }
-    }
-
     if (!firebaseReady || !auth) {
       setError("Authentication temporarily unavailable. Please try again.");
       setLoading(false);
@@ -76,11 +64,14 @@ export default function HostLoginPage() {
 
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      const idTokenResult = await userCredential.user.getIdTokenResult();
-      const userRole = idTokenResult.claims.role as string | undefined;
+      const token = await userCredential.user.getIdToken();
+      const syncResponse = await fetch('/api/auth/sync', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const syncData = await syncResponse.json();
 
-      if (userRole !== ROLES.FACILITATOR && userRole !== ROLES.ADMIN) {
-        // Sign them back out immediately — wrong role
+      if (!syncResponse.ok || ![ROLES.FACILITATOR, ROLES.ADMIN, ROLES.SUPER_ADMIN].includes(syncData.user?.role)) {
         await auth.signOut();
         setError(
           "This account does not have host privileges. If you believe this is an error, contact your coordinator."
@@ -89,6 +80,7 @@ export default function HostLoginPage() {
         return;
       }
 
+      await setAuthCookie(token);
       router.push("/host/dashboard");
     } catch (err: unknown) {
       setError(getLoginErrorMessage(err));

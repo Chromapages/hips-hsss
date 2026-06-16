@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { getStripeServerClient } from '@/lib/stripe';
-import { verifyFirebaseIdToken } from '@/lib/auth-edge';
+import { verifyFirebaseIdToken } from '@/lib/firebase-auth';
 import { checkRateLimit, getRateLimitHeaders } from '@/lib/rate-limit';
 
 const packageSchema = z.object({
@@ -53,10 +53,19 @@ export async function POST(req: NextRequest) {
     const { packageId } = result.data;
     const pkg = PACKAGES[packageId];
 
-    // 4. Create Payment Intent with Package Metadata
-    // Stable idempotency key (no Date.now()) prevents double-charge on
-    // concurrent retries. Sequential retries that need a fresh attempt
-    // can cancel the existing intent and re-call.
+    // 4. Create Payment Intent or Bypass if Demo Mode
+    const isDemoMode = process.env.NEXT_PUBLIC_DEMO_MODE === 'true';
+
+    if (isDemoMode) {
+      const mockSecret = `demo_package_${packageId}`;
+      console.log(`[Demo Mode] Bypassed Stripe package intent creation for ${firebaseUid}: ${packageId}`);
+      return NextResponse.json({
+        clientSecret: mockSecret,
+        packageName: pkg.name,
+        amount: pkg.priceCents / 100,
+      });
+    }
+
     const stripe = getStripeServerClient();
     const paymentIntent = await stripe.paymentIntents.create({
       amount: pkg.priceCents,

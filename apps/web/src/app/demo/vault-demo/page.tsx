@@ -7,7 +7,7 @@ export const metadata = {
 
 export default function VaultDemoPage() {
   return (
-    <main className="min-h-screen bg-bg-subtle">
+    <main id="main" tabIndex={-1} className="min-h-screen bg-bg-subtle">
       <VaultDemo />
     </main>
   );

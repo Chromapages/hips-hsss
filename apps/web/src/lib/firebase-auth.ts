@@ -1,4 +1,5 @@
 import { adminAuth } from './firebase-admin';
+import { getPrisma } from './prisma';
 
 export interface FirebaseTokenPayload {
   uid: string;
@@ -32,5 +33,13 @@ export async function verifyFirebaseIdToken(
     throw new Error('Bearer token is missing from Authorization header');
   }
 
-  return adminAuth.verifyIdToken(token) as Promise<FirebaseTokenPayload>;
+  const payload = await adminAuth.verifyIdToken(token, true) as FirebaseTokenPayload;
+  const activeUser = await getPrisma().user.findFirst({
+    where: { firebaseUid: payload.uid, deletedAt: null },
+    select: { id: true },
+  });
+  if (!activeUser) {
+    throw new Error('Authenticated user is missing or disabled');
+  }
+  return payload;
 }

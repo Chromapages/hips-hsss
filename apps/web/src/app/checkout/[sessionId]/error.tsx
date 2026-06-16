@@ -1,5 +1,4 @@
 'use client'
-"use client";
 
 import { useEffect } from "react";
 import { ErrorState } from "@/components/ui/error-state";
@@ -16,7 +15,7 @@ export default function CheckoutError({
   }, [error]);
 
   return (
-    <main className="grid min-h-screen place-items-center bg-black p-6">
+    <main id="main" tabIndex={-1} className="grid min-h-screen place-items-center bg-black p-6">
       <ErrorState
         title="Checkout Error"
         error="Something went wrong with your checkout. Please try again."

@@ -46,7 +46,7 @@ export function VoiceEffectsPanel({
                 {VOICE_PRESETS[preset].label}
               </span>
             </div>
-            <span className="text-[10px] leading-tight text-text-muted0">
+            <span className="text-[10px] leading-tight text-muted-foreground">
               {VOICE_PRESETS[preset].description}
             </span>
           </button>
@@ -56,7 +56,7 @@ export function VoiceEffectsPanel({
       {/* Semitone slider */}
       <div className="space-y-2">
         <div className="flex items-center justify-between">
-          <label htmlFor="pitch-shift" className="text-[10px] font-semibold uppercase tracking-widest text-text-muted0">
+          <label htmlFor="pitch-shift" className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
             Pitch Shift
           </label>
           <span className="font-mono text-xs text-text">

@@ -146,8 +146,7 @@ export default async function ServiceDetailPage({
         ]}
       />
 
-      <main
-        id="main-content"
+      <main id="main" tabIndex={-1}
         className="min-h-screen bg-background text-text-primary pb-32 overflow-x-hidden"
       >
         {/* Hero Section */}

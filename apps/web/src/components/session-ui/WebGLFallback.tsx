@@ -19,7 +19,7 @@ export function WebGLFallback({ avatar, roomName }: { avatar: AvatarProfile; roo
       <div className="mt-6 rounded-2xl border border-white/10 bg-surface/[0.03] px-6 py-4">
         <div className="flex items-center gap-2 mb-2">
           <Volume2 className="h-4 w-4 text-emerald-400" />
-          <p className="text-xs font-bold uppercase tracking-widest text-text-muted0">
+          <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
             Audio Active
           </p>
         </div>

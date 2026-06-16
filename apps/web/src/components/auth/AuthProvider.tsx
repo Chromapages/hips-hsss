@@ -35,32 +35,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const firebaseReady = !!auth;
 
   useEffect(() => {
-    if (process.env.NODE_ENV === 'development') {
-      const mockCookieToken = typeof window !== 'undefined'
-        ? document.cookie.split('; ').find(row => row.startsWith('hips-auth-token='))?.split('=')[1]
-        : null;
-      if (mockCookieToken && mockCookieToken.startsWith('mock-token-')) {
-        const isHost = mockCookieToken === 'mock-token-host';
-        const isAdmin = mockCookieToken === 'mock-token-admin';
-        setUser({
-          uid: isAdmin ? 'mock-admin-uid-123' : (isHost ? 'mock-host-uid-123' : 'mock-client-uid-123'),
-          email: isAdmin ? 'admin@hips.org' : (isHost ? 'host@hips.org' : 'client@hips.org'),
-          displayName: isAdmin ? 'Demo Admin' : (isHost ? 'Demo Host' : 'Demo Client'),
-          emailVerified: true,
-          isAnonymous: false,
-          metadata: {},
-          providerData: [],
-        } as any);
-        setRole(isAdmin ? 'ADMIN' : (isHost ? 'FACILITATOR' : 'PARTICIPANT'));
-        setLoading(false);
-        return;
-      }
-    }
-
     if (!auth) {
-      setLoading(false);
-      return;
+      const unavailableTimeout = setTimeout(() => setLoading(false), 0);
+      return () => clearTimeout(unavailableTimeout);
     }
+    const firebaseAuth = auth;
 
     // Defensive hard timeout: if onAuthStateChanged never fires or its
     // internal network call to securetoken.googleapis.com hangs (CSP block,
@@ -79,45 +58,48 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       });
     }, 3000);
 
-    let syncDebounce: ReturnType<typeof setTimeout> | undefined;
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+    let adminExpiryTimeout: ReturnType<typeof setTimeout> | undefined;
+    const unsubscribe = onAuthStateChanged(firebaseAuth, async (user) => {
       try {
         if (user) {
-          // Attempt to force refresh token for latest claims, but fallback to cached token
-          // if it times out or fails (e.g. due to flaky network).
-          let idTokenResult;
+          let idToken;
           try {
-            idTokenResult = await Promise.race([
-              user.getIdTokenResult(true),
+            idToken = await Promise.race([
+              user.getIdToken(),
               new Promise<never>((_, reject) =>
-                setTimeout(() => reject(new Error('getIdTokenResult timed out after 3s')), 3000)
+                setTimeout(() => reject(new Error('getIdToken timed out after 3s')), 3000)
               ),
             ]);
           } catch (refreshError) {
-            console.warn('[AuthProvider] Token force refresh failed, falling back to cached token:', refreshError);
-            idTokenResult = await user.getIdTokenResult(false);
+            console.warn('[AuthProvider] Token retrieval failed:', refreshError);
+            throw refreshError;
           }
-          
-          setRole((idTokenResult.claims.role as string) || 'PARTICIPANT');
           setUser(user);
 
-          // Synchronize cookie for middleware (debounced to avoid rapid re-syncs)
-          setAuthCookie(idTokenResult.token);
-
-          // Sync user with Commerce DB if needed (debounced)
-          if (syncDebounce) clearTimeout(syncDebounce);
-          syncDebounce = setTimeout(async () => {
-            try {
-              await fetch('/api/auth/sync', {
-                method: 'POST',
-                headers: {
-                  'Authorization': `Bearer ${idTokenResult.token}`,
-                },
-              });
-            } catch (error) {
-              console.error('Auth sync failed:', error);
+          // Sync identity and hydrate role from the authoritative Commerce DB.
+          const response = await fetch('/api/auth/sync', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${idToken}`,
+            },
+          });
+          if (!response.ok) throw new Error(`Auth sync failed (${response.status})`);
+          const data = await response.json();
+          const databaseRole = data.user?.role || null;
+          if (databaseRole === 'ADMIN' || databaseRole === 'SUPER_ADMIN') {
+            if (adminExpiryTimeout) clearTimeout(adminExpiryTimeout);
+            const expiresAt = Number(data.authTime) * 1000 + 4 * 60 * 60 * 1000;
+            const remainingMs = expiresAt - Date.now();
+            if (remainingMs <= 0) {
+              await firebaseAuth.signOut();
+              return;
             }
-          }, 2000);
+            adminExpiryTimeout = setTimeout(() => {
+              void firebaseAuth.signOut();
+            }, remainingMs);
+          }
+          setRole(databaseRole);
+          await setAuthCookie(idToken);
         } else {
           setUser(null);
           setRole(null);
@@ -125,12 +107,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         }
       } catch (error) {
         console.error('Auth state initialization failed:', error);
-        // Do not clear user here unless we are sure they are logged out.
-        // If it's a completely fatal error, we might be in an inconsistent state,
-        // but it's better to stay logged in with default role.
         if (user) {
           setUser(user);
-          setRole('PARTICIPANT');
+          setRole(null);
         } else {
           setUser(null);
           setRole(null);
@@ -143,20 +122,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     return () => {
       unsubscribe();
-      if (syncDebounce) clearTimeout(syncDebounce);
+      if (adminExpiryTimeout) clearTimeout(adminExpiryTimeout);
       clearTimeout(loadingTimeout);
     };
   }, []);
 
   const getToken = async (): Promise<string | null> => {
-    if (process.env.NODE_ENV === 'development') {
-      const mockCookieToken = typeof window !== 'undefined'
-        ? document.cookie.split('; ').find(row => row.startsWith('hips-auth-token='))?.split('=')[1]
-        : null;
-      if (mockCookieToken && mockCookieToken.startsWith('mock-token-')) {
-        return mockCookieToken;
-      }
-    }
     if (!auth?.currentUser) return null;
     // Bound token retrieval so a hung Firebase SDK call cannot deadlock
     // any consumer (e.g., dashboard SWR fetcher) waiting on this promise.
@@ -174,11 +145,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const logout = async () => {
-    if (process.env.NODE_ENV === 'development') {
-      document.cookie = 'hips-auth-token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
-      setUser(null);
-      setRole(null);
-    }
     if (auth) {
       await auth.signOut();
     }

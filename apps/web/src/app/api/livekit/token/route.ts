@@ -6,7 +6,7 @@ import * as admin from 'firebase-admin';
 import { db, isFirebaseAdminReady } from '@/lib/firebase-admin';
 import { checkRateLimit, getRateLimitHeaders } from '@/lib/rate-limit';
 import { authorizeSessionAccess } from '@/lib/session-authz';
-import { verifyFirebaseIdToken } from '@/lib/auth-edge';
+import { getPrisma } from '@/lib/prisma';
 
 const palettes = ['coastal', 'sunrise', 'forest'] as const;
 
@@ -27,31 +27,18 @@ function makeAvatar(seed: string) {
   };
 }
 
+import { Phase5Session, Phase5SessionSchema } from '@/lib/schemas/session';
+
 // Session lifecycle states
 type SessionStatus = 'pending' | 'active' | 'ended' | 'flagged';
-
-interface Phase5Session {
-  id: string;
-  status: SessionStatus;
-  createdAt: string;
-  activeAt?: string;
-  endedAt?: string;
-  startsAt?: string;
-  endsAt?: string;
-  participantCount: number;
-  participantIdentities?: string[];
-  facilitatorId?: string;
-  flagged: boolean;
-  flaggedBy?: string;
-  flaggedReason?: string;
-}
 
 async function getOrCreateSession(sessionId: string): Promise<Phase5Session> {
   const sessionRef = db.collection('phase5_sessions').doc(sessionId);
   const doc = await sessionRef.get();
 
   if (doc.exists) {
-    return doc.data() as Phase5Session;
+    const parsed = Phase5SessionSchema.safeParse({ id: doc.id, ...doc.data() });
+    if (parsed.success) return parsed.data;
   }
 
   // Create new session
@@ -60,6 +47,8 @@ async function getOrCreateSession(sessionId: string): Promise<Phase5Session> {
     status: 'pending',
     createdAt: new Date().toISOString(),
     participantCount: 0,
+    maxParticipants: 2,
+    roomName: sessionId,
     participantIdentities: [],
     flagged: false,
   };
@@ -158,7 +147,11 @@ export async function POST(req: NextRequest) {
       if (!sessionDoc.exists) {
         return NextResponse.json({ error: 'Session not found' }, { status: 404 });
       }
-      sessionData = sessionDoc.data() as Partial<Phase5Session>;
+      const parsed = Phase5SessionSchema.safeParse({ id: sessionDoc.id, ...sessionDoc.data() });
+      if (!parsed.success) {
+        return NextResponse.json({ error: 'Invalid session structure' }, { status: 500 });
+      }
+      sessionData = parsed.data;
     }
 
     // Authorize the caller. The helper accepts either a Firebase ID token (the
@@ -234,14 +227,15 @@ export async function POST(req: NextRequest) {
 
     // Add metadata forFacilitator identification
     let userRole = 'PARTICIPANT';
-    if (principal.kind === 'firebase' && token) {
+    if (principal.kind === 'firebase') {
       try {
-        const decoded = await verifyFirebaseIdToken(token);
-        if (decoded.role) {
-          userRole = decoded.role as string;
-        }
+        const dbUser = await getPrisma().user.findFirst({
+          where: { firebaseUid: principal.uid, deletedAt: null },
+          select: { role: true },
+        });
+        if (dbUser) userRole = dbUser.role;
       } catch (err) {
-        console.warn('[LiveKitAPI] Failed to verify token for role:', err);
+        console.warn('[LiveKitAPI] Failed to load database role:', err);
       }
     }
 

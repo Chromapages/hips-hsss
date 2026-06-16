@@ -7,10 +7,10 @@ type CheckoutErrorProps = {
 
 export default function CheckoutError({ error, reset }: CheckoutErrorProps) {
   return (
-    <main className="min-h-screen bg-black text-white flex items-center justify-center px-6">
+    <main id="main" tabIndex={-1} className="min-h-screen bg-black text-white flex items-center justify-center px-6">
       <div className="max-w-md text-center">
         <div className="mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-destructive0/10 border border-destructive/20 mb-6">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-destructive/10 border border-destructive/20 mb-6">
             <span className="text-3xl">⚠️</span>
           </div>
           <h1 className="text-3xl font-bold mb-2">Payment Failed</h1>

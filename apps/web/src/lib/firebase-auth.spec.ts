@@ -2,13 +2,16 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { verifyFirebaseIdToken } from './firebase-auth';
 
 const mockVerifyIdToken = vi.hoisted(() => vi.fn());
+const mockFindFirst = vi.hoisted(() => vi.fn());
 
 vi.mock('./firebase-admin', () => ({
   adminAuth: {
     verifyIdToken: mockVerifyIdToken,
   },
 }));
-
+vi.mock('./prisma', () => ({
+  getPrisma: () => ({ user: { findFirst: mockFindFirst } }),
+}));
 const mockPayload = {
   uid: 'user123',
   email: 'test@example.com',
@@ -24,6 +27,8 @@ const mockPayload = {
 describe('verifyFirebaseIdToken', () => {
   beforeEach(() => {
     mockVerifyIdToken.mockReset();
+    mockFindFirst.mockReset();
+    mockFindFirst.mockResolvedValue({ id: 'db-user-id' });
   });
 
   it('returns decoded payload for a valid Bearer token', async () => {
@@ -32,7 +37,7 @@ describe('verifyFirebaseIdToken', () => {
     const result = await verifyFirebaseIdToken('Bearer abc123token');
 
     expect(result).toEqual(mockPayload);
-    expect(mockVerifyIdToken).toHaveBeenCalledWith('abc123token');
+    expect(mockVerifyIdToken).toHaveBeenCalledWith('abc123token', true);
   });
 
   it('returns decoded payload when header value is just the token', async () => {
@@ -41,7 +46,7 @@ describe('verifyFirebaseIdToken', () => {
     const result = await verifyFirebaseIdToken('abc123token');
 
     expect(result).toEqual(mockPayload);
-    expect(mockVerifyIdToken).toHaveBeenCalledWith('abc123token');
+    expect(mockVerifyIdToken).toHaveBeenCalledWith('abc123token', true);
   });
 
   it('throws when authorization header is null', async () => {
@@ -74,22 +79,31 @@ describe('verifyFirebaseIdToken', () => {
     );
   });
 
+  it('rejects a verified identity without an active Commerce user', async () => {
+    mockVerifyIdToken.mockResolvedValue(mockPayload as never);
+    mockFindFirst.mockResolvedValue(null);
+
+    await expect(verifyFirebaseIdToken('Bearer abc123token')).rejects.toThrow(
+      'Authenticated user is missing or disabled'
+    );
+  });
+
   it('trims whitespace around the token', async () => {
     mockVerifyIdToken.mockResolvedValue(mockPayload as never);
 
     await verifyFirebaseIdToken('  Bearer   abc123token  ');
 
-    expect(mockVerifyIdToken).toHaveBeenCalledWith('abc123token');
+    expect(mockVerifyIdToken).toHaveBeenCalledWith('abc123token', true);
   });
 
   it('is case-insensitive for Bearer prefix', async () => {
     mockVerifyIdToken.mockResolvedValue(mockPayload as never);
 
     await verifyFirebaseIdToken('BEARER abc123token');
-    expect(mockVerifyIdToken).toHaveBeenCalledWith('abc123token');
+    expect(mockVerifyIdToken).toHaveBeenCalledWith('abc123token', true);
 
     mockVerifyIdToken.mockClear();
     await verifyFirebaseIdToken('bearer abc123token');
-    expect(mockVerifyIdToken).toHaveBeenCalledWith('abc123token');
+    expect(mockVerifyIdToken).toHaveBeenCalledWith('abc123token', true);
   });
 });

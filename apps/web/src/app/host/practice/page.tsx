@@ -12,7 +12,6 @@ export default function HostPracticePage() {
   // Auto-set practice-mode flags in sessionStorage so the session room knows
   useEffect(() => {
     sessionStorage.setItem("hips-practice-mode", "true");
-    sessionStorage.setItem("hips-host-role", "true");
 
     // Load avatar config from localStorage to pre-populate the session
     const avatarConfig = localStorage.getItem("hips-host-avatar");

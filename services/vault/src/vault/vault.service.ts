@@ -1,5 +1,6 @@
-import { Injectable, NotFoundException, Logger } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
+import { randomUUID } from 'node:crypto';
 import { PrismaService } from '../prisma.service.js';
 import { VaultCryptoService } from './vault-crypto.service.js';
 
@@ -18,7 +19,14 @@ export type VaultAccessInput = {
   actorRef: string;
   purpose: string;
   action?: string;
+  requestId?: string;
   metadata?: Record<string, unknown>;
+};
+
+export type VaultAccessRequestInput = {
+  subjectRef: string;
+  requesterRef: string;
+  justification: string;
 };
 
 @Injectable()
@@ -65,13 +73,18 @@ export class VaultService {
   async createRecord(data: CreateVaultRecordInput) {
     const { subjectRef, realName, emergencyContact, region, disclosure, ipAddress, deviceFingerprint } = data;
 
-    // Encrypt all PII
     const encryptedRealName = await this.crypto.encrypt(realName);
     const encryptedEmergencyContact = await this.crypto.encrypt(emergencyContact);
     const encryptedRegion = await this.crypto.encrypt(region);
-    const encryptedDisclosure = disclosure ? await this.crypto.encrypt(disclosure) : null;
-    const encryptedIpAddress = ipAddress ? await this.crypto.encrypt(ipAddress) : null;
-    const encryptedDeviceFingerprint = deviceFingerprint ? await this.crypto.encrypt(deviceFingerprint) : null;
+    const encryptedDisclosure = disclosure
+      ? await this.crypto.encrypt(disclosure)
+      : null;
+    const encryptedIpAddress = ipAddress
+      ? await this.crypto.encrypt(ipAddress)
+      : null;
+    const encryptedDeviceFingerprint = deviceFingerprint
+      ? await this.crypto.encrypt(deviceFingerprint)
+      : null;
 
     return this.prisma.identityRecord.upsert({
       where: { subjectRef },
@@ -95,18 +108,17 @@ export class VaultService {
     });
   }
 
-  async getRecord(subjectRef: string, actor: string, purpose: string) {
+  async getRecord(subjectRef: string, actor: string, purpose: string, requestId?: string) {
     const record = await this.prisma.identityRecord.findUnique({
       where: { subjectRef },
       select: {
         subjectRef: true,
         encryptedRealName: true,
         encryptedEmergencyContact: true,
-        encryptedDateOfBirth: true,
-        encryptedPhone: true,
-        encryptedAddress: true,
-        encryptedInsuranceInfo: true,
-        encryptedEmergencyContactPhone: true,
+        encryptedRegion: true,
+        encryptedDisclosure: true,
+        encryptedIpAddress: true,
+        encryptedDeviceFingerprint: true,
       },
     });
 
@@ -120,19 +132,24 @@ export class VaultService {
       actorRef: actor,
       purpose,
       action: 'READ_PII',
+      requestId: requestId || `req-${randomUUID()}`,
       metadata: { timestamp: new Date().toISOString() },
     });
 
-    // Decrypt fields
     return {
       subjectRef: record.subjectRef,
-      realName: await this.crypto.decrypt(record.encryptedRealName),
-      emergencyContact: await this.crypto.decrypt(record.encryptedEmergencyContact),
-      dateOfBirth: record.encryptedDateOfBirth ? await this.crypto.decrypt(record.encryptedDateOfBirth) : null,
-      phone: record.encryptedPhone ? await this.crypto.decrypt(record.encryptedPhone) : null,
-      address: record.encryptedAddress ? await this.crypto.decrypt(record.encryptedAddress) : null,
-      insuranceInfo: record.encryptedInsuranceInfo ? await this.crypto.decrypt(record.encryptedInsuranceInfo) : null,
-      emergencyContactPhone: record.encryptedEmergencyContactPhone ? await this.crypto.decrypt(record.encryptedEmergencyContactPhone) : null,
+      realName: await this.crypto.decrypt(Buffer.from(record.encryptedRealName)),
+      emergencyContact: await this.crypto.decrypt(Buffer.from(record.encryptedEmergencyContact)),
+      region: await this.crypto.decrypt(Buffer.from(record.encryptedRegion)),
+      disclosure: record.encryptedDisclosure
+        ? await this.crypto.decrypt(Buffer.from(record.encryptedDisclosure))
+        : null,
+      ipAddress: record.encryptedIpAddress
+        ? await this.crypto.decrypt(Buffer.from(record.encryptedIpAddress))
+        : null,
+      deviceFingerprint: record.encryptedDeviceFingerprint
+        ? await this.crypto.decrypt(Buffer.from(record.encryptedDeviceFingerprint))
+        : null,
     };
   }
 
@@ -141,10 +158,75 @@ export class VaultService {
       data: {
         subjectRef: data.subjectRef,
         actorRef: data.actorRef,
-        purpose: data.purpose,
-        action: data.action,
-        metadata: data.metadata || {},
+        purpose: data.purpose as any,
+        action: data.action ?? null,
+        requestId: data.requestId || `req-${randomUUID()}`,
       },
     });
+  }
+
+  async submitAccessRequest(data: VaultAccessRequestInput) {
+    return this.prisma.vaultAccessRequest.create({
+      data: {
+        subjectRef: data.subjectRef,
+        requesterRef: data.requesterRef,
+        justification: data.justification,
+        status: 'PENDING',
+        metadata: {},
+      },
+    });
+  }
+
+  async accessEmergencyContact(
+    subjectRef: string,
+    accessRequestId: string,
+    actor: string,
+    justification: string
+  ) {
+    const request = await this.prisma.vaultAccessRequest.findUnique({
+      where: { id: accessRequestId },
+    });
+
+    if (!request) {
+      throw new NotFoundException('Vault access request not found');
+    }
+
+    if (request.subjectRef !== subjectRef) {
+      throw new BadRequestException('Subject reference mismatch');
+    }
+
+    const record = await this.prisma.identityRecord.findUnique({
+      where: { subjectRef },
+    });
+
+    if (!record) {
+      throw new NotFoundException('Identity record not found');
+    }
+
+    const accessedAt = new Date();
+
+    await this.prisma.vaultAccessRequest.update({
+      where: { id: accessRequestId },
+      data: {
+        status: 'APPROVED',
+        accessedAt,
+      },
+    });
+
+    const decryptedEmergencyContact = await this.crypto.decrypt(Buffer.from(record.encryptedEmergencyContact));
+
+    await this.logAccess({
+      subjectRef,
+      actorRef: actor,
+      purpose: 'CRISIS_DISCLOSURE',
+      action: 'EMERGENCY_CONTACT_ACCESS',
+      requestId: accessRequestId,
+    });
+
+    return {
+      subjectRef,
+      emergencyContact: decryptedEmergencyContact,
+      accessedAt: accessedAt,
+    };
   }
 }

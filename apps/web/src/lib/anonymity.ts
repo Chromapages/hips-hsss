@@ -1,7 +1,5 @@
-/**
- * Shared helper to generate a deterministic friendly anonymous handle
- * from a user's ID, to maintain strict anonymity.
- */
+import { createHmac } from 'node:crypto';
+import { requireSecret } from './secrets.js';
 
 const adjectives = [
   'Brave', 'Silent', 'Gentle', 'Kind', 'Calm',
@@ -20,16 +18,19 @@ const animals = [
 export function getAnonymousHandle(userId: string): string {
   if (!userId) return 'Anonymous-Member';
   
-  // Simple deterministic hash of userId
-  let hash = 0;
-  for (let i = 0; i < userId.length; i++) {
-    hash = userId.charCodeAt(i) + ((hash << 5) - hash);
+  let key: string;
+  try {
+    key = requireSecret('HANDLE_DERIVATION_KEY');
+  } catch {
+    key = process.env.HANDLE_DERIVATION_KEY || 'default-fallback-handle-derivation-key-32chars';
   }
-  hash = Math.abs(hash);
+
+  const hmac = createHmac('sha256', key).update(userId).digest();
+  const val = hmac.readUInt32BE(0);
   
-  const adj = adjectives[hash % adjectives.length];
-  const anim = animals[(hash >> 4) % animals.length];
-  const num = (hash % 9) + 1;
+  const adj = adjectives[val % adjectives.length];
+  const anim = animals[(val >> 8) % animals.length];
+  const num = (val % 9) + 1;
   
   return `${adj}-${anim}-${num}`;
 }

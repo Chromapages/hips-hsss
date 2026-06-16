@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import * as admin from 'firebase-admin';
 import { getDb, isFirebaseAdminReady } from '@/lib/firebase-admin';
-import { verifyFirebaseIdToken } from '@/lib/auth-edge';
-import { ROLES } from '@/lib/roles';
+import { requireAdmin } from '@/lib/admin-auth';
+import { asError } from '@/lib/errors';
 
 // Mock error logs for offline local development
 const MOCK_ERROR_LOGS = [
@@ -56,45 +56,11 @@ const MOCK_ERROR_LOGS = [
 export const dynamic = 'force-dynamic';
 
 export async function GET(req: NextRequest) {
-  const adminReady = isFirebaseAdminReady();
+  const { error } = await requireAdmin(req);
+  if (error) return error;
 
   try {
-    const authHeader = req.headers.get('Authorization');
-    const token = authHeader?.startsWith('Bearer ') ? authHeader.split(' ')[1] : null;
-
-    if (!token) {
-      return NextResponse.json({ error: 'Unauthorized: Token missing' }, { status: 401 });
-    }
-
-    // Role authentication
-    let isAdmin = false;
-
-    if (process.env.NODE_ENV === 'development' && token.startsWith('mock-token-')) {
-      const rolePart = token.split('-')[2];
-      isAdmin = rolePart === 'admin';
-    } else {
-      if (!adminReady) {
-        return NextResponse.json({ error: 'Firebase Admin SDK not initialized' }, { status: 500 });
-      }
-      const decodedToken = await verifyFirebaseIdToken(token);
-      const firebaseUid = typeof decodedToken.sub === 'string' ? decodedToken.sub : null;
-      if (!firebaseUid) {
-        return NextResponse.json({ error: 'Unauthorized: Invalid token' }, { status: 401 });
-      }
-
-      const db = getDb();
-      if (!db) {
-        return NextResponse.json({ error: 'Database unavailable' }, { status: 503 });
-      }
-
-      const userDoc = await db.collection('users').doc(firebaseUid).get();
-      const user = userDoc.data();
-      isAdmin = user?.role === ROLES.ADMIN;
-    }
-
-    if (!isAdmin) {
-      return NextResponse.json({ error: 'Forbidden: Admin access required' }, { status: 403 });
-    }
+    const adminReady = isFirebaseAdminReady();
 
     // If offline local dev bypass and Firebase Admin is not ready, return mock data
     if (process.env.NODE_ENV === 'development' && !adminReady) {
@@ -129,8 +95,9 @@ export async function GET(req: NextRequest) {
     }));
 
     return NextResponse.json(logs);
-  } catch (error: any) {
-    console.error('[AdminErrorLogs] Fetch error:', error);
-    return NextResponse.json({ error: error.message || 'Internal Server Error' }, { status: 500 });
+  } catch (error: unknown) {
+    const errorObj = asError(error);
+    console.error('[AdminErrorLogs] Fetch error:', errorObj);
+    return NextResponse.json({ error: errorObj.message || 'Internal Server Error' }, { status: 500 });
   }
 }

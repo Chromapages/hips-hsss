@@ -4,6 +4,7 @@ import { Heart, Gift, Award, ShieldCheck, ArrowRight } from "lucide-react";
 import { Navbar } from "@/components/polish/Navbar";
 import { Footer } from "@/components/polish/Footer";
 import { Button } from "@/components/ui/button";
+import { DonationPanel } from "@/components/checkout/DonationPanel";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://hips.foundation";
 
@@ -48,7 +49,7 @@ export default function DonateLandingPage() {
   return (
     <>
       <Navbar />
-      <main className="min-h-screen bg-surface text-text-primary selection:bg-primary/30 overflow-x-hidden">
+      <main id="main" tabIndex={-1} className="min-h-screen bg-surface text-text-primary selection:bg-primary/30 overflow-x-hidden">
         {/* Hero Section */}
         <section
           className="relative bg-surface pt-24 pb-20 border-b border-border"
@@ -74,7 +75,7 @@ export default function DonateLandingPage() {
                     asChild
                     className="h-12 px-8 rounded-full bg-primary text-white hover:bg-accent transition-all font-bold text-sm uppercase tracking-wide"
                   >
-                    <Link href="/donate">Donate Now</Link>
+                    <a href="#donation-card">Donate Now</a>
                   </Button>
                   <Button
                     asChild
@@ -86,46 +87,8 @@ export default function DonateLandingPage() {
                 </div>
               </div>
               
-              <div className="relative rounded-2xl overflow-hidden shadow-card border border-border bg-bg-subtle p-8 md:p-10">
-                <h3 className="font-heading text-2xl font-bold text-text mb-4">Make a Lasting Impact</h3>
-                <p className="text-text-secondary text-sm font-body leading-relaxed mb-6">
-                  Select a tier or enter a custom amount to provide anonymous support and scholarship access.
-                </p>
-                <div className="grid grid-cols-2 gap-3 mb-6">
-                  <Link
-                    href="/donate"
-                    className="h-12 flex items-center justify-center text-sm border border-border rounded-xl font-bold text-primary hover:border-primary hover:bg-primary/5 transition-all"
-                  >
-                    $25 Supporter
-                  </Link>
-                  <Link
-                    href="/donate"
-                    className="h-12 flex items-center justify-center text-sm border border-border rounded-xl font-bold text-primary hover:border-primary hover:bg-primary/5 transition-all"
-                  >
-                    $50 Builder
-                  </Link>
-                  <Link
-                    href="/donate"
-                    className="h-12 flex items-center justify-center text-sm border border-primary bg-primary/10 rounded-xl font-bold text-primary transition-all"
-                  >
-                    $100 Sustainer
-                  </Link>
-                  <Link
-                    href="/donate"
-                    className="h-12 flex items-center justify-center text-sm border border-border rounded-xl font-bold text-primary hover:border-primary hover:bg-primary/5 transition-all"
-                  >
-                    $500 Catalyst
-                  </Link>
-                </div>
-                <Button
-                  asChild
-                  className="w-full h-12 bg-primary text-white hover:bg-accent transition-all font-bold text-sm uppercase tracking-wide"
-                >
-                  <Link href="/donate">Donate Now</Link>
-                </Button>
-                <p className="text-[11px] text-center text-text-muted mt-4 font-body">
-                  100% of your tax-deductible donation directly funds H.I.P.S. scholarships.
-                </p>
+              <div id="donation-card" className="w-full">
+                <DonationPanel />
               </div>
             </div>
           </div>
@@ -231,10 +194,10 @@ export default function DonateLandingPage() {
               asChild
               className="h-12 px-8 rounded-full bg-accent text-white hover:bg-accent transition-all font-bold text-sm uppercase tracking-wide"
             >
-              <Link href="/donate">
+              <a href="#donation-card">
                 Donate Now
                 <ArrowRight className="ml-2 h-4 w-4 inline-block" />
-              </Link>
+              </a>
             </Button>
           </div>
         </section>

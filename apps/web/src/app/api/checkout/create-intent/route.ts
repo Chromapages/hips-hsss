@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { getStripeServerClient } from '@/lib/stripe';
 import { getDb, isFirebaseAdminReady } from '@/lib/firebase-admin';
-import { verifyFirebaseIdToken } from '@/lib/auth-edge';
+import { verifyFirebaseIdToken } from '@/lib/firebase-auth';
 
 const intentSchema = z.object({
   sessionId: z.string(), // Firestore IDs are strings
@@ -72,11 +72,24 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    // 4. Create Payment Intent
-    // Idempotency key is stable per (user, session) so concurrent retries return
-    // the same PaymentIntent instead of creating a new one (which would
-    // double-charge). Sequential retries that need a fresh attempt can cancel
-    // the existing intent and create a new one.
+    // 4. Create Payment Intent or Bypass if Demo Mode
+    const isDemoMode = process.env.NEXT_PUBLIC_DEMO_MODE === 'true';
+
+    if (isDemoMode) {
+      const mockIntentId = `demo_intent_${sessionId}`;
+      try {
+        await sessionRef.update({
+          stripePaymentIntentId: mockIntentId,
+          updatedAt: new Date().toISOString(),
+        });
+      } catch (err) {
+        console.warn('Failed to persist mock intent ID on session:', err);
+      }
+      return NextResponse.json({
+        clientSecret: mockIntentId,
+      });
+    }
+
     const stripe = getStripeServerClient();
     const paymentIntent = await stripe.paymentIntents.create({
       amount: service.priceCents || 5000, // Fallback to $50 if not set

@@ -16,7 +16,7 @@ export default function AuthLayout({
         <div className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] bg-accent/5 rounded-full blur-[120px] animate-pulse [animation-delay:2s]" />
       </div>
 
-      <main className="relative z-10 flex min-h-screen items-center justify-center p-6">
+      <main id="main" tabIndex={-1} className="relative z-10 flex min-h-screen items-center justify-center p-6">
         <div className="w-full max-w-[440px] animate-in fade-in slide-in-from-bottom-8 duration-1000">
           <div className="rounded-3xl border border-border bg-surface p-8 md:p-12 shadow-xl relative overflow-hidden">
             {/* Subtle inner glow */}

@@ -117,6 +117,17 @@ exports.Prisma.TransactionIsolationLevel = makeStrictEnum({
   Serializable: 'Serializable'
 });
 
+exports.Prisma.AuditEventScalarFieldEnum = {
+  id: 'id',
+  service: 'service',
+  action: 'action',
+  actorRef: 'actorRef',
+  subjectRef: 'subjectRef',
+  metadata: 'metadata',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
 exports.Prisma.SafetyAlertScalarFieldEnum = {
   id: 'id',
   sessionId: 'sessionId',
@@ -125,7 +136,8 @@ exports.Prisma.SafetyAlertScalarFieldEnum = {
   anonymizedReason: 'anonymizedReason',
   transcriptChunk: 'transcriptChunk',
   isResolved: 'isResolved',
-  createdAt: 'createdAt'
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
 };
 
 exports.Prisma.SafetyMitigationScalarFieldEnum = {
@@ -143,7 +155,8 @@ exports.Prisma.SafetyStrikeScalarFieldEnum = {
   participantId: 'participantId',
   count: 'count',
   lastStrikeAt: 'lastStrikeAt',
-  createdAt: 'createdAt'
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
 };
 
 exports.Prisma.SafetyAuditLogScalarFieldEnum = {
@@ -151,7 +164,31 @@ exports.Prisma.SafetyAuditLogScalarFieldEnum = {
   action: 'action',
   actor: 'actor',
   metadata: 'metadata',
-  createdAt: 'createdAt'
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.EscalationQueueScalarFieldEnum = {
+  id: 'id',
+  sessionRef: 'sessionRef',
+  level: 'level',
+  source: 'source',
+  summary: 'summary',
+  status: 'status',
+  reviewerHandle: 'reviewerHandle',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt',
+  alertId: 'alertId'
+};
+
+exports.Prisma.KeywordRuleScalarFieldEnum = {
+  id: 'id',
+  term: 'term',
+  severity: 'severity',
+  category: 'category',
+  enabled: 'enabled',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
 };
 
 exports.Prisma.SortOrder = {
@@ -159,12 +196,12 @@ exports.Prisma.SortOrder = {
   desc: 'desc'
 };
 
-exports.Prisma.NullableJsonNullValueInput = {
-  DbNull: Prisma.DbNull,
+exports.Prisma.JsonNullValueInput = {
   JsonNull: Prisma.JsonNull
 };
 
-exports.Prisma.JsonNullValueInput = {
+exports.Prisma.NullableJsonNullValueInput = {
+  DbNull: Prisma.DbNull,
   JsonNull: Prisma.JsonNull
 };
 
@@ -173,23 +210,62 @@ exports.Prisma.QueryMode = {
   insensitive: 'insensitive'
 };
 
-exports.Prisma.NullsOrder = {
-  first: 'first',
-  last: 'last'
-};
-
 exports.Prisma.JsonNullValueFilter = {
   DbNull: Prisma.DbNull,
   JsonNull: Prisma.JsonNull,
   AnyNull: Prisma.AnyNull
 };
 
+exports.Prisma.NullsOrder = {
+  first: 'first',
+  last: 'last'
+};
+exports.SafetySeverity = exports.$Enums.SafetySeverity = {
+  LOW: 'LOW',
+  MEDIUM: 'MEDIUM',
+  HIGH: 'HIGH',
+  CRITICAL: 'CRITICAL'
+};
+
+exports.SafetyCategory = exports.$Enums.SafetyCategory = {
+  HARM: 'HARM',
+  SELF_HARM: 'SELF_HARM',
+  HARASSMENT: 'HARASSMENT',
+  DISCLOSURE: 'DISCLOSURE'
+};
+
+exports.MitigationAction = exports.$Enums.MitigationAction = {
+  WARNING: 'WARNING',
+  MUTE: 'MUTE',
+  KICK: 'KICK',
+  ESCALATE: 'ESCALATE'
+};
+
+exports.EscalationLevel = exports.$Enums.EscalationLevel = {
+  watch: 'watch',
+  urgent: 'urgent',
+  crisis: 'crisis'
+};
+
+exports.EscalationSource = exports.$Enums.EscalationSource = {
+  keyword: 'keyword',
+  manual: 'manual'
+};
+
+exports.EscalationStatus = exports.$Enums.EscalationStatus = {
+  open: 'open',
+  reviewing: 'reviewing',
+  resolved: 'resolved'
+};
 
 exports.Prisma.ModelName = {
+  AuditEvent: 'AuditEvent',
   SafetyAlert: 'SafetyAlert',
   SafetyMitigation: 'SafetyMitigation',
   SafetyStrike: 'SafetyStrike',
-  SafetyAuditLog: 'SafetyAuditLog'
+  SafetyAuditLog: 'SafetyAuditLog',
+  EscalationQueue: 'EscalationQueue',
+  KeywordRule: 'KeywordRule'
 };
 
 /**

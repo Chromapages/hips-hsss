@@ -4,6 +4,8 @@ import { useMemo, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Points, BufferAttribute } from 'three';
 
+import { useReducedMotion } from '@/hooks/useReducedMotion';
+
 const INDIGO = '#173B57';
 const AMBER = '#fbbf24';
 
@@ -14,6 +16,7 @@ function ParticleLayer({ count, color, speed, spread }: {
   spread: number;
 }) {
   const ref = useRef<Points>(null);
+  const reduced = useReducedMotion();
 
   const { positions, velocities } = useMemo(() => {
     const pos = new Float32Array(count * 3);
@@ -30,7 +33,7 @@ function ParticleLayer({ count, color, speed, spread }: {
   }, [count, speed, spread]);
 
   useFrame(() => {
-    if (!ref.current) return;
+    if (reduced || !ref.current) return;
     const attr = ref.current.geometry.attributes.position as BufferAttribute;
     for (let i = 0; i < count; i++) {
       let x = attr.getX(i) + (velocities[i * 3] ?? 0);

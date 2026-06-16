@@ -14,6 +14,7 @@
   },
   "dependencies": {
     "@hips/db": "workspace:^",
+    "@hips/types": "workspace:^",
     "@hookform/resolvers": "^5.4.0",
     "@livekit/components-react": "^2.9.20",
     "@livekit/components-styles": "^1.2.0",
@@ -37,6 +38,7 @@
     "@stripe/react-stripe-js": "^6.3.0",
     "@stripe/stripe-js": "^9.3.1",
     "@types/three": "^0.184.0",
+    "bcrypt": "^6.0.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
@@ -47,6 +49,8 @@
     "livekit-server-sdk": "^2.15.1",
     "lucide-react": "^1.11.0",
     "next": "15.5.18",
+    "otplib": "12.0.1",
+    "qrcode": "^1.5.4",
     "react": "18.3.1",
     "react-dom": "18.3.1",
     "react-hook-form": "^7.77.0",
@@ -57,5 +61,9 @@
     "tailwind-merge": "^3.5.0",
     "three": "^0.184.0",
     "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@types/bcrypt": "^6.0.0",
+    "@types/qrcode": "^1.5.6"
   }
 }

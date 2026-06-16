@@ -1,19 +1,15 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Calendar, Save, Loader2, Check } from "lucide-react";
+import { Calendar, Save, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { WeekDay, Slot, WeeklyAvailability } from "@/lib/availability";
 
-interface AvailabilityCalendarProps {
+interface HostAvailabilitySlotsProps {
   getToken: () => Promise<string | null>;
 }
 
-type WeekDays = "monday" | "tuesday" | "wednesday" | "thursday" | "friday" | "saturday" | "sunday";
-type SlotsType = "morning" | "afternoon" | "evening";
-
-type AvailabilityGrid = Record<WeekDays, SlotsType[]>;
-
-const daysList: { key: WeekDays; label: string }[] = [
+const daysList: { key: WeekDay; label: string }[] = [
   { key: "monday", label: "Mon" },
   { key: "tuesday", label: "Tue" },
   { key: "wednesday", label: "Wed" },
@@ -23,14 +19,14 @@ const daysList: { key: WeekDays; label: string }[] = [
   { key: "sunday", label: "Sun" },
 ];
 
-const slotsList: { key: SlotsType; label: string; hours: string }[] = [
+const slotsList: { key: Slot; label: string; hours: string }[] = [
   { key: "morning", label: "Morning", hours: "9am - 12pm" },
   { key: "afternoon", label: "Afternoon", hours: "12pm - 4pm" },
   { key: "evening", label: "Evening", hours: "4pm - 8pm" },
 ];
 
-export function AvailabilityCalendar({ getToken }: AvailabilityCalendarProps) {
-  const [grid, setGrid] = useState<AvailabilityGrid>({
+export function HostAvailabilitySlots({ getToken }: HostAvailabilitySlotsProps) {
+  const [grid, setGrid] = useState<WeeklyAvailability>({
     monday: [],
     tuesday: [],
     wednesday: [],
@@ -64,7 +60,7 @@ export function AvailabilityCalendar({ getToken }: AvailabilityCalendarProps) {
     loadAvailability();
   }, [getToken]);
 
-  const toggleSlot = (day: WeekDays, slot: SlotsType) => {
+  const toggleSlot = (day: WeekDay, slot: Slot) => {
     setGrid((prev) => {
       const active = prev[day];
       const next = active.includes(slot)

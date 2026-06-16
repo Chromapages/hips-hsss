@@ -23,7 +23,7 @@ import { ParticipantJourney } from "@/components/dashboard/ParticipantJourney";
 import { SessionFeedbackCard } from "@/components/dashboard/SessionFeedbackCard";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { useSWRData } from "@/hooks/useSWR";
-import { format } from "date-fns";
+import { formatDate, formatDateTime } from "@/lib/format";
 import { z } from "zod";
 
 const DashboardSessionSchema = z.object({
@@ -244,7 +244,7 @@ export default function DashboardPage() {
         </div>
         <div className="text-left md:text-right font-ui">
           <p className="text-[10px] font-bold text-text-muted uppercase tracking-widest">Current Date</p>
-          <p className="text-lg font-bold text-text-primary">{format(new Date(), 'MMM d, yyyy')}</p>
+          <p className="text-lg font-bold text-text-primary">{formatDate(new Date())}</p>
         </div>
       </header>
 
@@ -281,7 +281,7 @@ export default function DashboardPage() {
                 <Timer className="w-4 h-4 text-text-muted" />
                 <span>
                   {dashboardData.nextSession.startsAt
-                    ? format(new Date(dashboardData.nextSession.startsAt), 'eeee, MMM d @ h:mm a')
+                    ? formatDateTime(dashboardData.nextSession.startsAt)
                     : 'Time pending'}
                 </span>
               </div>
@@ -371,6 +371,20 @@ export default function DashboardPage() {
             </h3>
             <div className="space-y-3">
               <Link
+                href="/demo-room"
+                className="flex items-center justify-between p-3.5 rounded-lg border border-accent/30 bg-accent/5 hover:border-accent hover:bg-accent/10 transition-all group animate-pulse"
+              >
+                <div className="flex flex-col">
+                  <span className="text-sm font-semibold text-accent group-hover:text-accent transition-colors flex items-center gap-1.5">
+                    Try Demo Session
+                    <span className="text-[9px] px-1.5 py-0.5 rounded bg-accent/20 text-accent font-bold uppercase tracking-wider">Demo</span>
+                  </span>
+                  <span className="text-[10px] text-text-secondary font-body mt-0.5">Test WebRTC voice &amp; 3D avatar</span>
+                </div>
+                <ArrowRight className="w-4 h-4 text-accent group-hover:translate-x-1 transition-all" />
+              </Link>
+
+              <Link
                 href="/join"
                 className="flex items-center justify-between p-3.5 rounded-lg border border-border bg-surface hover:border-accent/40 hover:bg-surface transition-all group"
               >
@@ -414,7 +428,7 @@ export default function DashboardPage() {
             <ShieldAlert className="h-5 w-5 text-destructive" aria-hidden="true" />
           </div>
           <div>
-            <h4 className="font-heading text-sm font-bold text-text-primary">Immediate Support Needed?</h4>
+            <h3 className="font-heading text-sm font-bold text-text-primary">Immediate Support Needed?</h3>
             <p className="text-text-secondary text-xs font-body">If you are experiencing a crisis or in immediate danger, confidential help is available 24/7.</p>
           </div>
         </div>

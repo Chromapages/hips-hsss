@@ -1,4 +1,5 @@
 import { User, Users, Clock, Sparkles, HeartPulse, Shield, type LucideIcon } from "lucide-react"
+import { PACKAGES } from "@hips/types"
 
 // ============================================================================
 // Types
@@ -212,9 +213,9 @@ export const SERVICES_CATALOG: Service[] = [
 export const PACKAGE_TIERS: PackageTier[] = [
   {
     id: "SINGLE",
-    name: "Single Session",
-    price: 50,
-    sessions: 1,
+    name: PACKAGES.SINGLE.name,
+    price: PACKAGES.SINGLE.priceCents / 100,
+    sessions: PACKAGES.SINGLE.credits,
     description:
       "Perfect for a one-time crisis or a trial of the sanctuary experience.",
     features: [
@@ -227,9 +228,9 @@ export const PACKAGE_TIERS: PackageTier[] = [
   },
   {
     id: "ESSENTIAL",
-    name: "Essential Pack",
-    price: 225,
-    sessions: 5,
+    name: PACKAGES.ESSENTIAL.name,
+    price: PACKAGES.ESSENTIAL.priceCents / 100,
+    sessions: PACKAGES.ESSENTIAL.credits,
     description:
       "Our most popular choice for ongoing peer-to-peer healing. Save $25 vs. buying sessions individually.",
     features: [
@@ -244,9 +245,9 @@ export const PACKAGE_TIERS: PackageTier[] = [
   },
   {
     id: "SANCTUARY",
-    name: "Sanctuary Pack",
-    price: 400,
-    sessions: 10,
+    name: PACKAGES.SANCTUARY.name,
+    price: PACKAGES.SANCTUARY.priceCents / 100,
+    sessions: PACKAGES.SANCTUARY.credits,
     description:
       "The complete commitment to your safety and long-term recovery. Save $100 vs. buying sessions individually.",
     features: [

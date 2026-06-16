@@ -17,7 +17,16 @@ async function bootstrap() {
 
   // Safety Service listens on internal port 3003
   const port = process.env.PORT || 3003;
+
+  app.getHttpAdapter().get('/health', (req, res) => {
+    res.status(200).json({ status: 'ok', service: 'safety' });
+  });
+
   await app.listen(port);
   console.log(`H.I.P.S. Safety Engine running on port ${port}`);
+
+  if (process.send) {
+    process.send('ready');
+  }
 }
 bootstrap();

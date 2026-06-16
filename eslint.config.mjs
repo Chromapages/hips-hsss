@@ -12,6 +12,22 @@ const eslintConfig = defineConfig([
       },
     },
   },
+  {
+    files: ["apps/web/src/app/api/**/*.ts"],
+    rules: {
+      "no-restricted-syntax": [
+        "error",
+        {
+          selector: "BinaryExpression[left.property.name='role']",
+          message: "Server role checks must use requireRole() and the canonical permissions policy.",
+        },
+        {
+          selector: "BinaryExpression[right.property.name='role']",
+          message: "Server role checks must use requireRole() and the canonical permissions policy.",
+        },
+      ],
+    },
+  },
   // Override default ignores of eslint-config-next.
   globalIgnores([
     // Default ignores of eslint-config-next:

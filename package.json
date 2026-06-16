@@ -17,7 +17,8 @@
     "test": "node scripts/check-data-separation.mjs && node scripts/check-copy.mjs && vitest run tests/data-separation.spec.ts",
     "test:phase9": "vitest run tests/data-separation.spec.ts",
     "separation": "node scripts/check-data-separation.mjs",
-    "check:copy": "node scripts/check-copy.mjs"
+    "check:copy": "node scripts/check-copy.mjs",
+    "db:seed-demo": "tsx scripts/seed-demo-data.ts"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
@@ -32,6 +33,7 @@
     "jsdom": "^29.1.1",
     "prisma": "6.1.0",
     "tailwindcss": "^4",
+    "tsx": "^4.22.4",
     "typescript": "^5",
     "vitest": "^1.6.1"
   }

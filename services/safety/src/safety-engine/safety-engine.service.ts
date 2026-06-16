@@ -48,7 +48,7 @@ export class SafetyEngineService extends BaseService {
         data: {
           sessionId,
           severity,
-          category,
+          category: category as any,
           anonymizedReason: `Keyword detected: "${topMatch.keyword}" — ${matches.length} total match(es)`,
           transcriptChunk: text,
           isResolved: false,

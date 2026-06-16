@@ -26,10 +26,14 @@ function Starfield() {
   );
 }
 
+import { useReducedMotion } from '@/hooks/useReducedMotion';
+
 function MandalaRings() {
   const outerRef = useRef<Mesh>(null);
+  const reduced = useReducedMotion();
 
   useFrame((state) => {
+    if (reduced) return;
     if (outerRef.current) {
       outerRef.current.rotation.z = state.clock.elapsedTime * 0.04;
     }

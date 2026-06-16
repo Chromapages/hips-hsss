@@ -3,10 +3,13 @@
 import { useAuth } from "@/components/auth/AuthProvider";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
+import { type Role } from "@/lib/roles";
+
+export type AllowedRole = Role;
 
 interface AuthGuardProps {
   children: React.ReactNode;
-  allowedRoles?: string[];
+  allowedRoles?: readonly AllowedRole[] | undefined;
 }
 
 export function AuthGuard({ children, allowedRoles }: AuthGuardProps) {
@@ -16,14 +19,15 @@ export function AuthGuard({ children, allowedRoles }: AuthGuardProps) {
   useEffect(() => {
     if (!loading) {
       if (!user) {
-        router.push("/login");
-      } else if (allowedRoles && (!role || !allowedRoles.includes(role))) {
-        router.push("/dashboard");
+        const fromPath = window.location.pathname + window.location.search;
+        router.push("/login?from=" + encodeURIComponent(fromPath));
+      } else if (allowedRoles && (!role || !allowedRoles.includes(role as Role))) {
+        router.push(role === "FACILITATOR" ? "/facilitator" : role === "ADMIN" || role === "SUPER_ADMIN" ? "/admin" : "/dashboard");
       }
     }
   }, [user, role, loading, router, allowedRoles]);
 
-  if (loading || !user || (allowedRoles && (!role || !allowedRoles.includes(role)))) {
+  if (loading || !user || (allowedRoles && (!role || !allowedRoles.includes(role as Role)))) {
     return (
       <div className="min-h-screen bg-black text-white flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">

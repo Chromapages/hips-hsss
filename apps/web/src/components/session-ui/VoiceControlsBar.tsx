@@ -96,7 +96,7 @@ export function VoiceControlsBar({
               ? "cursor-wait opacity-50"
               : micEnabled
                 ? idleButton
-                : "border border-destructive/20 bg-destructive0/10 text-destructive0 hover:bg-destructive0/20",
+                : "border border-destructive/20 bg-destructive/10 text-destructive hover:bg-destructive/20",
           ].join(" ")}
           disabled={micBusy}
           onClick={onToggleMute}
@@ -179,7 +179,7 @@ export function VoiceControlsBar({
         {/* Leave button */}
         <button
           aria-label="Leave session"
-          className="ml-1 flex h-14 items-center justify-center rounded-full bg-destructive px-8 font-bold text-white shadow-lg shadow-red-900/40 transition-all hover:bg-destructive0 hover:scale-105"
+          className="ml-1 flex h-14 items-center justify-center rounded-full bg-destructive px-8 font-bold text-white shadow-lg shadow-red-900/40 transition-all hover:bg-destructive/10 hover:scale-105"
           onClick={handleLeaveClick}
           type="button"
         >
@@ -197,8 +197,8 @@ export function VoiceControlsBar({
           aria-labelledby="leave-modal-title"
         >
           <section className={modalCard}>
-            <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-full border border-destructive/20 bg-destructive0/10">
-              <PhoneOff className="h-8 w-8 text-destructive0" />
+            <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-full border border-destructive/20 bg-destructive/10">
+              <PhoneOff className="h-8 w-8 text-destructive" />
             </div>
             <h2
               className="font-heading mb-4 text-3xl font-extrabold tracking-tighter text-primary"
@@ -215,7 +215,7 @@ export function VoiceControlsBar({
                 Cancel
               </button>
               <button
-                className="h-14 flex-1 rounded-2xl bg-destructive font-bold shadow-lg shadow-red-900/40 hover:bg-destructive0 transition-all"
+                className="h-14 flex-1 rounded-2xl bg-destructive font-bold shadow-lg shadow-red-900/40 hover:bg-destructive/10 transition-all"
                 onClick={handleConfirmLeave}
                 type="button"
               >

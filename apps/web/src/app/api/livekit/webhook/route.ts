@@ -1,20 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDb } from '@/lib/firebase-admin';
-import { WebhookReceiver } from 'livekit-server-sdk';
+import { verifyWebhookSignature } from '@/lib/webhooks/verify';
+import { registerEventId } from '@/lib/webhooks/idempotency';
+import { logSecurityEvent } from '@/lib/security/audit';
+import { logger, safeError } from '@/lib/logger';
 
 /**
- * LiveKit Webhook Receiver — handles session lifecycle events.
- * Updates participantCount and session status in Firestore when
- * participants join/leave or the room finishes.
+ * LiveKit webhook handler — Layer 5.
  *
- * Security contract (C1, Sprint 1):
- * - LIVEKIT_WEBHOOK_SECRET is mandatory. If unset, the route refuses to run.
- * - The livekit-signature header is mandatory. Missing header → 401.
- * - The HMAC is compared with timingSafeEqual on equal-length buffers.
- * - Replay protection: each event id is recorded in `webhook_events` once.
- *   A second delivery with the same id is acknowledged but not processed.
- * - Events outside the allowlist are acknowledged with 200 but not processed.
+ * Pipeline (every step is required):
+ *  1. Read raw body (HMAC is computed over exact bytes).
+ *  2. verifyWebhookSignature({ provider: 'livekit' }) — covers HMAC +
+ *     ±5-min timestamp window on event.createdAt.
+ *  3. registerEventId(`livekit:${event.id}`) — Redis dedup, 24h TTL.
+ *     Replaces the older Firestore `webhook_events` collection check.
+ *  4. Allowlist known event types; ack unknown events with 200.
+ *  5. Apply the side effect via Firestore.
+ *  6. Signature failures → security audit log.
  */
+
+const ENDPOINT = '/api/livekit/webhook';
+
 const ALLOWED_EVENTS = new Set<string>([
   'room_started',
   'room_finished',
@@ -26,80 +32,69 @@ const SESSION_ID_PREFIX = 'session-';
 
 export async function POST(req: NextRequest) {
   const body = await req.text();
-  const signature = req.headers.get('Authorization') || req.headers.get('livekit-signature');
+  // LiveKit sends the signature in `Authorization: Bearer <token>` OR
+  // in the `livekit-signature` header. Try both.
+  const signature =
+    req.headers.get('Authorization')?.replace(/^Bearer\s+/i, '').trim() ??
+    req.headers.get('livekit-signature');
 
-  // 1. Webhook credentials check
-  const apiKey = process.env.LIVEKIT_API_KEY;
-  const apiSecret = process.env.LIVEKIT_API_SECRET;
+  // 1+2: Verify HMAC and timestamp window.
+  const verification = verifyWebhookSignature({
+    provider: 'livekit',
+    body,
+    signature: signature || null,
+    endpoint: ENDPOINT,
+  });
 
-  if (!apiKey || !apiSecret) {
+  if (!verification.ok) {
+    await logSecurityEvent({
+      eventType: 'WEBHOOK_SIGNATURE_FAILED',
+      outcome: 'FAILURE',
+      targetType: 'webhook',
+      targetId: ENDPOINT,
+      failureReason: verification.reason,
+      metadata: { provider: 'livekit', detail: verification.detail },
+      ip: req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? undefined,
+      userAgent: req.headers.get('user-agent') ?? undefined,
+    });
+
+    const status = verification.reason === 'misconfigured' ? 500 : 401;
     return NextResponse.json(
-      { error: 'Webhook not configured' },
-      { status: 503 }
+      { error: `Webhook verification failed: ${verification.reason}` },
+      { status },
     );
   }
 
-  // 2. Signature header is mandatory — fail closed if missing.
-  if (!signature) {
-    return NextResponse.json(
-      { error: 'Missing signature header' },
-      { status: 401 }
-    );
-  }
-
-  // 3. Verify signature using WebhookReceiver
-  const receiver = new WebhookReceiver(apiKey, apiSecret);
-  let event: {
+  const event = verification.event as {
     id?: string;
     event?: string;
     room?: { name?: string };
   };
 
-  try {
-    event = await receiver.receive(body, signature) as any;
-  } catch (err: any) {
-    return NextResponse.json(
-      { error: `Invalid webhook signature: ${err.message || 'Verification failed'}` },
-      { status: 401 }
-    );
-  }
-
-  // 5. Allowlist unknown events (acknowledge but do not process).
+  // 4: Allowlist unknown events — ack with 200 but don't process.
   if (!event.event || !ALLOWED_EVENTS.has(event.event)) {
     return NextResponse.json({ received: true });
   }
 
-  // 6. Replay protection — record the event id once.
   if (!event.id) {
     return NextResponse.json({ error: 'Missing event id' }, { status: 400 });
   }
-  const db = getDb();
-  if (!db) {
-    return NextResponse.json({ error: 'Service unavailable' }, { status: 503 });
+
+  // 3: Idempotency check (replaces the previous Firestore write).
+  const { firstSeen } = await registerEventId(`livekit:${event.id}`);
+  if (!firstSeen) {
+    return NextResponse.json({ received: true, replay: true });
   }
 
-  try {
-    await db.collection('webhook_events').doc(event.id).create({
-      receivedAt: new Date().toISOString(),
-    });
-  } catch (err: unknown) {
-    if (
-      err &&
-      typeof err === 'object' &&
-      'code' in err &&
-      (err as { code: unknown }).code === 6
-    ) {
-      // ALREADY_EXISTS — replay. Acknowledge without reprocessing.
-      return NextResponse.json({ received: true, replay: true });
-    }
-    console.error('[LiveKitWebhook] Dedupe write failed:', err);
-    return NextResponse.json({ error: 'Dedupe check failed' }, { status: 503 });
-  }
-
-  // 7. Apply the side effect.
+  // 5: Apply the side effect.
   const roomName = event.room?.name;
   if (!roomName) {
     return NextResponse.json({ received: true });
+  }
+
+  const db = getDb();
+  if (!db) {
+    return NextResponse.json({ error: 'Service unavailable' }, { status: 503 });
   }
 
   const sessionId = roomName.startsWith(SESSION_ID_PREFIX)
@@ -137,7 +132,9 @@ export async function POST(req: NextRequest) {
       }
     }
   } catch (err) {
-    console.warn('[LiveKitWebhook] Failed to update session:', err);
+    logger.warn('LiveKit webhook: failed to update session', { error: safeError(err) });
+    // Don't fail the request — we already acknowledged with 200. The
+    // idempotency registry has the event id, so a retry won't re-process.
   }
 
   return NextResponse.json({ received: true });

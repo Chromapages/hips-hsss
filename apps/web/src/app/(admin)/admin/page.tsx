@@ -4,6 +4,7 @@ import { useFetchWithTimeout } from "@/hooks/useFetchWithTimeout";
 import { DollarSign, Users, Activity, ShieldAlert, Loader2, TrendingUp, Globe } from "lucide-react";
 import { format } from "date-fns";
 import { GrowthChart } from "@/components/admin/GrowthChart";
+import { AdminErrorBanner } from "@/components/admin/AdminErrorBanner";
 
 type AdminStats = {
   totalRevenue?: number | string;
@@ -23,7 +24,7 @@ type AdminStats = {
 };
 
 export default function AdminDashboardPage() {
-  const { data: stats, isLoading } = useFetchWithTimeout<AdminStats>('/api/admin/stats');
+  const { data: stats, isLoading, error, refetch } = useFetchWithTimeout<AdminStats>('/api/admin/stats');
 
   if (isLoading) {
     return (
@@ -61,6 +62,8 @@ export default function AdminDashboardPage() {
           Global platform oversight. Monitor commerce flow, safety incidents, and infrastructure health in real-time.
         </p>
       </header>
+
+      <AdminErrorBanner error={error} onRetry={refetch} context="dashboard statistics" />
 
       {/* Metric Cards */}
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">

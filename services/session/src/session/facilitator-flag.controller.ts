@@ -4,14 +4,12 @@ import {
   Body,
   Param,
   Req,
-  UnauthorizedException,
   NotFoundException,
   HttpCode,
   UseGuards,
   BadRequestException,
 } from '@nestjs/common';
 import type { Request } from 'express';
-import { getAdminAuth } from '../firebase-init.js';
 import { Roles, UserRole, RolesGuard } from '../auth/roles.guard.js';
 import { PrismaService } from '../prisma.service.js';
 import { z } from 'zod';
@@ -22,7 +20,7 @@ const FacilitatorFlagSchema = z.object({
 });
 
 interface AuthRequest extends Request {
-  userId?: string;
+  userUid?: string;
   userRole?: UserRole;
 }
 
@@ -40,14 +38,15 @@ export class FacilitatorFlagController {
   @Post('sessions/:id/flag')
   @HttpCode(200)
   @UseGuards(RolesGuard)
-  @Roles(UserRole.FACILITATOR)
+  @Roles(UserRole.FACILITATOR, UserRole.ADMIN, UserRole.SUPER_ADMIN)
   async flagSession(
     @Param('id') sessionId: string,
     @Body() body: unknown,
     @Req() req: AuthRequest,
   ): Promise<{ flagged: boolean; auditEventId: string }> {
     // ── Auth check ───────────────────────────────────────────
-    const userId = await this.requireFacilitatorAuth(req);
+    const userId = req.userUid;
+    if (!userId) throw new Error('RolesGuard did not attach authenticated user');
 
     // ── Input validation ─────────────────────────────────────
     const parsed = FacilitatorFlagSchema.safeParse(body);
@@ -87,28 +86,4 @@ export class FacilitatorFlagController {
     return { flagged: true, auditEventId };
   }
 
-  private async requireFacilitatorAuth(req: AuthRequest): Promise<string> {
-    const authHeader = (req.headers as Record<string, string | undefined>)['authorization'];
-    const idToken = authHeader?.replace(/^Bearer\s+/i, '');
-
-    if (!idToken) {
-      throw new UnauthorizedException('Missing Firebase ID token');
-    }
-
-    let decoded: { uid: string; role?: string };
-    try {
-      decoded = await getAdminAuth().verifyIdToken(idToken) as { uid: string; role?: string };
-    } catch {
-      throw new UnauthorizedException('Invalid Firebase ID token');
-    }
-
-    const role = decoded.role as UserRole | undefined;
-    if (!role || role !== UserRole.FACILITATOR) {
-      throw new UnauthorizedException('Only facilitators may use this endpoint');
-    }
-
-    req.userId = decoded.uid;
-    req.userRole = role;
-    return decoded.uid;
-  }
 }

@@ -71,13 +71,14 @@ export class CrisisProtocolService extends BaseService {
     }
 
     // Retrieve PII for emergency response
-    // Look up the actual participantId from the session record
+    // Look up the actual participantId from the safety strikes record
     let participantId: string;
-    const sessionRecord = await this.prisma.session.findUnique({
-      where: { id: alert.sessionId },
+    const strikeRecord = await this.prisma.safetyStrike.findFirst({
+      where: { sessionId: alert.sessionId },
+      orderBy: { lastStrikeAt: 'desc' },
     });
-    if (sessionRecord?.anonymousParticipantId) {
-      participantId = sessionRecord.anonymousParticipantId;
+    if (strikeRecord?.participantId) {
+      participantId = strikeRecord.participantId;
     } else {
       participantId = alert.sessionId;
     }
@@ -102,6 +103,14 @@ export class CrisisProtocolService extends BaseService {
       }
     } catch (err) {
       this.logger.error(`Vault fetch failed for crisis protocol: ${err}`);
+    }
+
+    // After exhausting retries, vaultSuccess is false — crisis without PII is dangerous.
+    // Throw to force the caller to handle this explicitly rather than silently proceeding.
+    if (!vaultSuccess) {
+      throw new BadRequestException(
+        'Crisis protocol activation failed: PII lookup failed after all retries. PII is required for crisis response.'
+      );
     }
 
     // Update alert with crisis activation

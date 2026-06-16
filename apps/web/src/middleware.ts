@@ -1,3 +1,4 @@
+// Canonical Path: apps/web/src/middleware.ts
 import { NextResponse, NextRequest } from 'next/server';
 import { jwtVerify, importX509 } from 'jose';
 import { ROLES } from '@/lib/roles';
@@ -19,15 +20,7 @@ const PROTECTED_PATTERNS = [
   '/api/host',
 ];
 
-// Protected page route configs (role requirements)
-const PROTECTED_PAGES = [
-  { prefix: '/dashboard', roles: [] },
-  { prefix: '/checkout', roles: [] },
-  { prefix: '/session', roles: [] },
-  { prefix: '/facilitator', roles: [ROLES.FACILITATOR, ROLES.ADMIN] },
-  { prefix: '/host', roles: [ROLES.FACILITATOR, ROLES.ADMIN] },
-  { prefix: '/admin', roles: [ROLES.ADMIN] },
-];
+const PROTECTED_PAGES = ['/dashboard', '/checkout', '/session', '/facilitator', '/host', '/admin'];
 
 // Public routes (no auth required)
 const PUBLIC_PATTERNS = [
@@ -39,8 +32,7 @@ const PUBLIC_PATTERNS = [
   '/api/demo/token',
 ];
 
-// State-changing methods requiring CSRF
-const CSRF_METHODS = ['POST', 'PUT', 'PATCH', 'DELETE'];
+
 
 const WINDOW_MS = 60 * 1000;
 const MAX_REQUESTS = 100;
@@ -83,29 +75,39 @@ async function getPublicKeys() {
     return publicKeysCache.keys;
   }
 
-  const response = await fetch(FIREBASE_PUBLIC_KEYS_URL);
-  const cacheControl = response.headers.get('cache-control');
-  const maxAgeMatch = cacheControl?.match(/max-age=(\d+)/);
-  const maxAge = maxAgeMatch?.[1] ? parseInt(maxAgeMatch[1], 10) : 3600;
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000);
+    
+    const response = await fetch(FIREBASE_PUBLIC_KEYS_URL, {
+      signal: controller.signal
+    });
+    clearTimeout(timeoutId);
 
-  const keys = await response.json() as Record<string, string>;
-  publicKeysCache = { keys, expires: now + maxAge * 1000 };
-  return keys;
+    if (!response.ok) {
+      throw new Error(`Failed to fetch JWKS: HTTP ${response.status}`);
+    }
+
+    const cacheControl = response.headers.get('cache-control');
+    const maxAgeMatch = cacheControl?.match(/max-age=(\d+)/);
+    // Enforce min 300s (5m) and max 3600s (1h)
+    const rawMaxAge = maxAgeMatch?.[1] ? parseInt(maxAgeMatch[1], 10) : 3600;
+    const maxAge = Math.max(300, Math.min(rawMaxAge, 3600));
+
+    const keys = await response.json() as Record<string, string>;
+    publicKeysCache = { keys, expires: now + maxAge * 1000 };
+    return keys;
+  } catch (error) {
+    console.error('Failed to fetch Firebase public keys:', error);
+    if (publicKeysCache) {
+      console.warn('Serving stale public keys cache as fallback');
+      return publicKeysCache.keys;
+    }
+    throw error;
+  }
 }
 
-async function verifyToken(token: string): Promise<{ sub: string; role?: string } | null> {
-  if (process.env.NODE_ENV === 'development' && token.startsWith('mock-token-')) {
-    const rolePart = token.split('-')[2]; // 'host' or 'client' or 'admin'
-    const role = rolePart === 'host'
-      ? ROLES.FACILITATOR
-      : (rolePart === 'admin' ? ROLES.ADMIN : ROLES.PARTICIPANT);
-    const result: { sub: string; role?: string } = { sub: 'mock-uid-123' };
-    if (role) {
-      result.role = role;
-    }
-    return result;
-  }
-
+async function verifyToken(token: string): Promise<{ sub: string } | null> {
   const projectId = process.env.FIREBASE_PROJECT_ID || process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
   if (!projectId) return null;
 
@@ -125,11 +127,7 @@ async function verifyToken(token: string): Promise<{ sub: string; role?: string 
       audience: projectId,
     });
 
-    const result: { sub: string; role?: string } = { sub: payload.sub as string };
-    if (payload.role !== undefined) {
-      result.role = payload.role as string;
-    }
-    return result;
+    return { sub: payload.sub as string };
   } catch {
     return null;
   }
@@ -149,17 +147,7 @@ function isProtectedRoute(pathname: string): boolean {
   return false;
 }
 
-function generateCSRFToken(): string {
-  const array = new Uint8Array(32);
-  crypto.getRandomValues(array);
-  return Array.from(array, (b) => b.toString(16).padStart(2, '0')).join('');
-}
 
-function verifyCSRF(req: NextRequest): boolean {
-  const cookieToken = req.cookies.get('csrf-token')?.value;
-  const headerToken = req.headers.get('x-csrf-token');
-  return !!(cookieToken && headerToken && cookieToken === headerToken);
-}
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -176,46 +164,34 @@ export async function middleware(request: NextRequest) {
   }
 
   if (!pathname.startsWith('/api/')) {
-    const protectedPage = PROTECTED_PAGES.find(p => pathname.startsWith(p.prefix));
+    const protectedPage = PROTECTED_PAGES.find((prefix) => pathname.startsWith(prefix));
     if (protectedPage) {
       const token = request.cookies.get('hips-auth-token')?.value;
       if (!token) {
         const loginUrl = new URL('/login', request.url);
-        loginUrl.searchParams.set('from', pathname);
+        const fromPath = request.nextUrl.pathname + request.nextUrl.search;
+        loginUrl.searchParams.set('from', fromPath);
         return NextResponse.redirect(loginUrl);
       }
 
       const payload = await verifyToken(token);
       if (!payload) {
         const loginUrl = new URL('/login', request.url);
-        loginUrl.searchParams.set('from', pathname);
+        const fromPath = request.nextUrl.pathname + request.nextUrl.search;
+        loginUrl.searchParams.set('from', fromPath);
         return NextResponse.redirect(loginUrl);
       }
 
-      if (protectedPage.roles.length > 0) {
-        if (!payload.role || !protectedPage.roles.includes(payload.role as any)) {
-          return NextResponse.redirect(new URL('/dashboard', request.url));
-        }
-      }
+      // Middleware verifies identity only. Role redirects are performed by the
+      // database-hydrated AuthGuard; API authorization always uses requireRole().
     }
 
     return NextResponse.next();
   }
 
-  // Public routes — set CSRF cookie, skip auth
+  // Public routes — skip auth
   if (isPublicRoute(pathname)) {
-    const response = NextResponse.next();
-    const csrfCookie = request.cookies.get('csrf-token')?.value;
-    if (!csrfCookie) {
-      response.cookies.set('csrf-token', generateCSRFToken(), {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'strict',
-        path: '/',
-        maxAge: 60 * 60 * 24, // 24 hours
-      });
-    }
-    return response;
+    return NextResponse.next();
   }
 
   // Protected routes — require auth
@@ -232,37 +208,8 @@ export async function middleware(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // CSRF protection for state-changing methods
-    if (CSRF_METHODS.includes(request.method)) {
-      if (!verifyCSRF(request)) {
-        return NextResponse.json({ error: 'CSRF token missing or invalid' }, { status: 403 });
-      }
-    }
-
-    // Admin routes
-    if (pathname.startsWith('/api/admin')) {
-      if (payload.role !== ROLES.ADMIN) {
-        return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-      }
-    }
-
-    // Facilitator routes
-    if (pathname.startsWith('/api/facilitator')) {
-      if (payload.role !== ROLES.FACILITATOR && payload.role !== ROLES.ADMIN) {
-        return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-      }
-    }
-
-    // Host routes (same role requirement as facilitator)
-    if (pathname.startsWith('/api/host')) {
-      if (payload.role !== ROLES.FACILITATOR && payload.role !== ROLES.ADMIN) {
-        return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-      }
-    }
-
     const response = NextResponse.next();
     response.headers.set('x-user-id', payload.sub);
-    response.headers.set('x-user-role', payload.role || '');
     return response;
   }
 

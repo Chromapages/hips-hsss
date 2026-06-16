@@ -17,7 +17,16 @@ async function bootstrap() {
 
   // Commerce Service listens on internal port
   const port = process.env.PORT || 3004;
+
+  app.getHttpAdapter().get('/health', (req, res) => {
+    res.status(200).json({ status: 'ok', service: 'commerce' });
+  });
+
   await app.listen(port);
   console.log(`H.I.P.S. Commerce Service running on port ${port}`);
+
+  if (process.send) {
+    process.send('ready');
+  }
 }
 bootstrap();

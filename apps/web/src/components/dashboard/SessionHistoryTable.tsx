@@ -4,7 +4,7 @@ import Link from "next/link";
 import { CalendarX2 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { EmptyState } from "@/components/ui/empty-state";
-import { format } from "date-fns";
+import { formatDate } from "@/lib/format";
 
 const badgeClass = {
   UPCOMING: "bg-primary/10 text-primary border-primary/20",
@@ -62,7 +62,7 @@ export function SessionHistoryTable({ sessions = [] }: { sessions?: SessionHisto
               <td className="px-4 py-4 font-mono text-text-secondary text-xs">{displayId(row.id)}</td>
               <td className="px-4 py-4 text-text-primary font-bold font-heading">{row.service}</td>
               <td className="px-4 py-4 text-text-secondary">
-                {row.date ? format(new Date(row.date), 'MMM d, yyyy') : 'Pending'}
+                {row.date ? formatDate(row.date) : 'Pending'}
               </td>
               <td className="px-4 py-4">
                 <span

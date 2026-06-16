@@ -6,7 +6,7 @@ const services = [
 
 export default function DemoPage() {
   return (
-    <main className="min-h-screen bg-surface text-primary overflow-x-hidden">
+    <main id="main" tabIndex={-1} className="min-h-screen bg-surface text-primary overflow-x-hidden">
       <section className="mx-auto grid min-h-screen w-full max-w-7xl gap-8 px-5 py-8 lg:grid-cols-[1.05fr_0.95fr] lg:px-10">
         <div className="flex flex-col justify-between gap-8">
           <div>
