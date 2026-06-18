@@ -291,8 +291,8 @@ export const Navbar = React.memo(function Navbar() {
             )}
           </Link>
 
-          {/* ----- Center slot: desktop nav (>=1024px) ----- */}
-          <ul className="hidden lg:flex items-center gap-8 font-ui text-sm uppercase tracking-[0.15em] list-none m-0 p-0">
+          {/* ----- Center slot: desktop nav (>=768px) ----- */}
+          <ul className="hidden md:flex items-center gap-8 font-ui text-base tracking-[0.05em] list-none m-0 p-0">
             {navLinks.map((link) => (
               <li key={link.href} className="relative">
                 {link.children ? (
@@ -377,25 +377,35 @@ export const Navbar = React.memo(function Navbar() {
 
             {/* CTA visible >=768px in top bar; below that it lives in the drawer */}
             {user ? (
-              <Link
-                href="/dashboard"
-                className="hips-top-cta hidden md:inline-flex"
-                aria-current={isActive('/dashboard') ? 'page' : undefined}
-              >
-                <UserCircle className="w-4 h-4 mr-2" aria-hidden="true" />
-                Dashboard
-              </Link>
+              <div className="hidden md:flex items-center gap-3">
+                <Link
+                  href="/dashboard"
+                  className="hips-top-cta"
+                  aria-current={isActive('/dashboard') ? 'page' : undefined}
+                >
+                  <UserCircle className="w-4 h-4 mr-2" aria-hidden="true" />
+                  Dashboard
+                </Link>
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  className="px-4 h-11 flex items-center justify-center gap-2 rounded-xl border border-zinc-800 bg-zinc-900 text-zinc-300 text-xs font-bold uppercase tracking-wider hover:bg-zinc-850 hover:text-white hover:border-zinc-700 transition-all font-ui cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                >
+                  <LogOut className="w-3.5 h-3.5" aria-hidden="true" />
+                  Logout
+                </button>
+              </div>
             ) : (
-              <Link href="/services" className="hips-top-cta hidden md:inline-flex">
-                Get Support
+              <Link href="/login" className="hips-top-cta hidden md:inline-flex">
+                Login
               </Link>
             )}
 
-            {/* Hamburger — <1024px */}
+            {/* Hamburger — <768px */}
             <button
               ref={hamburgerRef}
               type="button"
-              className="hips-theme-toggle lg:hidden"
+              className="hips-theme-toggle md:hidden"
               onClick={handleToggle}
               aria-expanded={isOpen}
               aria-controls="mobile-drawer"
@@ -413,7 +423,7 @@ export const Navbar = React.memo(function Navbar() {
 
       {/* ----- Mobile drawer backdrop ----- */}
       <div
-        className="hips-drawer-backdrop lg:hidden"
+        className="hips-drawer-backdrop md:hidden"
         data-open={isOpen ? 'true' : 'false'}
         onClick={closeDrawer}
         aria-hidden="true"
@@ -423,7 +433,7 @@ export const Navbar = React.memo(function Navbar() {
       <nav
         ref={drawerRef}
         id="mobile-drawer"
-        className="hips-drawer lg:hidden"
+        className="hips-drawer md:hidden"
         data-open={isOpen ? 'true' : 'false'}
         aria-label="Mobile navigation"
         aria-hidden={!isOpen}
@@ -445,7 +455,7 @@ export const Navbar = React.memo(function Navbar() {
 
         <div className="flex-1 overflow-y-auto">
           {navLinks.map((link) => (
-            <div key={link.href}>
+            <div key={link.label}>
               <Link
                 href={link.href}
                 className="hips-drawer-link"
@@ -454,7 +464,7 @@ export const Navbar = React.memo(function Navbar() {
                 onClick={handleLinkClick}
                 tabIndex={isOpen ? 0 : -1}
               >
-                <span className="font-ui uppercase tracking-[0.15em] text-sm font-semibold">
+                <span className="font-ui tracking-[0.05em] text-base font-semibold">
                   {link.label}
                 </span>
               </Link>
@@ -466,11 +476,36 @@ export const Navbar = React.memo(function Navbar() {
                   onClick={handleLinkClick}
                   tabIndex={isOpen ? 0 : -1}
                 >
-                  <span className="text-[var(--color-text-muted)]">{child.label}</span>
+                  <span className="text-[var(--color-text-muted)] font-body font-medium">{child.label}</span>
                 </Link>
               ))}
             </div>
           ))}
+
+          {/* Staff Portals Section (Mobile Drawer only) */}
+          <div className="border-t border-[var(--color-divider)] mt-2">
+            <div className="hips-drawer-link select-none pointer-events-none bg-surface-alt/30 border-b border-[var(--color-divider)]">
+              <span className="font-ui tracking-[0.05em] text-base font-bold text-primary">
+                Staff Portals
+              </span>
+            </div>
+            <Link
+              href="/login/facilitator"
+              className="hips-drawer-link pl-8 text-sm"
+              onClick={handleLinkClick}
+              tabIndex={isOpen ? 0 : -1}
+            >
+              <span className="text-[var(--color-text-muted)] font-body font-medium">Facilitator Portal</span>
+            </Link>
+            <Link
+              href="/login/admin"
+              className="hips-drawer-link pl-8 text-sm"
+              onClick={handleLinkClick}
+              tabIndex={isOpen ? 0 : -1}
+            >
+              <span className="text-[var(--color-text-muted)] font-body font-medium">Admin Console</span>
+            </Link>
+          </div>
         </div>
 
         <div className="p-4 space-y-3 border-t border-[var(--color-divider)]">
@@ -491,7 +526,7 @@ export const Navbar = React.memo(function Navbar() {
                 className="hips-drawer-link w-full text-center"
                 tabIndex={isOpen ? 0 : -1}
               >
-                <span className="font-ui uppercase tracking-[0.15em] text-sm font-semibold text-[var(--color-danger)]">
+                <span className="font-ui tracking-[0.05em] text-base font-semibold text-[var(--color-danger)]">
                   Logout
                 </span>
               </button>
@@ -512,7 +547,7 @@ export const Navbar = React.memo(function Navbar() {
                 onClick={handleLinkClick}
                 tabIndex={isOpen ? 0 : -1}
               >
-                <span className="font-ui uppercase tracking-[0.15em] text-sm font-semibold">
+                <span className="font-ui tracking-[0.05em] text-base font-semibold">
                   Sign In
                 </span>
               </Link>

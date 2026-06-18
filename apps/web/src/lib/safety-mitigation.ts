@@ -13,6 +13,7 @@
 
 import 'server-only';
 import { createServiceToken, SCOPES, AUDIENCES } from '@/lib/auth/serviceToken';
+import { getInternalServiceUrl } from '@/lib/internal-service-url';
 
 export type SafetyMitigationPayload = {
   alertId?: string | undefined;
@@ -21,7 +22,7 @@ export type SafetyMitigationPayload = {
   metadata?: Record<string, unknown> | undefined;
 };
 
-const SAFETY_SERVICE_URL = process.env.SAFETY_SERVICE_URL || 'http://localhost:3003';
+const SAFETY_SERVICE_URL = getInternalServiceUrl('SAFETY_SERVICE_URL', 'http://localhost:3003');
 
 /**
  * Issue a scoped JWT and POST a mitigation record to the safety service.

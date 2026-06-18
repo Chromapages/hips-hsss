@@ -86,7 +86,7 @@ export class SessionService implements OnModuleInit {
       throw new UnauthorizedException('LiveKit not configured');
     }
 
-    const tokenData = this.livekitService.issue(session.id);
+    const tokenData = this.livekitService.issue(session.id, session.anonymousParticipantId || undefined);
 
     console.log(`[SessionService] Issued LiveKit token for session ${sessionId}. No user identity linkage.`);
 
@@ -109,7 +109,7 @@ export class SessionService implements OnModuleInit {
       throw new UnauthorizedException('LiveKit not configured');
     }
 
-    const tokenData = this.livekitService.issue(session.id);
+    const tokenData = this.livekitService.issue(session.id, session.anonymousParticipantId || undefined);
 
     console.log(`[SessionService] Issued LiveKit token for sessionRef ${sessionRef}. No user identity linkage.`);
 

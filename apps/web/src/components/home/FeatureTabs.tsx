@@ -9,87 +9,136 @@ import Link from 'next/link';
 export function FeatureTabs() {
   const [activeIndex, setActiveIndex] = useState(0);
 
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLButtonElement>, index: number) => {
+    let nextIndex = index;
+    if (e.key === 'ArrowRight') {
+      nextIndex = (index + 1) % 4;
+    } else if (e.key === 'ArrowLeft') {
+      nextIndex = (index - 1 + 4) % 4;
+    } else if (e.key === 'Home') {
+      nextIndex = 0;
+    } else if (e.key === 'End') {
+      nextIndex = 3;
+    } else {
+      return;
+    }
+    e.preventDefault();
+    setActiveIndex(nextIndex);
+    const nextTab = document.getElementById(`tab-${nextIndex}`);
+    if (nextTab) {
+      nextTab.focus();
+    }
+  };
+
   return (
     <div className="space-y-12">
       {/* Tab Strip */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+      <div role="tablist" aria-label="Feature categories" aria-orientation="horizontal" className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {/* Tab 0 — Identity Vault */}
         <button
+          id="tab-0"
+          role="tab"
+          aria-selected={activeIndex === 0}
+          aria-controls="panel-0"
+          tabIndex={activeIndex === 0 ? 0 : -1}
           onClick={() => setActiveIndex(0)}
-          className={`flex flex-col items-start gap-2 rounded-xl p-5 text-left transition-all duration-200 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${
+          onKeyDown={(e) => handleKeyDown(e, 0)}
+          className={`relative flex flex-col items-start gap-2 rounded-xl p-5 text-left transition-all duration-200 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${
             activeIndex === 0
               ? "bg-accent/10 border border-accent/30 shadow-sm"
               : "bg-surface border border-border hover:bg-muted"
           }`}
-          aria-selected={activeIndex === 0}
-          role="tab"
         >
+          {activeIndex === 0 && (
+            <div className="absolute top-0 left-0 right-0 h-1 bg-accent rounded-t-xl" />
+          )}
           <div className="w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center">
             <Lock className="w-4 h-4 text-accent" />
           </div>
-          <span className="text-sm font-bold text-primary font-heading leading-tight">Identity Vault</span>
-          <span className="text-xs text-muted-foreground font-body leading-snug">Isolated, encrypted PII storage — zero trace</span>
+          <span className="text-base font-bold text-primary font-heading leading-tight">Identity Vault</span>
+          <span className="text-sm text-muted-foreground font-body leading-snug">Isolated, encrypted PII storage — zero trace</span>
         </button>
 
         {/* Tab 1 — Avatar Privacy */}
         <button
+          id="tab-1"
+          role="tab"
+          aria-selected={activeIndex === 1}
+          aria-controls="panel-1"
+          tabIndex={activeIndex === 1 ? 0 : -1}
           onClick={() => setActiveIndex(1)}
-          className={`flex flex-col items-start gap-2 rounded-xl p-5 text-left transition-all duration-200 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${
+          onKeyDown={(e) => handleKeyDown(e, 1)}
+          className={`relative flex flex-col items-start gap-2 rounded-xl p-5 text-left transition-all duration-200 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${
             activeIndex === 1
               ? "bg-accent/10 border border-accent/30 shadow-sm"
               : "bg-surface border border-border hover:bg-muted"
           }`}
-          aria-selected={activeIndex === 1}
-          role="tab"
         >
+          {activeIndex === 1 && (
+            <div className="absolute top-0 left-0 right-0 h-1 bg-accent rounded-t-xl" />
+          )}
           <div className="w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center">
             <EyeOff className="w-4 h-4 text-accent" />
           </div>
-          <span className="text-sm font-bold text-primary font-heading leading-tight">Avatar Privacy</span>
-          <span className="text-xs text-muted-foreground font-body leading-snug">No cameras. Curated 3D avatars only.</span>
+          <span className="text-base font-bold text-primary font-heading leading-tight">Avatar Privacy</span>
+          <span className="text-sm text-muted-foreground font-body leading-snug">No cameras. Curated 3D avatars only.</span>
         </button>
 
         {/* Tab 2 — Safety Engine */}
         <button
+          id="tab-2"
+          role="tab"
+          aria-selected={activeIndex === 2}
+          aria-controls="panel-2"
+          tabIndex={activeIndex === 2 ? 0 : -1}
           onClick={() => setActiveIndex(2)}
-          className={`flex flex-col items-start gap-2 rounded-xl p-5 text-left transition-all duration-200 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${
+          onKeyDown={(e) => handleKeyDown(e, 2)}
+          className={`relative flex flex-col items-start gap-2 rounded-xl p-5 text-left transition-all duration-200 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${
             activeIndex === 2
               ? "bg-accent/10 border border-accent/30 shadow-sm"
               : "bg-surface border border-border hover:bg-muted"
           }`}
-          aria-selected={activeIndex === 2}
-          role="tab"
         >
+          {activeIndex === 2 && (
+            <div className="absolute top-0 left-0 right-0 h-1 bg-accent rounded-t-xl" />
+          )}
           <div className="w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center">
             <Shield className="w-4 h-4 text-accent" />
           </div>
-          <span className="text-sm font-bold text-primary font-heading leading-tight">Safety Engine</span>
-          <span className="text-xs text-muted-foreground font-body leading-snug">Human-in-the-loop monitoring, zero identity exposure</span>
+          <span className="text-base font-bold text-primary font-heading leading-tight">Safety Engine</span>
+          <span className="text-sm text-muted-foreground font-body leading-snug">Human-in-the-loop monitoring, zero identity exposure</span>
         </button>
 
         {/* Tab 3 — Session Token */}
         <button
+          id="tab-3"
+          role="tab"
+          aria-selected={activeIndex === 3}
+          aria-controls="panel-3"
+          tabIndex={activeIndex === 3 ? 0 : -1}
           onClick={() => setActiveIndex(3)}
-          className={`flex flex-col items-start gap-2 rounded-xl p-5 text-left transition-all duration-200 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${
+          onKeyDown={(e) => handleKeyDown(e, 3)}
+          className={`relative flex flex-col items-start gap-2 rounded-xl p-5 text-left transition-all duration-200 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${
             activeIndex === 3
               ? "bg-accent/10 border border-accent/30 shadow-sm"
               : "bg-surface border border-border hover:bg-muted"
           }`}
-          aria-selected={activeIndex === 3}
-          role="tab"
         >
+          {activeIndex === 3 && (
+            <div className="absolute top-0 left-0 right-0 h-1 bg-accent rounded-t-xl" />
+          )}
           <div className="w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center">
             <Key className="w-4 h-4 text-accent" />
           </div>
-          <span className="text-sm font-bold text-primary font-heading leading-tight">Hard Anonymity</span>
-          <span className="text-xs text-muted-foreground font-body leading-snug">Cryptographically enforced session tokens</span>
+          <span className="text-base font-bold text-primary font-heading leading-tight">Hard Anonymity</span>
+          <span className="text-sm text-muted-foreground font-body leading-snug">Cryptographically enforced session tokens</span>
         </button>
       </div>
 
       {/* Two-Column Detail Panel */}
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_1.5fr] gap-8 lg:gap-12 items-start">
         {/* Left: Accordion Column */}
-        <div className="flex flex-col gap-3" role="tablist" aria-label="Feature details">
+        <div className="flex flex-col gap-3">
           {/* Accordion Item 0 */}
           <div
             className={`rounded-xl border transition-all duration-200 ${
@@ -101,19 +150,18 @@ export function FeatureTabs() {
             <button
               onClick={() => setActiveIndex(0)}
               className="flex items-center justify-between w-full px-6 py-5 text-left focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 rounded-xl"
-              role="tab"
-              aria-selected={activeIndex === 0}
-              aria-controls="accordion-panel-0"
+              aria-expanded={activeIndex === 0}
+              aria-controls="panel-0"
               id="accordion-tab-0"
             >
               <span className="text-sm font-bold text-primary font-heading">Identity Vault</span>
               <ChevronRight className={`w-4 h-4 text-muted-foreground shrink-0 transition-transform duration-200 ${activeIndex === 0 ? "rotate-90" : ""}`} />
             </button>
             <div
-              id="accordion-panel-0"
-              role="tabpanel"
+              id="panel-0"
+              role="region"
               aria-labelledby="accordion-tab-0"
-              className={`overflow-hidden transition-all duration-300 ${activeIndex === 0 ? "max-h-48 opacity-100" : "max-h-0 opacity-0"}`}
+              className={`overflow-hidden transition-all duration-300 ${activeIndex === 0 ? "max-h-[500px] opacity-100" : "max-h-0 opacity-0"}`}
             >
               <div className="px-6 pb-6">
                 <p className="text-sm text-muted-foreground font-body leading-relaxed mb-4">
@@ -140,19 +188,18 @@ export function FeatureTabs() {
             <button
               onClick={() => setActiveIndex(1)}
               className="flex items-center justify-between w-full px-6 py-5 text-left focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 rounded-xl"
-              role="tab"
-              aria-selected={activeIndex === 1}
-              aria-controls="accordion-panel-1"
+              aria-expanded={activeIndex === 1}
+              aria-controls="panel-1"
               id="accordion-tab-1"
             >
-              <span className="text-sm font-bold text-primary font-heading">Avatar Native</span>
+              <span className="text-sm font-bold text-primary font-heading">Avatar Privacy</span>
               <ChevronRight className={`w-4 h-4 text-muted-foreground shrink-0 transition-transform duration-200 ${activeIndex === 1 ? "rotate-90" : ""}`} />
             </button>
             <div
-              id="accordion-panel-1"
-              role="tabpanel"
+              id="panel-1"
+              role="region"
               aria-labelledby="accordion-tab-1"
-              className={`overflow-hidden transition-all duration-300 ${activeIndex === 1 ? "max-h-48 opacity-100" : "max-h-0 opacity-0"}`}
+              className={`overflow-hidden transition-all duration-300 ${activeIndex === 1 ? "max-h-[500px] opacity-100" : "max-h-0 opacity-0"}`}
             >
               <div className="px-6 pb-6">
                 <p className="text-sm text-muted-foreground font-body leading-relaxed mb-4">
@@ -179,19 +226,18 @@ export function FeatureTabs() {
             <button
               onClick={() => setActiveIndex(2)}
               className="flex items-center justify-between w-full px-6 py-5 text-left focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 rounded-xl"
-              role="tab"
-              aria-selected={activeIndex === 2}
-              aria-controls="accordion-panel-2"
+              aria-expanded={activeIndex === 2}
+              aria-controls="panel-2"
               id="accordion-tab-2"
             >
               <span className="text-sm font-bold text-primary font-heading">Safety Engine</span>
               <ChevronRight className={`w-4 h-4 text-muted-foreground shrink-0 transition-transform duration-200 ${activeIndex === 2 ? "rotate-90" : ""}`} />
             </button>
             <div
-              id="accordion-panel-2"
-              role="tabpanel"
+              id="panel-2"
+              role="region"
               aria-labelledby="accordion-tab-2"
-              className={`overflow-hidden transition-all duration-300 ${activeIndex === 2 ? "max-h-48 opacity-100" : "max-h-0 opacity-0"}`}
+              className={`overflow-hidden transition-all duration-300 ${activeIndex === 2 ? "max-h-[500px] opacity-100" : "max-h-0 opacity-0"}`}
             >
               <div className="px-6 pb-6">
                 <p className="text-sm text-muted-foreground font-body leading-relaxed mb-4">
@@ -218,19 +264,18 @@ export function FeatureTabs() {
             <button
               onClick={() => setActiveIndex(3)}
               className="flex items-center justify-between w-full px-6 py-5 text-left focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 rounded-xl"
-              role="tab"
-              aria-selected={activeIndex === 3}
-              aria-controls="accordion-panel-3"
+              aria-expanded={activeIndex === 3}
+              aria-controls="panel-3"
               id="accordion-tab-3"
             >
               <span className="text-sm font-bold text-primary font-heading">Hard Anonymity</span>
               <ChevronRight className={`w-4 h-4 text-muted-foreground shrink-0 transition-transform duration-200 ${activeIndex === 3 ? "rotate-90" : ""}`} />
             </button>
             <div
-              id="accordion-panel-3"
-              role="tabpanel"
+              id="panel-3"
+              role="region"
               aria-labelledby="accordion-tab-3"
-              className={`overflow-hidden transition-all duration-300 ${activeIndex === 3 ? "max-h-48 opacity-100" : "max-h-0 opacity-0"}`}
+              className={`overflow-hidden transition-all duration-300 ${activeIndex === 3 ? "max-h-[500px] opacity-100" : "max-h-0 opacity-0"}`}
             >
               <div className="px-6 pb-6">
                 <p className="text-sm text-muted-foreground font-body leading-relaxed mb-4">
@@ -248,72 +293,76 @@ export function FeatureTabs() {
         </div>
 
         {/* Right: Mockup Panel */}
-        <div className="relative">
+        <div className="relative rounded-2xl overflow-hidden bg-surface border border-border shadow-lg min-h-[380px] lg:min-h-[440px] w-full">
           {activeIndex === 0 && (
-            <div className="rounded-2xl overflow-hidden shadow-lg border border-border min-h-[380px] lg:min-h-[440px] relative animate-in fade-in zoom-in-95 duration-300">
+            <div className="absolute inset-0 flex flex-col animate-in fade-in zoom-in-95 duration-300">
               <Image
-                src="https://images.unsplash.com/photo-1555949963-ff9fe0c870eb?w=1200&q=85"
+                src="/features/identity-vault.png"
                 alt="Identity Vault — encrypted security architecture"
                 fill
                 className="object-cover"
                 priority
                 quality={85}
                 sizes="(max-width: 768px) 100vw, (max-width: 1200px) 60vw, 800px"
+                data-no-dark="true"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-primary/80 via-primary/20 to-transparent flex flex-col items-center justify-end p-8">
-                <p className="text-white/50 text-[10px] font-bold uppercase tracking-widest font-ui mb-2">Identity Vault</p>
-                <p className="text-white/90 text-sm font-body text-center max-w-[28ch] leading-relaxed">Your personal data is isolated in an encrypted vault — completely unreachable from session infrastructure.</p>
+                <p className="text-primary-foreground/50 text-xs font-bold uppercase tracking-widest font-ui mb-2">Identity Vault</p>
+                <p className="text-primary-foreground/90 text-sm font-body text-center max-w-[28ch] leading-relaxed">Your personal data is isolated in an encrypted vault — completely unreachable from session infrastructure.</p>
               </div>
             </div>
           )}
 
           {activeIndex === 1 && (
-            <div className="rounded-2xl overflow-hidden shadow-lg border border-border min-h-[380px] lg:min-h-[440px] relative animate-in fade-in zoom-in-95 duration-300">
+            <div className="absolute inset-0 flex flex-col animate-in fade-in zoom-in-95 duration-300">
               <Image
-                src="https://images.unsplash.com/photo-1633265486064-1c3c5b5e1d9c?w=1200&q=85"
+                src="/features/avatar-native.png"
                 alt="Avatar Privacy — anonymous digital identity"
                 fill
                 className="object-cover"
                 quality={85}
                 sizes="(max-width: 768px) 100vw, (max-width: 1200px) 60vw, 800px"
+                data-no-dark="true"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-primary/80 via-primary/20 to-transparent flex flex-col items-center justify-end p-8">
-                <p className="text-accent text-[10px] font-bold uppercase tracking-widest font-ui mb-2">Avatar Native</p>
-                <p className="text-white/90 text-sm font-body text-center max-w-[28ch] leading-relaxed">Your identity is expressed only through a curated abstract avatar — never your actual face or appearance.</p>
+                <p className="text-accent text-xs font-bold uppercase tracking-widest font-ui mb-2">Avatar Native</p>
+                <p className="text-primary-foreground/90 text-sm font-body text-center max-w-[28ch] leading-relaxed">Your identity is expressed only through a curated abstract avatar — never your actual face or appearance.</p>
               </div>
             </div>
           )}
 
           {activeIndex === 2 && (
-            <div className="rounded-2xl overflow-hidden shadow-lg border border-border min-h-[380px] lg:min-h-[440px] relative animate-in fade-in zoom-in-95 duration-300">
+            <div className="absolute inset-0 flex flex-col animate-in fade-in zoom-in-95 duration-300">
               <Image
-                src="https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?w=1200&q=85"
+                src="/features/safety-engine.png"
                 alt="Safety Engine — human monitoring with anonymity"
                 fill
                 className="object-cover"
                 quality={85}
                 sizes="(max-width: 768px) 100vw, (max-width: 1200px) 60vw, 800px"
+                data-no-dark="true"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-success/80 via-success/20 to-transparent flex flex-col items-center justify-end p-8">
-                <p className="text-success text-[10px] font-bold uppercase tracking-widest font-ui mb-2">Safety Engine</p>
-                <p className="text-white/90 text-sm font-body text-center max-w-[28ch] leading-relaxed">Behavioral safety monitoring with human oversight — keeping sessions safe without ever accessing identity.</p>
+                <p className="text-success text-xs font-bold uppercase tracking-widest font-ui mb-2">Safety Engine</p>
+                <p className="text-primary-foreground/90 text-sm font-body text-center max-w-[28ch] leading-relaxed">Behavioral safety monitoring with human oversight — keeping sessions safe without ever accessing identity.</p>
               </div>
             </div>
           )}
 
           {activeIndex === 3 && (
-            <div className="rounded-2xl overflow-hidden shadow-lg border border-border min-h-[380px] lg:min-h-[440px] relative animate-in fade-in zoom-in-95 duration-300">
+            <div className="absolute inset-0 flex flex-col animate-in fade-in zoom-in-95 duration-300">
               <Image
-                src="https://images.unsplash.com/photo-1638775513788-3b4b8a6c0e5f?w=1200&q=85"
+                src="/features/hard-anonymity.png"
                 alt="Hard Anonymity — cryptographic session tokens"
                 fill
                 className="object-cover"
                 quality={85}
                 sizes="(max-width: 768px) 100vw, (max-width: 1200px) 60vw, 800px"
+                data-no-dark="true"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-primary/80 via-primary/20 to-transparent flex flex-col items-center justify-end p-8">
-                <p className="text-accent text-[10px] font-bold uppercase tracking-widest font-ui mb-2">Hard Anonymity</p>
-                <p className="text-white/90 text-sm font-body text-center max-w-[28ch] leading-relaxed">Every session token is ephemeral, cryptographically signed, and completely unlinkable across visits.</p>
+                <p className="text-accent text-xs font-bold uppercase tracking-widest font-ui mb-2">Hard Anonymity</p>
+                <p className="text-primary-foreground/90 text-sm font-body text-center max-w-[28ch] leading-relaxed">Every session token is ephemeral, cryptographically signed, and completely unlinkable across visits.</p>
               </div>
             </div>
           )}

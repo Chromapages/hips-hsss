@@ -27,7 +27,11 @@ export default function AbstractAvatar({
   const groupRef = useRef<Group>(null);
   const headMatRef = useRef<MeshStandardMaterial>(null);
   const bodyMatRef = useRef<MeshStandardMaterial>(null);
+  const mouthMatRef = useRef<MeshStandardMaterial>(null);
   const reduced = useReducedMotion();
+  // Head sphere center — keep in sync with mesh position={[0, HEAD_Y, 0]}
+  const HEAD_Y = 0.88;
+  const HEAD_R = isLocal ? 0.42 : 0.37; // head radius
 
   // Unique phase offset per avatar so they don't all bob in sync
   const phaseOffset = (styleIndex * 1.37) % (Math.PI * 2);
@@ -62,6 +66,12 @@ export default function AbstractAvatar({
       bodyMatRef.current.emissiveIntensity +=
         (targetBody - bodyMatRef.current.emissiveIntensity) * 0.12;
     }
+
+    // Mouth opens with speaking — lerp scaleY between 0.1 (closed) and 1.0 (open)
+    if (mouthMatRef.current) {
+      const targetMouth = isSpeaking ? 1.0 : 0.1;
+      mouthMatRef.current.opacity += (targetMouth - mouthMatRef.current.opacity) * 0.15;
+    }
   });
 
   const sharedMat = {
@@ -94,8 +104,8 @@ export default function AbstractAvatar({
       ) : null}
 
       {/* Head sphere */}
-      <mesh position={[0, 0.88, 0]}>
-        <sphereGeometry args={[headSize, 18, 14]} />
+      <mesh position={[0, HEAD_Y, 0]}>
+        <sphereGeometry args={[HEAD_R, 18, 14]} />
         <meshStandardMaterial {...sharedMat} emissiveIntensity={isLocal ? 0.14 : 0.07} ref={headMatRef} />
       </mesh>
 
@@ -103,6 +113,22 @@ export default function AbstractAvatar({
       <mesh position={[0, -0.08, 0]} scale={[0.58, 0.72, 0.5]}>
         <sphereGeometry args={[1, 14, 10]} />
         <meshStandardMaterial {...sharedMat} emissiveIntensity={isLocal ? 0.11 : 0.05} ref={bodyMatRef} />
+      </mesh>
+
+      {/* Mouth — dark ellipsoid on the face, scales open when speaking */}
+      {/* Positioned at lower-front of head sphere; scaleY animates 0.1 (closed) → 1 (open) */}
+      <mesh
+        position={[0, HEAD_Y - HEAD_R * 0.55, HEAD_R * 0.80]}
+        scale={[1.4, 0.1, 0.6]}
+        visible={isLocal}
+      >
+        <sphereGeometry args={[0.09, 8, 6]} />
+        <meshStandardMaterial
+          color="#0a0a0a"
+          transparent
+          opacity={0.1}
+          ref={mouthMatRef}
+        />
       </mesh>
 
       {/* Speaking pulse ring */}

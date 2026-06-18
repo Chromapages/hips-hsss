@@ -58,7 +58,12 @@ async function isAuthorizedForSession(
   sessionId: string,
   firebaseUid: string,
 ): Promise<boolean> {
-  if (process.env.NODE_ENV === 'development' && !isFirebaseAdminReady()) {
+  // Dev bypass only for sessions with a dev-only prefix — never for real user sessions.
+  if (
+    process.env.NODE_ENV === 'development' &&
+    !isFirebaseAdminReady() &&
+    (sessionId.startsWith('dev-') || sessionId.startsWith('prototype-'))
+  ) {
     return true;
   }
   const sessionRef = db.collection('phase5_sessions').doc(sessionId);

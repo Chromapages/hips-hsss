@@ -54,7 +54,7 @@ interface LiveKitTokenResponse {
   roomName: string;
   anonymousIdentity: string;
   expiresAt: string;
-  avatar: { style: number; palette: string; gesture: string; locked: boolean };
+  avatar: { style: number; palette: string; gesture: string };
 }
 
 interface SessionResponse {
@@ -163,7 +163,6 @@ export class SessionController {
         style: token.avatar.style,
         palette: token.avatar.palette,
         gesture: token.avatar.gesture,
-        locked: token.avatar.locked,
       },
     };
   }

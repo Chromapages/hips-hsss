@@ -49,6 +49,15 @@ const isIpHost = /^(?:\d{1,3}\.){3}\d{1,3}$/.test(publicSiteHost) || publicSiteH
 const shouldUpgradeInsecureRequests =
   process.env.ENABLE_HTTPS_UPGRADE === "true" ||
   (!!publicSiteUrl && publicSiteUrl.startsWith("https://") && !isIpHost);
+const neuralVoiceChangerOrigin = (() => {
+  const value = process.env.NEURAL_VOICE_CHANGER_PUBLIC_URL || "";
+  if (!value) return "";
+  try {
+    return new URL(value).origin;
+  } catch {
+    return "";
+  }
+})();
 const cspDirectives = [
   "default-src 'self'",
   // 'unsafe-inline' is required for Next.js webpack bundles (HMR in dev, compiled scripts in prod)
@@ -58,16 +67,20 @@ const cspDirectives = [
     : "script-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://www.googletagmanager.com https://apis.google.com",
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
   "font-src 'self' https://fonts.gstatic.com",
-  "img-src 'self' data: https: blob:",
+  "img-src 'self' data: blob: https://images.unsplash.com https://hips-hsss.firebasestorage.app https://*.googleusercontent.com",
   // Firebase Auth token refresh, Firestore, Identity Toolkit, LiveKit, GTM
-  "connect-src 'self' https://www.googleapis.com https://firestore.googleapis.com https://firebase.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://www.googletagmanager.com wss://hips-hsss-wm8okbqu.livekit.cloud https://hips-hsss-wm8okbqu.livekit.cloud",
+  [
+    "connect-src 'self' https://www.googleapis.com https://firestore.googleapis.com https://firebase.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://www.googletagmanager.com wss://hips-hsss-wm8okbqu.livekit.cloud https://hips-hsss-wm8okbqu.livekit.cloud https://api.stripe.com",
+    neuralVoiceChangerOrigin,
+  ].filter(Boolean).join(" "),
   // Google OAuth/GTM iframes + Firebase Auth popup
-  "frame-src 'self' https://accounts.google.com https://apis.google.com https://hips-hsss.firebaseapp.com",
+  "frame-src 'self' https://accounts.google.com https://apis.google.com https://hips-hsss.firebaseapp.com https://js.stripe.com",
   "object-src 'none'",
   "base-uri 'self'",
   "form-action 'self'",
   "frame-ancestors 'none'",
   ...(!isDev && shouldUpgradeInsecureRequests ? ["upgrade-insecure-requests"] : []),
+  "report-to csp-endpoint",
 ];
 
 const nextConfig: NextConfig = {
@@ -125,10 +138,12 @@ const nextConfig: NextConfig = {
     NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID ?? "",
   },
   typescript: {
-    // Skip type checking — pre-existing type mismatches in monorepo
-    ignoreBuildErrors: true,
+    ignoreBuildErrors: false,
   },
   eslint: {
+    // Production deploys still run TypeScript validation. ESLint remains a
+    // tracked remediation backlog, but it currently blocks deploying unrelated
+    // runtime fixes such as the neural voice masking status route.
     ignoreDuringBuilds: true,
   },
   // Content Security Policy headers
@@ -140,6 +155,14 @@ const nextConfig: NextConfig = {
           {
             key: 'Content-Security-Policy',
             value: cspDirectives.join('; '),
+          },
+          {
+            key: 'Report-To',
+            value: JSON.stringify({
+              group: 'csp-endpoint',
+              max_age: 10886400,
+              endpoints: [{ url: '/api/csp-report' }]
+            }),
           },
           {
             key: 'X-Content-Type-Options',
@@ -161,6 +184,10 @@ const nextConfig: NextConfig = {
             key: 'Permissions-Policy',
             value: 'camera=(self), microphone=(self), geolocation=()',
           },
+          ...(!isDev ? [{
+            key: 'Strict-Transport-Security',
+            value: 'max-age=63072000; includeSubDomains; preload',
+          }] : []),
         ],
       },
     ];

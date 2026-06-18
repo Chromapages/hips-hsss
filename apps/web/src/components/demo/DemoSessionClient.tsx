@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { screenLabels, voiceMaskActiveStyle } from './demo-utils';
 import { Mic, MicOff, Hand, Flag, PhoneOff } from 'lucide-react';
+import { VOICE_PRESETS } from '@/lib/voice-mask-presets';
 
 interface SessionControlsProps {
   isMuted: boolean;
@@ -257,8 +258,113 @@ interface MicSetupScreenProps {
 
 export function MicSetupScreen({ onBack, onMicReady }: MicSetupScreenProps) {
   const [micStatus, setMicStatus] = useState<'idle' | 'requesting' | 'ready' | 'denied'>('idle');
+  // Track active preview so clicking the same button stops it
+  const [previewing, setPreviewing] = useState<'original' | 'masked' | null>(null);
+  const previewContextRef = useRef<AudioContext | null>(null);
+  const previewStreamRef = useRef<MediaStream | null>(null);
+
+  const stopPreview = useCallback(() => {
+    if (previewStreamRef.current) {
+      previewStreamRef.current.getTracks().forEach((t) => t.stop());
+      previewStreamRef.current = null;
+    }
+    if (previewContextRef.current) {
+      previewContextRef.current.close();
+      previewContextRef.current = null;
+    }
+    setPreviewing(null);
+  }, []);
+
+  // Inline pitch-shift worklet for the masked preview.
+  // Mirrors the algorithm in voice-mask-processor.ts but self-contained here
+  // so it can be instantiated without the LiveKit TrackProcessor lifecycle.
+  const pitchShiftWorkletSrc = `
+class PitchShiftPreview extends AudioWorkletProcessor {
+  constructor() {
+    super();
+    this.ratio = Math.pow(2, 4 / 12); // +4 semitones (subtle preset default)
+    this.BUF_SIZE = 2048;
+    this.MASK = this.BUF_SIZE - 1;
+    this.HALF = this.BUF_SIZE >> 1;
+    this.buf = new Float32Array(this.BUF_SIZE);
+    this.wp = 0;
+    this.baseRp = 0;
+    this.frac = 0;
+  }
+  lerp(pos) {
+    const i0 = Math.floor(pos) & this.MASK;
+    const i1 = (i0 + 1) & this.MASK;
+    const f = pos - Math.floor(pos);
+    return this.buf[i0] * (1 - f) + this.buf[i1] * f;
+  }
+  win(n) {
+    return 0.5 * (1 - Math.cos(6.2831853 * n / this.HALF));
+  }
+  process(inputs, outputs,) {
+    const src = inputs[0]?.[0];
+    const dst = outputs[0]?.[0];
+    if (!src || !dst) return true;
+    for (let i = 0; i < src.length; i++) {
+      this.buf[this.wp & this.MASK] = src[i];
+      this.wp++;
+      this.frac += this.ratio;
+      if (this.frac >= 1) { this.baseRp += Math.floor(this.frac); this.frac -= Math.floor(this.frac); }
+      const rp0 = this.baseRp & this.MASK;
+      dst[i] = this.lerp(this.baseRp) * this.win(rp0)
+             + this.lerp((this.baseRp + this.HALF) & this.MASK) * this.win((this.baseRp + this.HALF) & this.MASK);
+      if (this.baseRp > this.BUF_SIZE * 16) this.baseRp -= this.BUF_SIZE * 16;
+    }
+    return true;
+  }
+}
+registerProcessor('pitch-shift-preview', PitchShiftPreview);
+`;
+
+  const startOriginalPreview = async () => {
+    if (previewing === 'original') { stopPreview(); return; }
+    stopPreview();
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      previewStreamRef.current = stream;
+      const ctx = new AudioContext();
+      previewContextRef.current = ctx;
+      const source = ctx.createMediaStreamSource(stream);
+      source.connect(ctx.destination);
+      setPreviewing('original');
+    } catch (err) {
+      console.warn('[MicSetupScreen] Original preview failed:', err);
+    }
+  };
+
+  const startMaskedPreview = async () => {
+    if (previewing === 'masked') { stopPreview(); return; }
+    stopPreview();
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      previewStreamRef.current = stream;
+      const ctx = new AudioContext();
+      previewContextRef.current = ctx;
+      const blob = new Blob([pitchShiftWorkletSrc], { type: 'application/javascript' });
+      const url = URL.createObjectURL(blob);
+      await ctx.audioWorklet.addModule(url);
+      URL.revokeObjectURL(url);
+      const source = ctx.createMediaStreamSource(stream);
+      const worklet = new AudioWorkletNode(ctx, 'pitch-shift-preview');
+      source.connect(worklet);
+      worklet.connect(ctx.destination);
+      setPreviewing('masked');
+    } catch (err) {
+      console.warn('[MicSetupScreen] Masked preview failed:', err);
+    }
+  };
+
+  // Stop preview when component unmounts or micStatus changes
+  useEffect(() => {
+    return () => stopPreview();
+  }, [stopPreview]);
 
   const requestMic = async () => {
+    stopPreview();
     setMicStatus('requesting');
     try {
       await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -292,11 +398,27 @@ export function MicSetupScreen({ onBack, onMicReady }: MicSetupScreenProps) {
             what it sounds like:
           </p>
           <div className="flex flex-col sm:flex-row gap-3">
-            <button className="btn-secondary flex-1 py-3 rounded-xl text-sm font-semibold flex items-center justify-center gap-2">
-              🔊 Hear Original
+            <button
+              onClick={startOriginalPreview}
+              className={[
+                'btn-secondary flex-1 py-3 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 transition-all',
+                previewing === 'original'
+                  ? 'border-primary/40 bg-primary/20 text-primary'
+                  : '',
+              ].join(' ')}
+            >
+              🔊 {previewing === 'original' ? 'Stop' : 'Hear Original'}
             </button>
-            <button className="btn-secondary flex-1 py-3 rounded-xl text-sm font-semibold flex items-center justify-center gap-2">
-              🎭 Hear Masked
+            <button
+              onClick={startMaskedPreview}
+              className={[
+                'btn-secondary flex-1 py-3 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 transition-all',
+                previewing === 'masked'
+                  ? 'border-primary/40 bg-primary/20 text-primary'
+                  : '',
+              ].join(' ')}
+            >
+              🎭 {previewing === 'masked' ? 'Stop' : 'Hear Masked'}
             </button>
           </div>
         </div>

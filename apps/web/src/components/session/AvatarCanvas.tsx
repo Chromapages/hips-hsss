@@ -4,7 +4,6 @@ import { Canvas, useThree } from "@react-three/fiber";
 import { useParticipants } from "@livekit/components-react";
 import { ACESFilmicToneMapping } from "three";
 import { EffectComposer, Bloom, Vignette } from "@react-three/postprocessing";
-import { Monitor } from "lucide-react";
 import type { AvatarProfile } from "@hips/types";
 import VirtualOfficeAvatar, {
   paletteColors,
@@ -12,47 +11,16 @@ import VirtualOfficeAvatar, {
   type AvatarGesture,
 } from "../session-ui/avatars/VirtualOfficeAvatar";
 import { OfficeRoomScene } from "../session-ui/office/OfficeRoomScene";
+import { WebGLFallback, isWebGLAvailable } from "../session-ui/WebGLFallback";
 import { useState, useCallback, useEffect, type ReactNode } from "react";
-
-// Task 5.13 — Audio-only fallback when WebGL is unavailable
-function AudioOnlyFallback({ roomName }: { avatar: AvatarProfile; roomName: string }) {
-  return (
-    <div className="flex h-full flex-col items-center justify-center bg-[radial-gradient(circle_at_50%_20%,rgba(99,102,241,0.16),transparent_45%),black] p-8 text-center">
-      <div className="mb-5 flex h-16 w-16 items-center justify-center rounded-full border border-primary/20 bg-primary/10">
-        <Monitor className="h-8 w-8 text-text" />
-      </div>
-      <h2 className="text-xl font-bold text-white">3D Avatars Unavailable</h2>
-      <p className="mt-2 max-w-xs text-sm text-text">
-        Your browser does not support WebGL. Audio is still working and you can participate in
-        the session.
-      </p>
-      <div className="mt-6 rounded-2xl border border-white/10 bg-surface/[0.03] px-6 py-4">
-        <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Session Active</p>
-        <p className="mt-1 font-mono text-sm text-text">anon-{roomName.slice(0, 8)}</p>
-      </div>
-    </div>
-  );
-}
-
-// Task 5.13 — WebGL detection
-function isWebGLAvailable(): boolean {
-  if (typeof window === "undefined") return true;
-  try {
-    const canvas = document.createElement("canvas");
-    return !!(
-      window.WebGLRenderingContext &&
-      (canvas.getContext("webgl") || canvas.getContext("experimental-webgl"))
-    );
-  } catch {
-    return false;
-  }
-}
 
 // Context loss handler — lives inside Canvas so it has access to the R3F state
 function WebGLContextHandler({
   onContextLost,
+  onContextRestored,
 }: {
   onContextLost: () => void;
+  onContextRestored: () => void;
 }) {
   const { gl } = useThree();
 
@@ -65,8 +33,7 @@ function WebGLContextHandler({
     };
 
     const handleContextRestored = () => {
-      // R3F's Canvas re-creates the renderer on context restore automatically
-      // We just need to trigger a re-render to re-initialize the scene
+      onContextRestored();
     };
 
     canvas.addEventListener("webglcontextlost", handleContextLost, { passive: false });
@@ -76,7 +43,7 @@ function WebGLContextHandler({
       canvas.removeEventListener("webglcontextlost", handleContextLost);
       canvas.removeEventListener("webglcontextrestored", handleContextRestored);
     };
-  }, [gl, onContextLost]);
+  }, [gl, onContextLost, onContextRestored]);
 
   return null;
 }
@@ -115,13 +82,32 @@ export default function AvatarCanvas({
 
   // Track WebGL context loss — when true, show fallback UI instead of crashing
   const [contextLost, setContextLost] = useState(false);
+  const [canvasKey, setCanvasKey] = useState(0);
+  const [enablePostProcessing, setEnablePostProcessing] = useState(true);
 
   const handleContextLost = useCallback(() => {
     setContextLost(true);
   }, []);
 
+  const handleContextRestored = useCallback(() => {
+    setContextLost(false);
+    setCanvasKey((prev) => prev + 1);
+  }, []);
+
+  useEffect(() => {
+    if (typeof navigator !== 'undefined') {
+      const isLowEnd = (navigator.hardwareConcurrency && navigator.hardwareConcurrency < 4) ||
+        /Mobi|Android|iPhone/i.test(navigator.userAgent);
+      if (isLowEnd || participants.length > 8) {
+        setEnablePostProcessing(false);
+      } else {
+        setEnablePostProcessing(true);
+      }
+    }
+  }, [participants.length]);
+
   if (!webglAvailable || contextLost) {
-    return <AudioOnlyFallback avatar={avatar} roomName={localIdentity} />;
+    return <WebGLFallback avatar={avatar} roomName={localIdentity} />;
   }
 
   const radius = participants.length > 1 ? Math.min(4.2, 2.4 + participants.length * 0.2) : 0;
@@ -129,6 +115,7 @@ export default function AvatarCanvas({
 
   return (
     <Canvas
+      key={canvasKey}
       camera={{ position: [0, 3.5, 8], fov: 46 }}
       gl={{
         toneMapping: ACESFilmicToneMapping,
@@ -143,7 +130,7 @@ export default function AvatarCanvas({
       }}
     >
       {/* WebGL context loss listener */}
-      <WebGLContextHandler onContextLost={handleContextLost} />
+      <WebGLContextHandler onContextLost={handleContextLost} onContextRestored={handleContextRestored} />
 
       {/* Scene fog for depth */}
       <fog attach="fog" args={["#030712", 14, 38]} />
@@ -167,13 +154,36 @@ export default function AvatarCanvas({
         const isLocal = participant.identity === localIdentity;
         const x = Math.cos(angle) * radius;
         const z = Math.sin(angle) * radius;
+
+        // CRIT-3 & MAJ-8: Local participant's color can be overridden by sessionStorage (from avatar selector modal)
+        // or localStorage (from host avatar setup configuration).
+        let localColor: string = paletteColors[avatar.palette] || "#06b6d4";
+        if (isLocal) {
+          const hostConfigStr = typeof window !== 'undefined' ? localStorage.getItem('hips-host-avatar') : null;
+          if (hostConfigStr) {
+            try {
+              const hostConfig = JSON.parse(hostConfigStr);
+              if (hostConfig.avatarColor) {
+                localColor = hostConfig.avatarColor;
+              }
+            } catch {}
+          }
+          const storedColor = typeof window !== 'undefined' ? sessionStorage.getItem('hips-avatar-color') : null;
+          if (storedColor) {
+            localColor = storedColor;
+          }
+        }
+
         const color = isLocal
-          ? paletteColors[avatar.palette]
+          ? localColor
           : fallbackColors[index % fallbackColors.length] ?? "#173B57";
 
         const isSpeaking = participant.isSpeaking || participant.identity === activeSpeakerIdentity;
 
         // Metadata is issued server-side from the authoritative Commerce role.
+        // SECURITY WARNING (CRIT-1): isHost derived from client metadata is strictly
+        // for rendering the visual crown badge. DO NOT use isHost or metadata role
+        // for any server-side or client-side authorization/privilege decisions.
         let isHost = false;
         if (participant.metadata) {
           try {
@@ -189,22 +199,24 @@ export default function AvatarCanvas({
             key={participant.identity}
             position={[x, 0, z]}
             raisedHand={raisedHands.has(participant.identity)}
-            styleIndex={isLocal ? avatar.style : index + 1}
+            styleIndex={isLocal ? avatar.style : index % 12}
             gesture={isLocal ? gesture : ("idle" as AvatarGesture)}
             isHost={isHost}
           />
         );
       })}
 
-      <GuardedEffectComposer>
-        <Bloom
-          luminanceThreshold={0.05}
-          luminanceSmoothing={0.85}
-          intensity={0.35}
-          mipmapBlur
-        />
-        <Vignette eskil={false} offset={0.38} darkness={0.55} />
-      </GuardedEffectComposer>
+      {enablePostProcessing && (
+        <GuardedEffectComposer>
+          <Bloom
+            luminanceThreshold={0.05}
+            luminanceSmoothing={0.85}
+            intensity={0.35}
+            mipmapBlur
+          />
+          <Vignette eskil={false} offset={0.38} darkness={0.55} />
+        </GuardedEffectComposer>
+      )}
     </Canvas>
   );
 }

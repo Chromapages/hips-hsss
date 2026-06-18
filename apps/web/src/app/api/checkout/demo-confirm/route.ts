@@ -51,8 +51,8 @@ export async function POST(req: NextRequest) {
 
   const { type, id, amountCents } = result.data;
 
-  // For session and package, authentication is strictly required
-  if (type !== 'DONATION' && !firebaseUid) {
+  // Authentication is strictly required for all operations
+  if (!firebaseUid) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
@@ -84,7 +84,7 @@ export async function POST(req: NextRequest) {
       });
 
       console.log(`[DemoConfirm] Successfully confirmed session ${id} for user ${firebaseUid}`);
-    } else if (type === 'PACKAGE_PURCHASE' || type === 'PACKAGE') {
+    } else if (type === 'PACKAGE') {
       const packageKey = id as keyof typeof PACKAGES;
       const pkg = PACKAGES[packageKey];
 

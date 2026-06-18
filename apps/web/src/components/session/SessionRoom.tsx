@@ -24,7 +24,8 @@ import { useAuth } from '../auth/AuthProvider';
 import AvatarCanvas from './AvatarCanvas';
 import SafetyMonitor from './SafetyMonitor';
 import { CrisisEscalation } from './CrisisEscalation';
-import { createVoiceMaskProcessor } from '@/lib/voice-mask-processor';
+import { createVoiceMaskProcessor, createLowLatencyVoiceMaskProcessor } from '@/lib/voice-mask-processor';
+import { checkWebGPUSupport } from '@/lib/webgpu-detect';
 import { SessionHeader } from '../session-ui/SessionHeader';
 import { VoiceControlsBar } from '../session-ui/VoiceControlsBar';
 import { WebGLFallback } from '../session-ui/WebGLFallback';
@@ -291,7 +292,7 @@ export default function SessionRoom({
         >
           <SessionContent
             anonymousIdentity="direct-join"
-            avatar={{ style: 1, palette: 'coastal', gesture: 'idle', locked: true }}
+            avatar={{ style: 1, palette: 'coastal', gesture: 'idle' }}
             canFacilitate={false}
             onCrisis={(reason) => {
               setCrisisReason(reason);
@@ -379,6 +380,7 @@ function SessionContent({
   roomName: string;
 }) {
   const router = useRouter();
+  const { getToken } = useAuth();
   const room = useRoomContext();
   const participants = useParticipants();
   const { localParticipant } = useLocalParticipant();
@@ -393,7 +395,114 @@ function SessionContent({
   const [cameraEnabled, setCameraEnabled] = useState(false);
 
   // Voice effects state
-  const { activePreset, semitones, setPreset, setSemitones } = useVoiceEffects('subtle', 4);
+  const { activePreset, semitones, wetDryRatio, setPreset, setSemitones, setWetDryRatio } = useVoiceEffects('sofi', 4);
+
+  // Two-tier voice replacement state
+  const [anonymizationMode, setAnonymizationMode] = useState<'dsp' | 'neural'>('dsp');
+  const [selectedPersona, setSelectedPersona] = useState<'clara' | 'arthur'>('clara');
+  const [isAntiCadenceEnabled, setIsAntiCadenceEnabled] = useState(false);
+  const [webgpuSupported, setWebgpuSupported] = useState(false);
+  const [serverMaskingReady, setServerMaskingReady] = useState(false);
+
+  useEffect(() => {
+    async function checkGPU() {
+      const support = await checkWebGPUSupport();
+      setWebgpuSupported(support);
+    }
+    checkGPU();
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function checkServerMasking() {
+      try {
+        const response = await fetch('/api/voice-masking/status', { cache: 'no-store' });
+        const data = await response.json();
+        if (!cancelled) {
+          setServerMaskingReady(Boolean(data?.neural?.readyForSessionUse));
+        }
+      } catch {
+        if (!cancelled) {
+          setServerMaskingReady(false);
+        }
+      }
+    }
+
+    void checkServerMasking();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (anonymizationMode !== 'neural' || webgpuSupported || !serverMaskingReady) return;
+
+    let cancelled = false;
+
+    async function dispatchServerAgent() {
+      try {
+        const token = await getToken();
+        if (!token || cancelled) return;
+
+        const response = await fetch('/api/voice-masking/agent/dispatch', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            sessionId: roomName.replace(/^session-/, ''),
+            participantIdentity: localParticipant.identity,
+            persona: selectedPersona,
+            antiCadence: isAntiCadenceEnabled,
+          }),
+        });
+
+        const data = await response.json().catch(() => ({}));
+        if (!cancelled && !data?.dispatched) {
+          setVoiceMaskWarning('Server voice masking is not ready for this room yet. Use Effects Mode for now.');
+        }
+      } catch (error) {
+        if (!cancelled) {
+          console.warn('[SessionRoom] Voice masking agent dispatch failed:', error);
+          setVoiceMaskWarning('Server voice masking could not start. Use Effects Mode for now.');
+        }
+      }
+    }
+
+    void dispatchServerAgent();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    anonymizationMode,
+    getToken,
+    isAntiCadenceEnabled,
+    localParticipant.identity,
+    roomName,
+    selectedPersona,
+    serverMaskingReady,
+    webgpuSupported,
+  ]);
+
+  useEffect(() => {
+    const configStr = localStorage.getItem("hips-host-avatar");
+    if (configStr) {
+      try {
+        const config = JSON.parse(configStr);
+        if (config.anonymizationMode) setAnonymizationMode(config.anonymizationMode);
+        if (config.selectedPersona) setSelectedPersona(config.selectedPersona);
+        if (typeof config.isAntiCadenceEnabled === "boolean") setIsAntiCadenceEnabled(config.isAntiCadenceEnabled);
+        if (config.voicePreset) setPreset(config.voicePreset);
+        if (typeof config.semitones === "number") setSemitones(config.semitones);
+      } catch (err) {
+        console.warn("Failed to load voice configuration:", err);
+      }
+    }
+  }, [setPreset, setSemitones]);
 
   // Media devices for toolbar
   const {
@@ -431,7 +540,26 @@ function SessionContent({
   // Task 5.14 — LiveKit reconnection event handlers
   useEffect(() => {
     const handleReconnecting = () => onReconnecting(true);
-    const handleReconnected = () => onReconnecting(false);
+    const handleReconnected = async () => {
+      onReconnecting(false);
+      // Re-apply the voice mask processor once LiveKit has re-established
+      // the transport. The localAudioTrack reference may still be valid but
+      // the transport needs a fresh processor attachment.
+      if (localAudioTrack && micEnabled) {
+        try {
+          if (anonymizationMode === 'neural') {
+            const presetOverride = selectedPersona === 'clara' ? 'lark' : 'guardian';
+            const semitonesOverride = selectedPersona === 'clara' ? 1 : -4;
+            await localAudioTrack.setProcessor(createVoiceMaskProcessor({ preset: presetOverride, semitones: semitonesOverride }));
+          } else {
+            await localAudioTrack.setProcessor(createLowLatencyVoiceMaskProcessor({ preset: activePreset, semitones, wetDryRatio }));
+          }
+        } catch (err) {
+          console.error('[SessionRoom] Failed to re-apply processor after reconnect:', err);
+          setVoiceMaskWarning('Voice mask was lost during reconnection. Try toggling your microphone.');
+        }
+      }
+    };
     const handleDisconnected = () => onReconnecting(false);
 
     room.on('reconnecting', handleReconnecting);
@@ -443,7 +571,7 @@ function SessionContent({
       room.off('reconnected', handleReconnected);
       room.off('disconnected', handleDisconnected);
     };
-  }, [room, onReconnecting]);
+  }, [room, onReconnecting, localAudioTrack, micEnabled, activePreset, semitones, wetDryRatio, anonymizationMode, selectedPersona]);
 
   // Task 5.8 — Session timer counting up from first render
   useEffect(() => {
@@ -534,16 +662,72 @@ function SessionContent({
         voiceIsolation: true,
       });
 
-      await localParticipant.publishTrack(track as unknown as MediaStreamTrack);
+      const isServerFallback = anonymizationMode === 'neural' && !webgpuSupported;
+      if (isServerFallback && !serverMaskingReady) {
+        setVoiceMaskWarning('Enhanced neural masking is not ready on the server yet. Switch to Effects Mode to use the microphone.');
+        try {
+          track.stop();
+        } catch (stopErr) {
+          console.warn('[SessionRoom] Failed to stop raw track while server masking was unavailable:', stopErr);
+        }
+        setLocalAudioTrack(null);
+        setMicEnabled(false);
+        setMicBusy(false);
+        return;
+      }
 
+      // CRITICAL FIX: apply voice mask processor BEFORE publishing.
+      // Publishing the raw track first would leak unmasked audio to peers
+      // if setProcessor() throws — and there would be no way to unpublish
+      // synchronously. The track is only published after processor succeeds.
       try {
-        await track.setProcessor(createVoiceMaskProcessor({ preset: activePreset, semitones }));
+        if (anonymizationMode === 'neural') {
+          const presetOverride = selectedPersona === 'clara' ? 'lark' : 'guardian';
+          const semitonesOverride = selectedPersona === 'clara' ? 1 : -4;
+          await track.setProcessor(createVoiceMaskProcessor({ preset: presetOverride, semitones: semitonesOverride }));
+        } else {
+          await track.setProcessor(createLowLatencyVoiceMaskProcessor({ preset: activePreset, semitones, wetDryRatio }));
+        }
       } catch (processorError) {
+        // Processor failed — do NOT publish the raw track.
+        // Stop the track and surface an actionable error to the user.
         setVoiceMaskWarning(
           processorError instanceof Error
-            ? `Voice mask unavailable: ${processorError.message}`
-            : 'Voice mask unavailable in this browser.',
+            ? `Voice mask unavailable: ${processorError.message}. Try Chrome or Edge for full support.`
+            : 'Voice mask unavailable in this browser. Try Chrome or Edge for full support.',
         );
+        try {
+          track.stop();
+        } catch (stopErr) {
+          console.warn('[SessionRoom] Failed to stop raw track after processor error:', stopErr);
+        }
+        setLocalAudioTrack(null);
+        setMicEnabled(false);
+        setMicBusy(false);
+        return;
+      }
+
+      const publishOptions = isServerFallback ? { name: 'voice-masking:server-agent' } : undefined;
+
+      // Only reach reach here once the processor was successfully applied.
+      await localParticipant.publishTrack(track as unknown as MediaStreamTrack, publishOptions);
+
+      try {
+        if (isServerFallback) {
+          await localParticipant.setAttributes({
+            'voice-masking': 'server-agent',
+            'voice-persona': selectedPersona,
+            'anti-cadence': String(isAntiCadenceEnabled),
+          });
+        } else {
+          await localParticipant.setAttributes({
+            'voice-masking': anonymizationMode === 'neural' ? 'local-s2s' : 'local-dsp',
+            'voice-preset': activePreset,
+            'voice-semitones': String(semitones),
+          });
+        }
+      } catch (attrErr) {
+        console.warn('[SessionRoom] Failed to set participant attributes:', attrErr);
       }
 
       setLocalAudioTrack(track);
@@ -565,7 +749,7 @@ function SessionContent({
     } finally {
       setMicBusy(false);
     }
-  }, [localParticipant, activePreset, semitones]);
+  }, [localParticipant, activePreset, semitones, wetDryRatio, anonymizationMode, selectedPersona, isAntiCadenceEnabled, webgpuSupported, serverMaskingReady]);
 
   const toggleMicrophone = useCallback(async () => {
     if (micBusy) return;
@@ -616,10 +800,17 @@ function SessionContent({
   // Real-time synchronization of voice mask processor settings when preset or semitones change
   useEffect(() => {
     if (localAudioTrack && micEnabled) {
-      localAudioTrack.setProcessor(createVoiceMaskProcessor({ preset: activePreset, semitones }))
-        .catch((err) => console.error('[VoiceEffects] Failed to update processor:', err));
+      if (anonymizationMode === 'neural') {
+        const presetOverride = selectedPersona === 'clara' ? 'lark' : 'guardian';
+        const semitonesOverride = selectedPersona === 'clara' ? 1 : -4;
+        localAudioTrack.setProcessor(createVoiceMaskProcessor({ preset: presetOverride, semitones: semitonesOverride }))
+          .catch((err) => console.error('[VoiceEffects] Failed to update processor:', err));
+      } else {
+        localAudioTrack.setProcessor(createLowLatencyVoiceMaskProcessor({ preset: activePreset, semitones, wetDryRatio }))
+          .catch((err) => console.error('[VoiceEffects] Failed to update processor:', err));
+      }
     }
-  }, [activePreset, semitones, localAudioTrack, micEnabled]);
+  }, [activePreset, semitones, wetDryRatio, localAudioTrack, micEnabled, anonymizationMode, selectedPersona]);
 
   const toggleHand = async () => {
     const isRaised = raisedHands.has(localParticipant.identity);
@@ -634,6 +825,92 @@ function SessionContent({
     setCameraEnabled((v) => !v);
   }, []);
 
+  // Re-create the LocalAudioTrack when the user selects a different input device.
+  // Simply updating the selected device ID is not enough — LiveKit must re-capture
+  // from the new hardware. This mirrors the startMicrophone pattern.
+  const handleSelectAudioInput = useCallback(
+    async (deviceId: string) => {
+      selectAudioInput(deviceId);
+      if (!localAudioTrack || !micEnabled) return;
+
+      setMicBusy(true);
+      let newTrack: LocalAudioTrack | null = null;
+      try {
+        // Tear down the old track cleanly before creating the replacement.
+        await stopLocalAudio();
+
+        newTrack = await createLocalAudioTrack({
+          deviceId,
+          autoGainControl: true,
+          echoCancellation: true,
+          noiseSuppression: true,
+          voiceIsolation: true,
+        });
+
+        try {
+          if (anonymizationMode === 'neural') {
+            const presetOverride = selectedPersona === 'clara' ? 'lark' : 'guardian';
+            const semitonesOverride = selectedPersona === 'clara' ? 1 : -4;
+            await newTrack.setProcessor(createVoiceMaskProcessor({ preset: presetOverride, semitones: semitonesOverride }));
+          } else {
+            await newTrack.setProcessor(createLowLatencyVoiceMaskProcessor({ preset: activePreset, semitones, wetDryRatio }));
+          }
+        } catch (processorError) {
+          setVoiceMaskWarning(
+            processorError instanceof Error
+              ? `Voice mask unavailable: ${processorError.message}. Try Chrome or Edge for full support.`
+              : 'Voice mask unavailable in this browser. Try Chrome or Edge for full support.',
+          );
+          try {
+            newTrack.stop();
+          } catch {
+            // ignore
+          }
+          setMicBusy(false);
+          return;
+        }
+
+        const isServerFallback = anonymizationMode === 'neural' && !webgpuSupported;
+        const publishOptions = isServerFallback ? { name: 'voice-masking:server-agent' } : undefined;
+
+        await localParticipant.publishTrack(newTrack as unknown as MediaStreamTrack, publishOptions);
+
+        try {
+          if (isServerFallback) {
+            await localParticipant.setAttributes({
+              'voice-masking': 'server-agent',
+              'voice-persona': selectedPersona,
+              'anti-cadence': String(isAntiCadenceEnabled),
+            });
+          } else {
+            await localParticipant.setAttributes({
+              'voice-masking': anonymizationMode === 'neural' ? 'local-s2s' : 'local-dsp',
+              'voice-preset': activePreset,
+              'voice-semitones': String(semitones),
+            });
+          }
+        } catch (attrErr) {
+          console.warn('[SessionRoom] Failed to set participant attributes:', attrErr);
+        }
+
+        setLocalAudioTrack(newTrack);
+      } catch (err) {
+        console.error('[SessionRoom] Device switch failed:', err);
+        if (newTrack) {
+          try {
+            newTrack.stop();
+          } catch {
+            // ignore
+          }
+        }
+        toast.error('Failed to switch microphone device. Please try again.');
+      } finally {
+        setMicBusy(false);
+      }
+    },
+    [localAudioTrack, micEnabled, localParticipant, activePreset, semitones, wetDryRatio, selectAudioInput, anonymizationMode, selectedPersona, isAntiCadenceEnabled, webgpuSupported, stopLocalAudio],
+  );
+
   const handleVoicePresetChange = useCallback((preset: VoicePreset) => {
     setPreset(preset);
   }, [setPreset]);
@@ -641,6 +918,10 @@ function SessionContent({
   const handleVoiceSemitoneChange = useCallback((st: number) => {
     setSemitones(st);
   }, [setSemitones]);
+
+  const handleVoiceWetDryChange = useCallback((ratio: number) => {
+    setWetDryRatio(ratio);
+  }, [setWetDryRatio]);
 
   const lowerHand = async (participantIdentity: string) => {
     await publishControlMessage({
@@ -696,7 +977,11 @@ function SessionContent({
             <WebGLFallback avatar={avatar} roomName={localParticipant.identity} />
           )}
           {voiceMaskWarning ? (
-            <div className="absolute left-6 top-6 max-w-md rounded-2xl border border-amber-500/20 bg-amber-500/10 px-4 py-3 text-sm text-amber-100 backdrop-blur-xl">
+            <div
+              role="alert"
+              aria-live="assertive"
+              className="absolute left-6 top-6 max-w-md rounded-2xl border border-amber-500/20 bg-amber-500/10 px-4 py-3 text-sm text-amber-100 backdrop-blur-xl"
+            >
               {voiceMaskWarning}
             </div>
           ) : null}
@@ -752,7 +1037,7 @@ function SessionContent({
         audioOutputs={audioOutputs}
         selectedAudioInput={selectedAudioInput}
         selectedAudioOutput={selectedAudioOutput}
-        onSelectAudioInput={selectAudioInput}
+        onSelectAudioInput={handleSelectAudioInput}
         onSelectAudioOutput={selectAudioOutput}
       />
 
@@ -766,8 +1051,11 @@ function SessionContent({
         onLeave={leaveSession}
         voicePreset={activePreset}
         voiceSemitones={semitones}
+        voiceWetDryRatio={wetDryRatio}
         onVoicePresetChange={handleVoicePresetChange}
         onVoiceSemitoneChange={handleVoiceSemitoneChange}
+        onVoiceWetDryChange={handleVoiceWetDryChange}
+        voiceMaskActive={micEnabled && !voiceMaskWarning}
       />
     </main>
   );

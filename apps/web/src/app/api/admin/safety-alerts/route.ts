@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/admin-auth';
 import { createServiceToken, SCOPES, AUDIENCES } from '@/lib/auth/serviceToken';
+import { getInternalServiceUrl } from '@/lib/internal-service-url';
 
-const SAFETY_SERVICE_URL = process.env.SAFETY_SERVICE_URL || 'http://localhost:3003';
+const SAFETY_SERVICE_URL = getInternalServiceUrl('SAFETY_SERVICE_URL', 'http://localhost:3003');
 
 async function callSafetyService(endpoint: string) {
   const jwt = await createServiceToken([SCOPES.SAFETY_REPORT], AUDIENCES.SAFETY, {

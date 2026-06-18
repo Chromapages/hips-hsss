@@ -89,16 +89,17 @@ describe('isUserRevoked (Firebase ID token path)', () => {
     expect(await isUserRevoked('user-1', Math.floor(Date.now() / 1000))).toBe(false);
   });
 
-  it('returns true when token was issued at or after revocation time', async () => {
+  it('returns false when token was issued at or after revocation time', async () => {
     const { revokeAllUserSessions } = await import('../apps/web/src/lib/auth/revocation');
-    const { revokedAt } = await revokeAllUserSessions({ userId: 'user-2', reason: 'suspended' });
-    // Token issued at or after the revocation is rejected.
-    expect(await isUserRevoked('user-2', revokedAt + 1)).toBe(true);
+    const { revokedAt } = await revokeAllUserSessions({ userId: 'user-2', reason: 'user_suspended' });
+    // Token issued at or after the revocation is a fresh login, so not revoked.
+    expect(await isUserRevoked('user-2', revokedAt + 1)).toBe(false);
   });
 
-  it('returns false for tokens issued before the revocation time', async () => {
+  it('returns true for tokens issued before the revocation time', async () => {
     const { revokeAllUserSessions } = await import('../apps/web/src/lib/auth/revocation');
-    const { revokedAt } = await revokeAllUserSessions({ userId: 'user-3', reason: 'suspended' });
-    expect(await isUserRevoked('user-3', revokedAt - 60)).toBe(false);
+    const { revokedAt } = await revokeAllUserSessions({ userId: 'user-3', reason: 'user_suspended' });
+    // Token issued before the revocation is a stale login, so revoked.
+    expect(await isUserRevoked('user-3', revokedAt - 60)).toBe(true);
   });
 });

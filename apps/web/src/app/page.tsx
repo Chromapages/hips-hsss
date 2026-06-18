@@ -5,6 +5,34 @@ import Link from "next/link"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { FeatureTabs } from "@/components/home/FeatureTabs"
+import { OrganizationJsonLd } from "@/components/seo/OrganizationJsonLd"
+import type { Metadata } from 'next'
+
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://hips.foundation'
+
+export const dynamic = 'force-static'
+export const revalidate = false
+
+export const metadata: Metadata = {
+  title: 'H.I.P.S. Foundation — Anonymous Peer Support Online',
+  description: 'The first anonymous peer support network — camera-free, voice-masked, and built on hard-anonymity protocols. Get matched in seconds, no sign-up required.',
+  keywords: ['anonymous peer support', 'peer support online', 'hard anonymity', 'camera-free support', 'crisis support', 'virtual sanctuary'],
+  alternates: { canonical: `${SITE_URL}/` },
+  openGraph: {
+    type: 'website',
+    title: 'H.I.P.S. Foundation — Anonymous Peer Support Online',
+    description: 'The first anonymous peer support network — camera-free, voice-masked, and built on hard-anonymity protocols. Get matched in seconds, no sign-up required.',
+    url: `${SITE_URL}/`,
+    siteName: 'H.I.P.S. Foundation',
+    images: [{ url: `${SITE_URL}/og/home`, width: 1200, height: 630, alt: 'H.I.P.S. Foundation' }],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'H.I.P.S. Foundation — Anonymous Peer Support Online',
+    description: 'The first anonymous peer support network — camera-free, voice-masked, and built on hard-anonymity protocols. Get matched in seconds, no sign-up required.',
+    images: [`${SITE_URL}/og/home`],
+  },
+}
 
 export default function HomePage() {
 
@@ -13,11 +41,11 @@ export default function HomePage() {
       <Navbar />
 
       {/* Hero Section */}
-      <section className="relative min-h-[80vh] pt-[clamp(2rem,4vw,3rem)] pb-[clamp(3rem,5vw,4rem)] md:pt-[clamp(3rem,5vw,5rem)] md:pb-[clamp(3.5rem,6vw,6rem)] overflow-hidden">
+      <section className="relative min-h-[80dvh] pt-[clamp(2rem,4vw,3rem)] pb-[clamp(3rem,5vw,4rem)] md:pt-[clamp(3rem,5vw,5rem)] md:pb-[clamp(3.5rem,6vw,6rem)] overflow-hidden">
         {/* Hero Background Image */}
         <div className="absolute inset-0 z-0">
           <Image
-            src="/hips_hero.png"
+            src="/hips_hero.webp"
             alt="H.I.P.S. Foundation — anonymous peer support platform"
             fill
             className="object-cover"
@@ -35,9 +63,9 @@ export default function HomePage() {
             <div className="text-left">
               {/* Announcement Pill Badge */}
               <div className="inline-flex items-center gap-3 rounded-full border border-accent/40 bg-accent/10 backdrop-blur-xl px-5 py-2 mb-8 animate-in fade-in slide-in-from-bottom-4 duration-1000">
-                <span className="text-[9px] font-bold uppercase tracking-brand text-primary font-ui">New</span>
+                <span className="text-xs font-bold uppercase tracking-brand text-primary font-ui">New</span>
                 <span className="w-px h-3 bg-primary/50" />
-                <span className="text-[10px] font-medium text-text-muted tracking-wide">First Anonymous Peer Support Network Live</span>
+                <span className="text-xs font-medium text-text-muted tracking-wide">A new standard in anonymous peer support — now live</span>
               </div>
 
               {/* H1 - Hero display headline (ExtraBold) */}
@@ -52,7 +80,7 @@ export default function HomePage() {
 
               {/* Dual CTA Layout */}
               <div className="flex flex-col sm:flex-row items-start gap-5 animate-in fade-in slide-in-from-bottom-12 duration-1000 delay-300">
-                <Button asChild className="h-14 px-10 rounded-full bg-primary text-primary-foreground hover:bg-accent hover:shadow-xl hover:shadow-accent/20 hover:scale-[1.02] active:scale-95 transition-all duration-200 ease-in-out text-base font-bold group focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
+                <Button asChild className="h-14 px-10 rounded-full bg-primary text-primary-foreground hover:bg-accent hover:shadow-xl hover:shadow-accent/20 motion-safe:hover:scale-[1.02] motion-safe:active:scale-95 transition-all duration-200 ease-in-out text-base font-bold group focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
                   <Link href="/services">
                     Get Support
                     <ChevronRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform duration-200 ease-in-out" />
@@ -60,25 +88,34 @@ export default function HomePage() {
                 </Button>
                 <Button variant="ghost" asChild className="h-14 px-10 rounded-full border-2 border-primary text-primary hover:bg-primary hover:text-white transition-all duration-200 ease-in-out text-base font-bold group focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2">
                   <Link href="/opportunities">
-                    <PlayCircle className="mr-2 h-5 w-5 text-accent group-hover:scale-110 transition-transform duration-200" />
+                    <PlayCircle className="mr-2 h-5 w-5 text-accent motion-safe:group-hover:scale-110 transition-transform duration-200" />
                     For Organizations
                   </Link>
                 </Button>
               </div>
             </div>
 
-            {/* Right Column — Reserved for future content */}
-            <div className="hidden md:flex min-h-[500px] items-center justify-center">
-              {/* Right column — reserved for future content */}
+            {/* Right Column — Illustration Mockup */}
+            <div className="hidden md:flex relative min-h-[400px] lg:min-h-[500px] w-full items-center justify-center animate-in fade-in zoom-in-95 duration-1000 delay-300">
+              <Image
+                src="/hero-app-mockup.png"
+                alt="H.I.P.S. Peer Support Room Application Interface"
+                fill
+                priority
+                className="object-contain"
+                sizes="(max-width: 768px) 100vw, 50vw"
+                data-no-dark="true"
+              />
             </div>
           </div>
 
           {/* Partner / Trust Logo Strip — full width below grid */}
-          <div className="animate-in fade-in slide-in-from-bottom-16 duration-1000 delay-400 mt-4">
-            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-text-muted mb-8 font-ui">Partnering with leading mental health organizations</p>
-            <div className="flex flex-wrap items-center justify-start gap-8 md:gap-12 opacity-30">
-              {/* Placeholder partner logos - using text for now, replace with actual logo Image components */}
-              {['HIMS', 'Mindful', 'Calm', 'Headspace', 'BetterHelp'].map((partner) => (
+          <div className="animate-in fade-in slide-in-from-bottom-16 duration-1000 delay-400 mt-12 md:mt-20">
+            <p className="text-xs font-semibold uppercase tracking-[0.15em] text-text-muted mb-4 font-ui">
+              Built to integrate with leading platforms
+            </p>
+            <div aria-hidden="true" className="flex flex-wrap items-center justify-start gap-8 md:gap-12 opacity-60">
+              {['Partner One', 'Partner Two', 'Partner Three', 'Partner Four', 'Partner Five'].map((partner) => (
                 <span key={partner} className="text-sm font-bold uppercase tracking-[0.15em] text-primary font-ui">{partner}</span>
               ))}
             </div>
@@ -92,7 +129,7 @@ export default function HomePage() {
           {/* Header — centered, compact */}
           <div className="text-center mb-20">
             {/* Pill badge */}
-            <span className="inline-flex items-center rounded-full border border-accent/40 bg-accent/10 px-5 py-1.5 text-[10px] font-bold uppercase tracking-brand text-accent font-ui mb-6">
+            <span className="inline-flex items-center rounded-full border border-accent/40 bg-accent/10 px-5 py-1.5 text-xs font-bold uppercase tracking-brand text-accent font-ui mb-6">
               How It Works
             </span>
             {/* Display headline */}
@@ -121,7 +158,7 @@ export default function HomePage() {
                 <MousePointerClick className="w-7 h-7 text-accent" />
               </div>
               {/* Step number badge */}
-              <div className="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center text-sm font-bold font-heading mb-4">
+              <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-bold font-heading mb-4">
                 1
               </div>
               {/* Step title */}
@@ -141,7 +178,7 @@ export default function HomePage() {
                 <Zap className="w-7 h-7 text-accent" />
               </div>
               {/* Step number badge */}
-              <div className="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center text-sm font-bold font-heading mb-4">
+              <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-bold font-heading mb-4">
                 2
               </div>
               {/* Step title */}
@@ -161,7 +198,7 @@ export default function HomePage() {
                 <Shield className="w-7 h-7 text-accent" />
               </div>
               {/* Step number badge */}
-              <div className="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center text-sm font-bold font-heading mb-4">
+              <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-bold font-heading mb-4">
                 3
               </div>
               {/* Step title */}
@@ -185,10 +222,10 @@ export default function HomePage() {
 
             {/* Dual CTA — match hero button styles exactly */}
             <div className="flex flex-col sm:flex-row items-center justify-center gap-5">
-              {/* Primary: Start Your Session */}
-              <Button asChild className="h-14 px-10 rounded-full bg-primary text-primary-foreground hover:bg-accent hover:shadow-xl hover:shadow-accent/20 hover:scale-[1.02] active:scale-95 transition-all duration-200 ease-in-out text-base font-bold group focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
-                <Link href="/services">
-                  Start Your Session
+              {/* Primary: Support the Foundation */}
+              <Button asChild className="h-14 px-10 rounded-full bg-primary text-primary-foreground hover:bg-accent hover:shadow-xl hover:shadow-accent/20 motion-safe:hover:scale-[1.02] motion-safe:active:scale-95 transition-all duration-200 ease-in-out text-base font-bold group focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
+                <Link href="/donate">
+                  Support the Foundation
                   <ChevronRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform duration-200" />
                 </Link>
               </Button>
@@ -196,7 +233,7 @@ export default function HomePage() {
               {/* Ghost: Watch How It Works -> Try Demo Room */}
               <Button variant="ghost" asChild className="h-14 px-10 rounded-full border-2 border-primary text-primary hover:bg-primary hover:text-white transition-all duration-200 ease-in-out text-base font-bold group focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2">
                 <Link href="/demo-room">
-                  <PlayCircle className="mr-2 h-5 w-5 text-accent group-hover:scale-110 transition-transform duration-200" />
+                  <PlayCircle className="mr-2 h-5 w-5 text-accent motion-safe:group-hover:scale-110 transition-transform duration-200" />
                   Try Demo Room
                 </Link>
               </Button>
@@ -212,7 +249,7 @@ export default function HomePage() {
           {/* Section Header — centered, tight */}
           <div className="text-center mb-16">
             {/* Pill badge */}
-            <span className="inline-flex items-center rounded-full border border-accent/40 bg-accent/10 px-5 py-1.5 text-[10px] font-bold uppercase tracking-brand text-accent font-ui mb-6">
+            <span className="inline-flex items-center rounded-full border border-accent/40 bg-accent/10 px-5 py-1.5 text-xs font-bold uppercase tracking-brand text-accent font-ui mb-6">
               Core Features
             </span>
             {/* Display headline */}
@@ -229,6 +266,7 @@ export default function HomePage() {
 
         </div>
       </section>
+      <OrganizationJsonLd />
     </main>
   )
 }

@@ -31,21 +31,42 @@ export async function POST(req: NextRequest) {
     } catch {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
-    const user = await getPrisma().user.findFirst({
-      where: { firebaseUid: identity.uid, deletedAt: null },
-      select: { role: true },
-    });
-    if (!user) {
+    let userRole: string | null = null;
+    try {
+      const dbUser = await getPrisma().user.findFirst({
+        where: { firebaseUid: identity.uid, deletedAt: null },
+        select: { role: true },
+      });
+      if (dbUser) {
+        userRole = dbUser.role;
+      }
+    } catch (dbError) {
+      const isDemoMode = process.env.NEXT_PUBLIC_DEMO_MODE === 'true';
+      const demoRoles: Record<string, string> = {
+        'participant@hips.foundation': 'PARTICIPANT',
+        'facilitator@hips.foundation': 'FACILITATOR',
+        'admin@hips.foundation': 'ADMIN',
+        'superadmin@hips.foundation': 'SUPER_ADMIN',
+      };
+      const emailKey = identity.email || '';
+      if (isDemoMode) {
+        userRole = demoRoles[emailKey] || 'PARTICIPANT';
+      } else {
+        throw dbError;
+      }
+    }
+
+    if (!userRole) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const isAdmin = (ADMIN_ROLES as readonly Role[]).includes(user.role as Role);
+    const isAdmin = (ADMIN_ROLES as readonly Role[]).includes(userRole as Role);
     const maxAge = isAdmin ? 60 * 60 * 4 : 60 * 60 * 24 * 7;
     const response = NextResponse.json({ success: true });
 
-    response.cookies.set('hips-auth-token', token, {
+    response.cookies.set('__Host-hips-auth-token', token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production' || req.nextUrl.protocol === 'https:',
+      secure: true,
       sameSite: 'lax',
       path: '/',
       maxAge,
@@ -64,9 +85,9 @@ export async function POST(req: NextRequest) {
 export async function DELETE() {
   const response = NextResponse.json({ success: true });
 
-  response.cookies.set('hips-auth-token', '', {
+  response.cookies.set('__Host-hips-auth-token', '', {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
+    secure: true,
     sameSite: 'lax',
     path: '/',
     maxAge: 0,

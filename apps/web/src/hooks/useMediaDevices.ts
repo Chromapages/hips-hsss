@@ -38,6 +38,8 @@ export function useMediaDevices(): UseMediaDevicesReturn {
   const analyserRef = useRef<AnalyserNode | null>(null);
   const animationFrameRef = useRef<number | null>(null);
   const micStreamRef = useRef<MediaStream | null>(null);
+  // Track AudioContext so it can be properly closed on unmount — prevents memory leaks
+  const audioContextRef = useRef<AudioContext | null>(null);
 
   const refreshDevices = useCallback(async () => {
     try {
@@ -72,6 +74,7 @@ export function useMediaDevices(): UseMediaDevicesReturn {
 
       // Set up analyser for audio level metering
       const audioContext = new AudioContext();
+      audioContextRef.current = audioContext; // store for cleanup
       const source = audioContext.createMediaStreamSource(stream);
       const analyser = audioContext.createAnalyser();
       analyser.fftSize = 256;
@@ -126,6 +129,11 @@ export function useMediaDevices(): UseMediaDevicesReturn {
       }
       micStreamRef.current?.getTracks().forEach((t) => t.stop());
       micStreamRef.current = null;
+      // Close the AudioContext created in requestMicPermission to prevent memory leak
+      if (audioContextRef.current) {
+        audioContextRef.current.close();
+        audioContextRef.current = null;
+      }
     };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 

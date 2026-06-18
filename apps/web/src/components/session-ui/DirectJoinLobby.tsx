@@ -15,7 +15,7 @@ interface DirectJoinLobbyProps {
   allChecked: boolean;
   checklist: ChecklistState;
   onChecklistChange: (checklist: ChecklistState) => void;
-  avatarSeed?: string;
+  avatarInitials?: string;
   onAvatarRefresh?: () => void;
   isJoining?: boolean;
   isPreparing?: boolean;
@@ -27,7 +27,7 @@ export function DirectJoinLobby({
   allChecked,
   checklist,
   onChecklistChange,
-  avatarSeed,
+  avatarInitials,
   onAvatarRefresh,
   isJoining = false,
   isPreparing = false,
@@ -57,17 +57,25 @@ export function DirectJoinLobby({
 
       <div className="flex items-center gap-4">
         <div className="group relative">
-          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-accent font-bold text-2xl text-primary-foreground shadow-sm shadow-primary/20">
-            {avatarSeed ? avatarSeed.slice(0, 2).toUpperCase() : '??'}
-          </div>
-          {onAvatarRefresh && (
+          {isPreparing ? (
+            <div className="flex h-16 w-16 animate-pulse items-center justify-center rounded-2xl bg-zinc-800" />
+          ) : (
+            <div
+              className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-accent font-bold text-2xl text-primary-foreground shadow-sm shadow-primary/20"
+              role="img"
+              aria-label={`Lobby initials: ${avatarInitials || '??'}`}
+            >
+              {avatarInitials || '??'}
+            </div>
+          )}
+          {onAvatarRefresh && !isPreparing && (
             <button
               onClick={onAvatarRefresh}
-              className="absolute -bottom-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full bg-background text-text-secondary ring-1 ring-border transition-colors hover:bg-accent hover:text-primary-foreground"
-              aria-label="Randomise avatar"
+              className="absolute -bottom-2 -right-2 flex h-11 w-11 items-center justify-center rounded-full bg-background text-text-secondary ring-1 ring-border transition-colors hover:bg-accent hover:text-primary-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+              aria-label="Randomise initials"
               type="button"
             >
-              <Shuffle className="h-3 w-3" />
+              <Shuffle className="h-4 w-4" />
             </button>
           )}
         </div>

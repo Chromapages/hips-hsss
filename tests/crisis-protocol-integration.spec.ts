@@ -64,8 +64,8 @@ describe('Crisis Protocol — E2E Flow', () => {
           requestId: data.data.requestId ?? crypto.randomUUID(),
           createdAt: new Date(),
         };
-        mockVaultLog.push(entry as typeof mockVaultLog[number]);
-        return entry;
+        mockVaultLog.push(entry as any);
+        return entry as any;
       }),
     },
     safetyAuditLog: {
@@ -514,6 +514,7 @@ describe('SNS Alert — Crisis Notification Firing', () => {
     piiAvailable: boolean;
     message: string;
     metadata?: Record<string, unknown>;
+    pagerdutyRoutingKey?: string;
   }
 
   interface PublishedAlert {
@@ -639,7 +640,7 @@ describe('SNS Alert — Crisis Notification Firing', () => {
     expect(result.messageId).toMatch(/^sns-/);
     expect(result.destinations).toContain('pagerduty');
     expect(publishedAlerts).toHaveLength(1);
-    expect(publishedAlerts[0].topicArn).toMatch(/hips-safety-crisis$/);
+    expect(publishedAlerts[0]!.topicArn).toMatch(/hips-safety-crisis$/);
   });
 
   it('constructs correct SNS topic ARN from config', () => {
@@ -667,7 +668,7 @@ describe('SNS Alert — Crisis Notification Firing', () => {
 
     await publishCrisisAlert(alert);
 
-    const published = publishedAlerts[0];
+    const published = publishedAlerts[0]!;
     const parsedMessage = JSON.parse(published.message);
 
     // pagerduty inside the SNS JSON envelope is a nested JSON-encoded string
@@ -735,7 +736,7 @@ describe('SNS Alert — Crisis Notification Firing', () => {
 
     expect(result.destinations).toContain('pagerduty');
     expect(result.destinations).toContain('slack');
-    expect(publishedAlerts[0].destinations).toEqual(['pagerduty', 'slack']);
+    expect(publishedAlerts[0]!.destinations).toEqual(['pagerduty', 'slack']);
   });
 
   it('SNS message structure uses JSON envelope for multi-protocol delivery', async () => {
@@ -752,7 +753,7 @@ describe('SNS Alert — Crisis Notification Firing', () => {
 
     await publishCrisisAlert(alert);
 
-    const published = publishedAlerts[0];
+    const published = publishedAlerts[0]!;
     const msg = JSON.parse(published.message);
 
     // JSON envelope for SNS message structure
@@ -804,6 +805,6 @@ describe('SNS Alert — Crisis Notification Firing', () => {
     publishCrisisAlert(alert);
 
     expect(publishedAlerts).toHaveLength(1);
-    expect(publishedAlerts[0].topicArn).toMatch(/hips-safety-crisis/);
+    expect(publishedAlerts[0]!.topicArn).toMatch(/hips-safety-crisis/);
   });
 });

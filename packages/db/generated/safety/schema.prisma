@@ -1,31 +1,12 @@
-// Row-Level Security (RLS) is required for production deployment.
-// Run the following in your Postgres database:
-//
-// ALTER TABLE "safety_alert" ENABLE ROW LEVEL SECURITY;
-// CREATE POLICY "safety_alert_admin_only" ON "safety_alert" FOR ALL USING (true);
-//
-// ALTER TABLE "audit_event" ENABLE ROW LEVEL SECURITY;
-// CREATE POLICY "audit_event_admin_only" ON "audit_event" FOR ALL USING (true);
-//
-// ALTER TABLE "escalation_queue" ENABLE ROW LEVEL SECURITY;
-// CREATE POLICY "escalation_queue_admin_only" ON "escalation_queue" FOR ALL USING (true);
-
-// Safety Service schema — extends shared @hips/db safety schema
-// This service-level schema is used for code generation (prisma generate)
-// The actual database uses the shared schema at packages/db/prisma/safety.prisma
-// NOTE: This schema syncs with the shared safety schema. Drift must be resolved before deployment.
-
 generator client {
   provider = "prisma-client-js"
-  output   = "../../../packages/db/generated/safety"
+  output   = "../generated/safety"
 }
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
+  url      = env("SAFETY_DATABASE_URL")
 }
-
-// ─── Enums (mirrors packages/db/prisma/safety.prisma) ───────────────────────
 
 enum SafetySeverity {
   LOW
@@ -65,23 +46,6 @@ enum EscalationStatus {
   resolved
 }
 
-// PHI-1: Safety Audit Trail — INSERT only, never modify
-model AuditEvent {
-  id         String   @id @default(cuid())
-  service    String
-  action     String
-  actorRef   String
-  subjectRef String?
-  metadata   Json     @default("{}")
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-
-  @@index([service, action])
-  @@index([actorRef])
-  @@index([createdAt])
-  @@map("audit_event")
-}
-
 model SafetyAlert {
   id               String         @id @default(uuid()) @db.Uuid
   sessionId        String
@@ -102,6 +66,20 @@ model SafetyAlert {
   @@index([createdAt])
 }
 
+model KeywordRule {
+  id        String         @id @default(uuid()) @db.Uuid
+  term      String         @unique
+  severity  SafetySeverity
+  category  SafetyCategory
+  enabled   Boolean        @default(true)
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+
+  @@index([enabled])
+  @@index([severity])
+  @@index([category])
+}
+
 model SafetyMitigation {
   id        String           @id @default(uuid()) @db.Uuid
   alertId   String           @db.Uuid
@@ -110,7 +88,9 @@ model SafetyMitigation {
   metadata  Json?
   createdAt DateTime         @default(now())
 
-  alert SafetyAlert @relation(fields: [alertId], references: [id], onDelete: Cascade)
+  alert SafetyAlert @relation(fields: [alertId], references: [id], onDelete: Cascade, map: "SafetyMitigation_alertId_fkey")
+
+  @@index([alertId])
 }
 
 model SafetyStrike {
@@ -134,6 +114,7 @@ model SafetyAuditLog {
   updatedAt DateTime @updatedAt
 }
 
+// Persisted escalation queue - replaces in-memory queue
 model EscalationQueue {
   id             String           @id @default(uuid()) @db.Uuid
   sessionRef     String
@@ -149,19 +130,4 @@ model EscalationQueue {
 
   @@index([status])
   @@index([sessionRef])
-}
-
-model KeywordRule {
-  id        String         @id @default(uuid()) @db.Uuid
-  term      String         @unique
-  severity  SafetySeverity
-  category  SafetyCategory
-  enabled   Boolean        @default(true)
-  createdAt DateTime       @default(now())
-  updatedAt DateTime       @updatedAt
-
-  @@index([enabled])
-  @@index([severity])
-  @@index([category])
-  @@map("keyword_rule")
 }

@@ -2,7 +2,8 @@
 
 import { Canvas } from "@react-three/fiber";
 import { ACESFilmicToneMapping } from "three";
-import AbstractAvatar from "@/components/session/AbstractAvatar";
+import VirtualOfficeAvatar from "@/components/session-ui/avatars/VirtualOfficeAvatar";
+import type { AvatarGesture } from "@/components/session-ui/avatars/VirtualOfficeAvatar";
 import SanctuaryScene from "@/components/session/SanctuaryScene";
 import SanctuaryParticles from "@/components/session/SanctuaryParticles";
 
@@ -10,16 +11,19 @@ interface AvatarPreviewCanvasProps {
   color: string;
   styleIndex: number;
   isSpeaking: boolean;
+  gesture?: AvatarGesture;
 }
 
 /**
  * Lightweight standalone R3F canvas used on the Avatar Setup page.
  * Renders a single host avatar floating in the sanctuary environment.
+ * Uses VirtualOfficeAvatar (12 styles, 5 gestures) for richer customization.
  */
 export default function AvatarPreviewCanvas({
   color,
   styleIndex,
   isSpeaking,
+  gesture = "idle",
 }: AvatarPreviewCanvasProps) {
   return (
     <Canvas
@@ -42,14 +46,15 @@ export default function AvatarPreviewCanvas({
       <SanctuaryScene />
       <SanctuaryParticles />
 
-      {/* Single host avatar, centred */}
-      <AbstractAvatar
+      {/* Single host avatar, centred — VirtualOfficeAvatar has 12 styles × 5 gestures */}
+      <VirtualOfficeAvatar
         color={color}
         isLocal={true}
         isSpeaking={isSpeaking}
         position={[0, 0, 0]}
         raisedHand={false}
         styleIndex={styleIndex}
+        gesture={gesture}
       />
     </Canvas>
   );

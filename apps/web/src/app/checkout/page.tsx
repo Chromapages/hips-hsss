@@ -15,14 +15,14 @@ export default function CheckoutPage() {
 
       <section className="relative z-10 mx-auto max-w-7xl px-6 pt-32 pb-24">
         <div className="max-w-3xl mb-12">
-          <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-text mb-4 animate-in fade-in slide-in-from-bottom-2 duration-700">
+          <p className="text-xs font-bold uppercase tracking-[0.3em] text-accent mb-4 animate-in fade-in slide-in-from-bottom-2 duration-700 font-ui">
             Final Step
           </p>
           <h1 className="font-heading text-3xl md:text-5xl font-extrabold tracking-tighter leading-[0.9] mb-8 animate-in fade-in slide-in-from-bottom-4 duration-1000">
             Complete your <br />
-            <span className="text-text">reservation.</span>
+            <span className="text-accent">reservation.</span>
           </h1>
-          <p className="text-lg text-muted-foreground font-medium max-w-xl leading-relaxed animate-in fade-in slide-in-from-bottom-6 duration-1000">
+          <p className="text-lg text-zinc-300 font-medium max-w-xl leading-relaxed animate-in fade-in slide-in-from-bottom-6 duration-1000 font-body">
             Your billing information is handled securely via Stripe. H.I.P.S. ensures
             that this data is never connected to your session participation.
           </p>

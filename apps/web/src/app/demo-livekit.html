@@ -339,6 +339,25 @@
           <span>🎭</span> <span class="hidden sm:inline">Voice mask active — pitch shift + reverb</span>
           <span class="sm:hidden">Masked</span>
         </div>
+
+        <!-- Wet / Dry mix slider -->
+        <div class="absolute bottom-4 right-4 sm:bottom-6 sm:right-6 flex flex-col items-end gap-1">
+          <label for="wet-dry-slider" class="text-[10px] font-semibold uppercase tracking-widest text-indigo-300">Dry / Wet</label>
+          <div class="flex items-center gap-2">
+            <span class="text-[10px] text-indigo-300">Dry</span>
+            <input
+              id="wet-dry-slider"
+              type="range"
+              min="0" max="1" step="0.05"
+              value="0.22"
+              oninput="updateWetDry(Number(this.value))"
+              aria-label="Dry / Wet mix"
+              class="h-2 w-24 appearance-none rounded-full bg-indigo-500/20 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-indigo-400 [&::-webkit-slider-thumb]:cursor-pointer"
+            />
+            <span class="text-[10px] text-indigo-300">Wet</span>
+          </div>
+          <span id="wet-dry-label" class="text-[10px] font-mono text-indigo-400">22% wet</span>
+        </div>
       </div>
 
       <!-- Sidebar -->
@@ -475,12 +494,15 @@
   let analyser = null;
   let sourceNode = null;
   let workletNode = null;
+  let wetGainNode = null;   // wet reverb gain — updated by wet/dry slider
+  let dryGainNode = null;   // dry signal gain — updated by wet/dry slider
   let isMicActive = false;
   let isMuted = false;
   let isHandRaised = false;
   let sessionStartTime = null;
   let myAnonId = '';
   let animationFrameId = null;
+  let wetDryRatio = 0.22;   // default 22% wet
 
   // Global keyboard handler for modals
   document.addEventListener('keydown', (e) => {
@@ -497,33 +519,99 @@
     }
   });
 
-  // The pitch shift worklet — same as voice-mask-processor.ts
+  // Low-Latency OLA Pitch Shifter — L=512 (~16ms total), registered as 'hips-pitch-shift-ola'
   const pitchShiftWorkletSource = `
-class HipsPitchShiftProcessor extends AudioWorkletProcessor {
+class LowLatencyPitchShiftProcessor extends AudioWorkletProcessor {
   constructor(options) {
     super();
     const semitones = options.processorOptions?.semitones ?? 4;
-    this.ratio = Math.pow(2, semitones / 12); // ~1.26 for 4 semitones
-    this.BUF_SIZE = 4096;          // power of 2
-    this.MASK = this.BUF_SIZE - 1;
-    this.HALF = this.BUF_SIZE >> 1;
-    this.buf = new Float32Array(this.BUF_SIZE);
-    this.wp = 0;                   // write pointer (0..BUF_SIZE-1)
-    this.baseRp = 0;               // read pointer base (advances with ratio)
-    this.frac = 0;                 // fractional part of read pointer
+    this.ratio = Math.pow(2, semitones / 12);
+
+    this.phaseLFO = 0;
+    this.lfoFreq = 2.5;
+    this.lfoDepth = 0.015;
+    this.sampleRate = 48000;
+
+    this.SIZE = 4096;
+    this.MASK = this.SIZE - 1;
+    this.buf = new Float32Array(this.SIZE);
+    this.wp = 0;
+
+    this.L = 512;
+    this.HALF_L = this.L >> 1;
+
+    this.p1 = 0;
+
+    const minDelay = 64;
+    const baseDelay = this.ratio > 1.0 ? minDelay + this.L * (this.ratio - 1.0) : minDelay;
+    this.D = Math.ceil(baseDelay + 32);
+
+    this.anchor1 = (this.wp - this.D + this.SIZE) & this.MASK;
+
+    this.gateThresholdDb = -45;
+    this.gateThresholdEnv = Math.pow(10, this.gateThresholdDb / 20);
+    this.envelope = 0;
+    this.gateGain = 0;
+
+    const sr = globalThis.sampleRate || 48000;
+    this.envReleaseCoef = Math.exp(-1.0 / (sr * 0.05));
+    this.gateAttackCoef = Math.exp(-1.0 / (sr * 0.002));
+    this.gateReleaseCoef = Math.exp(-1.0 / (sr * 0.150));
+
+    this.port.onmessage = (event) => {
+      if (event.data.type === 'update-params') {
+        if (typeof event.data.semitones === 'number') {
+          this.ratio = Math.pow(2, event.data.semitones / 12);
+          const baseDelay = this.ratio > 1.0 ? 64 + this.L * (this.ratio - 1.0) : 64;
+          this.D = Math.ceil(baseDelay + 32);
+        }
+        if (typeof event.data.gateThresholdDb === 'number') {
+          this.gateThresholdDb = event.data.gateThresholdDb;
+          this.gateThresholdEnv = Math.pow(10, this.gateThresholdDb / 20);
+        }
+        if (typeof event.data.lfoDepth === 'number') {
+          this.lfoDepth = event.data.lfoDepth;
+        }
+        if (typeof event.data.lfoFreq === 'number') {
+          this.lfoFreq = event.data.lfoFreq;
+        }
+      }
+    };
   }
 
-  // Hann window
-  win(n) {
-    return 0.5 * (1 - Math.cos(6.2831853 * n / this.HALF));
+  lerp(pos) {
+    const i = (pos | 0) & this.MASK;
+    const j = (i + 1) & this.MASK;
+    const f = pos - (pos | 0);
+    return this.buf[i] + (this.buf[j] - this.buf[i]) * f;
   }
 
-  // Linear interpolate from circular buffer at fractional position
-  lerp(rp) {
-    const i0 = Math.floor(rp) & this.MASK;
-    const i1 = (i0 + 1) & this.MASK;
-    const f  = rp - Math.floor(rp);
-    return this.buf[i0] * (1 - f) + this.buf[i1] * f;
+  win(p) {
+    return 0.5 - 0.5 * Math.cos((2 * Math.PI * p) / this.L);
+  }
+
+  alignAnchor(targetRp, baseRp) {
+    const SearchRange = 64;
+    const BlockSize = 32;
+    const HalfBlock = BlockSize >> 1;
+
+    let bestShift = 0;
+    let minSad = Infinity;
+
+    for (let shift = -SearchRange; shift <= SearchRange; shift += 2) {
+      let sad = 0;
+      for (let k = -HalfBlock; k < HalfBlock; k += 4) {
+        const idxA = (targetRp + k + this.SIZE) & this.MASK;
+        const idxB = (baseRp + shift + k + this.SIZE) & this.MASK;
+        const diff = this.buf[idxA] - this.buf[idxB];
+        sad += diff < 0 ? -diff : diff;
+      }
+      if (sad < minSad) {
+        minSad = sad;
+        bestShift = shift;
+      }
+    }
+    return (baseRp + bestShift + this.SIZE) & this.MASK;
   }
 
   process(inputs, outputs) {
@@ -531,34 +619,60 @@ class HipsPitchShiftProcessor extends AudioWorkletProcessor {
     const dst = outputs[0]?.[0];
     if (!src || !dst) return true;
 
+    const sr = globalThis.sampleRate || 48000;
+    if (this.sampleRate !== sr) {
+      this.sampleRate = sr;
+      this.envReleaseCoef = Math.exp(-1.0 / (sr * 0.05));
+      this.gateAttackCoef = Math.exp(-1.0 / (sr * 0.002));
+      this.gateReleaseCoef = Math.exp(-1.0 / (sr * 0.150));
+    }
+
     for (let i = 0; i < src.length; i++) {
-      // Write input sample
-      this.buf[this.wp & this.MASK] = src[i];
-      this.wp++;
+      this.buf[this.wp] = src[i];
 
-      // Advance read pointer by ratio
-      this.frac += this.ratio;
-      if (this.frac >= 1) {
-        const whole = Math.floor(this.frac);
-        this.baseRp += whole;
-        this.frac  -= whole;
+      const rect = Math.abs(src[i]);
+      if (rect > this.envelope) {
+        this.envelope = rect;
+      } else {
+        this.envelope = this.envelope * this.envReleaseCoef + rect * (1.0 - this.envReleaseCoef);
       }
 
-      // Compute two read positions (windowed overlap-add)
-      const rp1 = (this.baseRp               ) & this.MASK;
-      const rp2 = (this.baseRp + this.HALF) & this.MASK;
-      dst[i] = this.lerp(this.baseRp       ) * this.win(rp1)
-             + this.lerp((this.baseRp + this.HALF) & this.MASK) * this.win(rp2);
-
-      // Wrap baseRp to stay within reasonable range (no runaway)
-      if (this.baseRp > this.BUF_SIZE * 16) {
-        this.baseRp -= this.BUF_SIZE * 16;
+      const targetGate = (this.envelope > this.gateThresholdEnv) ? 1.0 : 0.0;
+      if (this.gateGain < targetGate) {
+        this.gateGain = this.gateGain * this.gateAttackCoef + targetGate * (1.0 - this.gateAttackCoef);
+      } else {
+        this.gateGain = this.gateGain * this.gateReleaseCoef + targetGate * (1.0 - this.gateReleaseCoef);
       }
+
+      let currentRatio = this.ratio;
+      if (this.ratio !== 1.0 && this.lfoDepth > 0) {
+        this.phaseLFO += this.lfoFreq / this.sampleRate;
+        if (this.phaseLFO >= 1.0) this.phaseLFO -= 1.0;
+        currentRatio = this.ratio * (1.0 + Math.sin(2.0 * Math.PI * this.phaseLFO) * this.lfoDepth);
+      }
+
+      const rp1 = this.anchor1 + this.p1 * currentRatio;
+
+      const outSample = this.lerp(rp1) * this.win(this.p1);
+
+      const noise = (Math.random() * 2.0 - 1.0) * 0.0003 * Math.max(0.1, this.gateGain);
+      dst[i] = outSample * this.gateGain + noise;
+
+      this.p1 += 1;
+
+      if (this.p1 >= this.L) {
+        this.p1 -= this.L;
+        const targetRp = Math.floor(this.anchor1 + this.p1 * currentRatio);
+        const baseRp = (this.wp - this.D + this.SIZE) & this.MASK;
+        this.anchor1 = this.alignAnchor(targetRp, baseRp);
+      }
+
+      this.wp = (this.wp + 1) & this.MASK;
     }
     return true;
   }
 }
-registerProcessor('hips-pitch-shift', HipsPitchShiftProcessor);
+registerProcessor('hips-pitch-shift-ola', LowLatencyPitchShiftProcessor);
 `;
 
   // ============================================================
@@ -725,14 +839,14 @@ registerProcessor('hips-pitch-shift', HipsPitchShiftProcessor);
       }
       convolver.buffer = ir;
 
-      const dryGain = audioContext.createGain();
-      dryGain.gain.value = 0.78;
+      dryGainNode = audioContext.createGain();
+      dryGainNode.gain.value = 1.0 - wetDryRatio;
 
-      const wetGain = audioContext.createGain();
-      wetGain.gain.value = 0.22;
+      wetGainNode = audioContext.createGain();
+      wetGainNode.gain.value = wetDryRatio;
 
-      // Create worklet node with 4 semitone pitch shift
-      workletNode = new AudioWorkletNode(audioContext, 'hips-pitch-shift', {
+      // Create worklet node with 4 semitone pitch shift — use low-latency processor
+      workletNode = new AudioWorkletNode(audioContext, 'hips-pitch-shift-ola', {
         processorOptions: { semitones: 4 }
       });
 
@@ -742,11 +856,11 @@ registerProcessor('hips-pitch-shift', HipsPitchShiftProcessor);
       highpass.connect(workletNode);
       workletNode.connect(lowpass);
       lowpass.connect(compressor);
-      compressor.connect(dryGain);
-      dryGain.connect(audioContext.destination);
+      compressor.connect(dryGainNode);
+      dryGainNode.connect(audioContext.destination);
       compressor.connect(convolver);
-      convolver.connect(wetGain);
-      wetGain.connect(audioContext.destination);
+      convolver.connect(wetGainNode);
+      wetGainNode.connect(audioContext.destination);
 
       isMicActive = true;
       isMuted = false;
@@ -762,6 +876,17 @@ registerProcessor('hips-pitch-shift', HipsPitchShiftProcessor);
       if (maskIndicator) maskIndicator.style.display = 'none';
       updateMuteButton();
     }
+  }
+
+  // Update wet/dry gain values on the fly — called by the wet/dry slider
+  function updateWetDry(ratio) {
+    wetDryRatio = ratio;
+    if (wetGainNode && dryGainNode) {
+      wetGainNode.gain.setTargetAtTime(wetDryRatio, audioContext.currentTime, 0.05);
+      dryGainNode.gain.setTargetAtTime(1.0 - wetDryRatio, audioContext.currentTime, 0.05);
+    }
+    const label = document.getElementById('wet-dry-label');
+    if (label) label.textContent = Math.round(wetDryRatio * 100) + '% wet';
   }
 
   // ============================================================

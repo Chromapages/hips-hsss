@@ -11,7 +11,7 @@ import {
   UnauthorizedException,
   InternalServerErrorException,
 } from '@nestjs/common';
-import { Request } from 'express';
+import type { Request } from 'express';
 import { CommerceService } from './commerce.service.js';
 import { FirebaseAuthService } from '../auth/firebase-auth.service.js';
 import {

@@ -1,4 +1,4 @@
-import { createHmac, randomUUID } from "node:crypto";
+import { createHmac, randomBytes, randomUUID } from "node:crypto";
 import type {
   AnonymousLiveSessionToken,
   AvatarPalette,
@@ -30,17 +30,18 @@ function makeAvatar(seed: string): AvatarProfile {
   const second = seed.charCodeAt(1);
 
   return {
-    style: (first % 12) + 1,
+    style: (first % 12) as any,
     palette: palettes[second % palettes.length] ?? "coastal",
     gesture: "idle",
-    locked: true,
   };
 }
 
 export class LiveKitTokenService {
+  private readonly identityCache = new Map<string, string>();
+
   constructor(private readonly options: LiveKitTokenOptions) {}
 
-  issue(sessionId: string, now = new Date()): AnonymousLiveSessionToken {
+  issue(sessionId: string, userRef?: string, now = new Date()): AnonymousLiveSessionToken {
     // Validate sessionId: only alphanumeric, hyphens, and underscores allowed.
     // Prevents injection into roomName which is used as a LiveKit room identifier.
     if (!/^[a-zA-Z0-9_-]+$/.test(sessionId)) {
@@ -50,7 +51,12 @@ export class LiveKitTokenService {
       );
     }
 
-    const anonymousIdentity = randomUUID();
+    const identityCacheKey = userRef ? `${sessionId}:${userRef}` : `${sessionId}:${randomUUID()}`;
+    let anonymousIdentity = this.identityCache.get(identityCacheKey);
+    if (!anonymousIdentity) {
+      anonymousIdentity = randomBytes(32).toString("hex");
+      this.identityCache.set(identityCacheKey, anonymousIdentity);
+    }
     const roomName = `session-${sessionId}`;
     const expiresAt = new Date(
       now.getTime() + this.options.durationSeconds * 1000 + 300_000,

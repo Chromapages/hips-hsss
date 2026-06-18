@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { onAuthStateChanged, User } from 'firebase/auth';
+import { onIdTokenChanged, User } from 'firebase/auth';
 import { auth } from '@/lib/firebase-client';
 import { setAuthCookie, removeAuthCookie } from '@/lib/auth-cookies';
 
@@ -22,6 +22,18 @@ const AuthContext = createContext<AuthContextType>({
   getToken: async () => null,
   logout: async () => {},
 });
+
+type AuthSyncResponse = {
+  user?: {
+    role?: string | null;
+  };
+  authTime?: number;
+  error?: string;
+  code?: string;
+  details?: string;
+  message?: string;
+  requestId?: string;
+};
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
@@ -59,7 +71,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }, 3000);
 
     let adminExpiryTimeout: ReturnType<typeof setTimeout> | undefined;
-    const unsubscribe = onAuthStateChanged(firebaseAuth, async (user) => {
+    const unsubscribe = onIdTokenChanged(firebaseAuth, async (user) => {
       try {
         if (user) {
           let idToken;
@@ -83,8 +95,30 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
               'Authorization': `Bearer ${idToken}`,
             },
           });
-          if (!response.ok) throw new Error(`Auth sync failed (${response.status})`);
-          const data = await response.json();
+          const data = (await response.json().catch(() => ({}))) as AuthSyncResponse;
+          if (!response.ok) {
+            const message = data.message || data.details || data.error;
+
+            if (response.status === 401 || response.status === 403) {
+              console.warn('[AuthProvider] Auth sync rejected credentials:', {
+                status: response.status,
+                code: data.code,
+                message,
+                requestId: data.requestId,
+              });
+              await firebaseAuth.signOut();
+              return;
+            }
+
+            console.warn('[AuthProvider] Auth sync unavailable:', {
+              status: response.status,
+              code: data.code,
+              message,
+              requestId: data.requestId,
+            });
+            setRole(null);
+            return;
+          }
           const databaseRole = data.user?.role || null;
           if (databaseRole === 'ADMIN' || databaseRole === 'SUPER_ADMIN') {
             if (adminExpiryTimeout) clearTimeout(adminExpiryTimeout);
@@ -145,6 +179,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const logout = async () => {
+    try {
+      await fetch('/api/auth/session', { method: 'DELETE' });
+    } catch (err) {
+      console.error('[AuthProvider] Failed to clear session cookie:', err);
+    }
     if (auth) {
       await auth.signOut();
     }

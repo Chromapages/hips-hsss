@@ -12,6 +12,13 @@ vi.mock('./firebase-admin', () => ({
 vi.mock('./prisma', () => ({
   getPrisma: () => ({ user: { findFirst: mockFindFirst } }),
 }));
+vi.mock('./logger', () => ({
+  logger: {
+    warn: vi.fn(),
+    info: vi.fn(),
+    error: vi.fn(),
+  },
+}));
 const mockPayload = {
   uid: 'user123',
   email: 'test@example.com',
@@ -26,6 +33,7 @@ const mockPayload = {
 
 describe('verifyFirebaseIdToken', () => {
   beforeEach(() => {
+    vi.unstubAllEnvs();
     mockVerifyIdToken.mockReset();
     mockFindFirst.mockReset();
     mockFindFirst.mockResolvedValue({ id: 'db-user-id' });
@@ -80,6 +88,28 @@ describe('verifyFirebaseIdToken', () => {
   });
 
   it('rejects a verified identity without an active Commerce user', async () => {
+    mockVerifyIdToken.mockResolvedValue(mockPayload as never);
+    mockFindFirst.mockResolvedValue(null);
+
+    await expect(verifyFirebaseIdToken('Bearer abc123token')).rejects.toThrow(
+      'Authenticated user is missing or disabled'
+    );
+  });
+
+  it('allows a Firebase-verified identity when Commerce DB is unreachable in local demo mode', async () => {
+    vi.stubEnv('NODE_ENV', 'development');
+    vi.stubEnv('NEXT_PUBLIC_DEMO_MODE', 'true');
+    mockVerifyIdToken.mockResolvedValue(mockPayload as never);
+    mockFindFirst.mockRejectedValue(Object.assign(new Error("Can't reach database server"), { code: 'P1001' }));
+
+    const result = await verifyFirebaseIdToken('Bearer abc123token');
+
+    expect(result).toEqual(mockPayload);
+  });
+
+  it('does not bypass missing Commerce users in demo mode', async () => {
+    vi.stubEnv('NODE_ENV', 'development');
+    vi.stubEnv('NEXT_PUBLIC_DEMO_MODE', 'true');
     mockVerifyIdToken.mockResolvedValue(mockPayload as never);
     mockFindFirst.mockResolvedValue(null);
 

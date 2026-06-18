@@ -11,7 +11,10 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'invalid' }, { status: 400 });
     }
 
-    const secret = process.env.HOST_ACCESS_CODE || 'HIPS-HOST-2025';
+    if (!process.env.HOST_ACCESS_CODE) {
+      throw new Error('HOST_ACCESS_CODE env var is required');
+    }
+    const secret = process.env.HOST_ACCESS_CODE;
     const valid = parsed.data.code.toUpperCase() === secret.toUpperCase();
     return NextResponse.json({ ok: valid }, { status: valid ? 200 : 403 });
   } catch (error) {

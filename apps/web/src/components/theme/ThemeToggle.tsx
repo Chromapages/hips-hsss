@@ -1,13 +1,12 @@
 "use client";
 
 import * as React from "react";
-import { Sun, Moon, Monitor } from "lucide-react";
-import { useTheme, type Theme } from "@/components/theme/ThemeProvider";
+import { Sun, Moon } from "lucide-react";
+import { useTheme } from "@/components/theme/ThemeProvider";
 import { cn } from "@/lib/utils";
 
 /**
- * ThemeToggle — three-state icon button that cycles
- *   light → dark → system → light
+ * ThemeToggle — cycles through light → dark → system → light.
  *
  * The icon for the current state is shown; the next click advances the
  * cycle. The icon element is keyed on the current `theme` value so it
@@ -31,10 +30,7 @@ export function ThemeToggle({ className }: { className?: string }) {
     if (theme === "light") {
       return { Icon: Sun, label: "Light mode", nextLabel: "dark" as const };
     }
-    if (theme === "dark") {
-      return { Icon: Moon, label: "Dark mode", nextLabel: "system" as const };
-    }
-    return { Icon: Monitor, label: "System theme", nextLabel: "light" as const };
+    return { Icon: Moon, label: "Dark mode", nextLabel: "light" as const };
   })();
 
   return (
@@ -47,7 +43,7 @@ export function ThemeToggle({ className }: { className?: string }) {
       className={cn("hips-theme-toggle", className)}
     >
       <Icon
-        key={theme as Theme}
+        key={theme}
         className="theme-icon-enter h-5 w-5"
         aria-hidden="true"
       />

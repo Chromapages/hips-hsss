@@ -9,6 +9,9 @@ import {
 } from "livekit-client";
 import { useRoomContext, useDataChannel, useParticipants } from "@livekit/components-react";
 import { toast } from "sonner";
+import { createLowLatencyVoiceMaskProcessor, createVoiceMaskProcessor } from "@/lib/voice-mask-processor";
+import type { VoicePreset } from "@/lib/voice-mask-presets";
+import { checkWebGPUSupport } from "@/lib/webgpu-detect";
 
 export type ConnectionQuality = "good" | "fair" | "poor";
 
@@ -75,29 +78,33 @@ export function useVoiceConnection() {
 
     room.on(RoomEvent.ConnectionStateChanged, handleConnectionStateChange);
 
-    // Initial state
-    const handleParticipantUpdates = () => {
-      // LiveKit updates connection quality via room
-    };
-
-    room.on(RoomEvent.ActiveSpeakersChanged, (speakers) => {
+    const handleActiveSpeakersChanged = (speakers: Array<{ identity: string }>) => {
       if (speakers.length > 0) {
         const loudest = speakers[0];
         setActiveSpeakerIdentity(loudest?.identity ?? null);
       } else {
         setActiveSpeakerIdentity(null);
       }
-    });
+    };
+
+    room.on(RoomEvent.ActiveSpeakersChanged, handleActiveSpeakersChanged);
 
     return () => {
       room.off(RoomEvent.ConnectionStateChanged, handleConnectionStateChange);
-      room.off(RoomEvent.ActiveSpeakersChanged, () => {});
+      room.off(RoomEvent.ActiveSpeakersChanged, handleActiveSpeakersChanged);
     };
   }, [room]);
 
   // Task 5.4 — Enable microphone with voice mask processor
   const startMicrophone = useCallback(
-    async (voiceMaskProcessor?: (track: MediaStreamTrack) => Promise<MediaStreamTrack>) => {
+    async (
+      voicePreset: VoicePreset = 'sofi',
+      semitones?: number,
+      anonymizationMode: 'dsp' | 'neural' = 'dsp',
+      selectedPersona: 'clara' | 'arthur' = 'clara',
+      isAntiCadenceEnabled: boolean = false,
+      wetDryRatio: number = 0.22,
+    ) => {
       setMicBusy(true);
       let trackObj: LocalAudioTrack | null = null;
       try {
@@ -114,27 +121,74 @@ export function useVoiceConnection() {
           voiceIsolation: true,
         });
 
-        let processedTrack: LocalAudioTrack = trackObj;
-
-        if (voiceMaskProcessor) {
-          try {
-            const processed = await voiceMaskProcessor(trackObj.mediaStreamTrack);
-            // Create a new LocalAudioTrack from the processed stream
-            const newTrack = createLocalAudioTrack({
-              channelCount: 1,
-              echoCancellation: true,
-              noiseSuppression: true,
-            });
-            // Note: In practice we'd need to replace the track
-            processedTrack = trackObj;
-          } catch {
-            // Processor unavailable — continue with raw audio
+        const webgpuSupported = await checkWebGPUSupport();
+        const isServerFallback = anonymizationMode === 'neural' && !webgpuSupported;
+        if (isServerFallback) {
+          const response = await fetch('/api/voice-masking/status', { cache: 'no-store' });
+          const data = await response.json().catch(() => ({}));
+          if (!data?.neural?.readyForSessionUse) {
+            try {
+              trackObj.stop();
+            } catch {
+              // ignore
+            }
+            toast.error('Enhanced neural masking is not ready on the server yet. Use Effects Mode for now.');
+            setMicBusy(false);
+            return;
           }
         }
 
-        await room.localParticipant.publishTrack(processedTrack as unknown as MediaStreamTrack);
-        localAudioTrackRef.current = processedTrack;
-        setLocalAudioTrack(processedTrack);
+        // Apply the voice mask processor before publishing.
+        // CRITICAL: the raw track must never be published if the processor fails —
+        // unpublishing synchronously is not possible in WebRTC.
+        try {
+          if (anonymizationMode === 'neural') {
+            const presetOverride = selectedPersona === 'clara' ? 'lark' : 'guardian';
+            const semitonesOverride = selectedPersona === 'clara' ? 1 : -4;
+            await trackObj.setProcessor(createVoiceMaskProcessor({ preset: presetOverride, semitones: semitonesOverride }));
+          } else {
+            await trackObj.setProcessor(createLowLatencyVoiceMaskProcessor({
+              preset: voicePreset,
+              ...(semitones !== undefined ? { semitones } : {}),
+              wetDryRatio,
+            }));
+          }
+        } catch {
+          // Processor unavailable — do NOT publish raw audio.
+          try {
+            trackObj.stop();
+          } catch {
+            // ignore
+          }
+          setMicBusy(false);
+          return;
+        }
+
+        const publishOptions = isServerFallback ? { name: 'voice-masking:server-agent' } : undefined;
+
+        await room.localParticipant.publishTrack(trackObj as unknown as MediaStreamTrack, publishOptions);
+        
+        try {
+          if (isServerFallback) {
+            await room.localParticipant.setAttributes({
+              'voice-masking': 'server-agent',
+              'voice-persona': selectedPersona,
+              'anti-cadence': String(isAntiCadenceEnabled),
+            });
+          } else {
+            await room.localParticipant.setAttributes({
+              'voice-masking': anonymizationMode === 'neural' ? 'local-s2s' : 'local-dsp',
+              'voice-preset': voicePreset,
+              'voice-semitones': String(semitones ?? 0),
+              'voice-wet-dry-ratio': String(wetDryRatio),
+            });
+          }
+        } catch (attrErr) {
+          console.warn('[useVoiceConnection] Failed to set participant attributes:', attrErr);
+        }
+
+        localAudioTrackRef.current = trackObj;
+        setLocalAudioTrack(trackObj);
         setMicEnabled(true);
       } catch (err) {
         console.error('[useVoiceConnection] Microphone publication failed:', err);
@@ -218,7 +272,7 @@ export function useVoiceConnection() {
     connectionQuality,
     micEnabled,
     micBusy,
-    localAudioTrack: localAudioTrackRef.current,
+    localAudioTrack,
     activeSpeakerIdentity,
     toggleMicrophone,
     startMicrophone,

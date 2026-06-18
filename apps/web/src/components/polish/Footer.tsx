@@ -14,6 +14,10 @@ const FOOTER_LINKS = {
     { label: "Donate", href: "/donate" },
     { label: "Crisis Resources", href: "/crisis" },
   ],
+  Portals: [
+    { label: "Facilitator Portal", href: "/login/facilitator" },
+    { label: "Admin Console", href: "/login/admin" },
+  ],
   Legal: [
     { label: "Privacy", href: "/privacy" },
     { label: "Terms", href: "/terms" },
@@ -30,7 +34,7 @@ export function Footer() {
       className="border-t border-border bg-surface"
     >
       <div className="container mx-auto px-6 max-w-6xl py-16">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-8">
           <div className="col-span-2 md:col-span-1">
             <Link href="/" className="flex items-center gap-3 group">
               <div className="h-10 w-10 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center motion-safe:group-hover:rotate-6 transition-all">

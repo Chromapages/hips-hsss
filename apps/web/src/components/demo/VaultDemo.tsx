@@ -29,10 +29,12 @@ function now() {
 const PhasePill = memo(function PhasePill({ label, active }: { label: string; active: boolean }) {
   return (
     <span
+      aria-label={`Phase ${label}: ${active ? 'active' : 'inactive'}`}
+      aria-current={active ? 'step' : undefined}
       className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold transition-all duration-300 ${
         active
           ? 'bg-primary text-white shadow-[0_0_12px_rgba(44,56,146,0.4)]'
-          : 'bg-surface/5 text-text/40'
+          : 'bg-surface text-text-muted'
       }`}
     >
       <span className={`h-1.5 w-1.5 rounded-full transition-all duration-300 ${active ? 'bg-emerald-400 animate-pulse' : 'bg-surface/20'}`} />
@@ -65,15 +67,18 @@ const EncryptionIcon = memo(function EncryptionIcon({ state }: { state: Phase })
     );
   }
   return (
-    <div className={`${sizes} rounded-2xl bg-bg-subtle/5 border border-border/20 flex items-center justify-center`}>
-      <ShieldCheck className="w-7 h-7 text-text/40" />
+    <div className={`${sizes} rounded-2xl bg-surface border border-border/20 flex items-center justify-center`}>
+      <ShieldCheck className="w-7 h-7 text-text-muted" />
     </div>
   );
 });
 
 const DataCard = memo(function DataCard({ label, value, masked, accent }: { label: string; value: string; masked?: boolean; accent?: string }) {
   return (
-    <div className={`rounded-xl border p-4 transition-all duration-300 ${accent ? `border-[${accent}]/40 bg-[${accent}]/5` : 'border-white/10 bg-surface/5'}`}>
+    <div
+      className="rounded-xl border p-4 transition-all duration-300 border-white/10 bg-surface/5"
+      style={accent ? { borderColor: `${accent}66`, backgroundColor: `${accent}0D` } : undefined}
+    >
       <div className="flex items-start justify-between gap-2">
         <p className="text-xs font-semibold uppercase tracking-widest text-white/40">{label}</p>
         {masked && <Lock className="w-3.5 h-3.5 text-accent mt-0.5" />}
@@ -89,7 +94,7 @@ const LogEntry = memo(function LogEntry({ entry, index }: { entry: AuditEntry; i
   const colors = {
     encrypt: { border: 'border-primary/40', bg: 'bg-primary/10', dot: 'bg-primary', label: 'text-primary', icon: '🔐' },
     decrypt: { border: 'border-emerald-500/40', bg: 'bg-emerald-500/10', dot: 'bg-emerald-400', label: 'text-emerald-400', icon: '🔓' },
-    access: { border: 'border-border/20', bg: 'bg-surface/5', dot: 'bg-bg-subtle/40', label: 'text-text/60', icon: '👤' },
+    access: { border: 'border-border/20', bg: 'bg-surface/5', dot: 'bg-white/30', label: 'text-text/60', icon: '👤' },
   }[entry.action];
 
   return (
@@ -105,7 +110,10 @@ const LogEntry = memo(function LogEntry({ entry, index }: { entry: AuditEntry; i
       <div className={`mt-1 h-3.5 w-3.5 shrink-0 rounded-full border-2 ${colors.border} ${colors.dot}`} />
       <div className="min-w-0 flex-1">
         <div className="flex items-center justify-between gap-2">
-          <span className="text-sm font-semibold">{entry.icon} {entry.detail}</span>
+          <span className="text-sm font-semibold">
+            <span role="img" aria-label={entry.action}>{entry.icon}</span>{' '}
+            {entry.detail}
+          </span>
           <span className="text-xs tabular-nums text-text/30 shrink-0">{entry.ts}</span>
         </div>
         <p className="text-xs text-text/40 mt-0.5">{entry.meta}</p>
@@ -215,7 +223,7 @@ export function VaultDemo() {
       <div className="rounded-2xl border border-border/20 bg-surface shadow-xl overflow-hidden">
 
         {/* Vault icon + status header */}
-        <div className="flex items-center gap-4 bg-bg-subtle px-6 py-4 border-b border-border/10">
+        <div className="flex items-center gap-4 bg-surface px-6 py-4 border-b border-border/10">
           <EncryptionIcon state={phase} />
           <div>
             <p className="text-sm font-bold text-text">
@@ -256,7 +264,7 @@ export function VaultDemo() {
                   value={pii.name}
                   onChange={e => setPii(p => ({ ...p, name: e.target.value }))}
                   placeholder="Taylor Chen"
-                  className="w-full rounded-xl border border-border/20 bg-bg-subtle px-4 py-3 text-sm text-text placeholder:text-text-muted/40 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
+                  className="w-full rounded-xl border border-border/20 bg-surface px-4 py-3 text-sm text-text placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
                   autoComplete="name"
                 />
               </div>
@@ -270,7 +278,7 @@ export function VaultDemo() {
                   value={pii.email}
                   onChange={e => setPii(p => ({ ...p, email: e.target.value }))}
                   placeholder="taylor@provider.com"
-                  className="w-full rounded-xl border border-border/20 bg-bg-subtle px-4 py-3 text-sm text-text placeholder:text-text-muted/40 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
+                  className="w-full rounded-xl border border-border/20 bg-surface px-4 py-3 text-sm text-text placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
                   autoComplete="email"
                 />
               </div>
@@ -284,7 +292,7 @@ export function VaultDemo() {
                   value={pii.phone}
                   onChange={e => setPii(p => ({ ...p, phone: e.target.value }))}
                   placeholder="+1 555 0100"
-                  className="w-full rounded-xl border border-border/20 bg-bg-subtle px-4 py-3 text-sm text-text placeholder:text-text-muted/40 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
+                  className="w-full rounded-xl border border-border/20 bg-surface px-4 py-3 text-sm text-text placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
                   autoComplete="tel"
                 />
               </div>
@@ -351,7 +359,7 @@ export function VaultDemo() {
             {(phase === 'encrypted' || phase === 'verified') && (
               <button
                 onClick={reset}
-                className="flex items-center justify-center gap-2 rounded-xl border border-border/20 text-text-muted px-4 py-3.5 text-sm font-semibold hover:bg-bg-subtle transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary active:scale-[0.97] sm:shrink-0"
+                className="flex items-center justify-center gap-2 rounded-xl border border-border/20 text-text-muted px-4 py-3.5 text-sm font-semibold hover:bg-surface-offset transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary active:scale-[0.97] sm:shrink-0"
               >
                 <RefreshCw className="w-4 h-4" />
                 Start over
@@ -371,7 +379,7 @@ export function VaultDemo() {
               title: 'PII collected',
               body: 'Name, email, and phone are the plaintext data to protect.',
               icon: <Eye className="w-5 h-5 text-success" />,
-              bg: 'bg-bg-subtle',
+              bg: 'bg-surface',
               accent: '#334155',
             },
             {
@@ -391,7 +399,11 @@ export function VaultDemo() {
               accent: '#23698C',
             },
           ].map(item => (
-            <div key={item.num} className={`rounded-xl border border-[${item.accent}]/20 p-4 bg-surface`}>
+            <div
+              key={item.num}
+              className="rounded-xl border p-4 bg-surface"
+              style={{ borderColor: `${item.accent}33` }}
+            >
               <div className="flex items-center gap-3 mb-3">
                 <div className={`w-9 h-9 rounded-xl ${item.bg} flex items-center justify-center`}>{item.icon}</div>
                 <div>
@@ -407,7 +419,7 @@ export function VaultDemo() {
       {/* Audit log */}
       <div className="rounded-2xl border border-border/20 bg-surface overflow-hidden">
         <button
-          className="w-full flex items-center justify-between px-5 py-4 text-left hover:bg-bg-subtle/50 transition-colors"
+          className="w-full flex items-center justify-between px-5 py-4 text-left hover:bg-surface-offset transition-colors"
           onClick={() => setShowLog(s => !s)}
         >
           <div className="flex items-center gap-2">

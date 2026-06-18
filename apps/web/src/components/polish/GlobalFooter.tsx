@@ -5,22 +5,27 @@ import { Footer } from "@/components/polish/Footer";
 
 // Routes that render the DashboardShell and therefore should not show
 // the global marketing footer.
-const DASHBOARD_PREFIXES = [
+const HIDE_FOOTER_PREFIXES = [
   "/admin",
   "/dashboard",
   "/facilitator",
   "/organizations",
+  "/login",
+  "/signup",
+  "/forgot-password",
+  "/mfa-verify",
+  "/mfa-setup",
 ];
 
-function isDashboardPath(pathname: string | null): boolean {
+function isHiddenFooterPath(pathname: string | null): boolean {
   if (!pathname) return false;
-  return DASHBOARD_PREFIXES.some(
+  return HIDE_FOOTER_PREFIXES.some(
     (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`)
   );
 }
 
 export function GlobalFooter() {
   const pathname = usePathname();
-  if (isDashboardPath(pathname)) return null;
+  if (isHiddenFooterPath(pathname)) return null;
   return <Footer />;
 }

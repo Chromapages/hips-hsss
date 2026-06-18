@@ -11,7 +11,7 @@
 
 import { describe, expect, it, beforeEach, afterEach } from 'vitest';
 import { SignJWT } from 'jose';
-import { findStaleSigningSecrets, SERVICE_JWT_DUAL, SESSION_DUAL } from '../apps/web/src/lib/secrets/dual';
+import { findStaleSigningSecrets, SERVICE_JWT_DUAL, SESSION_DUAL, getActiveSigningKeys } from '../apps/web/src/lib/secrets/dual';
 import {
   verifyWithDual,
   signWithDual,
@@ -33,7 +33,7 @@ describe('getActiveSigningKeys', () => {
   });
 
   it('returns primary and null when prior is absent', () => {
-    const { primary, prior } = SESSION_DUAL;
+    const { primary, prior } = getActiveSigningKeys(SESSION_DUAL);
     // primary is not a callable in dual.ts — it's read inside getActiveSigningKeys.
     // Test signWithDual + verifyWithDual instead.
   });

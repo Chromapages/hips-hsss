@@ -53,15 +53,30 @@ export async function POST(req: NextRequest) {
   const role = auth.user.role as Role;
   const requiresMfa = MFA_REQUIRED_ROLES.includes(role);
 
-  const user = await prisma.user.findUnique({
-    where: { id: auth.user.id },
-    select: {
-      id: true,
-      email: true,
-      mfaEnabled: true,
-      lastMfaVerifiedAt: true,
-    },
-  });
+  let user: { id: string; email: string; mfaEnabled: boolean; lastMfaVerifiedAt: Date | null } | null = null;
+  try {
+    user = await prisma.user.findUnique({
+      where: { id: auth.user.id },
+      select: {
+        id: true,
+        email: true,
+        mfaEnabled: true,
+        lastMfaVerifiedAt: true,
+      },
+    });
+  } catch (dbError) {
+    const isDemoMode = process.env.NEXT_PUBLIC_DEMO_MODE === 'true';
+    if (isDemoMode) {
+      user = {
+        id: auth.user.id,
+        email: auth.user.email,
+        mfaEnabled: false,
+        lastMfaVerifiedAt: null,
+      };
+    } else {
+      throw dbError;
+    }
+  }
   if (!user) {
     return NextResponse.json({ error: 'User not found' }, { status: 404 });
   }

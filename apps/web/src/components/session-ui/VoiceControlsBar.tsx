@@ -17,8 +17,12 @@ interface VoiceControlsBarProps {
   // Gestures removed
   voicePreset?: VoicePreset;
   voiceSemitones?: number;
+  voiceWetDryRatio?: number;
   onVoicePresetChange?: (preset: VoicePreset) => void;
   onVoiceSemitoneChange?: (semitones: number) => void;
+  onVoiceWetDryChange?: (ratio: number) => void;
+  /** Set to true when the voice mask processor is successfully active, to show a positive indicator. */
+  voiceMaskActive?: boolean;
   /**
    * Visual variant. `'dark'` (default) is the immersive stage chrome used by
    * the live `/session/[id]` room. `'light'` re-themes the bar for surfaces
@@ -37,10 +41,13 @@ export function VoiceControlsBar({
   onFlag,
   onLeave,
   // Gestures removed
-  voicePreset = "subtle",
+  voicePreset = "sofi",
   voiceSemitones = 4,
+  voiceWetDryRatio = 0.22,
   onVoicePresetChange,
   onVoiceSemitoneChange,
+  onVoiceWetDryChange,
+  voiceMaskActive = false,
   variant = "dark",
 }: VoiceControlsBarProps) {
   const isLight = variant === "light";
@@ -134,10 +141,15 @@ export function VoiceControlsBar({
           <div className="relative">
             <button
               aria-label="Voice effects"
+              aria-expanded={showFxPanel}
+              aria-haspopup="dialog"
               aria-pressed={showFxPanel}
               onClick={() => setShowFxPanel(!showFxPanel)}
+              onKeyDown={(e) => {
+                if (e.key === 'Escape') setShowFxPanel(false);
+              }}
               className={[
-                "flex h-14 w-14 items-center justify-center rounded-full transition-all group",
+                "flex h-14 w-14 items-center justify-center rounded-full transition-all group relative",
                 showFxPanel
                   ? isLight
                     ? "border border-accent/40 bg-accent/15 text-accent"
@@ -146,6 +158,10 @@ export function VoiceControlsBar({
               ].join(" ")}
             >
               <Waves className="h-6 w-6 transition-transform group-hover:scale-110" />
+              {/* Positive indicator: green dot when masking is successfully active and panel is closed */}
+              {!showFxPanel && voiceMaskActive && (
+                <span className="absolute right-1.5 top-1.5 h-2.5 w-2.5 rounded-full bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.8)]" />
+              )}
             </button>
 
             {showFxPanel && (
@@ -154,12 +170,18 @@ export function VoiceControlsBar({
                 <div
                   className="fixed inset-0 z-[-1]"
                   onClick={() => setShowFxPanel(false)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Escape') setShowFxPanel(false);
+                  }}
                 />
                 <VoiceEffectsPanel
                   activePreset={voicePreset}
                   semitones={voiceSemitones}
+                  wetDryRatio={voiceWetDryRatio}
                   onPresetChange={onVoicePresetChange!}
                   onSemitoneChange={onVoiceSemitoneChange!}
+                  onWetDryChange={onVoiceWetDryChange!}
+                  onClose={() => setShowFxPanel(false)}
                 />
               </>
             )}

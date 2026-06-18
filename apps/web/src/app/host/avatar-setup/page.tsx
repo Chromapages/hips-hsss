@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, Suspense } from "react";
+import { useState, useCallback, Suspense, useEffect } from "react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import {
@@ -13,6 +13,9 @@ import {
   Loader2,
   Sliders,
 } from "lucide-react";
+import { toast } from "sonner";
+import { pitchShiftWorkletSource } from "@/lib/voice-mask-processor";
+import { checkWebGPUSupport } from "@/lib/webgpu-detect";
 
 // ─── Lazy-load the 3D canvas (heavy — R3F) ────────────────────────────────────
 const AvatarPreviewCanvas = dynamic(
@@ -57,9 +60,10 @@ interface VoiceOption {
 }
 
 const VOICE_OPTIONS: VoiceOption[] = [
-  { id: "subtle", label: "Subtle", semitones: 3, description: "Slight pitch shift — still sounds natural" },
-  { id: "deep", label: "Deep", semitones: -4, description: "Lower register, more authoritative" },
-  { id: "high", label: "High", semitones: 4, description: "Raised pitch, softer presence" },
+  { id: "subtle", label: "Subtle", semitones: -2, description: "Slight pitch down — natural and calm cover" },
+  { id: "deep", label: "Deep", semitones: -6, description: "Voice Shield — deep, anonymous register" },
+  { id: "high", label: "High", semitones: 6, description: "Bright Veil — high, light register" },
+  { id: "cyber", label: "Cyber", semitones: -2, description: "Robotic synthesis — ring modulation anonymiser" },
   { id: "custom", label: "Custom", semitones: 0, description: "Set your own semitone shift" },
 ];
 
@@ -87,9 +91,129 @@ export default function AvatarSetupPage() {
   const [saved, setSaved] = useState(false);
   const [saving, setSaving] = useState(false);
   const [isPreviewing, setIsPreviewing] = useState(false);
+  const [savedConfig, setSavedConfig] = useState<any>(null);
+
+  // Two-tier voice replacement state
+  const [anonymizationMode, setAnonymizationMode] = useState<"dsp" | "neural">("dsp");
+  const [selectedPersona, setSelectedPersona] = useState<"clara" | "arthur">("clara");
+  const [isAntiCadenceEnabled, setIsAntiCadenceEnabled] = useState(false);
+  const [webgpuSupported, setWebgpuSupported] = useState(false);
+  const [neuralBackendAvailable, setNeuralBackendAvailable] = useState(false);
+  const [modelDownloadProgress, setModelDownloadProgress] = useState<number | null>(null);
+  const [modelDownloaded, setModelDownloaded] = useState(false);
 
   const effectiveSemitones =
     selectedVoice.id === "custom" ? customSemitones : selectedVoice.semitones;
+
+  const isDirty = !savedConfig || 
+    savedConfig.avatarPresetId !== selectedPreset.id ||
+    savedConfig.avatarColor !== selectedPreset.color ||
+    savedConfig.avatarStyle !== selectedPreset.style ||
+    savedConfig.voicePreset !== selectedVoice.id ||
+    savedConfig.semitones !== effectiveSemitones ||
+    savedConfig.reverbLevel !== reverbLevel ||
+    savedConfig.anonymizationMode !== anonymizationMode ||
+    savedConfig.selectedPersona !== selectedPersona ||
+    savedConfig.isAntiCadenceEnabled !== isAntiCadenceEnabled;
+
+  useEffect(() => {
+    async function checkGPU() {
+      const support = await checkWebGPUSupport();
+      setWebgpuSupported(support);
+    }
+    checkGPU();
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function checkNeuralBackend() {
+      try {
+        const response = await fetch("/api/voice-masking/status", { cache: "no-store" });
+        const data = await response.json();
+        if (!cancelled) {
+          setNeuralBackendAvailable(Boolean(data?.neural?.readyForSessionUse));
+        }
+      } catch {
+        if (!cancelled) {
+          setNeuralBackendAvailable(false);
+        }
+      }
+    }
+
+    void checkNeuralBackend();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    const configStr = localStorage.getItem("hips-host-avatar");
+    if (configStr) {
+      try {
+        const config = JSON.parse(configStr);
+        if (config.avatarPresetId) {
+          const preset = AVATAR_PRESETS.find(p => p.id === config.avatarPresetId);
+          if (preset) setSelectedPreset(preset);
+        }
+        if (config.voicePreset) {
+          const voice = VOICE_OPTIONS.find(v => v.id === config.voicePreset);
+          if (voice) setSelectedVoice(voice);
+        }
+        if (typeof config.semitones === "number") {
+          setCustomSemitones(config.semitones);
+        }
+        if (config.reverbLevel) {
+          setReverbLevel(config.reverbLevel);
+        }
+        if (config.anonymizationMode) {
+          setAnonymizationMode(config.anonymizationMode);
+          if (config.anonymizationMode === "neural") {
+            setModelDownloaded(true);
+          }
+        }
+        if (config.selectedPersona) {
+          setSelectedPersona(config.selectedPersona);
+        }
+        if (typeof config.isAntiCadenceEnabled === "boolean") {
+          setIsAntiCadenceEnabled(config.isAntiCadenceEnabled);
+        }
+        setSavedConfig(config);
+      } catch (err) {
+        console.warn("Failed to parse host avatar config:", err);
+      }
+    } else {
+      const defaultConfig = {
+        avatarPresetId: AVATAR_PRESETS[0]!.id,
+        avatarColor: AVATAR_PRESETS[0]!.color,
+        avatarStyle: AVATAR_PRESETS[0]!.style,
+        voicePreset: VOICE_OPTIONS[0]!.id,
+        semitones: VOICE_OPTIONS[0]!.semitones,
+        reverbLevel: "medium",
+        anonymizationMode: "dsp" as const,
+        selectedPersona: "clara" as const,
+        isAntiCadenceEnabled: false,
+      };
+      setSavedConfig(defaultConfig);
+    }
+  }, []);
+
+  const handleDownloadModel = useCallback(() => {
+    if (modelDownloadProgress !== null) return;
+    setModelDownloadProgress(0);
+    const interval = setInterval(() => {
+      setModelDownloadProgress((prev) => {
+        if (prev === null) return 0;
+        if (prev >= 100) {
+          clearInterval(interval);
+          setModelDownloaded(true);
+          return null;
+        }
+        return prev + 10;
+      });
+    }, 150);
+  }, [modelDownloadProgress]);
 
   const handlePresetSelect = useCallback((preset: AvatarPreset) => {
     setSelectedPreset(preset);
@@ -103,6 +227,10 @@ export default function AvatarSetupPage() {
 
   const handlePreviewVoice = useCallback(async () => {
     if (isPreviewing) return;
+    if (anonymizationMode === "neural" && webgpuSupported && !modelDownloaded) {
+      toast.error("Please download the AI Voice Model first.");
+      return;
+    }
     setIsPreviewing(true);
     setIsSpeaking(true);
 
@@ -120,11 +248,26 @@ export default function AvatarSetupPage() {
       highpass.type = "highpass";
       highpass.frequency.value = 90;
 
+      const preEmphasis = ctx.createBiquadFilter();
+      preEmphasis.type = "highshelf";
+      preEmphasis.frequency.value = 3500;
+      
+      const semitonesOverride = anonymizationMode === "neural"
+        ? (selectedPersona === "clara" ? 1 : -4)
+        : effectiveSemitones;
+
+      preEmphasis.gain.value = semitonesOverride < 0 ? 4.0 : 0.0;
+
       const lowpass = ctx.createBiquadFilter();
       lowpass.type = "lowpass";
-      lowpass.frequency.value = selectedVoice.id === "deep" ? 5000 : 7000;
-      if (selectedVoice.id === "high") {
+      lowpass.frequency.value = anonymizationMode === "neural"
+        ? (selectedPersona === "clara" ? 7000 : 5000)
+        : (selectedVoice.id === "deep" ? 5000 : (selectedVoice.id === "cyber" ? 6000 : 7000));
+      
+      if (anonymizationMode === "dsp" && selectedVoice.id === "high") {
         highpass.frequency.value = 150;
+      } else if (anonymizationMode === "neural" && selectedPersona === "clara") {
+        highpass.frequency.value = 150; // Clara is a higher pitch range
       }
 
       const compressor = ctx.createDynamicsCompressor();
@@ -138,8 +281,12 @@ export default function AvatarSetupPage() {
       const dryGain = ctx.createGain();
       const wetGain = ctx.createGain();
 
-      const dryLevel = selectedVoice.id === "deep" ? 0.8 : (selectedVoice.id === "high" ? 0.85 : 0.78);
-      const wetLevel = selectedVoice.id === "deep" ? 0.2 : (selectedVoice.id === "high" ? 0.15 : 0.22);
+      const dryLevel = anonymizationMode === "neural"
+        ? (selectedPersona === "clara" ? 0.85 : 0.8)
+        : (selectedVoice.id === "deep" ? 0.8 : (selectedVoice.id === "high" ? 0.85 : (selectedVoice.id === "cyber" ? 0.85 : 0.78)));
+      const wetLevel = anonymizationMode === "neural"
+        ? (selectedPersona === "clara" ? 0.15 : 0.2)
+        : (selectedVoice.id === "deep" ? 0.2 : (selectedVoice.id === "high" ? 0.15 : (selectedVoice.id === "cyber" ? 0.15 : 0.22)));
 
       dryGain.gain.value = dryLevel;
       wetGain.gain.value = wetLevel;
@@ -154,74 +301,65 @@ export default function AvatarSetupPage() {
         console.warn("Reverb IR failed:", e);
       }
 
+      // Create peaking filters for formant compensation in preview
+      const formantLow = ctx.createBiquadFilter();
+      const formantMid = ctx.createBiquadFilter();
+      const formantHigh = ctx.createBiquadFilter();
+      const formantVeryHigh = ctx.createBiquadFilter();
+
+      // Vocal tract length simulation scaling
+      const formantScale = Math.pow(2, (semitonesOverride * 0.6) / 12);
+
+      formantLow.type      = 'peaking'; formantLow.frequency.value      = Math.min(2000, Math.max(100, 600 * formantScale));  formantLow.Q.value      = 1.2;
+      formantMid.type      = 'peaking'; formantMid.frequency.value      = Math.min(4000, Math.max(300, 1400 * formantScale)); formantMid.Q.value      = 1.2;
+      formantHigh.type     = 'peaking'; formantHigh.frequency.value     = Math.min(6000, Math.max(800, 2400 * formantScale)); formantHigh.Q.value     = 1.2;
+      formantVeryHigh.type = 'peaking'; formantVeryHigh.frequency.value = Math.min(10000, Math.max(1500, 3400 * formantScale)); formantVeryHigh.Q.value = 1.2;
+
+      if (semitonesOverride < 0) {
+        formantLow.gain.value      = -3.0;
+        formantMid.gain.value      = 2.0;
+        formantHigh.gain.value     = 4.0;
+        formantVeryHigh.gain.value = 6.0;
+      } else if (semitonesOverride > 0) {
+        formantLow.gain.value      = 4.0;
+        formantMid.gain.value      = 2.0;
+        formantHigh.gain.value     = -3.0;
+        formantVeryHigh.gain.value = -5.0;
+      } else {
+        formantLow.gain.value      = 0.0;
+        formantMid.gain.value      = 0.0;
+        formantHigh.gain.value     = 0.0;
+        formantVeryHigh.gain.value = 0.0;
+      }
+
       // Check if AudioWorklet is supported
       if (ctx.audioWorklet) {
-        const workletSource = `
-          class HipsPitchShiftProcessor extends AudioWorkletProcessor {
-            constructor(options) {
-              super();
-              const semitones = options.processorOptions?.semitones ?? 4;
-              this.ratio = Math.pow(2, semitones / 12);
-              this.SIZE = 8192;
-              this.MASK = this.SIZE - 1;
-              this.HALF = this.SIZE >> 1;
-              this.buf = new Float32Array(this.SIZE);
-              this.wp  = this.HALF * 2;
-              this.rp1 = 0;
-              this.rp2 = this.HALF;
-            }
-            lerp(pos) {
-              const i = (pos | 0) & this.MASK;
-              const j = (i + 1) & this.MASK;
-              const f = pos - (pos | 0);
-              return this.buf[i] + (this.buf[j] - this.buf[i]) * f;
-            }
-            win(rp) {
-              const phase = ((rp % this.HALF) + this.HALF) % this.HALF;
-              return 0.5 - 0.5 * Math.cos(6.2831853 * phase / this.HALF);
-            }
-            resetIfNeeded(rp) {
-              const delay = (this.wp - rp + this.SIZE * 8) % this.SIZE;
-              if (delay < 64 || delay > this.SIZE - 64) {
-                return this.wp - this.HALF;
-              }
-              return rp;
-            }
-            process(inputs, outputs) {
-              const src = inputs[0]?.[0];
-              const dst = outputs[0]?.[0];
-              if (!src || !dst) return true;
-              for (let i = 0; i < src.length; i++) {
-                this.buf[this.wp & this.MASK] = src[i];
-                this.wp++;
-                dst[i] = this.lerp(this.rp1) * this.win(this.rp1)
-                       + this.lerp(this.rp2) * this.win(this.rp2);
-                this.rp1 += this.ratio;
-                this.rp2 += this.ratio;
-                this.rp1 = this.resetIfNeeded(this.rp1);
-                this.rp2 = this.resetIfNeeded(this.rp2 + this.HALF) - this.HALF;
-              }
-              return true;
-            }
-          }
-          registerProcessor('hips-pitch-shift', HipsPitchShiftProcessor);
-        `;
-        const blob = new Blob([workletSource], { type: "application/javascript" });
+        const blob = new Blob([pitchShiftWorkletSource], { type: "application/javascript" });
         const workletUrl = URL.createObjectURL(blob);
         await ctx.audioWorklet.addModule(workletUrl);
 
+        const isCyber = anonymizationMode === "dsp" && selectedVoice.id === "cyber";
         const pitchShiftNode = new AudioWorkletNode(ctx, "hips-pitch-shift", {
-          processorOptions: { semitones: effectiveSemitones },
+          processorOptions: {
+            semitones: semitonesOverride,
+            ringModFreq: isCyber ? 75 : 0
+          },
         });
 
-        source.connect(highpass);
+        source.connect(preEmphasis);
+        preEmphasis.connect(highpass);
         highpass.connect(pitchShiftNode);
-        pitchShiftNode.connect(lowpass);
+        pitchShiftNode.connect(formantLow);
+        formantLow.connect(formantMid);
+        formantMid.connect(formantHigh);
+        formantHigh.connect(formantVeryHigh);
+        formantVeryHigh.connect(lowpass);
         lowpass.connect(compressor);
         URL.revokeObjectURL(workletUrl);
       } else {
         // Fallback to passthrough filter chain if no worklet support
-        source.connect(highpass);
+        source.connect(preEmphasis);
+        preEmphasis.connect(highpass);
         highpass.connect(lowpass);
         lowpass.connect(compressor);
       }
@@ -245,7 +383,7 @@ export default function AvatarSetupPage() {
       setIsSpeaking(false);
       setIsPreviewing(false);
     }
-  }, [isPreviewing, effectiveSemitones, selectedVoice.id, reverbLevel]);
+  }, [isPreviewing, effectiveSemitones, selectedVoice.id, reverbLevel, anonymizationMode, selectedPersona, modelDownloaded, webgpuSupported]);
 
   const handleSave = async () => {
     setSaving(true);
@@ -256,12 +394,21 @@ export default function AvatarSetupPage() {
       voicePreset: selectedVoice.id,
       semitones: effectiveSemitones,
       reverbLevel,
+      anonymizationMode,
+      selectedPersona,
+      isAntiCadenceEnabled,
     };
     // Persist to localStorage — no backend needed for the demo
     localStorage.setItem("hips-host-avatar", JSON.stringify(config));
     await new Promise((r) => setTimeout(r, 600));
+    setSavedConfig(config);
     setSaved(true);
     setSaving(false);
+
+    // Auto-reset saved checkmark after 4 seconds (MIN-25)
+    setTimeout(() => {
+      setSaved(false);
+    }, 4000);
   };
 
   return (
@@ -339,24 +486,18 @@ export default function AvatarSetupPage() {
                         ? `0 0 0 3px white, 0 0 0 5px ${preset.color}`
                         : undefined,
                     }}
-                  >
-                    {isSelected && (
-                      <Check className="w-4 h-4 text-white drop-shadow-md" aria-hidden="true" />
-                    )}
-                    <span className="sr-only">{preset.label}</span>
-                  </button>
-                );
-              })}
-            </div>
-            <p className="mt-2 text-xs text-text-muted font-body">
-              Selected: <strong className="text-text">{selectedPreset.label}</strong>
-            </p>
-          </div>
-        </div>
+	                  >
+	                    {isSelected && <Check className="w-5 h-5 text-white drop-shadow" aria-hidden="true" />}
+	                  </button>
+	                );
+	              })}
+	            </div>
+	          </div>
+	        </div>
 
-        {/* ── Right: Voice Settings ── */}
-        <div className="lg:col-span-2 space-y-5">
-          {/* Voice preset selection */}
+	        {/* ── Right: Voice Settings ── */}
+	        <div className="lg:col-span-2 space-y-5">
+          {/* Voice Settings Card */}
           <div className="rounded-2xl border border-border bg-surface p-5">
             <div className="flex items-center gap-2 mb-4">
               <Volume2 className="w-4 h-4 text-accent" aria-hidden="true" />
@@ -365,103 +506,275 @@ export default function AvatarSetupPage() {
               </h2>
             </div>
 
-            <div className="space-y-2" role="radiogroup" aria-label="Voice preset options">
-              {VOICE_OPTIONS.map((voice) => {
-                const isSelected = selectedVoice.id === voice.id;
-                return (
-                  <button
-                    key={voice.id}
-                    type="button"
-                    role="radio"
-                    aria-checked={isSelected}
-                    onClick={() => handleVoiceSelect(voice)}
-                    tabIndex={0}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" || e.key === " ") handleVoiceSelect(voice);
-                    }}
-                    className={`w-full text-left px-4 py-3 rounded-xl border transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${
-                      isSelected
-                        ? "border-accent bg-accent/8"
-                        : "border-border hover:border-primary/30"
-                    }`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <span className={`text-sm font-bold font-ui ${isSelected ? "text-accent" : "text-text"}`}>
-                        {voice.label}
-                      </span>
-                      {isSelected && <Check className="w-4 h-4 text-accent" aria-hidden="true" />}
-                    </div>
-                    <p className="text-[11px] text-text-muted font-body mt-0.5">{voice.description}</p>
-                  </button>
-                );
-              })}
-            </div>
-
-            {/* Custom semitone slider */}
-            {selectedVoice.id === "custom" && (
-              <div className="mt-4 p-3 rounded-xl bg-bg-subtle">
-                <div className="flex items-center justify-between mb-2">
-                  <label htmlFor="semitone-slider" className="text-[10px] font-bold uppercase tracking-wider text-text-muted font-ui flex items-center gap-1">
-                    <Sliders className="w-3 h-3" aria-hidden="true" />
-                    Pitch Shift
-                  </label>
-                  <span className="text-xs font-mono font-bold text-text">
-                    {customSemitones > 0 ? `+${customSemitones}` : customSemitones} st
-                  </span>
-                </div>
-                <input
-                  id="semitone-slider"
-                  type="range"
-                  min={-6}
-                  max={6}
-                  step={1}
-                  value={customSemitones}
-                  onChange={(e) => {
-                    setCustomSemitones(Number(e.target.value));
+            {/* Anonymisation Mode Toggle */}
+            <div className="mb-6">
+              <label className="text-[10px] font-bold uppercase tracking-widest text-text-muted font-ui block mb-3">
+                Voice Anonymisation Mode
+              </label>
+              <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-label="Voice anonymisation mode">
+                <button
+                  type="button"
+                  role="radio"
+                  aria-checked={anonymizationMode === "dsp"}
+                  onClick={() => {
+                    setAnonymizationMode("dsp");
                     setSaved(false);
                   }}
-                  aria-label="Semitone pitch shift"
-                  aria-valuemin={-6}
-                  aria-valuemax={6}
-                  aria-valuenow={customSemitones}
-                  className="w-full accent-accent"
-                />
-                <div className="flex justify-between text-[9px] text-text-muted font-mono mt-1">
-                  <span>−6</span>
-                  <span>0</span>
-                  <span>+6</span>
+                  className={`py-3 px-4 rounded-xl text-left border transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${
+                    anonymizationMode === "dsp"
+                      ? "border-accent bg-accent/8 text-accent font-bold"
+                      : "border-border text-text hover:border-primary/30"
+                  }`}
+                >
+                  <div className="text-xs font-bold font-ui">Tier 1: Effects Mode</div>
+                  <div className="text-[9px] text-text-muted font-body mt-0.5">Local fallback DSP</div>
+                </button>
+                <button
+                  type="button"
+                  role="radio"
+                  aria-checked={anonymizationMode === "neural"}
+                  onClick={() => {
+                    setAnonymizationMode("neural");
+                    setSaved(false);
+                  }}
+                  className={`py-3 px-4 rounded-xl text-left border transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${
+                    anonymizationMode === "neural"
+                      ? "border-accent bg-accent/8 text-accent font-bold"
+                      : "border-border text-text hover:border-primary/30"
+                  }`}
+                >
+                  <div className="text-xs font-bold font-ui">Tier 2: Enhanced Neural</div>
+                  <div className="text-[9px] text-text-muted font-body mt-0.5">
+                    {neuralBackendAvailable ? "Server backend ready" : "Backend not connected"}
+                  </div>
+                </button>
+              </div>
+            </div>
+
+            {anonymizationMode === "dsp" ? (
+              <div className="space-y-4">
+                <div className="space-y-2" role="radiogroup" aria-label="Voice preset options">
+                  {VOICE_OPTIONS.map((voice) => {
+                    const isSelected = selectedVoice.id === voice.id;
+                    return (
+                      <button
+                        key={voice.id}
+                        type="button"
+                        role="radio"
+                        aria-checked={isSelected}
+                        onClick={() => handleVoiceSelect(voice)}
+                        tabIndex={0}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" || e.key === " ") handleVoiceSelect(voice);
+                        }}
+                        className={`w-full text-left px-4 py-3 rounded-xl border transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${
+                          isSelected
+                            ? "border-accent bg-accent/8"
+                            : "border-border hover:border-primary/30"
+                        }`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className={`text-sm font-bold font-ui ${isSelected ? "text-accent" : "text-text"}`}>
+                            {voice.label}
+                          </span>
+                          {isSelected && <Check className="w-4 h-4 text-accent" aria-hidden="true" />}
+                        </div>
+                        <p className="text-[11px] text-text-muted font-body mt-0.5">{voice.description}</p>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Custom semitone slider */}
+                {selectedVoice.id === "custom" && (
+                  <div className="mt-4 p-3 rounded-xl bg-bg-subtle">
+                    <div className="flex items-center justify-between mb-2">
+                      <label htmlFor="semitone-slider" className="text-[10px] font-bold uppercase tracking-wider text-text-muted font-ui flex items-center gap-1">
+                        <Sliders className="w-3 h-3" aria-hidden="true" />
+                        Pitch Shift
+                      </label>
+                      <span className="text-xs font-mono font-bold text-text">
+                        {customSemitones > 0 ? `+${customSemitones}` : customSemitones} st
+                      </span>
+                    </div>
+                    <input
+                      id="semitone-slider"
+                      type="range"
+                      min={-6}
+                      max={6}
+                      step={1}
+                      value={customSemitones}
+                      onChange={(e) => {
+                        setCustomSemitones(Number(e.target.value));
+                        setSaved(false);
+                      }}
+                      aria-label="Semitone pitch shift"
+                      aria-valuemin={-6}
+                      aria-valuemax={6}
+                      aria-valuenow={customSemitones}
+                      className="w-full accent-accent"
+                    />
+                    <div className="flex justify-between text-[9px] text-text-muted font-mono mt-1">
+                      <span>−6</span>
+                      <span>0</span>
+                      <span>+6</span>
+                    </div>
+                  </div>
+                )}
+
+                {/* Reverb */}
+                <div className="mt-4">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-text-muted font-ui mb-2">
+                    Reverb Intensity
+                  </p>
+                  <div className="grid grid-cols-3 gap-2" role="radiogroup" aria-label="Reverb level">
+                    {(["low", "medium", "high"] as const).map((level) => (
+                      <button
+                        key={level}
+                        type="button"
+                        role="radio"
+                        aria-checked={reverbLevel === level}
+                        onClick={() => { setReverbLevel(level); setSaved(false); }}
+                        tabIndex={0}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" || e.key === " ") { setReverbLevel(level); setSaved(false); }
+                        }}
+                        className={`py-2 rounded-lg text-[10px] font-bold uppercase tracking-wider font-ui transition-all border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${
+                          reverbLevel === level
+                            ? "bg-primary text-white border-primary"
+                            : "bg-surface text-text-muted border-border hover:border-primary/40"
+                        }`}
+                      >
+                        {level}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div>
+                  <label className="text-[10px] font-bold uppercase tracking-widest text-text-muted font-ui block mb-3">
+                    Select Persona Voice
+                  </label>
+                  <div className="grid grid-cols-2 gap-3" role="radiogroup" aria-label="AI voice persona">
+                    <button
+                      type="button"
+                      role="radio"
+                      aria-checked={selectedPersona === "clara"}
+                      onClick={() => {
+                        setSelectedPersona("clara");
+                        setSaved(false);
+                      }}
+                      className={`p-4 rounded-xl text-left border transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${
+                        selectedPersona === "clara"
+                          ? "border-accent bg-accent/8 text-accent font-bold"
+                          : "border-border text-text hover:border-primary/30"
+                      }`}
+                    >
+                      <div className="font-bold text-sm font-ui">Clara</div>
+                      <div className="text-[10px] text-text-muted font-body mt-1 leading-relaxed">Soft, warm, and highly conversational.</div>
+                    </button>
+                    <button
+                      type="button"
+                      role="radio"
+                      aria-checked={selectedPersona === "arthur"}
+                      onClick={() => {
+                        setSelectedPersona("arthur");
+                        setSaved(false);
+                      }}
+                      className={`p-4 rounded-xl text-left border transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${
+                        selectedPersona === "arthur"
+                          ? "border-accent bg-accent/8 text-accent font-bold"
+                          : "border-border text-text hover:border-primary/30"
+                      }`}
+                    >
+                      <div className="font-bold text-sm font-ui">Arthur</div>
+                      <div className="text-[10px] text-text-muted font-body mt-1 leading-relaxed">Steady, deep, and professional register.</div>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Anti-Cadence Pacing Delay Toggle */}
+                <div className="flex items-center justify-between p-3 rounded-xl border border-border bg-surface/30">
+                  <div className="pr-4">
+                    <label htmlFor="anti-cadence-toggle" className="text-xs font-bold font-ui text-text block">
+                      Anti-Cadence Pacing Delay
+                    </label>
+                    <span className="text-[10px] text-text-muted font-body leading-normal block mt-0.5">
+                      Modulates and randomizes breathing/speech pacing to eliminate biometric cadence cues (+0.8s latency).
+                    </span>
+                  </div>
+                  <button
+                    id="anti-cadence-toggle"
+                    type="button"
+                    role="switch"
+                    aria-checked={isAntiCadenceEnabled}
+                    onClick={() => {
+                      setIsAntiCadenceEnabled(!isAntiCadenceEnabled);
+                      setSaved(false);
+                    }}
+                    className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 ${
+                      isAntiCadenceEnabled ? "bg-accent" : "bg-zinc-700"
+                    }`}
+                  >
+                    <span
+                      className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                        isAntiCadenceEnabled ? "translate-x-5" : "translate-x-0"
+                      }`}
+                    />
+                  </button>
+                </div>
+
+                {/* Neural backend readiness banner */}
+                <div className="p-4 rounded-xl border border-border bg-bg-subtle/50">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className={`h-2.5 w-2.5 rounded-full ${neuralBackendAvailable ? "bg-emerald-500 animate-pulse" : "bg-amber-500"}`} />
+                    <span className="text-xs font-bold uppercase tracking-wider font-ui text-text">
+                      {neuralBackendAvailable ? "Enhanced Neural Backend Ready" : "Enhanced Neural Backend Pending"}
+                    </span>
+                  </div>
+                  <p className="text-[10px] text-text-muted font-body leading-normal">
+                    {neuralBackendAvailable
+                      ? "Enhanced Neural Masking processes opted-in microphone audio on H.I.P.S.-controlled server infrastructure, then publishes only the converted voice into the session."
+                      : "Enhanced Neural Masking needs the VPS voice-conversion backend before it can provide stronger voice replacement. Until then, sessions fall back to local DSP masking."}
+                  </p>
+
+                  {/* Simulated Download Model Button / Progress */}
+                  {webgpuSupported && neuralBackendAvailable && (
+                    <div className="mt-3 pt-3 border-t border-border/50">
+                      {modelDownloaded ? (
+                        <div className="flex items-center gap-1.5 text-xs text-emerald-400 font-bold font-ui">
+                          <Check className="w-4 h-4" />
+                          Voice Model Ready (Cached)
+                        </div>
+                      ) : modelDownloadProgress !== null ? (
+                        <div className="space-y-1.5">
+                          <div className="flex justify-between text-[10px] font-mono font-bold text-text">
+                            <span>Downloading model files...</span>
+                            <span>{modelDownloadProgress}%</span>
+                          </div>
+                          <div className="h-1.5 w-full bg-zinc-800 rounded-full overflow-hidden">
+                            <div
+                              className="h-full bg-accent transition-all duration-150"
+                              style={{ width: `${modelDownloadProgress}%` }}
+                            />
+                          </div>
+                        </div>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={handleDownloadModel}
+                          className="w-full py-2 px-3 bg-primary/10 hover:bg-primary/20 text-text border border-primary/20 rounded-lg text-[10px] font-bold uppercase tracking-wider font-ui transition-colors"
+                        >
+                          📥 Download Voice Model (18.4 MB)
+                        </button>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
             )}
-
-            {/* Reverb */}
-            <div className="mt-4">
-              <p className="text-[10px] font-bold uppercase tracking-wider text-text-muted font-ui mb-2">
-                Reverb Intensity
-              </p>
-              <div className="grid grid-cols-3 gap-2" role="radiogroup" aria-label="Reverb level">
-                {(["low", "medium", "high"] as const).map((level) => (
-                  <button
-                    key={level}
-                    type="button"
-                    role="radio"
-                    aria-checked={reverbLevel === level}
-                    onClick={() => { setReverbLevel(level); setSaved(false); }}
-                    tabIndex={0}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" || e.key === " ") { setReverbLevel(level); setSaved(false); }
-                    }}
-                    className={`py-2 rounded-lg text-[10px] font-bold uppercase tracking-wider font-ui transition-all border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${
-                      reverbLevel === level
-                        ? "bg-primary text-white border-primary"
-                        : "bg-surface text-text-muted border-border hover:border-primary/40"
-                    }`}
-                  >
-                    {level}
-                  </button>
-                ))}
-              </div>
-            </div>
 
             {/* Preview voice button */}
             <button
@@ -502,14 +815,23 @@ export default function AvatarSetupPage() {
           <button
             type="button"
             onClick={handleSave}
-            disabled={saving}
+            disabled={saving || (!isDirty && !saved)}
             aria-label="Save avatar and voice settings"
-            className={`w-full h-14 flex items-center justify-center gap-2 rounded-2xl font-bold uppercase tracking-wider font-ui text-sm transition-all duration-200 ${
+            className={`relative w-full h-14 flex items-center justify-center gap-2 rounded-2xl font-bold uppercase tracking-wider font-ui text-sm transition-all duration-200 ${
               saved
                 ? "bg-emerald-500 text-white"
-                : "bg-accent text-white hover:bg-accent shadow-lg shadow-accent/25"
-            } disabled:opacity-50`}
+                : isDirty
+                  ? "bg-accent text-white hover:bg-accent/90 shadow-lg shadow-accent/25"
+                  : "bg-zinc-800 text-zinc-500 border border-zinc-700 cursor-not-allowed"
+            }`}
           >
+            {/* Dirty indicator dot */}
+            {isDirty && !saved && !saving && (
+              <span className="absolute top-3 right-3 flex h-2.5 w-2.5">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-amber-500"></span>
+              </span>
+            )}
             {saving ? (
               <Loader2 className="w-5 h-5 animate-spin" />
             ) : saved ? (

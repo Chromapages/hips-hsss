@@ -46,10 +46,40 @@ export async function authenticateRequest(req: NextRequest): Promise<AuthResult>
 
   try {
     const identity = await auth.verifyIdToken(token, true);
-    const dbUser = await getPrisma().user.findFirst({
-      where: { firebaseUid: identity.uid, deletedAt: null },
-      select: { id: true, firebaseUid: true, email: true, role: true },
-    });
+    let dbUser: { id: string; firebaseUid: string; email: string; role: string } | null = null;
+    try {
+      const userRecord = await getPrisma().user.findFirst({
+        where: { firebaseUid: identity.uid, deletedAt: null },
+        select: { id: true, firebaseUid: true, email: true, role: true },
+      });
+      if (userRecord) {
+        dbUser = {
+          id: userRecord.id,
+          firebaseUid: userRecord.firebaseUid,
+          email: userRecord.email,
+          role: userRecord.role,
+        };
+      }
+    } catch (dbError) {
+      const isDemoMode = process.env.NEXT_PUBLIC_DEMO_MODE === 'true';
+      const demoRoles: Record<string, Role> = {
+        'participant@hips.foundation': 'PARTICIPANT',
+        'facilitator@hips.foundation': 'FACILITATOR',
+        'admin@hips.foundation': 'ADMIN',
+        'superadmin@hips.foundation': 'SUPER_ADMIN',
+      };
+      const emailKey = identity.email || '';
+      if (isDemoMode) {
+        dbUser = {
+          id: identity.uid,
+          firebaseUid: identity.uid,
+          email: identity.email || '',
+          role: demoRoles[emailKey] || 'PARTICIPANT',
+        };
+      } else {
+        throw dbError;
+      }
+    }
 
     if (!dbUser) {
       return { user: null, error: NextResponse.json({ error: 'Unauthorized' }, { status: 401 }) };

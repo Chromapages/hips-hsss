@@ -1,7 +1,7 @@
 import { Controller, Post, HttpCode, HttpStatus, Req } from '@nestjs/common';
 import { CommerceService } from '../commerce/commerce.service.js';
 import { constructStripeEvent } from '../stripe.js';
-import { Request } from 'express';
+import type { Request } from 'express';
 
 @Controller('webhooks')
 export class WebhooksController {

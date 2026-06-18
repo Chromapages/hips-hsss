@@ -5,8 +5,9 @@ import { db } from '@/lib/firebase-admin';
 import { checkRateLimit, getRateLimitHeaders } from '@/lib/rate-limit';
 import { createServiceToken, SCOPES, AUDIENCES } from '@/lib/auth/serviceToken';
 import { Phase5SessionSchema } from '@/lib/schemas/session';
+import { getInternalServiceUrl } from '@/lib/internal-service-url';
 
-const SAFETY_ENGINE_URL = process.env.SAFETY_ENGINE_URL || 'http://localhost:3003';
+const SAFETY_ENGINE_URL = getInternalServiceUrl('SAFETY_ENGINE_URL', 'http://localhost:3003');
 
 const SafetyIngestSchema = z.object({
   sessionId: z.string().min(1).max(64),
@@ -21,12 +22,14 @@ async function isSessionMember(firebaseUid: string, sessionId: string): Promise<
     const parsed = Phase5SessionSchema.safeParse({ id: sessionDoc.id, ...sessionDoc.data() });
     if (!parsed.success) return false;
     const data = parsed.data;
-    return (
-      data.facilitatorId === firebaseUid ||
-      data.metadata?.facilitatorId === firebaseUid ||
-      (Array.isArray(data.participantIdentities) &&
-        data.participantIdentities.includes(firebaseUid))
-    );
+    if (data.facilitatorId === firebaseUid || data.metadata?.facilitatorId === firebaseUid) {
+      return true;
+    }
+    const participantDoc = await db
+      .collection('session_participants')
+      .doc(`${sessionId}_${firebaseUid}`)
+      .get();
+    return participantDoc.exists;
   } catch {
     return false;
   }

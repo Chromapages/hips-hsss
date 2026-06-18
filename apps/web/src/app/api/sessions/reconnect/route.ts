@@ -4,6 +4,7 @@ import { AccessToken } from 'livekit-server-sdk';
 import crypto from 'crypto';
 import { verifyFirebaseIdToken } from '@/lib/firebase-auth';
 import * as admin from 'firebase-admin';
+import { getRedis } from '@/lib/redis';
 
 /**
  * Phase 5 — Session Reconnection Handler (5.14)
@@ -108,8 +109,21 @@ export async function POST(req: NextRequest) {
         if (sessionDoc.exists) {
           const parsed = Phase5SessionSchema.safeParse({ id: sessionDoc.id, ...sessionDoc.data() });
           if (parsed.success && (parsed.data.facilitatorId === firebaseUid || parsed.data.metadata?.facilitatorId === firebaseUid)) {
-            const apiSecret = process.env.LIVEKIT_API_SECRET || '';
-            originalIdentity = crypto.createHmac('sha256', apiSecret).update(firebaseUid).digest('hex');
+            // Generate a random 64-char hex token for the facilitator and store it in session_participants
+            originalIdentity = crypto.randomBytes(32).toString('hex');
+            await db
+              .collection('session_participants')
+              .doc(`${sessionId}_${firebaseUid}`)
+              .set(
+                {
+                  sessionId,
+                  firebaseUid,
+                  anonymousIdentity: originalIdentity,
+                  joinedAt: new Date().toISOString(),
+                  lastSeenAt: new Date().toISOString(),
+                },
+                { merge: true }
+              );
           }
         }
       } catch (err) {
@@ -196,27 +210,50 @@ export async function POST(req: NextRequest) {
 
     const roomName = `session-${sessionId}`;
 
-    const at = new AccessToken(apiKey, apiSecret, {
-      identity: originalIdentity, // Same identity for reconnection
-      ttl: '1h',
-    });
+    // Redis caching check
+    const cacheKey = `lk_token:${sessionId}:${originalIdentity}`;
+    const redis = getRedis();
+    let tokenJwt: string | null = null;
 
-    at.addGrant({
-      roomJoin: true,
-      room: roomName,
-      canPublish: true,
-      canSubscribe: true,
-      canPublishData: true,
-    });
+    if (redis) {
+      try {
+        tokenJwt = await redis.get(cacheKey);
+      } catch (err) {
+        console.warn('[SessionReconnect] Redis read error:', err);
+      }
+    }
 
-    at.metadata = JSON.stringify({
-      reconnect: true,
-      reconnectCount: (reconnectRecord?.reconnectCount || 0) + 1,
-      originalJoinedAt: reconnectRecord?.lastReconnectAt || new Date().toISOString(),
-      reason: reason || 'network_interruption',
-    });
+    if (!tokenJwt) {
+      const at = new AccessToken(apiKey, apiSecret, {
+        identity: originalIdentity, // Same identity for reconnection
+        ttl: '1h',
+      });
 
-    const tokenJwt = await at.toJwt();
+      at.addGrant({
+        roomJoin: true,
+        room: roomName,
+        canPublish: true,
+        canSubscribe: true,
+        canPublishData: true,
+      });
+
+      at.metadata = JSON.stringify({
+        reconnect: true,
+        reconnectCount: (reconnectRecord?.reconnectCount || 0) + 1,
+        originalJoinedAt: reconnectRecord?.lastReconnectAt || new Date().toISOString(),
+        reason: reason || 'network_interruption',
+      });
+
+      tokenJwt = await at.toJwt();
+
+      if (redis && tokenJwt) {
+        try {
+          await redis.set(cacheKey, tokenJwt, 'EX', 50 * 60);
+        } catch (err) {
+          console.warn('[SessionReconnect] Redis write error:', err);
+        }
+      }
+    }
 
     const attemptNumber = (reconnectRecord?.reconnectCount || 0) + 1;
 

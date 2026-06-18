@@ -21,7 +21,7 @@ const createMockPrisma = () => ({
 describe('EscalationQueueService', () => {
   let service: EscalationQueueService;
 
-  const mockSafetyPrisma = {
+  const mockSafetyPrisma: any = {
     $transaction: vi.fn((cb) => cb(mockSafetyPrisma)),
     safetyAlert: {
       findMany: vi.fn(),
@@ -87,10 +87,11 @@ describe('EscalationQueueService', () => {
       });
 
       expect(result.data).toHaveLength(1);
-      expect(result.data[0].sessionId).toBe('session-123');
-      expect(result.data[0].participantHash).toBeDefined();
-      expect(result.data[0].participantHash).toMatch(/^P[A-Z0-9]+$/);
-      expect(result.data[0].transcriptPreview).toBe('I want to end my life');
+      const first = result.data[0]!;
+      expect(first.sessionId).toBe('session-123');
+      expect(first.participantHash).toBeDefined();
+      expect(first.participantHash).toMatch(/^P[A-Z0-9]+$/);
+      expect(first.transcriptPreview).toBe('I want to end my life');
       expect(result.pagination.total).toBe(1);
     });
 
@@ -139,8 +140,8 @@ describe('EscalationQueueService', () => {
         status: 'all',
       });
 
-      expect(result.data[0].transcriptPreview!.length).toBeLessThanOrEqual(203); // 200 + '...'
-      expect(result.data[0].transcriptPreview).toContain('...');
+      expect(result.data[0]!.transcriptPreview!.length).toBeLessThanOrEqual(203); // 200 + '...'
+      expect(result.data[0]!.transcriptPreview).toContain('...');
     });
   });
 

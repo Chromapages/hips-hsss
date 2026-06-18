@@ -166,7 +166,7 @@ export async function middleware(request: NextRequest) {
   if (!pathname.startsWith('/api/')) {
     const protectedPage = PROTECTED_PAGES.find((prefix) => pathname.startsWith(prefix));
     if (protectedPage) {
-      const token = request.cookies.get('hips-auth-token')?.value;
+      const token = request.cookies.get('__Host-hips-auth-token')?.value;
       if (!token) {
         const loginUrl = new URL('/login', request.url);
         const fromPath = request.nextUrl.pathname + request.nextUrl.search;

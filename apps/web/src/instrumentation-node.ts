@@ -28,13 +28,13 @@ export function runNodeStartupChecks(): void {
     const lines = problems.map((p) => `  - [${p.reason}] ${p.detail}`).join('\n');
     const msg = `[startup] Secret validation failed (${problems.length} problem${problems.length === 1 ? '' : 's'}):\n${lines}`;
 
-    if (isProd) {
+    if (isProd && process.env.NEXT_PHASE !== 'phase-production-build') {
       // Hard fail in production.
       throw new Error(msg);
     } else {
-      // Soft fail in development so the dev experience is not blocked.
+      // Soft fail in development or build phase so the build is not blocked.
       // eslint-disable-next-line no-console
-      console.error(msg + '\n[startup] Continuing in development mode.');
+      console.error(msg + '\n[startup] Continuing in development/build mode.');
     }
   }
 
@@ -61,7 +61,7 @@ export function runNodeStartupChecks(): void {
       assertNoCrossContamination(secretsByName);
     } catch (err) {
       const msg = `[startup] ${(err as Error).message}`;
-      if (isProd) throw new Error(msg);
+      if (isProd && process.env.NEXT_PHASE !== 'phase-production-build') throw new Error(msg);
       // eslint-disable-next-line no-console
       console.error(msg);
     }

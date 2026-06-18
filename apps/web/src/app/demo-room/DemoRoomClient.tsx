@@ -34,8 +34,7 @@ import SafetyMonitor from '@/components/session/SafetyMonitor';
 import { useMediaDevices } from '@/hooks/useMediaDevices';
 import { useVoiceEffects } from '@/hooks/useVoiceEffects';
 import type { VoicePreset } from '@/lib/voice-mask-presets';
-import { createVoiceMaskProcessor } from '@/lib/voice-mask-processor';
-import type { AvatarGesture } from '@hips/types';
+import { createLowLatencyVoiceMaskProcessor } from '@/lib/voice-mask-processor';
 
 // SECURITY NOTE: NEXT_PUBLIC_LIVEKIT_URL exposes internal infrastructure for WebSocket connections.
 // This is acceptable for demo mode as no real user data is involved.
@@ -141,7 +140,7 @@ function DemoRoomContent({ roomName }: { roomName: string }) {
   const [cameraEnabled, setCameraEnabled] = useState(false);
   const [isReconnecting, setIsReconnecting] = useState(false);
 
-  const { activePreset, semitones, setPreset, setSemitones } = useVoiceEffects('subtle', 4);
+  const { activePreset, semitones, wetDryRatio, setPreset, setSemitones, setWetDryRatio } = useVoiceEffects('sofi', 4);
 
   const {
     audioInputs,
@@ -246,17 +245,28 @@ function DemoRoomContent({ roomName }: { roomName: string }) {
         voiceIsolation: true,
       });
 
-      await localParticipant.publishTrack(track as unknown as MediaStreamTrack);
-
+      // CRITICAL: apply processor BEFORE publishing to prevent unmasked audio leak.
       try {
-        await track.setProcessor(createVoiceMaskProcessor({ preset: activePreset, semitones }));
+        await track.setProcessor(createLowLatencyVoiceMaskProcessor({ preset: activePreset, semitones, wetDryRatio }));
       } catch (processorError) {
+        // Processor unavailable — stop the raw track and surface an actionable warning.
         setVoiceMaskWarning(
           processorError instanceof Error
-            ? `Voice mask unavailable: ${processorError.message}`
-            : 'Voice mask unavailable in this browser.',
+            ? `Voice mask unavailable: ${processorError.message}. Try Chrome or Edge for full support.`
+            : 'Voice mask unavailable in this browser. Try Chrome or Edge for full support.',
         );
+        try {
+          track.stop();
+        } catch {
+          // ignore
+        }
+        setLocalAudioTrack(null);
+        setMicEnabled(false);
+        setMicBusy(false);
+        return;
       }
+
+      await localParticipant.publishTrack(track as unknown as MediaStreamTrack);
 
       setLocalAudioTrack(track);
       setMicEnabled(true);
@@ -276,7 +286,7 @@ function DemoRoomContent({ roomName }: { roomName: string }) {
     } finally {
       setMicBusy(false);
     }
-  }, [localParticipant, activePreset, semitones]);
+  }, [localParticipant, activePreset, semitones, wetDryRatio]);
 
   const toggleMicrophone = useCallback(async () => {
     if (micBusy) return;
@@ -344,6 +354,10 @@ function DemoRoomContent({ roomName }: { roomName: string }) {
   const handleVoiceSemitoneChange = useCallback((st: number) => {
     setSemitones(st);
   }, [setSemitones]);
+
+  const handleVoiceWetDryChange = useCallback((ratio: number) => {
+    setWetDryRatio(ratio);
+  }, [setWetDryRatio]);
 
   const leaveSession = async () => {
     await stopLocalAudio();
@@ -421,8 +435,10 @@ function DemoRoomContent({ roomName }: { roomName: string }) {
         onLeave={leaveSession}
         voicePreset={activePreset}
         voiceSemitones={semitones}
+        voiceWetDryRatio={wetDryRatio}
         onVoicePresetChange={handleVoicePresetChange}
         onVoiceSemitoneChange={handleVoiceSemitoneChange}
+        onVoiceWetDryChange={handleVoiceWetDryChange}
       />
     </main>
   );

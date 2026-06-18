@@ -493,33 +493,100 @@
     }
   });
 
-  // The pitch shift worklet — same as voice-mask-processor.ts
   const pitchShiftWorkletSource = `
 class HipsPitchShiftProcessor extends AudioWorkletProcessor {
   constructor(options) {
     super();
     const semitones = options.processorOptions?.semitones ?? 4;
-    this.ratio = Math.pow(2, semitones / 12); // ~1.26 for 4 semitones
-    this.BUF_SIZE = 4096;          // power of 2
-    this.MASK = this.BUF_SIZE - 1;
-    this.HALF = this.BUF_SIZE >> 1;
-    this.buf = new Float32Array(this.BUF_SIZE);
-    this.wp = 0;                   // write pointer (0..BUF_SIZE-1)
-    this.baseRp = 0;               // read pointer base (advances with ratio)
-    this.frac = 0;                 // fractional part of read pointer
+    this.ratio = Math.pow(2, semitones / 12);
+
+    this.phaseLFO = 0;
+    this.lfoFreq = 2.5;
+    this.lfoDepth = 0.015;
+    this.sampleRate = 48000;
+
+    this.SIZE = 8192;
+    this.MASK = this.SIZE - 1;
+    this.buf = new Float32Array(this.SIZE);
+    this.wp = 0;
+
+    this.L = 2048;
+    this.HALF_L = this.L >> 1;
+
+    this.p1 = 0;
+    this.p2 = this.HALF_L;
+    
+    const minDelay = 64;
+    const baseDelay = this.ratio > 1.0 ? minDelay + this.L * (this.ratio - 1.0) : minDelay;
+    this.D = Math.ceil(baseDelay + 64);
+
+    this.anchor1 = (this.wp - this.D + this.SIZE) & this.MASK;
+    this.anchor2 = (this.wp - this.D - this.HALF_L + this.SIZE) & this.MASK;
+
+    this.gateThresholdDb = -45;
+    this.gateThresholdEnv = Math.pow(10, this.gateThresholdDb / 20);
+    this.envelope = 0;
+    this.gateGain = 0;
+
+    const sr = globalThis.sampleRate || 48000;
+    this.envReleaseCoef = Math.exp(-1.0 / (sr * 0.05));
+    this.gateAttackCoef = Math.exp(-1.0 / (sr * 0.002));
+    this.gateReleaseCoef = Math.exp(-1.0 / (sr * 0.150));
+
+    this.port.onmessage = (event) => {
+      if (event.data.type === 'update-params') {
+        if (typeof event.data.semitones === 'number') {
+          this.ratio = Math.pow(2, event.data.semitones / 12);
+          const baseDelay = this.ratio > 1.0 ? 64 + this.L * (this.ratio - 1.0) : 64;
+          this.D = Math.ceil(baseDelay + 64);
+        }
+        if (typeof event.data.gateThresholdDb === 'number') {
+          this.gateThresholdDb = event.data.gateThresholdDb;
+          this.gateThresholdEnv = Math.pow(10, this.gateThresholdDb / 20);
+        }
+        if (typeof event.data.lfoDepth === 'number') {
+          this.lfoDepth = event.data.lfoDepth;
+        }
+        if (typeof event.data.lfoFreq === 'number') {
+          this.lfoFreq = event.data.lfoFreq;
+        }
+      }
+    };
   }
 
-  // Hann window
-  win(n) {
-    return 0.5 * (1 - Math.cos(6.2831853 * n / this.HALF));
+  lerp(pos) {
+    const i = (pos | 0) & this.MASK;
+    const j = (i + 1) & this.MASK;
+    const f = pos - (pos | 0);
+    return this.buf[i] + (this.buf[j] - this.buf[i]) * f;
   }
 
-  // Linear interpolate from circular buffer at fractional position
-  lerp(rp) {
-    const i0 = Math.floor(rp) & this.MASK;
-    const i1 = (i0 + 1) & this.MASK;
-    const f  = rp - Math.floor(rp);
-    return this.buf[i0] * (1 - f) + this.buf[i1] * f;
+  win(p) {
+    return 0.5 - 0.5 * Math.cos((2 * Math.PI * p) / this.L);
+  }
+
+  alignAnchor(targetRp, baseRp) {
+    const SearchRange = 256;
+    const BlockSize = 128;
+    const HalfBlock = BlockSize >> 1;
+
+    let bestShift = 0;
+    let minSad = Infinity;
+
+    for (let shift = -SearchRange; shift <= SearchRange; shift += 2) {
+      let sad = 0;
+      for (let k = -HalfBlock; k < HalfBlock; k += 4) {
+        const idxA = (targetRp + k + this.SIZE) & this.MASK;
+        const idxB = (baseRp + shift + k + this.SIZE) & this.MASK;
+        const diff = this.buf[idxA] - this.buf[idxB];
+        sad += diff < 0 ? -diff : diff;
+      }
+      if (sad < minSad) {
+        minSad = sad;
+        bestShift = shift;
+      }
+    }
+    return (baseRp + bestShift + this.SIZE) & this.MASK;
   }
 
   process(inputs, outputs) {
@@ -527,29 +594,66 @@ class HipsPitchShiftProcessor extends AudioWorkletProcessor {
     const dst = outputs[0]?.[0];
     if (!src || !dst) return true;
 
+    const sr = globalThis.sampleRate || 48000;
+    if (this.sampleRate !== sr) {
+      this.sampleRate = sr;
+      this.envReleaseCoef = Math.exp(-1.0 / (sr * 0.05));
+      this.gateAttackCoef = Math.exp(-1.0 / (sr * 0.002));
+      this.gateReleaseCoef = Math.exp(-1.0 / (sr * 0.150));
+    }
+
     for (let i = 0; i < src.length; i++) {
-      // Write input sample
-      this.buf[this.wp & this.MASK] = src[i];
-      this.wp++;
+      this.buf[this.wp] = src[i];
 
-      // Advance read pointer by ratio
-      this.frac += this.ratio;
-      if (this.frac >= 1) {
-        const whole = Math.floor(this.frac);
-        this.baseRp += whole;
-        this.frac  -= whole;
+      const rect = Math.abs(src[i]);
+      if (rect > this.envelope) {
+        this.envelope = rect;
+      } else {
+        this.envelope = this.envelope * this.envReleaseCoef + rect * (1.0 - this.envReleaseCoef);
       }
 
-      // Compute two read positions (windowed overlap-add)
-      const rp1 = (this.baseRp               ) & this.MASK;
-      const rp2 = (this.baseRp + this.HALF) & this.MASK;
-      dst[i] = this.lerp(this.baseRp       ) * this.win(rp1)
-             + this.lerp((this.baseRp + this.HALF) & this.MASK) * this.win(rp2);
-
-      // Wrap baseRp to stay within reasonable range (no runaway)
-      if (this.baseRp > this.BUF_SIZE * 16) {
-        this.baseRp -= this.BUF_SIZE * 16;
+      const targetGate = (this.envelope > this.gateThresholdEnv) ? 1.0 : 0.0;
+      if (this.gateGain < targetGate) {
+        this.gateGain = this.gateGain * this.gateAttackCoef + targetGate * (1.0 - this.gateAttackCoef);
+      } else {
+        this.gateGain = this.gateGain * this.gateReleaseCoef + targetGate * (1.0 - this.gateReleaseCoef);
       }
+
+      let currentRatio = this.ratio;
+      if (this.ratio !== 1.0 && this.lfoDepth > 0) {
+        this.phaseLFO += this.lfoFreq / this.sampleRate;
+        if (this.phaseLFO >= 1.0) this.phaseLFO -= 1.0;
+        currentRatio = this.ratio * (1.0 + Math.sin(2.0 * Math.PI * this.phaseLFO) * this.lfoDepth);
+      }
+
+      const rp1 = this.anchor1 + this.p1 * currentRatio;
+      const rp2 = this.anchor2 + this.p2 * currentRatio;
+
+      const outSample = this.lerp(rp1) * this.win(this.p1)
+                      + this.lerp(rp2) * this.win(this.p2);
+
+      // Apply noise gate and low-level anti-biometric dither
+      const noise = (Math.random() * 2.0 - 1.0) * 0.0003 * Math.max(0.1, this.gateGain);
+      dst[i] = outSample * this.gateGain + noise;
+
+      this.p1 += 1;
+      this.p2 += 1;
+
+      if (this.p1 >= this.L) {
+        this.p1 -= this.L;
+        const targetRp = Math.floor(this.anchor2 + this.p2 * currentRatio);
+        const baseRp = (this.wp - this.D + this.SIZE) & this.MASK;
+        this.anchor1 = this.alignAnchor(targetRp, baseRp);
+      }
+
+      if (this.p2 >= this.L) {
+        this.p2 -= this.L;
+        const targetRp = Math.floor(this.anchor1 + this.p1 * currentRatio);
+        const baseRp = (this.wp - this.D + this.SIZE) & this.MASK;
+        this.anchor2 = this.alignAnchor(targetRp, baseRp);
+      }
+
+      this.wp = (this.wp + 1) & this.MASK;
     }
     return true;
   }

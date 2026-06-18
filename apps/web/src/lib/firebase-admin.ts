@@ -1,6 +1,7 @@
 import 'server-only';
 import * as admin from 'firebase-admin';
 import * as fs from 'fs';
+import { resolve } from 'path';
 
 type ServiceAccountJson = {
   project_id?: string;
@@ -12,10 +13,47 @@ type FirebaseAdminConfigStatus = {
   hasConfig: boolean;
   missing: string[];
   source: 'service-account' | 'env' | 'none';
+  initError: {
+    message: string;
+    code?: string;
+  } | undefined;
 };
 
 function cleanEnvValue(value: string) {
   return value.trim().replace(/^"|"$/g, '').replace(/^'|'$/g, '');
+}
+
+let workspaceEnvLoaded = false;
+
+function loadWorkspaceEnvIfNeeded() {
+  if (workspaceEnvLoaded) return;
+  workspaceEnvLoaded = true;
+
+  const envPaths = [
+    resolve(process.cwd(), '.env'),
+    resolve(process.cwd(), '.env.local'),
+    resolve(process.cwd(), '../../.env'),
+    resolve(process.cwd(), '../../.env.local'),
+  ];
+
+  for (const envPath of envPaths) {
+    const contents = tryReadFile(envPath);
+    if (!contents) continue;
+
+    for (const line of contents.split(/\r?\n/)) {
+      const trimmed = line.trim();
+      if (!trimmed || trimmed.startsWith('#')) continue;
+
+      const separatorIndex = trimmed.indexOf('=');
+      if (separatorIndex === -1) continue;
+
+      const key = trimmed.slice(0, separatorIndex).trim();
+      if (!key || process.env[key] !== undefined) continue;
+
+      const value = trimmed.slice(separatorIndex + 1).trim();
+      process.env[key] = value.replace(/^(['"])(.*)\1$/, '$2');
+    }
+  }
 }
 
 function normalizePrivateKey(value?: string) {
@@ -74,6 +112,8 @@ function parseServiceAccountJson(value?: string): ServiceAccountJson | null {
 }
 
 function getServiceAccount() {
+  loadWorkspaceEnvIfNeeded();
+
   const jsonAccount = parseServiceAccountJson(
     process.env.FIREBASE_ADMIN_SDK_KEY || process.env.FIREBASE_SERVICE_ACCOUNT_KEY
   );
@@ -103,6 +143,8 @@ function getServiceAccount() {
 }
 
 export function getFirebaseAdminConfigStatus(): FirebaseAdminConfigStatus {
+  loadWorkspaceEnvIfNeeded();
+
   const hasServiceAccountSource = Boolean(
     process.env.FIREBASE_ADMIN_SDK_KEY || process.env.FIREBASE_SERVICE_ACCOUNT_KEY
   );
@@ -141,10 +183,12 @@ export function getFirebaseAdminConfigStatus(): FirebaseAdminConfigStatus {
     hasConfig: missing.length === 0,
     missing,
     source: jsonAccount ? 'service-account' : privateKey ? 'env' : 'none',
+    initError: _lastInitError,
   };
 }
 
 let _adminApp: admin.app.App | null = null;
+let _lastInitError: FirebaseAdminConfigStatus['initError'];
 
 function initAdmin(): admin.app.App | null {
   // Singleton guard using firebase-admin's own app registry
@@ -156,6 +200,7 @@ function initAdmin(): admin.app.App | null {
   const serviceAccount = getServiceAccount();
 
   if (!serviceAccount) {
+    _lastInitError = undefined;
     const status = getFirebaseAdminConfigStatus();
     console.warn(
       '[FirebaseAdmin] Credentials missing — Admin SDK not initialized. ' +
@@ -176,8 +221,17 @@ function initAdmin(): admin.app.App | null {
       credential: admin.credential.cert(serviceAccount),
     });
     console.log('[FirebaseAdmin] Initialized successfully');
+    _lastInitError = undefined;
     return _adminApp;
   } catch (err) {
+    const code =
+      typeof err === 'object' && err !== null && 'code' in err
+        ? String((err as { code?: unknown }).code)
+        : undefined;
+    _lastInitError = {
+      message: err instanceof Error ? err.message : String(err),
+      ...(code ? { code } : {}),
+    };
     console.error('[FirebaseAdmin] Failed to initialize:', err);
     return null;
   }
@@ -238,8 +292,8 @@ export const getAdminAuth = () => getAuth();
 export { getDb };
 
 export const isFirebaseAdminReady = () => {
-  if (_adminApp !== null) return true;
+  if (_adminApp !== null || admin.apps.length > 0) return true;
   // Try to initialize on demand — handles case where check is called before getAuth/getDb
   initAdmin();
-  return _adminApp !== null;
+  return _adminApp !== null || admin.apps.length > 0;
 };

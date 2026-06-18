@@ -330,9 +330,8 @@ export async function isUserRevoked(userId: string, authTime: number): Promise<b
   }
 
   if (revokedAt === null) return false;
-  // Tokens issued at or after the revocation time are rejected.
-  // Tokens issued before are still valid (they were issued when the user was
-  // not yet revoked). This is the correct semantics for "invalidate all
-  // sessions from this point forward".
-  return authTime >= revokedAt;
+  // Tokens issued before the revocation time are rejected (stale).
+  // Tokens issued at or after are valid (fresh login).
+  // This is the correct semantics for "invalidate all sessions prior to this point".
+  return authTime < revokedAt;
 }

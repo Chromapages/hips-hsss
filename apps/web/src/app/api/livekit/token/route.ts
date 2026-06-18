@@ -7,6 +7,7 @@ import { db, isFirebaseAdminReady } from '@/lib/firebase-admin';
 import { checkRateLimit, getRateLimitHeaders } from '@/lib/rate-limit';
 import { authorizeSessionAccess } from '@/lib/session-authz';
 import { getPrisma } from '@/lib/prisma';
+import { getRedis } from '@/lib/redis';
 
 const palettes = ['coastal', 'sunrise', 'forest'] as const;
 
@@ -20,10 +21,9 @@ function makeAvatar(seed: string) {
   const second = seed.charCodeAt(1) || 2;
 
   return {
-    style: (first % 12) + 1,
+    style: (first % 12) as any,
     palette: palettes[second % palettes.length] || 'coastal',
     gesture: 'idle',
-    locked: true,
   };
 }
 
@@ -188,10 +188,69 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Phase 5: Stable pseudonymous identity hashed via HMAC-SHA256 with apiSecret
+    // Retrieve or generate a cryptographically random, non-reversible identity
     const uidToHash = principal.kind === 'firebase' ? principal.uid : principal.ref;
-    const anonymousIdentity = crypto.createHmac('sha256', apiSecret).update(uidToHash).digest('hex');
+    let anonymousIdentity = '';
+
+    if (adminReady) {
+      try {
+        const participantDocRef = db.collection('session_participants').doc(`${sessionId}_${uidToHash}`);
+        const participantDoc = await participantDocRef.get();
+        if (participantDoc.exists) {
+          const data = participantDoc.data();
+          if (data?.anonymousIdentity && typeof data.anonymousIdentity === 'string') {
+            anonymousIdentity = data.anonymousIdentity;
+          }
+        }
+      } catch (err) {
+        console.warn('[LiveKitAPI] Failed to fetch existing anonymous identity:', err);
+      }
+    }
+
+    if (!anonymousIdentity) {
+      anonymousIdentity = crypto.randomBytes(32).toString('hex');
+    }
+
     const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour max
+
+    // Redis caching check: before setting up the token, check if we have a valid cached token
+    const cacheKey = `lk_token:${sessionId}:${anonymousIdentity}`;
+    const redis = getRedis();
+    if (redis) {
+      try {
+        const cachedToken = await redis.get(cacheKey);
+        if (cachedToken) {
+          console.log(`[LiveKitAPI] Returning cached token for room: ${roomName}, identity: ${anonymousIdentity}`);
+          
+          // Make sure to still transition/record session in background/db if needed
+          let session: Partial<Phase5Session> = { id: sessionId, status: 'active', createdAt: new Date().toISOString(), participantCount: 0, flagged: false };
+          if (adminReady) {
+            try {
+              const sessionRecord = await getOrCreateSession(sessionId);
+              if (sessionRecord.status === 'pending') {
+                await transitionSession(sessionId, 'active');
+                sessionRecord.status = 'active';
+                sessionRecord.activeAt = new Date().toISOString();
+              }
+              session = sessionRecord;
+            } catch (err) {
+              console.warn('[LiveKitAPI] Session lifecycle error in cache hit path:', err);
+            }
+          }
+          
+          return NextResponse.json({
+            token: cachedToken,
+            roomName,
+            anonymousIdentity,
+            avatar: makeAvatar(anonymousIdentity),
+            expiresAt: expiresAt.toISOString(),
+            sessionStatus: session.status,
+          });
+        }
+      } catch (err) {
+        console.warn('[LiveKitAPI] Redis read error:', err);
+      }
+    }
 
     // Session lifecycle — ensure session exists and transition to active
     let session: Partial<Phase5Session> = { id: sessionId, status: 'active', createdAt: new Date().toISOString(), participantCount: 0, flagged: false };
@@ -247,8 +306,17 @@ export async function POST(req: NextRequest) {
 
     const tokenJwt = await at.toJwt();
 
+    // Cache the newly generated token in Redis (expire in 50 minutes)
+    if (redis && tokenJwt) {
+      try {
+        await redis.set(cacheKey, tokenJwt, 'EX', 50 * 60);
+      } catch (err) {
+        console.warn('[LiveKitAPI] Redis write error:', err);
+      }
+    }
+
     // Record participant identity for future authorization and reconnection.
-    // We persist the (sessionId, firebaseUid) → anonymousIdentity mapping
+    // We persist the (sessionId, uidToHash) → anonymousIdentity mapping
     // explicitly so the reconnect endpoint can look up the original identity
     // server-side without trusting client input. See H7 in the audit report.
     if (anonymousIdentity && adminReady) {
@@ -263,25 +331,25 @@ export async function POST(req: NextRequest) {
         // Non-fatal — token already issued
       }
 
-      if (principal.kind === 'firebase') {
-        try {
-          await db
-            .collection('session_participants')
-            .doc(`${sessionId}_${principal.uid}`)
-            .set(
-              {
-                sessionId,
-                firebaseUid: principal.uid,
-                anonymousIdentity,
-                joinedAt: new Date().toISOString(),
-                lastSeenAt: new Date().toISOString(),
-              },
-              { merge: true }
-            );
-        } catch {
-          console.warn('[LiveKitAPI] Could not record session_participants mapping');
-          // Non-fatal — token already issued
-        }
+      try {
+        await db
+          .collection('session_participants')
+          .doc(`${sessionId}_${uidToHash}`)
+          .set(
+            {
+              sessionId,
+              ...(principal.kind === 'firebase'
+                ? { firebaseUid: principal.uid }
+                : { sessionRef: principal.ref }),
+              anonymousIdentity,
+              joinedAt: new Date().toISOString(),
+              lastSeenAt: new Date().toISOString(),
+            },
+            { merge: true }
+          );
+      } catch (err) {
+        console.warn('[LiveKitAPI] Could not record session_participants mapping:', err);
+        // Non-fatal — token already issued
       }
     }
 

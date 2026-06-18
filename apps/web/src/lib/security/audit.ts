@@ -17,6 +17,26 @@ import 'server-only';
 import { logger, safeError } from '@/lib/logger';
 import { prisma } from '@/lib/prisma';
 
+type SecurityEventLogClient = {
+  securityEventLog?: {
+    create: (args: {
+      data: {
+        eventType: SecurityEventType;
+        outcome: 'SUCCESS' | 'FAILURE';
+        correlationId: string | null;
+        actorId: string | null;
+        actorRole: string | null;
+        targetType: string | null;
+        targetId: string | null;
+        failureReason: string | null;
+        ip: string | null;
+        userAgent: string | null;
+        metadata: Record<string, unknown>;
+      };
+    }) => Promise<unknown>;
+  };
+};
+
 export type SecurityEventType =
   // Login events
   | 'ADMIN_LOGIN_SUCCESS'
@@ -76,7 +96,12 @@ export async function logSecurityEvent(event: SecurityEventInput): Promise<void>
       correlationId: event.correlationId,
     });
 
-    await prisma.securityEventLog.create({
+    const auditClient = prisma as unknown as SecurityEventLogClient;
+    if (!auditClient.securityEventLog) {
+      return;
+    }
+
+    await auditClient.securityEventLog.create({
       data: {
         eventType: event.eventType,
         outcome: event.outcome,
@@ -88,7 +113,7 @@ export async function logSecurityEvent(event: SecurityEventInput): Promise<void>
         failureReason: event.failureReason || null,
         ip: event.ip || null,
         userAgent: event.userAgent || null,
-        metadata: (event.metadata || {}) as any,
+        metadata: event.metadata || {},
       },
     });
   } catch (err) {

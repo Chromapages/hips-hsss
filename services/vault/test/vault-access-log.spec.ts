@@ -83,7 +83,7 @@ describe('VaultController - POST /access-log', () => {
       purpose: 'RECORD_READ',
     };
 
-    await expect(controller.logAccess(input, undefined))
+    await expect(controller.logAccess(input, undefined as any))
       .rejects.toThrow('Invalid vault secret');
   });
 

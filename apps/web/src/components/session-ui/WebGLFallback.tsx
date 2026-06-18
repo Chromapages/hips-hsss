@@ -7,7 +7,11 @@ import type { AvatarProfile } from "@hips/types";
 // Task 5.13 — WebGL fallback (audio-only if WebGL unavailable)
 export function WebGLFallback({ avatar, roomName }: { avatar: AvatarProfile; roomName: string }) {
   return (
-    <div className="flex h-full flex-col items-center justify-center bg-[radial-gradient(circle_at_50%_20%,rgba(99,102,241,0.16),transparent_45%),black] p-8 text-center">
+    <div
+      className="flex h-full flex-col items-center justify-center bg-[radial-gradient(circle_at_50%_20%,rgba(99,102,241,0.16),transparent_45%),black] p-8 text-center"
+      role="status"
+      aria-live="polite"
+    >
       <div className="mb-5 flex h-16 w-16 items-center justify-center rounded-full border border-primary/20 bg-primary/10">
         <Monitor className="h-8 w-8 text-text" />
       </div>
@@ -25,10 +29,18 @@ export function WebGLFallback({ avatar, roomName }: { avatar: AvatarProfile; roo
         </div>
         <p className="font-mono text-sm text-text">anon-{roomName.slice(0, 8)}</p>
       </div>
-      <div className="mt-8 rounded-xl border border-amber-500/20 bg-amber-500/10 px-4 py-3">
+      <div className="mt-4 rounded-xl border border-amber-500/20 bg-amber-500/10 px-4 py-3">
         <p className="text-xs text-amber-200">
           ✋ Hand raising and voice controls still work in audio-only mode
         </p>
+      </div>
+      <div className="mt-6 max-w-sm rounded-xl border border-white/10 bg-zinc-950/40 p-4 text-left text-xs text-text-muted space-y-2">
+        <p className="font-bold text-white">How to restore 3D support:</p>
+        <ul className="list-disc pl-4 space-y-1">
+          <li>Check that Hardware Acceleration is enabled in your browser settings.</li>
+          <li>Update Chrome, Edge, Safari, or Firefox to the latest version.</li>
+          <li>Verify WebGL is not disabled by corporate IT policies.</li>
+        </ul>
       </div>
     </div>
   );

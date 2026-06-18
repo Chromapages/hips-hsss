@@ -117,17 +117,6 @@ exports.Prisma.TransactionIsolationLevel = makeStrictEnum({
   Serializable: 'Serializable'
 });
 
-exports.Prisma.AuditEventScalarFieldEnum = {
-  id: 'id',
-  service: 'service',
-  action: 'action',
-  actorRef: 'actorRef',
-  subjectRef: 'subjectRef',
-  metadata: 'metadata',
-  createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
-};
-
 exports.Prisma.SafetyAlertScalarFieldEnum = {
   id: 'id',
   sessionId: 'sessionId',
@@ -136,6 +125,16 @@ exports.Prisma.SafetyAlertScalarFieldEnum = {
   anonymizedReason: 'anonymizedReason',
   transcriptChunk: 'transcriptChunk',
   isResolved: 'isResolved',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.KeywordRuleScalarFieldEnum = {
+  id: 'id',
+  term: 'term',
+  severity: 'severity',
+  category: 'category',
+  enabled: 'enabled',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 };
@@ -181,27 +180,17 @@ exports.Prisma.EscalationQueueScalarFieldEnum = {
   alertId: 'alertId'
 };
 
-exports.Prisma.KeywordRuleScalarFieldEnum = {
-  id: 'id',
-  term: 'term',
-  severity: 'severity',
-  category: 'category',
-  enabled: 'enabled',
-  createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
-};
-
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
 };
 
-exports.Prisma.JsonNullValueInput = {
+exports.Prisma.NullableJsonNullValueInput = {
+  DbNull: Prisma.DbNull,
   JsonNull: Prisma.JsonNull
 };
 
-exports.Prisma.NullableJsonNullValueInput = {
-  DbNull: Prisma.DbNull,
+exports.Prisma.JsonNullValueInput = {
   JsonNull: Prisma.JsonNull
 };
 
@@ -210,15 +199,15 @@ exports.Prisma.QueryMode = {
   insensitive: 'insensitive'
 };
 
+exports.Prisma.NullsOrder = {
+  first: 'first',
+  last: 'last'
+};
+
 exports.Prisma.JsonNullValueFilter = {
   DbNull: Prisma.DbNull,
   JsonNull: Prisma.JsonNull,
   AnyNull: Prisma.AnyNull
-};
-
-exports.Prisma.NullsOrder = {
-  first: 'first',
-  last: 'last'
 };
 exports.SafetySeverity = exports.$Enums.SafetySeverity = {
   LOW: 'LOW',
@@ -259,13 +248,12 @@ exports.EscalationStatus = exports.$Enums.EscalationStatus = {
 };
 
 exports.Prisma.ModelName = {
-  AuditEvent: 'AuditEvent',
   SafetyAlert: 'SafetyAlert',
+  KeywordRule: 'KeywordRule',
   SafetyMitigation: 'SafetyMitigation',
   SafetyStrike: 'SafetyStrike',
   SafetyAuditLog: 'SafetyAuditLog',
-  EscalationQueue: 'EscalationQueue',
-  KeywordRule: 'KeywordRule'
+  EscalationQueue: 'EscalationQueue'
 };
 
 /**

@@ -3,13 +3,14 @@ import { z } from 'zod';
 import { requireAdmin } from '@/lib/admin-auth';
 import { createServiceToken, SCOPES, AUDIENCES } from '@/lib/auth/serviceToken';
 import { writeAuditEvent } from '@/lib/admin-audit';
+import { getInternalServiceUrl } from '@/lib/internal-service-url';
 
 const updateStatusSchema = z.object({
   status: z.enum(['OPEN', 'RESOLVED']),
   reason: z.string().min(3, 'Reason must be at least 3 characters').max(500),
 });
 
-const SAFETY_SERVICE_URL = process.env.SAFETY_SERVICE_URL || 'http://localhost:3003';
+const SAFETY_SERVICE_URL = getInternalServiceUrl('SAFETY_SERVICE_URL', 'http://localhost:3003');
 
 async function callSafetyService(endpoint: string, method: 'GET' | 'POST' | 'PATCH', body?: unknown) {
   const jwt = await createServiceToken([SCOPES.SAFETY_REPORT], AUDIENCES.SAFETY, {

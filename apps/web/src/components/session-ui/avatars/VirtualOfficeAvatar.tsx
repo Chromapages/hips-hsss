@@ -4,6 +4,7 @@ import { useRef } from "react";
 import { Html } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
 import { type Group, MeshStandardMaterial, Color, Mesh } from "three";
+import { useReducedMotion } from "@/hooks/useReducedMotion";
 
 // Task 5.6 — Avatar system: 12 styles × 3 palettes, 5 gestures, ≤2000 polys per avatar
 // Each avatar is a simple geometric representation with unique phase offset
@@ -47,6 +48,15 @@ export const paletteColors = {
   forest: "#10b981",
 } as const;
 
+export const skinTones = [
+  "#FDF0ED",
+  "#F8D5C2",
+  "#E8B092",
+  "#C58A63",
+  "#905C38",
+  "#5C3826",
+] as const;
+
 export const avatarGestures: AvatarGesture[] = [
   "idle",
   "nodding",
@@ -54,6 +64,360 @@ export const avatarGestures: AvatarGesture[] = [
   "thinking",
   "applause",
 ];
+
+// Helper to render procedural low-poly hair and accessories based on style index
+const renderHairAndAccessories = (styleIndex: number, headSize: number, paletteColor: string) => {
+  const hairColors = ["#1c1917", "#292524", "#44403c", "#78716c", "#d97706", "#ca8a04"];
+  const hairColorStr = hairColors[styleIndex % hairColors.length] ?? hairColors[0];
+  const hairColor = new Color(hairColorStr);
+  const accColor = new Color(paletteColor);
+  
+  const darkMaterial = <meshStandardMaterial color="#18181b" roughness={0.8} />;
+  const hairMaterial = <meshStandardMaterial color={hairColor} roughness={0.8} />;
+  const accMaterial = <meshStandardMaterial color={accColor} roughness={0.5} />;
+
+  switch (styleIndex) {
+    case 0: // Short crop / clean cut
+      return (
+        <mesh position={[0, headSize * 0.18, -headSize * 0.1]} scale={[1.02, 0.85, 1.02]}>
+          <sphereGeometry args={[headSize, 16, 12]} />
+          {hairMaterial}
+        </mesh>
+      );
+
+    case 1: // Curly Afro (overlapping spheres)
+      return (
+        <group>
+          <mesh position={[0, headSize * 0.85, -headSize * 0.1]}>
+            <sphereGeometry args={[headSize * 0.45, 10, 10]} />
+            {hairMaterial}
+          </mesh>
+          <mesh position={[-headSize * 0.4, headSize * 0.75, -headSize * 0.1]}>
+            <sphereGeometry args={[headSize * 0.4, 10, 10]} />
+            {hairMaterial}
+          </mesh>
+          <mesh position={[headSize * 0.4, headSize * 0.75, -headSize * 0.1]}>
+            <sphereGeometry args={[headSize * 0.4, 10, 10]} />
+            {hairMaterial}
+          </mesh>
+          <mesh position={[0, headSize * 0.65, -headSize * 0.5]}>
+            <sphereGeometry args={[headSize * 0.4, 10, 10]} />
+            {hairMaterial}
+          </mesh>
+          <mesh position={[-headSize * 0.35, headSize * 0.55, -headSize * 0.4]}>
+            <sphereGeometry args={[headSize * 0.35, 10, 10]} />
+            {hairMaterial}
+          </mesh>
+          <mesh position={[headSize * 0.35, headSize * 0.55, -headSize * 0.4]}>
+            <sphereGeometry args={[headSize * 0.35, 10, 10]} />
+            {hairMaterial}
+          </mesh>
+        </group>
+      );
+
+    case 2: // Ponytail / Long hair
+      return (
+        <group>
+          {/* Hair base */}
+          <mesh position={[0, headSize * 0.18, -headSize * 0.1]} scale={[1.02, 0.85, 1.02]}>
+            <sphereGeometry args={[headSize, 16, 12]} />
+            {hairMaterial}
+          </mesh>
+          {/* Hair tie */}
+          <mesh position={[0, -headSize * 0.1, -headSize * 1.02]}>
+            <torusGeometry args={[headSize * 0.1, headSize * 0.03, 6, 12]} />
+            {accMaterial}
+          </mesh>
+          {/* Ponytail extension */}
+          <mesh position={[0, -headSize * 0.45, -headSize * 1.15]} rotation={[0.2, 0, 0]}>
+            <capsuleGeometry args={[headSize * 0.12, headSize * 0.6, 4, 8]} />
+            {hairMaterial}
+          </mesh>
+        </group>
+      );
+
+    case 3: // Beanie hat
+      return (
+        <group>
+          {/* Beanie base rim */}
+          <mesh position={[0, headSize * 0.35, -headSize * 0.05]} rotation={[0.12, 0, 0]}>
+            <cylinderGeometry args={[headSize * 1.03, headSize * 1.05, headSize * 0.25, 16]} />
+            {accMaterial}
+          </mesh>
+          {/* Beanie main dome */}
+          <mesh position={[0, headSize * 0.58, -headSize * 0.1]} rotation={[0.12, 0, 0]}>
+            <sphereGeometry args={[headSize * 1.01, 16, 12]} />
+            {accMaterial}
+          </mesh>
+          {/* Beanie pom-pom */}
+          <mesh position={[0, headSize * 1.48, -headSize * 0.25]}>
+            <sphereGeometry args={[headSize * 0.16, 8, 8]} />
+            <meshStandardMaterial color="#ffffff" roughness={0.9} />
+          </mesh>
+        </group>
+      );
+
+    case 4: // Round glasses (with short crop hair)
+      return (
+        <group>
+          {/* Short crop hair */}
+          <mesh position={[0, headSize * 0.18, -headSize * 0.1]} scale={[1.02, 0.85, 1.02]}>
+            <sphereGeometry args={[headSize, 16, 12]} />
+            {hairMaterial}
+          </mesh>
+          {/* Left Frame */}
+          <mesh position={[-headSize * 0.32, headSize * 0.12, headSize * 1.03]}>
+            <torusGeometry args={[headSize * 0.22, headSize * 0.03, 6, 24]} />
+            {darkMaterial}
+          </mesh>
+          {/* Right Frame */}
+          <mesh position={[headSize * 0.32, headSize * 0.12, headSize * 1.03]}>
+            <torusGeometry args={[headSize * 0.22, headSize * 0.03, 6, 24]} />
+            {darkMaterial}
+          </mesh>
+          {/* Bridge */}
+          <mesh position={[0, headSize * 0.12, headSize * 1.04]} rotation={[0, 0, Math.PI / 2]}>
+            <cylinderGeometry args={[headSize * 0.02, headSize * 0.02, headSize * 0.24, 8]} />
+            {darkMaterial}
+          </mesh>
+          {/* Temples (sides) */}
+          <mesh position={[-headSize * 0.52, headSize * 0.12, headSize * 0.5]} rotation={[Math.PI / 2, 0, 0]}>
+            <cylinderGeometry args={[headSize * 0.015, headSize * 0.015, headSize * 1.0, 8]} />
+            {darkMaterial}
+          </mesh>
+          <mesh position={[headSize * 0.52, headSize * 0.12, headSize * 0.5]} rotation={[Math.PI / 2, 0, 0]}>
+            <cylinderGeometry args={[headSize * 0.015, headSize * 0.015, headSize * 1.0, 8]} />
+            {darkMaterial}
+          </mesh>
+        </group>
+      );
+
+    case 5: // Bob cut
+      return (
+        <group>
+          {/* Top cap */}
+          <mesh position={[0, headSize * 0.2, -headSize * 0.05]} scale={[1.03, 0.8, 1.03]}>
+            <sphereGeometry args={[headSize, 16, 12]} />
+            {hairMaterial}
+          </mesh>
+          {/* Left side */}
+          <mesh position={[-headSize * 0.98, -headSize * 0.15, headSize * 0.1]}>
+            <capsuleGeometry args={[headSize * 0.18, headSize * 0.45, 4, 8]} />
+            {hairMaterial}
+          </mesh>
+          {/* Right side */}
+          <mesh position={[headSize * 0.98, -headSize * 0.15, headSize * 0.1]}>
+            <capsuleGeometry args={[headSize * 0.18, headSize * 0.45, 4, 8]} />
+            {hairMaterial}
+          </mesh>
+          {/* Back curtain */}
+          <mesh position={[0, -headSize * 0.15, -headSize * 0.65]} scale={[1.5, 0.9, 0.8]}>
+            <sphereGeometry args={[headSize * 0.65, 12, 12]} />
+            {hairMaterial}
+          </mesh>
+        </group>
+      );
+
+    case 6: // Spiky hair
+      return (
+        <group>
+          {/* Base cap */}
+          <mesh position={[0, headSize * 0.18, -headSize * 0.1]} scale={[1.02, 0.85, 1.02]}>
+            <sphereGeometry args={[headSize, 16, 12]} />
+            {hairMaterial}
+          </mesh>
+          {/* Spikes */}
+          <mesh position={[0, headSize * 0.96, -headSize * 0.05]} rotation={[0.15, 0, 0.1]}>
+            <coneGeometry args={[headSize * 0.12, headSize * 0.38, 4]} />
+            {hairMaterial}
+          </mesh>
+          <mesh position={[-headSize * 0.3, headSize * 0.9, headSize * 0.08]} rotation={[0.1, 0, 0.35]}>
+            <coneGeometry args={[headSize * 0.11, headSize * 0.35, 4]} />
+            {hairMaterial}
+          </mesh>
+          <mesh position={[headSize * 0.3, headSize * 0.9, headSize * 0.08]} rotation={[0.1, 0, -0.35]}>
+            <coneGeometry args={[headSize * 0.11, headSize * 0.35, 4]} />
+            {hairMaterial}
+          </mesh>
+          <mesh position={[0, headSize * 0.86, -headSize * 0.35]} rotation={[-0.35, 0, 0]}>
+            <coneGeometry args={[headSize * 0.12, headSize * 0.38, 4]} />
+            {hairMaterial}
+          </mesh>
+          <mesh position={[-headSize * 0.35, headSize * 0.76, -headSize * 0.35]} rotation={[-0.2, 0, 0.45]}>
+            <coneGeometry args={[headSize * 0.1, headSize * 0.3, 4]} />
+            {hairMaterial}
+          </mesh>
+          <mesh position={[headSize * 0.35, headSize * 0.76, -headSize * 0.35]} rotation={[-0.2, 0, -0.45]}>
+            <coneGeometry args={[headSize * 0.1, headSize * 0.3, 4]} />
+            {hairMaterial}
+          </mesh>
+        </group>
+      );
+
+    case 7: // Headband (with short crop hair)
+      return (
+        <group>
+          {/* Short crop hair */}
+          <mesh position={[0, headSize * 0.18, -headSize * 0.1]} scale={[1.02, 0.85, 1.02]}>
+            <sphereGeometry args={[headSize, 16, 12]} />
+            {hairMaterial}
+          </mesh>
+          {/* Headband band */}
+          <mesh position={[0, headSize * 0.22, headSize * 0.05]} rotation={[0.15, 0, 0]} scale={[1.04, 1.04, 0.95]}>
+            <torusGeometry args={[headSize * 1.01, headSize * 0.06, 6, 24]} />
+            {accMaterial}
+          </mesh>
+        </group>
+      );
+
+    case 8: // Side part
+      return (
+        <group>
+          {/* Base cap */}
+          <mesh position={[0, headSize * 0.18, -headSize * 0.1]} scale={[1.02, 0.85, 1.02]}>
+            <sphereGeometry args={[headSize, 16, 12]} />
+            {hairMaterial}
+          </mesh>
+          {/* Swept part left */}
+          <mesh position={[-headSize * 0.32, headSize * 0.78, headSize * 0.25]} rotation={[0.1, 0.25, 0.32]} scale={[1.2, 1.0, 1.0]}>
+            <capsuleGeometry args={[headSize * 0.16, headSize * 0.45, 4, 8]} />
+            {hairMaterial}
+          </mesh>
+          {/* Swept part right */}
+          <mesh position={[headSize * 0.32, headSize * 0.78, headSize * 0.25]} rotation={[0.1, -0.25, -0.32]} scale={[1.0, 0.9, 0.9]}>
+            <capsuleGeometry args={[headSize * 0.15, headSize * 0.4, 4, 8]} />
+            {hairMaterial}
+          </mesh>
+        </group>
+      );
+
+    case 9: // Square glasses (with short crop hair)
+      return (
+        <group>
+          {/* Short crop hair */}
+          <mesh position={[0, headSize * 0.18, -headSize * 0.1]} scale={[1.02, 0.85, 1.02]}>
+            <sphereGeometry args={[headSize, 16, 12]} />
+            {hairMaterial}
+          </mesh>
+          {/* Left Frame (4 boxes forming square border) */}
+          <group position={[-headSize * 0.32, headSize * 0.12, headSize * 1.03]}>
+            {/* Top */}
+            <mesh position={[0, headSize * 0.15, 0]}>
+              <boxGeometry args={[headSize * 0.32, headSize * 0.03, headSize * 0.03]} />
+              {darkMaterial}
+            </mesh>
+            {/* Bottom */}
+            <mesh position={[0, -headSize * 0.15, 0]}>
+              <boxGeometry args={[headSize * 0.32, headSize * 0.03, headSize * 0.03]} />
+              {darkMaterial}
+            </mesh>
+            {/* Left side */}
+            <mesh position={[-headSize * 0.16, 0, 0]}>
+              <boxGeometry args={[headSize * 0.03, headSize * 0.3, headSize * 0.03]} />
+              {darkMaterial}
+            </mesh>
+            {/* Right side */}
+            <mesh position={[headSize * 0.16, 0, 0]}>
+              <boxGeometry args={[headSize * 0.03, headSize * 0.3, headSize * 0.03]} />
+              {darkMaterial}
+            </mesh>
+          </group>
+          {/* Right Frame (4 boxes forming square border) */}
+          <group position={[headSize * 0.32, headSize * 0.12, headSize * 1.03]}>
+            {/* Top */}
+            <mesh position={[0, headSize * 0.15, 0]}>
+              <boxGeometry args={[headSize * 0.32, headSize * 0.03, headSize * 0.03]} />
+              {darkMaterial}
+            </mesh>
+            {/* Bottom */}
+            <mesh position={[0, -headSize * 0.15, 0]}>
+              <boxGeometry args={[headSize * 0.32, headSize * 0.03, headSize * 0.03]} />
+              {darkMaterial}
+            </mesh>
+            {/* Left side */}
+            <mesh position={[-headSize * 0.16, 0, 0]}>
+              <boxGeometry args={[headSize * 0.03, headSize * 0.3, headSize * 0.03]} />
+              {darkMaterial}
+            </mesh>
+            {/* Right side */}
+            <mesh position={[headSize * 0.16, 0, 0]}>
+              <boxGeometry args={[headSize * 0.03, headSize * 0.3, headSize * 0.03]} />
+              {darkMaterial}
+            </mesh>
+          </group>
+          {/* Bridge */}
+          <mesh position={[0, headSize * 0.12, headSize * 1.04]}>
+            <boxGeometry args={[headSize * 0.32, headSize * 0.04, headSize * 0.03]} />
+            {darkMaterial}
+          </mesh>
+          {/* Temples (sides) */}
+          <mesh position={[-headSize * 0.52, headSize * 0.12, headSize * 0.5]} rotation={[Math.PI / 2, 0, 0]}>
+            <cylinderGeometry args={[headSize * 0.015, headSize * 0.015, headSize * 1.0, 8]} />
+            {darkMaterial}
+          </mesh>
+          <mesh position={[headSize * 0.52, headSize * 0.12, headSize * 0.5]} rotation={[Math.PI / 2, 0, 0]}>
+            <cylinderGeometry args={[headSize * 0.015, headSize * 0.015, headSize * 1.0, 8]} />
+            {darkMaterial}
+          </mesh>
+        </group>
+      );
+
+    case 10: // Beard / mustache (with short crop hair)
+      return (
+        <group>
+          {/* Short crop hair */}
+          <mesh position={[0, headSize * 0.18, -headSize * 0.1]} scale={[1.02, 0.85, 1.02]}>
+            <sphereGeometry args={[headSize, 16, 12]} />
+            {hairMaterial}
+          </mesh>
+          {/* Mustache left */}
+          <mesh position={[-headSize * 0.12, -headSize * 0.18, headSize * 0.94]} rotation={[0, 0, -0.2]}>
+            <capsuleGeometry args={[headSize * 0.04, headSize * 0.15, 4, 8]} />
+            {hairMaterial}
+          </mesh>
+          {/* Mustache right */}
+          <mesh position={[headSize * 0.12, -headSize * 0.18, headSize * 0.94]} rotation={[0, 0, 0.2]}>
+            <capsuleGeometry args={[headSize * 0.04, headSize * 0.15, 4, 8]} />
+            {hairMaterial}
+          </mesh>
+          {/* Left jaw beard */}
+          <mesh position={[-headSize * 0.48, -headSize * 0.42, headSize * 0.58]} rotation={[0.15, 0.38, 0.1]}>
+            <capsuleGeometry args={[headSize * 0.1, headSize * 0.48, 4, 8]} />
+            {hairMaterial}
+          </mesh>
+          {/* Right jaw beard */}
+          <mesh position={[headSize * 0.48, -headSize * 0.42, headSize * 0.58]} rotation={[0.15, -0.38, -0.1]}>
+            <capsuleGeometry args={[headSize * 0.1, headSize * 0.48, 4, 8]} />
+            {hairMaterial}
+          </mesh>
+          {/* Chin beard */}
+          <mesh position={[0, -headSize * 0.68, headSize * 0.42]} rotation={[0.26, 0, 0]} scale={[1.2, 0.8, 1.0]}>
+            <sphereGeometry args={[headSize * 0.22, 8, 8]} />
+            {hairMaterial}
+          </mesh>
+        </group>
+      );
+
+    case 11: // Baseball cap
+      return (
+        <group>
+          {/* Cap dome */}
+          <mesh position={[0, headSize * 0.32, -headSize * 0.05]} scale={[1.03, 0.88, 1.03]}>
+            <sphereGeometry args={[headSize, 16, 12]} />
+            {accMaterial}
+          </mesh>
+          {/* Cap bill visor */}
+          <mesh position={[0, headSize * 0.25, headSize * 0.72]} rotation={[0.12, 0, 0]}>
+            <boxGeometry args={[headSize * 1.12, headSize * 0.04, headSize * 0.52]} />
+            {accMaterial}
+          </mesh>
+        </group>
+      );
+
+    default:
+      return null;
+  }
+};
 
 // Fallback colors for non-local participants
 const fallbackColors = [
@@ -84,32 +448,59 @@ export default function VirtualOfficeAvatar({
   const nodRef = useRef<number>(0);
   const applauseY = useRef<number>(0);
 
-  const style = avatarStyles[(styleIndex % 12) as keyof typeof avatarStyles] || avatarStyles[0];
+  const leftEyeGroupRef = useRef<Group>(null);
+  const rightEyeGroupRef = useRef<Group>(null);
+  const mouthRef = useRef<Group>(null);
+
+  const blinkTimerRef = useRef<number>(0);
+  const nextBlinkTimeRef = useRef<number>(2 + Math.random() * 4);
+
+  const reduced = useReducedMotion();
+
+  // Validate parameters or fall back to safe defaults (MAJ-17, MIN-9, MIN-40)
+  const safeStyleIndex = (typeof styleIndex === "number" && styleIndex >= 0 && styleIndex < 12)
+    ? styleIndex
+    : 0;
+  const safeGesture = avatarGestures.includes(gesture) ? gesture : "idle";
+  
+  // Safe color parsing
+  let safeColorStr = "#06b6d4";
+  if (color && (color.startsWith("#") || color.startsWith("rgb") || color.startsWith("hsl"))) {
+    safeColorStr = color;
+  }
+
+  const style = avatarStyles[safeStyleIndex as keyof typeof avatarStyles] || avatarStyles[0];
   const headSize = isLocal ? 0.42 * style.headScale : 0.37 * style.headScale;
 
   // Unique phase offset per avatar so they don't all bob in sync
   const phaseOffset = style.phase;
 
-  useFrame((state) => {
+  useFrame((state, delta) => {
+    // Pause animations when browser is hidden (MAJ-18)
+    if (typeof document !== "undefined" && document.hidden) return;
     if (!groupRef.current) return;
 
     const elapsed = state.clock.elapsedTime;
 
-    // Slow vertical float with unique phase
-    groupRef.current.position.set(
-      position[0],
-      position[1] + Math.sin(elapsed * 0.75 + phaseOffset) * style.bobAmp,
-      position[2],
-    );
+    // Slow vertical float with unique phase (disabled in reduced motion)
+    if (reduced) {
+      groupRef.current.position.set(position[0], position[1], position[2]);
+    } else {
+      groupRef.current.position.set(
+        position[0],
+        position[1] + Math.sin(elapsed * 0.75 + phaseOffset) * style.bobAmp,
+        position[2],
+      );
+    }
 
-    // Task 5.10 — Active speaker detection: emissive pulse
+    // Task 5.10 — Active speaker detection: emissive pulse (speaker tremors disabled in reduced motion)
     const targetHead = isSpeaking
-      ? 0.55 + Math.sin(elapsed * 7.5) * 0.3
+      ? 0.55 + (reduced ? 0 : Math.sin(elapsed * 7.5) * 0.3)
       : isLocal
         ? 0.14
         : 0.07;
     const targetBody = isSpeaking
-      ? 0.45 + Math.sin(elapsed * 7.5) * 0.22
+      ? 0.45 + (reduced ? 0 : Math.sin(elapsed * 7.5) * 0.22)
       : isLocal
         ? 0.11
         : 0.05;
@@ -123,28 +514,71 @@ export default function VirtualOfficeAvatar({
         (targetBody - bodyMatRef.current.emissiveIntensity) * 0.12;
     }
 
-    // Task 5.6 — Gesture animations
-    if (gesture === "nodding" && nodRef.current !== 1) {
+    // Blinking animation
+    if (!reduced) {
+      blinkTimerRef.current += delta;
+      if (blinkTimerRef.current >= nextBlinkTimeRef.current) {
+        const blinkProgress = blinkTimerRef.current - nextBlinkTimeRef.current;
+        const blinkDuration = 0.15;
+        if (blinkProgress >= blinkDuration) {
+          blinkTimerRef.current = 0;
+          nextBlinkTimeRef.current = 3 + Math.random() * 4;
+          if (leftEyeGroupRef.current) leftEyeGroupRef.current.scale.y = 1;
+          if (rightEyeGroupRef.current) rightEyeGroupRef.current.scale.y = 1;
+        } else {
+          const half = blinkDuration / 2;
+          const scaleY = blinkProgress < half
+            ? 1 - (blinkProgress / half) * 0.9
+            : 0.1 + ((blinkProgress - half) / half) * 0.9;
+          if (leftEyeGroupRef.current) leftEyeGroupRef.current.scale.y = scaleY;
+          if (rightEyeGroupRef.current) rightEyeGroupRef.current.scale.y = scaleY;
+        }
+      } else {
+        if (leftEyeGroupRef.current && leftEyeGroupRef.current.scale.y !== 1) {
+          leftEyeGroupRef.current.scale.y = 1;
+        }
+        if (rightEyeGroupRef.current && rightEyeGroupRef.current.scale.y !== 1) {
+          rightEyeGroupRef.current.scale.y = 1;
+        }
+      }
+    } else {
+      if (leftEyeGroupRef.current && leftEyeGroupRef.current.scale.y !== 1) {
+        leftEyeGroupRef.current.scale.y = 1;
+      }
+      if (rightEyeGroupRef.current && rightEyeGroupRef.current.scale.y !== 1) {
+        rightEyeGroupRef.current.scale.y = 1;
+      }
+    }
+
+    // Speaking mouth animation
+    const targetMouthScaleY = isSpeaking
+      ? (reduced ? 0.6 : 0.45 + Math.sin(elapsed * 18) * 0.35)
+      : 0.15;
+    if (mouthRef.current) {
+      mouthRef.current.scale.y += (targetMouthScaleY - mouthRef.current.scale.y) * 0.25;
+    }
+
+    // Task 5.6 — Gesture animations (disabled in reduced motion)
+    if (safeGesture === "nodding" && nodRef.current !== 1) {
       nodRef.current = 1;
-      // Nodding head: rotate on X axis
-      const nodAngle = Math.sin(elapsed * 3) * 0.3;
+      const nodAngle = reduced ? 0 : Math.sin(elapsed * 3) * 0.3;
       groupRef.current.rotation.x = nodAngle;
-    } else if (gesture !== "nodding" && nodRef.current === 1) {
+    } else if (safeGesture !== "nodding" && nodRef.current === 1) {
       nodRef.current = 0;
       groupRef.current.rotation.x = 0;
     }
 
     // Raised arm animation for "raised-hand" gesture
     if (raisedArmRef.current) {
-      if (gesture === "raised-hand") {
-        raisedArmRef.current.rotation.z = -Math.PI / 2 + Math.sin(elapsed * 2) * 0.1;
+      if (safeGesture === "raised-hand") {
+        raisedArmRef.current.rotation.z = -Math.PI / 2 + (reduced ? 0 : Math.sin(elapsed * 2) * 0.1);
       } else {
         raisedArmRef.current.rotation.z = 0;
       }
     }
 
     // Task 5.6 — Applause animation: rapid small bounces via refs
-    if (gesture === "applause") {
+    if (safeGesture === "applause" && !reduced) {
       applauseY.current = Math.abs(Math.sin(elapsed * 8)) * 0.2;
       if (applauseLeftRef.current) {
         applauseLeftRef.current.position.y = -0.5 + applauseY.current;
@@ -155,9 +589,19 @@ export default function VirtualOfficeAvatar({
     }
   });
 
+  const skinToneColor = skinTones[safeStyleIndex % skinTones.length] ?? skinTones[0];
+  const skinMat = {
+    color: new Color(skinToneColor),
+    emissive: new Color(skinToneColor),
+    metalness: 0.05,
+    roughness: 0.88,
+    transparent: true,
+    opacity: 0.9,
+  } as const;
+
   const sharedMat = {
-    color: new Color(color),
-    emissive: new Color(color),
+    color: new Color(safeColorStr),
+    emissive: new Color(safeColorStr),
     metalness: 0.05,
     roughness: 0.88,
     transparent: true,
@@ -194,14 +638,98 @@ export default function VirtualOfficeAvatar({
         </Html>
       ) : null}
 
-      {/* Head sphere */}
-      <mesh position={[0, 0.88, 0]}>
-        <sphereGeometry args={[headSize, 18, 14]} />
-        <meshStandardMaterial
-          {...sharedMat}
-          emissiveIntensity={isLocal ? 0.14 : 0.07}
-          ref={headMatRef}
-        />
+      {/* Head Group */}
+      <group position={[0, 0.88, 0]}>
+        {/* Head sphere */}
+        <mesh>
+          <sphereGeometry args={[headSize, 18, 14]} />
+          <meshStandardMaterial
+            {...skinMat}
+            emissiveIntensity={isLocal ? 0.14 : 0.07}
+            ref={headMatRef}
+          />
+        </mesh>
+
+        {/* Left Ear */}
+        <mesh position={[-headSize * 0.96, 0, -headSize * 0.05]} scale={[0.4, 0.7, 0.5]}>
+          <sphereGeometry args={[headSize * 0.3, 8, 8]} />
+          <meshStandardMaterial {...skinMat} />
+        </mesh>
+
+        {/* Right Ear */}
+        <mesh position={[headSize * 0.96, 0, -headSize * 0.05]} scale={[0.4, 0.7, 0.5]}>
+          <sphereGeometry args={[headSize * 0.3, 8, 8]} />
+          <meshStandardMaterial {...skinMat} />
+        </mesh>
+
+        {/* Eyes & Pupils */}
+        {/* Left Eye Group */}
+        <group ref={leftEyeGroupRef} position={[-headSize * 0.32, headSize * 0.12, headSize * 0.88]}>
+          <mesh>
+            <sphereGeometry args={[headSize * 0.14, 12, 12]} />
+            <meshStandardMaterial color="#ffffff" roughness={0.2} />
+          </mesh>
+          <mesh position={[0, 0, headSize * 0.07]}>
+            <sphereGeometry args={[headSize * 0.07, 8, 8]} />
+            <meshStandardMaterial color="#18181b" roughness={0.1} />
+          </mesh>
+        </group>
+
+        {/* Right Eye Group */}
+        <group ref={rightEyeGroupRef} position={[headSize * 0.32, headSize * 0.12, headSize * 0.88]}>
+          <mesh>
+            <sphereGeometry args={[headSize * 0.14, 12, 12]} />
+            <meshStandardMaterial color="#ffffff" roughness={0.2} />
+          </mesh>
+          <mesh position={[0, 0, headSize * 0.07]}>
+            <sphereGeometry args={[headSize * 0.07, 8, 8]} />
+            <meshStandardMaterial color="#18181b" roughness={0.1} />
+          </mesh>
+        </group>
+
+        {/* Eyebrows */}
+        <mesh position={[-headSize * 0.32, headSize * 0.3, headSize * 0.88]} rotation={[0, 0, -0.06]}>
+          <boxGeometry args={[headSize * 0.25, headSize * 0.04, headSize * 0.03]} />
+          <meshStandardMaterial color="#27272a" roughness={0.9} />
+        </mesh>
+        <mesh position={[headSize * 0.32, headSize * 0.3, headSize * 0.88]} rotation={[0, 0, 0.06]}>
+          <boxGeometry args={[headSize * 0.25, headSize * 0.04, headSize * 0.03]} />
+          <meshStandardMaterial color="#27272a" roughness={0.9} />
+        </mesh>
+
+        {/* Nose */}
+        <mesh position={[0, -headSize * 0.05, headSize * 0.95]}>
+          <capsuleGeometry args={[headSize * 0.07, headSize * 0.12, 4, 8]} />
+          <meshStandardMaterial {...skinMat} />
+        </mesh>
+
+        {/* Mouth */}
+        <group ref={mouthRef} position={[0, -headSize * 0.3, headSize * 0.88]}>
+          {/* Cavity */}
+          <mesh>
+            <boxGeometry args={[headSize * 0.32, headSize * 0.12, 0.02]} />
+            <meshStandardMaterial color="#3f0f12" roughness={0.9} />
+          </mesh>
+          {/* Upper Lip */}
+          <mesh position={[0, headSize * 0.05, 0.01]} rotation={[0, 0, Math.PI / 2]}>
+            <capsuleGeometry args={[0.012, headSize * 0.24, 4, 8]} />
+            <meshStandardMaterial color="#fda4af" roughness={0.7} />
+          </mesh>
+          {/* Lower Lip */}
+          <mesh position={[0, -headSize * 0.05, 0.01]} rotation={[0, 0, Math.PI / 2]}>
+            <capsuleGeometry args={[0.012, headSize * 0.24, 4, 8]} />
+            <meshStandardMaterial color="#fda4af" roughness={0.7} />
+          </mesh>
+        </group>
+
+        {/* Procedural Hair & Accessories */}
+        {renderHairAndAccessories(safeStyleIndex, headSize, safeColorStr)}
+      </group>
+
+      {/* Neck */}
+      <mesh position={[0, 0.45, 0]}>
+        <cylinderGeometry args={[headSize * 0.28, headSize * 0.32, 0.25, 12]} />
+        <meshStandardMaterial {...skinMat} />
       </mesh>
 
       {/* Body — ellipsoid (sphere scaled) */}
@@ -230,7 +758,7 @@ export default function VirtualOfficeAvatar({
         </mesh>
       ) : null}
 
-{/* Task 5.6 — Applause animation: rapid small bounces */}
+      {/* Task 5.6 — Applause animation: rapid small bounces */}
       {gesture === "applause" ? (
         <group position={[0, -0.5, 0]}>
           <mesh ref={applauseLeftRef} position={[-0.3, 0, 0]}>
