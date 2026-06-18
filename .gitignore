@@ -58,5 +58,8 @@ next-env.d.ts
 packages/db/generated/
 **/generated/
 
+# Downloaded voice-conversion model weights/cache
+deploy/voice-changer/pretrain/
+
 # Firebase Admin Service Account Key
 firebase-admin.json
