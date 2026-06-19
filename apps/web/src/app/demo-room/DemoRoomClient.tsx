@@ -28,6 +28,7 @@ import { AudioAvatar } from '@/components/demo/audio-avatar';
 import { ConnectingOverlay } from '@/components/demo/connecting-overlay';
 import { DemoModeProvider } from '@/contexts/DemoModeContext';
 import { SessionHeader } from '@/components/session-ui/SessionHeader';
+import { getBrowserMediaDevices } from '@/lib/browser-media';
 import { VoiceControlsBar } from '@/components/session-ui/VoiceControlsBar';
 import { MediaToolbar } from '@/components/session-ui/MediaToolbar';
 import SafetyMonitor from '@/components/session/SafetyMonitor';
@@ -479,7 +480,7 @@ function MicSelectorModal({ isOpen, initialError, onConfirm, onClose }: MicSelec
   const startAudioTest = useCallback(async (deviceId: string) => {
     stopAudio();
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({
+      const stream = await getBrowserMediaDevices().getUserMedia({
         audio: deviceId ? { deviceId: { exact: deviceId } } : true,
       });
       streamRef.current = stream;
@@ -508,11 +509,14 @@ function MicSelectorModal({ isOpen, initialError, onConfirm, onClose }: MicSelec
     setChecking(true);
     setPermissionError(null);
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mediaDevices = getBrowserMediaDevices();
+      const stream = await mediaDevices.getUserMedia({ audio: true });
       stream.getTracks().forEach((t) => t.stop());
       setPermissionGranted(true);
 
-      const all = await navigator.mediaDevices.enumerateDevices();
+      const all = typeof mediaDevices.enumerateDevices === 'function'
+        ? await mediaDevices.enumerateDevices()
+        : [];
       const inputs = all.filter((d) => d.kind === 'audioinput');
       setDevices(inputs);
 
@@ -715,7 +719,7 @@ function DemoRoomInner({ roomName }: { token?: string; roomName: string }) {
           setShowMicModal(true);
           return;
         }
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        const stream = await getBrowserMediaDevices().getUserMedia({ audio: true });
         stream.getTracks().forEach((track) => track.stop());
       } catch {
         setMicModalError(

@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { AvatarGesture } from '@hips/types';
+import { getBrowserMediaDevices } from '@/lib/browser-media';
 
 interface AudioAvatarProps {
   localIdentity: string;
@@ -117,7 +118,7 @@ export function AudioAvatar({ localIdentity, micEnabled, gesture }: AudioAvatarP
       // Create a MediaStream from the microphone
       let stream: MediaStream;
       try {
-        stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        stream = await getBrowserMediaDevices().getUserMedia({ audio: true });
       } catch (permError) {
         console.warn('AudioAvatar: Microphone permission denied:', permError);
         setMicUnavailable(true);

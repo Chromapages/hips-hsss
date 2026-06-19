@@ -33,6 +33,7 @@ import { MobileBlockPage } from '../session-ui/MobileBlockPage';
 import { MediaToolbar } from '../session-ui/MediaToolbar';
 import { useMediaDevices } from '@/hooks/useMediaDevices';
 import { useVoiceEffects } from '@/hooks/useVoiceEffects';
+import { getBrowserMediaDevices } from '@/lib/browser-media';
 import type { AvatarGesture } from '../session-ui/avatars/VirtualOfficeAvatar';
 import { SessionExitState } from './SessionExitState';
 import { RaisedHandQueue } from './RaisedHandQueue';
@@ -139,7 +140,7 @@ export default function SessionRoom({
           return;
         }
 
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        const stream = await getBrowserMediaDevices().getUserMedia({ audio: true });
         stream.getTracks().forEach(track => track.stop());
       } catch (err: unknown) {
         const errorObj = asError(err);

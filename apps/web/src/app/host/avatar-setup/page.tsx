@@ -16,6 +16,7 @@ import {
 import { toast } from "sonner";
 import { pitchShiftWorkletSource } from "@/lib/voice-mask-processor";
 import { checkWebGPUSupport } from "@/lib/webgpu-detect";
+import { getBrowserMediaDevices } from "@/lib/browser-media";
 
 // ─── Lazy-load the 3D canvas (heavy — R3F) ────────────────────────────────────
 const AvatarPreviewCanvas = dynamic(
@@ -239,7 +240,7 @@ export default function AvatarSetupPage() {
 
     try {
       // Request mic access and play back through voice processor for 3 seconds
-      stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      stream = await getBrowserMediaDevices().getUserMedia({ audio: true });
       const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
       ctx = new AudioCtx();
       const source = ctx.createMediaStreamSource(stream);

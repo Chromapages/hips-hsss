@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { getBrowserMediaDevices, hasBrowserMediaDevices } from '@/lib/browser-media';
 
 export interface UseDemoMediaDevicesReturn {
   audioInputs: MediaDeviceInfo[];
@@ -73,6 +74,10 @@ export function useDemoMediaDevices(isDemo: boolean = true): UseDemoMediaDevices
 
   const refreshDevices = useCallback(async () => {
     try {
+      if (!hasBrowserMediaDevices() || typeof navigator.mediaDevices.enumerateDevices !== 'function') {
+        throw new Error('Media devices are unavailable.');
+      }
+
       const devices = await navigator.mediaDevices.enumerateDevices();
 
       // Filter real devices
@@ -132,7 +137,7 @@ export function useDemoMediaDevices(isDemo: boolean = true): UseDemoMediaDevices
   // Request microphone permission and set up audio level metering
   const requestMicPermission = useCallback(async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const stream = await getBrowserMediaDevices().getUserMedia({ audio: true });
       micStreamRef.current = stream;
       setMicStream(stream);
       setMicPermissionGranted(true);
@@ -181,7 +186,7 @@ export function useDemoMediaDevices(isDemo: boolean = true): UseDemoMediaDevices
   // Request camera permission
   const requestCameraPermission = useCallback(async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      const stream = await getBrowserMediaDevices().getUserMedia({ video: true });
       setCameraStream(stream);
       setCameraPermissionGranted(true);
     } catch {
@@ -198,6 +203,10 @@ export function useDemoMediaDevices(isDemo: boolean = true): UseDemoMediaDevices
   // Initial device enumeration and permission requests
   useEffect(() => {
     refreshDevices();
+
+    if (!hasBrowserMediaDevices() || typeof navigator.mediaDevices.addEventListener !== 'function') {
+      return undefined;
+    }
 
     navigator.mediaDevices.addEventListener('devicechange', refreshDevices);
     return () => {

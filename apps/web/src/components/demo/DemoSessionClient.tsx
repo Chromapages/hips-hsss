@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { screenLabels, voiceMaskActiveStyle } from './demo-utils';
 import { Mic, MicOff, Hand, Flag, PhoneOff } from 'lucide-react';
 import { VOICE_PRESETS } from '@/lib/voice-mask-presets';
+import { getBrowserMediaDevices } from '@/lib/browser-media';
 
 interface SessionControlsProps {
   isMuted: boolean;
@@ -324,7 +325,7 @@ registerProcessor('pitch-shift-preview', PitchShiftPreview);
     if (previewing === 'original') { stopPreview(); return; }
     stopPreview();
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const stream = await getBrowserMediaDevices().getUserMedia({ audio: true });
       previewStreamRef.current = stream;
       const ctx = new AudioContext();
       previewContextRef.current = ctx;
@@ -340,7 +341,7 @@ registerProcessor('pitch-shift-preview', PitchShiftPreview);
     if (previewing === 'masked') { stopPreview(); return; }
     stopPreview();
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const stream = await getBrowserMediaDevices().getUserMedia({ audio: true });
       previewStreamRef.current = stream;
       const ctx = new AudioContext();
       previewContextRef.current = ctx;
@@ -367,7 +368,7 @@ registerProcessor('pitch-shift-preview', PitchShiftPreview);
     stopPreview();
     setMicStatus('requesting');
     try {
-      await navigator.mediaDevices.getUserMedia({ audio: true });
+      await getBrowserMediaDevices().getUserMedia({ audio: true });
       setMicStatus('ready');
       onMicReady();
     } catch {

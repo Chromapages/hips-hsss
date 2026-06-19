@@ -24,6 +24,7 @@ import {
 import { Track } from 'livekit-client';
 import { createLowLatencyVoiceMaskProcessor } from '@/lib/voice-mask-processor';
 import { VOICE_PRESETS as VOICE_PRESET_CONFIGS, type VoicePreset } from '@/lib/voice-mask-presets';
+import { getBrowserMediaDevices } from '@/lib/browser-media';
 import type { AvatarGesture } from '@/components/session-ui/avatars/VirtualOfficeAvatar';
 
 // ─── Heavy 3D canvas — lazy-loaded, no SSR ───────────────────────────────────
@@ -220,7 +221,7 @@ export default function LiveDemoPage() {
     setErrorMsg('');
 
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+      const stream = await getBrowserMediaDevices().getUserMedia({ audio: true, video: false });
       micStreamRef.current = stream;
 
       const sourceTrack = stream.getAudioTracks()[0];
