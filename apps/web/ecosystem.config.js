@@ -12,8 +12,9 @@ module.exports = {
   apps: [
     {
       name: 'hips-web',
-      script: 'node',
-      args: 'node_modules/next/dist/bin/next start -p 3000',
+      script: '/bin/bash',
+      args: "-lc 'set -a; source /home/deploy/hips-hsss/.env; set +a; exec node node_modules/next/dist/bin/next start -p 3000'",
+      interpreter: 'none',
       cwd: '/home/deploy/hips-hsss/apps/web',
       env: {
         NODE_ENV: 'production',
