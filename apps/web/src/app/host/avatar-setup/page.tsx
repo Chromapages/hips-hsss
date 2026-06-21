@@ -68,6 +68,9 @@ const VOICE_OPTIONS: VoiceOption[] = [
   { id: "custom", label: "Custom", semitones: 0, description: "Set your own semitone shift" },
 ];
 
+const ENHANCED_NEURAL_UNAVAILABLE_MESSAGE =
+  "Enhanced Neural is locked until the server can return converted audio into the session. Use Effects Mode for live microphone audio.";
+
 // Reverb impulse response generator
 function buildReverbIR(ctx: AudioContext, durationSec: number, decay: number): AudioBuffer {
   const len = Math.max(1, Math.floor(ctx.sampleRate * durationSec));
@@ -100,6 +103,7 @@ export default function AvatarSetupPage() {
   const [isAntiCadenceEnabled, setIsAntiCadenceEnabled] = useState(false);
   const [webgpuSupported, setWebgpuSupported] = useState(false);
   const [neuralBackendAvailable, setNeuralBackendAvailable] = useState(false);
+  const [neuralBackendChecked, setNeuralBackendChecked] = useState(false);
   const [modelDownloadProgress, setModelDownloadProgress] = useState<number | null>(null);
   const [modelDownloaded, setModelDownloaded] = useState(false);
 
@@ -134,10 +138,12 @@ export default function AvatarSetupPage() {
         const data = await response.json();
         if (!cancelled) {
           setNeuralBackendAvailable(Boolean(data?.neural?.readyForSessionUse));
+          setNeuralBackendChecked(true);
         }
       } catch {
         if (!cancelled) {
           setNeuralBackendAvailable(false);
+          setNeuralBackendChecked(true);
         }
       }
     }
@@ -148,6 +154,13 @@ export default function AvatarSetupPage() {
       cancelled = true;
     };
   }, []);
+
+  useEffect(() => {
+    if (neuralBackendChecked && !neuralBackendAvailable && anonymizationMode === "neural") {
+      setAnonymizationMode("dsp");
+      setModelDownloaded(false);
+    }
+  }, [anonymizationMode, neuralBackendAvailable, neuralBackendChecked]);
 
   useEffect(() => {
     const configStr = localStorage.getItem("hips-host-avatar");
@@ -228,8 +241,8 @@ export default function AvatarSetupPage() {
 
   const handlePreviewVoice = useCallback(async () => {
     if (isPreviewing) return;
-    if (anonymizationMode === "neural" && webgpuSupported && !modelDownloaded) {
-      toast.error("Please download the AI Voice Model first.");
+    if (anonymizationMode === "neural") {
+      toast.error(ENHANCED_NEURAL_UNAVAILABLE_MESSAGE);
       return;
     }
     setIsPreviewing(true);
@@ -253,22 +266,16 @@ export default function AvatarSetupPage() {
       preEmphasis.type = "highshelf";
       preEmphasis.frequency.value = 3500;
       
-      const semitonesOverride = anonymizationMode === "neural"
-        ? (selectedPersona === "clara" ? 1 : -4)
-        : effectiveSemitones;
+      const semitonesOverride = effectiveSemitones;
 
       preEmphasis.gain.value = semitonesOverride < 0 ? 4.0 : 0.0;
 
       const lowpass = ctx.createBiquadFilter();
       lowpass.type = "lowpass";
-      lowpass.frequency.value = anonymizationMode === "neural"
-        ? (selectedPersona === "clara" ? 7000 : 5000)
-        : (selectedVoice.id === "deep" ? 5000 : (selectedVoice.id === "cyber" ? 6000 : 7000));
+      lowpass.frequency.value = selectedVoice.id === "deep" ? 5000 : (selectedVoice.id === "cyber" ? 6000 : 7000);
       
-      if (anonymizationMode === "dsp" && selectedVoice.id === "high") {
+      if (selectedVoice.id === "high") {
         highpass.frequency.value = 150;
-      } else if (anonymizationMode === "neural" && selectedPersona === "clara") {
-        highpass.frequency.value = 150; // Clara is a higher pitch range
       }
 
       const compressor = ctx.createDynamicsCompressor();
@@ -282,12 +289,8 @@ export default function AvatarSetupPage() {
       const dryGain = ctx.createGain();
       const wetGain = ctx.createGain();
 
-      const dryLevel = anonymizationMode === "neural"
-        ? (selectedPersona === "clara" ? 0.85 : 0.8)
-        : (selectedVoice.id === "deep" ? 0.8 : (selectedVoice.id === "high" ? 0.85 : (selectedVoice.id === "cyber" ? 0.85 : 0.78)));
-      const wetLevel = anonymizationMode === "neural"
-        ? (selectedPersona === "clara" ? 0.15 : 0.2)
-        : (selectedVoice.id === "deep" ? 0.2 : (selectedVoice.id === "high" ? 0.15 : (selectedVoice.id === "cyber" ? 0.15 : 0.22)));
+      const dryLevel = selectedVoice.id === "deep" ? 0.8 : (selectedVoice.id === "high" ? 0.85 : (selectedVoice.id === "cyber" ? 0.85 : 0.78));
+      const wetLevel = selectedVoice.id === "deep" ? 0.2 : (selectedVoice.id === "high" ? 0.15 : (selectedVoice.id === "cyber" ? 0.15 : 0.22));
 
       dryGain.gain.value = dryLevel;
       wetGain.gain.value = wetLevel;
@@ -528,28 +531,40 @@ export default function AvatarSetupPage() {
                   }`}
                 >
                   <div className="text-xs font-bold font-ui">Tier 1: Effects Mode</div>
-                  <div className="text-[9px] text-text-muted font-body mt-0.5">Local fallback DSP</div>
+                  <div className="text-[9px] text-text-muted font-body mt-0.5">Available now - browser DSP</div>
                 </button>
                 <button
                   type="button"
                   role="radio"
                   aria-checked={anonymizationMode === "neural"}
+                  aria-disabled={!neuralBackendAvailable}
                   onClick={() => {
+                    if (!neuralBackendAvailable) {
+                      toast.error(ENHANCED_NEURAL_UNAVAILABLE_MESSAGE);
+                      return;
+                    }
                     setAnonymizationMode("neural");
                     setSaved(false);
                   }}
                   className={`py-3 px-4 rounded-xl text-left border transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${
                     anonymizationMode === "neural"
                       ? "border-accent bg-accent/8 text-accent font-bold"
-                      : "border-border text-text hover:border-primary/30"
+                      : neuralBackendAvailable
+                        ? "border-border text-text hover:border-primary/30"
+                        : "border-border text-text-muted cursor-not-allowed opacity-75"
                   }`}
                 >
                   <div className="text-xs font-bold font-ui">Tier 2: Enhanced Neural</div>
                   <div className="text-[9px] text-text-muted font-body mt-0.5">
-                    {neuralBackendAvailable ? "Server backend ready" : "Backend not connected"}
+                    {neuralBackendAvailable ? "Returned audio ready" : "Locked until backend audio is live"}
                   </div>
                 </button>
               </div>
+              {!neuralBackendAvailable && (
+                <p className="mt-3 rounded-xl border border-amber-500/20 bg-amber-500/8 px-3 py-2 text-[10px] text-amber-700 dark:text-amber-200 font-body leading-relaxed">
+                  Effects Mode is the only live microphone path today. Enhanced Neural stays locked until the VPS worker returns converted audio and raw mic audio is never published.
+                </p>
+              )}
             </div>
 
             {anonymizationMode === "dsp" ? (

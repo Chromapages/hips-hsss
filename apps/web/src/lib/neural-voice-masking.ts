@@ -2,12 +2,13 @@ import 'server-only';
 
 type NeuralVoiceMaskingConfig = {
   enabled: boolean;
-  provider: 'w-okada';
-  baseUrl: string | null;
-  publicBaseUrl: string | null;
+  provider: 'voice-worker';
+  healthUrl: string | null;
+  publicWsUrl: string | null;
   runtime: string;
   liveReady: boolean;
   sharedSecretConfigured: boolean;
+  browserToken: string | null;
   timeoutMs: number;
 };
 
@@ -20,18 +21,24 @@ function parseTimeout(value: string | undefined): number {
 }
 
 export function getNeuralVoiceMaskingConfig(): NeuralVoiceMaskingConfig {
-  const baseUrl = process.env.NEURAL_VOICE_CHANGER_URL?.trim() || null;
-  const publicBaseUrl = process.env.NEURAL_VOICE_CHANGER_PUBLIC_URL?.trim() || null;
+  const privateWsUrl = process.env.VOICE_WORKER_WS_URL?.trim() || null;
+  const healthUrl =
+    process.env.VOICE_WORKER_HEALTH_URL?.trim() ||
+    deriveHealthUrl(privateWsUrl) ||
+    null;
+  const publicWsUrl = process.env.VOICE_WORKER_PUBLIC_WS_URL?.trim() || null;
+  const browserToken = process.env.VOICE_WORKER_BROWSER_TOKEN?.trim() || null;
 
   return {
-    enabled: process.env.NEURAL_VOICE_MASKING_ENABLED === 'true' && Boolean(baseUrl),
-    provider: 'w-okada',
-    baseUrl,
-    publicBaseUrl,
-    runtime: process.env.NEURAL_VOICE_CHANGER_RUNTIME?.trim() || 'unknown',
-    liveReady: process.env.NEURAL_VOICE_CHANGER_LIVE_READY === 'true',
-    sharedSecretConfigured: Boolean(process.env.NEURAL_VOICE_CHANGER_SHARED_SECRET),
-    timeoutMs: parseTimeout(process.env.NEURAL_VOICE_CHANGER_TIMEOUT_MS),
+    enabled: process.env.VOICE_WORKER_ENABLED === 'true' && Boolean(healthUrl),
+    provider: 'voice-worker',
+    healthUrl,
+    publicWsUrl,
+    runtime: process.env.VOICE_WORKER_RUNTIME?.trim() || 'transport-passthrough-vad',
+    liveReady: process.env.VOICE_WORKER_LIVE_READY === 'true',
+    sharedSecretConfigured: Boolean(process.env.VOICE_WORKER_SHARED_SECRET),
+    browserToken,
+    timeoutMs: parseTimeout(process.env.VOICE_WORKER_TIMEOUT_MS),
   };
 }
 
@@ -40,10 +47,11 @@ export async function checkNeuralVoiceMaskingHealth(): Promise<{
   reachable: boolean;
   statusCode?: number;
   latencyMs?: number;
+  workerLiveReady?: boolean;
   error?: string;
 }> {
   const config = getNeuralVoiceMaskingConfig();
-  if (!config.enabled || !config.baseUrl) {
+  if (!config.enabled || !config.healthUrl) {
     return { configured: false, reachable: false };
   }
 
@@ -52,22 +60,19 @@ export async function checkNeuralVoiceMaskingHealth(): Promise<{
   const startedAt = Date.now();
 
   try {
-    const response = await fetch(config.baseUrl, {
+    const response = await fetch(config.healthUrl, {
       method: 'GET',
       cache: 'no-store',
       signal: controller.signal,
-      headers: {
-        ...(process.env.NEURAL_VOICE_CHANGER_SHARED_SECRET
-          ? { Authorization: `Bearer ${process.env.NEURAL_VOICE_CHANGER_SHARED_SECRET}` }
-          : {}),
-      },
     });
+    const data = await response.json().catch(() => null) as { liveReady?: unknown } | null;
 
     return {
       configured: true,
       reachable: response.ok,
       statusCode: response.status,
       latencyMs: Date.now() - startedAt,
+      workerLiveReady: Boolean(data?.liveReady),
     };
   } catch (error) {
     return {
@@ -78,5 +83,20 @@ export async function checkNeuralVoiceMaskingHealth(): Promise<{
     };
   } finally {
     clearTimeout(timeout);
+  }
+}
+
+function deriveHealthUrl(wsUrl: string | null): string | null {
+  if (!wsUrl) return null;
+
+  try {
+    const parsed = new URL(wsUrl);
+    parsed.protocol = parsed.protocol === 'wss:' ? 'https:' : 'http:';
+    parsed.pathname = '/health';
+    parsed.search = '';
+    parsed.hash = '';
+    return parsed.toString();
+  } catch {
+    return null;
   }
 }

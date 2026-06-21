@@ -12,11 +12,19 @@ export async function GET() {
     neural: {
       enabled: config.enabled,
       provider: config.provider,
-      configured: Boolean(config.baseUrl),
+      configured: Boolean(config.healthUrl),
       runtime: config.runtime,
-      liveReady: config.liveReady,
-      readyForSessionUse: config.enabled && config.liveReady && health.reachable,
-      publicEndpointConfigured: Boolean(config.publicBaseUrl),
+      liveReady: config.liveReady && Boolean(health.workerLiveReady),
+      readyForSessionUse:
+        config.enabled &&
+        config.liveReady &&
+        Boolean(health.workerLiveReady) &&
+        health.reachable &&
+        Boolean(config.publicWsUrl) &&
+        (!config.sharedSecretConfigured || Boolean(config.browserToken)),
+      publicEndpointConfigured: Boolean(config.publicWsUrl),
+      publicWsUrl: config.publicWsUrl,
+      browserToken: config.browserToken,
       sharedSecretConfigured: config.sharedSecretConfigured,
       health,
     },

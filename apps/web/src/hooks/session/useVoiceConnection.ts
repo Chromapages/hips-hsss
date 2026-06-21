@@ -9,9 +9,8 @@ import {
 } from "livekit-client";
 import { useRoomContext, useDataChannel, useParticipants } from "@livekit/components-react";
 import { toast } from "sonner";
-import { createLowLatencyVoiceMaskProcessor, createVoiceMaskProcessor } from "@/lib/voice-mask-processor";
+import { createLowLatencyVoiceMaskProcessor } from "@/lib/voice-mask-processor";
 import type { VoicePreset } from "@/lib/voice-mask-presets";
-import { checkWebGPUSupport } from "@/lib/webgpu-detect";
 
 export type ConnectionQuality = "good" | "fair" | "poor";
 
@@ -24,6 +23,8 @@ export type ControlMessage = {
 
 const textEncoder = new TextEncoder();
 const textDecoder = new TextDecoder();
+const ENHANCED_NEURAL_UNAVAILABLE_MESSAGE =
+  "Enhanced Neural Masking is not live yet. Use Effects Mode for microphone audio while the returned-audio backend is being connected.";
 
 function decodeControlMessage(payload: Uint8Array): ControlMessage | null {
   try {
@@ -101,8 +102,8 @@ export function useVoiceConnection() {
       voicePreset: VoicePreset = 'sofi',
       semitones?: number,
       anonymizationMode: 'dsp' | 'neural' = 'dsp',
-      selectedPersona: 'clara' | 'arthur' = 'clara',
-      isAntiCadenceEnabled: boolean = false,
+      _selectedPersona: 'clara' | 'arthur' = 'clara',
+      _isAntiCadenceEnabled: boolean = false,
       wetDryRatio: number = 0.22,
     ) => {
       setMicBusy(true);
@@ -121,38 +122,26 @@ export function useVoiceConnection() {
           voiceIsolation: true,
         });
 
-        const webgpuSupported = await checkWebGPUSupport();
-        const isServerFallback = anonymizationMode === 'neural' && !webgpuSupported;
-        if (isServerFallback) {
-          const response = await fetch('/api/voice-masking/status', { cache: 'no-store' });
-          const data = await response.json().catch(() => ({}));
-          if (!data?.neural?.readyForSessionUse) {
-            try {
-              trackObj.stop();
-            } catch {
-              // ignore
-            }
-            toast.error('Enhanced neural masking is not ready on the server yet. Use Effects Mode for now.');
-            setMicBusy(false);
-            return;
+        if (anonymizationMode === 'neural') {
+          try {
+            trackObj.stop();
+          } catch {
+            // ignore
           }
+          toast.error(ENHANCED_NEURAL_UNAVAILABLE_MESSAGE);
+          setMicBusy(false);
+          return;
         }
 
         // Apply the voice mask processor before publishing.
         // CRITICAL: the raw track must never be published if the processor fails —
         // unpublishing synchronously is not possible in WebRTC.
         try {
-          if (anonymizationMode === 'neural') {
-            const presetOverride = selectedPersona === 'clara' ? 'lark' : 'guardian';
-            const semitonesOverride = selectedPersona === 'clara' ? 1 : -4;
-            await trackObj.setProcessor(createVoiceMaskProcessor({ preset: presetOverride, semitones: semitonesOverride }));
-          } else {
-            await trackObj.setProcessor(createLowLatencyVoiceMaskProcessor({
-              preset: voicePreset,
-              ...(semitones !== undefined ? { semitones } : {}),
-              wetDryRatio,
-            }));
-          }
+          await trackObj.setProcessor(createLowLatencyVoiceMaskProcessor({
+            preset: voicePreset,
+            ...(semitones !== undefined ? { semitones } : {}),
+            wetDryRatio,
+          }));
         } catch {
           // Processor unavailable — do NOT publish raw audio.
           try {
@@ -164,25 +153,15 @@ export function useVoiceConnection() {
           return;
         }
 
-        const publishOptions = isServerFallback ? { name: 'voice-masking:server-agent' } : undefined;
-
-        await room.localParticipant.publishTrack(trackObj as unknown as MediaStreamTrack, publishOptions);
+        await room.localParticipant.publishTrack(trackObj as unknown as MediaStreamTrack);
         
         try {
-          if (isServerFallback) {
-            await room.localParticipant.setAttributes({
-              'voice-masking': 'server-agent',
-              'voice-persona': selectedPersona,
-              'anti-cadence': String(isAntiCadenceEnabled),
-            });
-          } else {
-            await room.localParticipant.setAttributes({
-              'voice-masking': anonymizationMode === 'neural' ? 'local-s2s' : 'local-dsp',
-              'voice-preset': voicePreset,
-              'voice-semitones': String(semitones ?? 0),
-              'voice-wet-dry-ratio': String(wetDryRatio),
-            });
-          }
+          await room.localParticipant.setAttributes({
+            'voice-masking': 'local-dsp',
+            'voice-preset': voicePreset,
+            'voice-semitones': String(semitones ?? 0),
+            'voice-wet-dry-ratio': String(wetDryRatio),
+          });
         } catch (attrErr) {
           console.warn('[useVoiceConnection] Failed to set participant attributes:', attrErr);
         }

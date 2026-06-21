@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense, useCallback, useEffect, useMemo, useState } from 'react';
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   LiveKitRoom,
@@ -13,9 +13,11 @@ import {
 } from '@livekit/components-react';
 import '@livekit/components-styles';
 import {
-  AlertTriangle,
+  Activity,
   Loader2,
-  PhoneOff,
+  Server,
+  ShieldCheck,
+  TriangleAlert,
 } from 'lucide-react';
 import type { AvatarProfile, UserRole } from '@hips/types';
 import { createLocalAudioTrack, LocalAudioTrack, Room } from 'livekit-client';
@@ -24,8 +26,7 @@ import { useAuth } from '../auth/AuthProvider';
 import AvatarCanvas from './AvatarCanvas';
 import SafetyMonitor from './SafetyMonitor';
 import { CrisisEscalation } from './CrisisEscalation';
-import { createVoiceMaskProcessor, createLowLatencyVoiceMaskProcessor } from '@/lib/voice-mask-processor';
-import { checkWebGPUSupport } from '@/lib/webgpu-detect';
+import { createLowLatencyVoiceMaskProcessor } from '@/lib/voice-mask-processor';
 import { SessionHeader } from '../session-ui/SessionHeader';
 import { VoiceControlsBar } from '../session-ui/VoiceControlsBar';
 import { WebGLFallback } from '../session-ui/WebGLFallback';
@@ -33,11 +34,13 @@ import { MobileBlockPage } from '../session-ui/MobileBlockPage';
 import { MediaToolbar } from '../session-ui/MediaToolbar';
 import { useMediaDevices } from '@/hooks/useMediaDevices';
 import { useVoiceEffects } from '@/hooks/useVoiceEffects';
+import { useNeuralVoiceMasking } from '@/hooks/session/useNeuralVoiceMasking';
 import { getBrowserMediaDevices } from '@/lib/browser-media';
-import type { AvatarGesture } from '../session-ui/avatars/VirtualOfficeAvatar';
+import type { AvatarGesture, AvatarEmotion } from '../session-ui/avatars/VirtualOfficeAvatar';
 import { SessionExitState } from './SessionExitState';
 import { RaisedHandQueue } from './RaisedHandQueue';
 import type { VoicePreset } from '@/lib/voice-mask-presets';
+import type { VoiceWorkerControlMessage } from '@/lib/streaming-voice-client';
 import { asError } from '@/lib/errors';
 
 type LiveKitTokenResponse = {
@@ -54,6 +57,17 @@ type SessionControlMessage = {
   at: string;
 };
 
+type VoiceMaskingStatus = {
+  checked: boolean;
+  ready: boolean;
+  runtime: string;
+  liveReady: boolean;
+  publicEndpointConfigured: boolean;
+  healthReachable: boolean;
+  healthLatencyMs?: number;
+  fallbackReason?: string;
+};
+
 // SECURITY NOTE [M12]: NEXT_PUBLIC_LIVEKIT_URL exposes internal infrastructure.
 // LiveKit URL must be public for client-side WebSocket connections.
 // For production: move room token generation server-side so URL doesn't need to be public.
@@ -61,6 +75,8 @@ type SessionControlMessage = {
 // TODO [Phase 3]: Refactor to generate tokens server-side and remove NEXT_PUBLIC_LIVEKIT_URL.
 const liveKitUrl = process.env.NEXT_PUBLIC_LIVEKIT_URL || process.env.NEXT_PUBLIC_LIVEKIT_WS_URL || 'ws://localhost:7880';
 const textEncoder = new TextEncoder();
+const ENHANCED_NEURAL_UNAVAILABLE_MESSAGE =
+  'Enhanced Neural Masking is not live yet. Use Effects Mode for microphone audio while the returned-audio backend is being connected.';
 
 function decodeControlMessage(payload: Uint8Array): SessionControlMessage | null {
   try {
@@ -82,6 +98,28 @@ function decodeControlMessage(payload: Uint8Array): SessionControlMessage | null
 
 function roleCanFacilitate(role: string | null): role is Extract<UserRole, 'FACILITATOR' | 'ADMIN'> {
   return role === 'FACILITATOR' || role === 'ADMIN';
+}
+
+function isLiveKitLocalAudioTrack(track: LocalAudioTrack | MediaStreamTrack): track is LocalAudioTrack {
+  return 'mediaStreamTrack' in track && typeof track.stopProcessor === 'function';
+}
+
+function stopLiveKitLocalAudioTrack(track: LocalAudioTrack) {
+  try {
+    track.stop();
+  } catch (stopErr) {
+    console.warn('[SessionRoom] Failed to stop local microphone track:', stopErr);
+  }
+}
+
+function getVoiceMaskingFallbackReason(neural: Record<string, unknown>): string {
+  if (!neural.enabled) return 'Worker disabled';
+  if (!neural.configured) return 'Worker health URL missing';
+  if (!(neural.health as { reachable?: boolean } | undefined)?.reachable) return 'Worker unreachable';
+  if (!neural.liveReady) return 'Worker not live-ready';
+  if (!neural.publicEndpointConfigured) return 'Public WebSocket missing';
+  if (neural.sharedSecretConfigured && !neural.browserToken) return 'Browser token missing';
+  return 'Enhanced path unavailable';
 }
 
 async function reportSessionError(message: string, severity: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL', sessionId?: string) {
@@ -381,12 +419,12 @@ function SessionContent({
   roomName: string;
 }) {
   const router = useRouter();
-  const { getToken } = useAuth();
   const room = useRoomContext();
   const participants = useParticipants();
   const { localParticipant } = useLocalParticipant();
   const [raisedHands, setRaisedHands] = useState<Set<string>>(new Set());
-  const [localAudioTrack, setLocalAudioTrack] = useState<LocalAudioTrack | null>(null);
+  const [localEmotion, setLocalEmotion] = useState<AvatarEmotion>('neutral');
+  const [localAudioTrack, setLocalAudioTrack] = useState<LocalAudioTrack | MediaStreamTrack | null>(null);
   const [micEnabled, setMicEnabled] = useState(false);
   const [micBusy, setMicBusy] = useState(false);
   const [voiceMaskWarning, setVoiceMaskWarning] = useState<string | null>(null);
@@ -402,16 +440,25 @@ function SessionContent({
   const [anonymizationMode, setAnonymizationMode] = useState<'dsp' | 'neural'>('dsp');
   const [selectedPersona, setSelectedPersona] = useState<'clara' | 'arthur'>('clara');
   const [isAntiCadenceEnabled, setIsAntiCadenceEnabled] = useState(false);
-  const [webgpuSupported, setWebgpuSupported] = useState(false);
   const [serverMaskingReady, setServerMaskingReady] = useState(false);
-
-  useEffect(() => {
-    async function checkGPU() {
-      const support = await checkWebGPUSupport();
-      setWebgpuSupported(support);
-    }
-    checkGPU();
-  }, []);
+  const [voiceWorkerUrl, setVoiceWorkerUrl] = useState<string | null>(null);
+  const [voiceWorkerToken, setVoiceWorkerToken] = useState<string | null>(null);
+  const [voiceMaskingStatus, setVoiceMaskingStatus] = useState<VoiceMaskingStatus>({
+    checked: false,
+    ready: false,
+    runtime: 'unknown',
+    liveReady: false,
+    publicEndpointConfigured: false,
+    healthReachable: false,
+  });
+  const {
+    start: startNeuralVoiceMasking,
+    stop: stopNeuralVoiceMasking,
+    state: neuralVoiceState,
+    error: neuralVoiceError,
+    lastControlMessage: neuralVoiceControlMessage,
+  } = useNeuralVoiceMasking();
+  const neuralSourceTrackRef = useRef<LocalAudioTrack | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -420,12 +467,37 @@ function SessionContent({
       try {
         const response = await fetch('/api/voice-masking/status', { cache: 'no-store' });
         const data = await response.json();
+        const neural = data?.neural ?? {};
+        const ready = Boolean(neural?.readyForSessionUse);
         if (!cancelled) {
-          setServerMaskingReady(Boolean(data?.neural?.readyForSessionUse));
+          setServerMaskingReady(ready);
+          setVoiceWorkerUrl(typeof neural?.publicWsUrl === 'string' ? neural.publicWsUrl : null);
+          setVoiceWorkerToken(typeof neural?.browserToken === 'string' ? neural.browserToken : null);
+          setVoiceMaskingStatus({
+            checked: true,
+            ready,
+            runtime: typeof neural?.runtime === 'string' ? neural.runtime : 'unknown',
+            liveReady: Boolean(neural?.liveReady),
+            publicEndpointConfigured: Boolean(neural?.publicEndpointConfigured),
+            healthReachable: Boolean(neural?.health?.reachable),
+            ...(typeof neural?.health?.latencyMs === 'number' ? { healthLatencyMs: neural.health.latencyMs } : {}),
+            ...(!ready ? { fallbackReason: getVoiceMaskingFallbackReason(neural) } : {}),
+          });
         }
       } catch {
         if (!cancelled) {
           setServerMaskingReady(false);
+          setVoiceWorkerUrl(null);
+          setVoiceWorkerToken(null);
+          setVoiceMaskingStatus({
+            checked: true,
+            ready: false,
+            runtime: 'unknown',
+            liveReady: false,
+            publicEndpointConfigured: false,
+            healthReachable: false,
+            fallbackReason: 'Status check failed',
+          });
         }
       }
     }
@@ -436,58 +508,6 @@ function SessionContent({
       cancelled = true;
     };
   }, []);
-
-  useEffect(() => {
-    if (anonymizationMode !== 'neural' || webgpuSupported || !serverMaskingReady) return;
-
-    let cancelled = false;
-
-    async function dispatchServerAgent() {
-      try {
-        const token = await getToken();
-        if (!token || cancelled) return;
-
-        const response = await fetch('/api/voice-masking/agent/dispatch', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            sessionId: roomName.replace(/^session-/, ''),
-            participantIdentity: localParticipant.identity,
-            persona: selectedPersona,
-            antiCadence: isAntiCadenceEnabled,
-          }),
-        });
-
-        const data = await response.json().catch(() => ({}));
-        if (!cancelled && !data?.dispatched) {
-          setVoiceMaskWarning('Server voice masking is not ready for this room yet. Use Effects Mode for now.');
-        }
-      } catch (error) {
-        if (!cancelled) {
-          console.warn('[SessionRoom] Voice masking agent dispatch failed:', error);
-          setVoiceMaskWarning('Server voice masking could not start. Use Effects Mode for now.');
-        }
-      }
-    }
-
-    void dispatchServerAgent();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [
-    anonymizationMode,
-    getToken,
-    isAntiCadenceEnabled,
-    localParticipant.identity,
-    roomName,
-    selectedPersona,
-    serverMaskingReady,
-    webgpuSupported,
-  ]);
 
   useEffect(() => {
     const configStr = localStorage.getItem("hips-host-avatar");
@@ -549,10 +569,8 @@ function SessionContent({
       if (localAudioTrack && micEnabled) {
         try {
           if (anonymizationMode === 'neural') {
-            const presetOverride = selectedPersona === 'clara' ? 'lark' : 'guardian';
-            const semitonesOverride = selectedPersona === 'clara' ? 1 : -4;
-            await localAudioTrack.setProcessor(createVoiceMaskProcessor({ preset: presetOverride, semitones: semitonesOverride }));
-          } else {
+            setVoiceMaskWarning(ENHANCED_NEURAL_UNAVAILABLE_MESSAGE);
+          } else if (isLiveKitLocalAudioTrack(localAudioTrack)) {
             await localAudioTrack.setProcessor(createLowLatencyVoiceMaskProcessor({ preset: activePreset, semitones, wetDryRatio }));
           }
         } catch (err) {
@@ -573,6 +591,28 @@ function SessionContent({
       room.off('disconnected', handleDisconnected);
     };
   }, [room, onReconnecting, localAudioTrack, micEnabled, activePreset, semitones, wetDryRatio, anonymizationMode, selectedPersona]);
+
+  // Synchronize avatar properties and local emotion to LiveKit participant attributes dynamically
+  useEffect(() => {
+    if (!localParticipant) return;
+
+    const syncAttributes = async () => {
+      try {
+        await localParticipant.setAttributes({
+          'voice-masking': 'local-dsp',
+          'voice-preset': activePreset,
+          'voice-semitones': String(semitones),
+          'avatar-style': String(avatar.style),
+          'avatar-palette': avatar.palette,
+          'avatar-emotion': localEmotion,
+        });
+      } catch (err) {
+        console.warn('[SessionRoom] Failed to sync participant attributes:', err);
+      }
+    };
+
+    void syncAttributes();
+  }, [localParticipant, activePreset, semitones, avatar.style, avatar.palette, localEmotion]);
 
   // Task 5.8 — Session timer counting up from first render
   useEffect(() => {
@@ -663,18 +703,55 @@ function SessionContent({
         voiceIsolation: true,
       });
 
-      const isServerFallback = anonymizationMode === 'neural' && !webgpuSupported;
-      if (isServerFallback && !serverMaskingReady) {
-        setVoiceMaskWarning('Enhanced neural masking is not ready on the server yet. Switch to Effects Mode to use the microphone.');
-        try {
-          track.stop();
-        } catch (stopErr) {
-          console.warn('[SessionRoom] Failed to stop raw track while server masking was unavailable:', stopErr);
-        }
+      if (anonymizationMode === 'neural' && (!serverMaskingReady || !voiceWorkerUrl)) {
+        setVoiceMaskWarning(ENHANCED_NEURAL_UNAVAILABLE_MESSAGE);
+        stopLiveKitLocalAudioTrack(track);
         setLocalAudioTrack(null);
         setMicEnabled(false);
         setMicBusy(false);
         return;
+      }
+
+      if (anonymizationMode === 'neural') {
+        try {
+          const sourceSampleRate = track.mediaStreamTrack.getSettings().sampleRate;
+          const processedTrack = await startNeuralVoiceMasking({
+            workerUrl: voiceWorkerUrl!,
+            ...(voiceWorkerToken ? { workerToken: voiceWorkerToken } : {}),
+            sessionId: roomName.replace(/^session-/, ''),
+            participantIdentity: localParticipant.identity,
+            sourceTrack: track.mediaStreamTrack,
+            persona: selectedPersona,
+            antiCadence: isAntiCadenceEnabled,
+            pseudoSpeakerSeed: `${roomName}:${localParticipant.identity}:${selectedPersona}`,
+            ...(typeof sourceSampleRate === 'number' ? { sampleRate: sourceSampleRate } : {}),
+          });
+
+          await localParticipant.publishTrack(processedTrack, { name: 'voice-masking:server-worker' });
+          await localParticipant.setAttributes({
+            'voice-masking': 'server-worker',
+            'voice-persona': selectedPersona,
+            'anti-cadence': String(isAntiCadenceEnabled),
+          });
+
+          neuralSourceTrackRef.current = track;
+          setLocalAudioTrack(processedTrack);
+          setMicEnabled(true);
+          return;
+        } catch (neuralError) {
+          console.error('[SessionRoom] Enhanced Neural Masking failed:', neuralError);
+          setVoiceMaskWarning(
+            neuralError instanceof Error
+              ? `Enhanced Neural Masking failed: ${neuralError.message}. Use Effects Mode for now.`
+              : 'Enhanced Neural Masking failed. Use Effects Mode for now.',
+          );
+          stopNeuralVoiceMasking();
+          stopLiveKitLocalAudioTrack(track);
+          setLocalAudioTrack(null);
+          setMicEnabled(false);
+          setMicBusy(false);
+          return;
+        }
       }
 
       // CRITICAL FIX: apply voice mask processor BEFORE publishing.
@@ -682,13 +759,7 @@ function SessionContent({
       // if setProcessor() throws — and there would be no way to unpublish
       // synchronously. The track is only published after processor succeeds.
       try {
-        if (anonymizationMode === 'neural') {
-          const presetOverride = selectedPersona === 'clara' ? 'lark' : 'guardian';
-          const semitonesOverride = selectedPersona === 'clara' ? 1 : -4;
-          await track.setProcessor(createVoiceMaskProcessor({ preset: presetOverride, semitones: semitonesOverride }));
-        } else {
-          await track.setProcessor(createLowLatencyVoiceMaskProcessor({ preset: activePreset, semitones, wetDryRatio }));
-        }
+        await track.setProcessor(createLowLatencyVoiceMaskProcessor({ preset: activePreset, semitones, wetDryRatio }));
       } catch (processorError) {
         // Processor failed — do NOT publish the raw track.
         // Stop the track and surface an actionable error to the user.
@@ -708,25 +779,18 @@ function SessionContent({
         return;
       }
 
-      const publishOptions = isServerFallback ? { name: 'voice-masking:server-agent' } : undefined;
-
       // Only reach reach here once the processor was successfully applied.
-      await localParticipant.publishTrack(track as unknown as MediaStreamTrack, publishOptions);
+      await localParticipant.publishTrack(track as unknown as MediaStreamTrack);
 
       try {
-        if (isServerFallback) {
-          await localParticipant.setAttributes({
-            'voice-masking': 'server-agent',
-            'voice-persona': selectedPersona,
-            'anti-cadence': String(isAntiCadenceEnabled),
-          });
-        } else {
-          await localParticipant.setAttributes({
-            'voice-masking': anonymizationMode === 'neural' ? 'local-s2s' : 'local-dsp',
-            'voice-preset': activePreset,
-            'voice-semitones': String(semitones),
-          });
-        }
+        await localParticipant.setAttributes({
+          'voice-masking': 'local-dsp',
+          'voice-preset': activePreset,
+          'voice-semitones': String(semitones),
+          'avatar-style': String(avatar.style),
+          'avatar-palette': avatar.palette,
+          'avatar-emotion': localEmotion,
+        });
       } catch (attrErr) {
         console.warn('[SessionRoom] Failed to set participant attributes:', attrErr);
       }
@@ -750,7 +814,21 @@ function SessionContent({
     } finally {
       setMicBusy(false);
     }
-  }, [localParticipant, activePreset, semitones, wetDryRatio, anonymizationMode, selectedPersona, isAntiCadenceEnabled, webgpuSupported, serverMaskingReady]);
+  }, [
+    localParticipant,
+    activePreset,
+    semitones,
+    wetDryRatio,
+    anonymizationMode,
+    serverMaskingReady,
+    voiceWorkerUrl,
+    voiceWorkerToken,
+    startNeuralVoiceMasking,
+    stopNeuralVoiceMasking,
+    roomName,
+    selectedPersona,
+    isAntiCadenceEnabled,
+  ]);
 
   const toggleMicrophone = useCallback(async () => {
     if (micBusy) return;
@@ -764,10 +842,24 @@ function SessionContent({
 
     try {
       if (micEnabled) {
-        await localAudioTrack.mute();
+        if (isLiveKitLocalAudioTrack(localAudioTrack)) {
+          await localAudioTrack.mute();
+        } else {
+          localAudioTrack.enabled = false;
+          if (neuralSourceTrackRef.current) {
+            neuralSourceTrackRef.current.mediaStreamTrack.enabled = false;
+          }
+        }
         setMicEnabled(false);
       } else {
-        await localAudioTrack.unmute();
+        if (isLiveKitLocalAudioTrack(localAudioTrack)) {
+          await localAudioTrack.unmute();
+        } else {
+          localAudioTrack.enabled = true;
+          if (neuralSourceTrackRef.current) {
+            neuralSourceTrackRef.current.mediaStreamTrack.enabled = true;
+          }
+        }
         setMicEnabled(true);
       }
     } finally {
@@ -779,9 +871,19 @@ function SessionContent({
     if (!localAudioTrack) return;
 
     try {
-      await localAudioTrack.stopProcessor(false);
-      localParticipant.unpublishTrack(localAudioTrack as unknown as MediaStreamTrack);
-      localAudioTrack.stop();
+      if (isLiveKitLocalAudioTrack(localAudioTrack)) {
+        await localAudioTrack.stopProcessor(false);
+        localParticipant.unpublishTrack(localAudioTrack as unknown as MediaStreamTrack);
+        localAudioTrack.stop();
+      } else {
+        localParticipant.unpublishTrack(localAudioTrack);
+        localAudioTrack.stop();
+      }
+      stopNeuralVoiceMasking();
+      if (neuralSourceTrackRef.current) {
+        stopLiveKitLocalAudioTrack(neuralSourceTrackRef.current);
+        neuralSourceTrackRef.current = null;
+      }
     } catch (error) {
       console.warn('Failed to stop local audio cleanly:', error);
     } finally {
@@ -793,25 +895,31 @@ function SessionContent({
   useEffect(() => {
     return () => {
       if (localAudioTrack) {
-        localAudioTrack.stop();
+        if (isLiveKitLocalAudioTrack(localAudioTrack)) {
+          localAudioTrack.stop();
+        } else {
+          localAudioTrack.stop();
+        }
+      }
+      stopNeuralVoiceMasking();
+      if (neuralSourceTrackRef.current) {
+        stopLiveKitLocalAudioTrack(neuralSourceTrackRef.current);
+        neuralSourceTrackRef.current = null;
       }
     };
-  }, [localAudioTrack]);
+  }, [localAudioTrack, stopNeuralVoiceMasking]);
 
   // Real-time synchronization of voice mask processor settings when preset or semitones change
   useEffect(() => {
     if (localAudioTrack && micEnabled) {
       if (anonymizationMode === 'neural') {
-        const presetOverride = selectedPersona === 'clara' ? 'lark' : 'guardian';
-        const semitonesOverride = selectedPersona === 'clara' ? 1 : -4;
-        localAudioTrack.setProcessor(createVoiceMaskProcessor({ preset: presetOverride, semitones: semitonesOverride }))
-          .catch((err) => console.error('[VoiceEffects] Failed to update processor:', err));
-      } else {
+        return;
+      } else if (isLiveKitLocalAudioTrack(localAudioTrack)) {
         localAudioTrack.setProcessor(createLowLatencyVoiceMaskProcessor({ preset: activePreset, semitones, wetDryRatio }))
           .catch((err) => console.error('[VoiceEffects] Failed to update processor:', err));
       }
     }
-  }, [activePreset, semitones, wetDryRatio, localAudioTrack, micEnabled, anonymizationMode, selectedPersona]);
+  }, [activePreset, semitones, wetDryRatio, localAudioTrack, micEnabled, anonymizationMode]);
 
   const toggleHand = async () => {
     const isRaised = raisedHands.has(localParticipant.identity);
@@ -837,6 +945,12 @@ function SessionContent({
       setMicBusy(true);
       let newTrack: LocalAudioTrack | null = null;
       try {
+        if (anonymizationMode === 'neural') {
+          await stopLocalAudio();
+          await startMicrophone();
+          return;
+        }
+
         // Tear down the old track cleanly before creating the replacement.
         await stopLocalAudio();
 
@@ -849,13 +963,7 @@ function SessionContent({
         });
 
         try {
-          if (anonymizationMode === 'neural') {
-            const presetOverride = selectedPersona === 'clara' ? 'lark' : 'guardian';
-            const semitonesOverride = selectedPersona === 'clara' ? 1 : -4;
-            await newTrack.setProcessor(createVoiceMaskProcessor({ preset: presetOverride, semitones: semitonesOverride }));
-          } else {
-            await newTrack.setProcessor(createLowLatencyVoiceMaskProcessor({ preset: activePreset, semitones, wetDryRatio }));
-          }
+          await newTrack.setProcessor(createLowLatencyVoiceMaskProcessor({ preset: activePreset, semitones, wetDryRatio }));
         } catch (processorError) {
           setVoiceMaskWarning(
             processorError instanceof Error
@@ -871,25 +979,14 @@ function SessionContent({
           return;
         }
 
-        const isServerFallback = anonymizationMode === 'neural' && !webgpuSupported;
-        const publishOptions = isServerFallback ? { name: 'voice-masking:server-agent' } : undefined;
-
-        await localParticipant.publishTrack(newTrack as unknown as MediaStreamTrack, publishOptions);
+        await localParticipant.publishTrack(newTrack as unknown as MediaStreamTrack);
 
         try {
-          if (isServerFallback) {
-            await localParticipant.setAttributes({
-              'voice-masking': 'server-agent',
-              'voice-persona': selectedPersona,
-              'anti-cadence': String(isAntiCadenceEnabled),
-            });
-          } else {
-            await localParticipant.setAttributes({
-              'voice-masking': anonymizationMode === 'neural' ? 'local-s2s' : 'local-dsp',
-              'voice-preset': activePreset,
-              'voice-semitones': String(semitones),
-            });
-          }
+          await localParticipant.setAttributes({
+            'voice-masking': 'local-dsp',
+            'voice-preset': activePreset,
+            'voice-semitones': String(semitones),
+          });
         } catch (attrErr) {
           console.warn('[SessionRoom] Failed to set participant attributes:', attrErr);
         }
@@ -909,7 +1006,7 @@ function SessionContent({
         setMicBusy(false);
       }
     },
-    [localAudioTrack, micEnabled, localParticipant, activePreset, semitones, wetDryRatio, selectAudioInput, anonymizationMode, selectedPersona, isAntiCadenceEnabled, webgpuSupported, stopLocalAudio],
+    [localAudioTrack, micEnabled, localParticipant, activePreset, semitones, wetDryRatio, selectAudioInput, anonymizationMode, stopLocalAudio, startMicrophone],
   );
 
   const handleVoicePresetChange = useCallback((preset: VoicePreset) => {
@@ -972,6 +1069,7 @@ function SessionContent({
                 avatar={avatar}
                 localIdentity={localParticipant.identity}
                 raisedHands={raisedHands}
+                localEmotion={localEmotion}
               />
             </Suspense>
           ) : (
@@ -988,7 +1086,7 @@ function SessionContent({
           ) : null}
         </div>
 
-        <aside className="grid min-h-0 grid-rows-[auto_1fr] border-l border-white/10 bg-zinc-950">
+        <aside className="flex min-h-0 flex-col border-l border-white/10 bg-zinc-950">
           {canFacilitate ? (
             <RaisedHandQueue raisedHands={raisedHandList} onLowerHand={lowerHand} />
           ) : (
@@ -999,6 +1097,17 @@ function SessionContent({
               </p>
             </div>
           )}
+          <VoiceMaskingDebugPanel
+            anonymizationMode={anonymizationMode}
+            selectedPersona={selectedPersona}
+            antiCadenceEnabled={isAntiCadenceEnabled}
+            micEnabled={micEnabled}
+            warning={voiceMaskWarning}
+            status={voiceMaskingStatus}
+            neuralState={neuralVoiceState}
+            neuralError={neuralVoiceError}
+            lastControlMessage={neuralVoiceControlMessage}
+          />
           <SafetyMonitor sessionId={roomName} onCrisis={onCrisis} onKick={onKick} />
           {canFacilitate ? (
             <div className="border-t border-white/10 p-4">
@@ -1057,7 +1166,106 @@ function SessionContent({
         onVoiceSemitoneChange={handleVoiceSemitoneChange}
         onVoiceWetDryChange={handleVoiceWetDryChange}
         voiceMaskActive={micEnabled && !voiceMaskWarning}
+        activeEmotion={localEmotion}
+        onEmotionChange={setLocalEmotion}
       />
     </main>
   );
+}
+
+function VoiceMaskingDebugPanel({
+  anonymizationMode,
+  selectedPersona,
+  antiCadenceEnabled,
+  micEnabled,
+  warning,
+  status,
+  neuralState,
+  neuralError,
+  lastControlMessage,
+}: {
+  anonymizationMode: 'dsp' | 'neural';
+  selectedPersona: 'clara' | 'arthur';
+  antiCadenceEnabled: boolean;
+  micEnabled: boolean;
+  warning: string | null;
+  status: VoiceMaskingStatus;
+  neuralState: string;
+  neuralError: string | null;
+  lastControlMessage: VoiceWorkerControlMessage | null;
+}) {
+  const metrics = lastControlMessage?.type === 'metrics' ? lastControlMessage : null;
+  const ready = status.ready;
+  const activeServerWorker = micEnabled && anonymizationMode === 'neural' && neuralState === 'ready' && !warning;
+
+  return (
+    <div className="border-b border-white/10 p-4">
+      <div className="mb-3 flex items-center justify-between gap-3">
+        <div>
+          <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Voice Worker</p>
+          <p className="mt-1 text-sm font-semibold text-white">
+            {anonymizationMode === 'neural' ? 'Enhanced Neural' : 'Effects Mode'}
+          </p>
+        </div>
+        <span
+          className={[
+            'inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider',
+            activeServerWorker
+              ? 'border-emerald-500/25 bg-emerald-500/10 text-emerald-300'
+              : ready
+                ? 'border-sky-500/25 bg-sky-500/10 text-sky-300'
+                : 'border-amber-500/25 bg-amber-500/10 text-amber-300',
+          ].join(' ')}
+        >
+          {activeServerWorker ? <ShieldCheck className="h-3 w-3" /> : ready ? <Server className="h-3 w-3" /> : <TriangleAlert className="h-3 w-3" />}
+          {activeServerWorker ? 'Publishing' : ready ? 'Ready' : 'Fallback'}
+        </span>
+      </div>
+
+      <div className="grid grid-cols-2 gap-2 text-[11px]">
+        <DebugMetric label="Runtime" value={lastControlMessage?.type === 'ready' ? lastControlMessage.runtime : status.runtime} />
+        <DebugMetric label="Hook" value={neuralState} />
+        <DebugMetric label="Persona" value={anonymizationMode === 'neural' ? selectedPersona : 'local-dsp'} />
+        <DebugMetric label="Cadence" value={antiCadenceEnabled ? 'on' : 'off'} />
+        <DebugMetric label="Health" value={status.healthReachable ? `ok${status.healthLatencyMs ? ` ${status.healthLatencyMs}ms` : ''}` : 'offline'} />
+        <DebugMetric label="Live" value={status.liveReady ? 'true' : 'false'} />
+      </div>
+
+      {metrics ? (
+        <div className="mt-3 rounded-xl border border-white/10 bg-black/20 p-3">
+          <div className="mb-2 flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-emerald-300">
+            <Activity className="h-3.5 w-3.5" />
+            Worker Metrics
+          </div>
+          <div className="grid grid-cols-3 gap-2 text-[11px]">
+            <DebugMetric label="RTF" value={formatMetric(metrics.rtfEstimate, 3)} />
+            <DebugMetric label="Delta" value={formatMetric(metrics.transformDeltaAvg, 3)} />
+            <DebugMetric label="Frames" value={`${metrics.framesReturned}/${metrics.framesReceived}`} />
+            <DebugMetric label="Input" value={formatMetric(metrics.inputRmsAvg, 3)} />
+            <DebugMetric label="Output" value={formatMetric(metrics.outputRmsAvg, 3)} />
+            <DebugMetric label="Speech" value={`${metrics.speechFrames}`} />
+          </div>
+        </div>
+      ) : null}
+
+      {!ready || warning || neuralError ? (
+        <p className="mt-3 rounded-xl border border-amber-500/15 bg-amber-500/8 px-3 py-2 text-[11px] leading-relaxed text-amber-100/80">
+          {warning || neuralError || status.fallbackReason || 'Enhanced worker metrics appear after microphone start.'}
+        </p>
+      ) : null}
+    </div>
+  );
+}
+
+function DebugMetric({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="min-w-0 rounded-lg bg-white/[0.03] px-2 py-1.5">
+      <p className="truncate text-[9px] font-bold uppercase tracking-wider text-white/35">{label}</p>
+      <p className="mt-0.5 truncate font-mono text-[11px] font-semibold text-white/75">{value}</p>
+    </div>
+  );
+}
+
+function formatMetric(value: number, digits: number): string {
+  return Number.isFinite(value) ? value.toFixed(digits) : 'n/a';
 }

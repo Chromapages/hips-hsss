@@ -1,7 +1,7 @@
 "use client";
-import { Flag, Mic, MicOff, PhoneOff, Hand, Waves } from "lucide-react";
+import { Flag, Mic, MicOff, PhoneOff, Hand, Waves, Smile } from "lucide-react";
 import { useState, useCallback } from "react";
-import type { AvatarGesture } from "@hips/types";
+import type { AvatarGesture, AvatarEmotion } from "@hips/types";
 import type { VoicePreset } from "@/lib/voice-mask-presets";
 import { VoiceEffectsPanel } from "./VoiceEffectsPanel";
 // Gestures removed
@@ -29,6 +29,8 @@ interface VoiceControlsBarProps {
    * that sit on a light page — currently the demo-room.
    */
   variant?: "light" | "dark";
+  activeEmotion?: AvatarEmotion;
+  onEmotionChange?: (emotion: AvatarEmotion) => void;
 }
 
 // Task 5.7 — Voice controls bar (mute, gesture, flag, end)
@@ -49,10 +51,13 @@ export function VoiceControlsBar({
   onVoiceWetDryChange,
   voiceMaskActive = false,
   variant = "dark",
+  activeEmotion = "neutral",
+  onEmotionChange,
 }: VoiceControlsBarProps) {
   const isLight = variant === "light";
   const [confirmEnd, setConfirmEnd] = useState(false);
   const [showFxPanel, setShowFxPanel] = useState(false);
+  const [showEmotionMenu, setShowEmotionMenu] = useState(false);
 
   const handleLeaveClick = useCallback(() => {
     setConfirmEnd(true);
@@ -132,7 +137,78 @@ export function VoiceControlsBar({
           <Hand className="h-6 w-6 transition-transform group-hover:scale-110" />
         </button>
 
-        // Gestures removed
+        {/* Expression selector button */}
+        {onEmotionChange && (
+          <div className="relative">
+            <button
+              aria-label={`Expression: ${activeEmotion}`}
+              aria-expanded={showEmotionMenu}
+              aria-haspopup="menu"
+              className={[
+                "flex h-14 w-14 items-center justify-center rounded-full transition-all group relative",
+                showEmotionMenu
+                  ? isLight
+                    ? "border border-accent/40 bg-accent/15 text-accent"
+                    : "border border-primary/40 bg-primary/20 text-text"
+                  : idleButton,
+              ].join(" ")}
+              onClick={() => setShowEmotionMenu(!showEmotionMenu)}
+              type="button"
+            >
+              <Smile className="h-6 w-6 transition-transform group-hover:scale-110" />
+            </button>
+
+            {showEmotionMenu && (
+              <>
+                <div
+                  className="fixed inset-0 z-10"
+                  onClick={() => setShowEmotionMenu(false)}
+                />
+                <div
+                  role="menu"
+                  className={[
+                    "absolute bottom-20 left-1/2 z-20 flex -translate-x-1/2 items-center gap-2 rounded-2xl p-2 shadow-2xl backdrop-blur-2xl animate-in fade-in slide-in-from-bottom-2 duration-250",
+                    isLight
+                      ? "border border-border bg-background/95"
+                      : "border border-white/10 bg-zinc-950/95"
+                  ].join(" ")}
+                >
+                  {(["neutral", "happy", "thoughtful", "distressed"] as AvatarEmotion[]).map((emo) => {
+                    const labelMap = {
+                      neutral: "😐 Neutral",
+                      happy: "😊 Happy",
+                      thoughtful: "🤔 Thoughtful",
+                      distressed: "😟 Distressed",
+                    };
+                    const isSelected = activeEmotion === emo;
+                    return (
+                      <button
+                        key={emo}
+                        role="menuitem"
+                        className={[
+                          "px-4 py-2 text-sm rounded-xl font-bold transition-all whitespace-nowrap",
+                          isSelected
+                            ? isLight
+                              ? "bg-accent/15 text-accent"
+                              : "bg-primary/20 text-text"
+                            : isLight
+                              ? "text-primary hover:bg-surface-alt"
+                              : "text-white/60 hover:bg-surface/5 hover:text-white"
+                        ].join(" ")}
+                        onClick={() => {
+                          onEmotionChange(emo);
+                          setShowEmotionMenu(false);
+                        }}
+                      >
+                        {labelMap[emo]}
+                      </button>
+                    );
+                  })}
+                </div>
+              </>
+            )}
+          </div>
+        )}
 
         <div className={`mx-1 h-8 w-px ${dividerLine}`} />
 

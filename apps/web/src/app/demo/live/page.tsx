@@ -149,7 +149,7 @@ export default function LiveDemoPage() {
   const [audioLevel, setAudioLevel] = useState(0);
   const [wetDryRatio, setWetDryRatio] = useState(0.22);
 
-  // A/B comparison state — hear original vs. masked voice side by side
+  // A/B comparison state: hear original vs. processed voice side by side.
   const [compareMode, setCompareMode] = useState<'normal' | 'original' | 'masked'>('normal');
 
   // Refs — audio graph lives outside React state to avoid re-renders
@@ -489,8 +489,8 @@ export default function LiveDemoPage() {
         </h1>
         <p className="mx-auto max-w-xl text-base text-white/55 font-body leading-relaxed">
           Experience the two core privacy technologies that protect every H.I.P.S. session —
-          your <strong className="text-white/80">3D anonymous avatar</strong> and real-time{' '}
-          <strong className="text-white/80">voice masking</strong> — live, right here in your browser.
+          your <strong className="text-white/80">3D anonymous avatar</strong> and the browser-based{' '}
+          <strong className="text-white/80">Effects Mode voice demo</strong> — live, right here in your browser.
         </p>
       </section>
 
@@ -685,13 +685,13 @@ export default function LiveDemoPage() {
           </div>
         </div>
 
-        {/* ═══ RIGHT — Voice Masking Panel ═══ */}
+        {/* ═══ RIGHT — Voice Effects Panel ═══ */}
         <div className="flex flex-col gap-5">
           <div className="rounded-2xl border border-white/10 bg-white/[0.03] overflow-hidden">
             {/* Panel header */}
             <div className="px-5 py-4 border-b border-white/8">
               <p className="text-[10px] font-bold uppercase tracking-widest text-white/40 font-ui">Feature 2</p>
-              <h2 className="text-base font-bold text-white mt-0.5">Real-Time Voice Masking</h2>
+              <h2 className="text-base font-bold text-white mt-0.5">Effects Mode Voice Demo</h2>
             </div>
 
             <div className="p-5 space-y-6">
@@ -707,7 +707,7 @@ export default function LiveDemoPage() {
                     id="demo-start-btn"
                     type="button"
                     onClick={() => setPhase('headphones')}
-                    aria-label="Start voice masking demonstration"
+                    aria-label="Start voice effects demonstration"
                     className="w-full flex items-center justify-center gap-3 rounded-2xl bg-indigo-600 hover:bg-indigo-500 py-4 px-6 font-bold text-base text-white uppercase tracking-wider font-ui transition-all duration-200 shadow-xl shadow-indigo-500/25 hover:shadow-indigo-500/40 hover:scale-[1.01]"
                   >
                     <Mic className="h-5 w-5" aria-hidden="true" />
@@ -727,7 +727,7 @@ export default function LiveDemoPage() {
                         <p className="text-base font-bold text-amber-200">Please put on headphones</p>
                         <p className="mt-2 text-sm text-amber-200/70 font-body leading-relaxed max-w-xs mx-auto">
                           Your processed voice will play through your speakers. Headphones prevent
-                          audio feedback and let you hear the voice mask clearly.
+                          audio feedback and let you hear the effect clearly.
                         </p>
                       </div>
                     </div>
@@ -767,7 +767,7 @@ export default function LiveDemoPage() {
                       <div>
                         <p className="text-sm font-bold text-amber-200">Microphone access denied</p>
                         <p className="text-xs text-amber-200/60 mt-1 font-body leading-relaxed">
-                          To experience the voice mask, please allow microphone access in your browser
+                          To experience Effects Mode, please allow microphone access in your browser
                           settings, then try again.
                         </p>
                       </div>
@@ -812,7 +812,7 @@ export default function LiveDemoPage() {
                       <div className="flex items-center gap-2.5">
                         <span className="h-2.5 w-2.5 rounded-full bg-emerald-400 animate-pulse flex-shrink-0" />
                         <span className="text-sm font-bold text-emerald-300 uppercase tracking-wider font-ui">
-                          Voice Mask Active
+                          Effects Mode Active
                         </span>
                       </div>
                       <div className="flex items-center gap-2">
@@ -832,7 +832,7 @@ export default function LiveDemoPage() {
                         <button
                           type="button"
                           onClick={handleToggleCompare}
-                          aria-label={compareMode === 'normal' ? 'Compare original vs masked voice' : 'Exit compare mode'}
+                          aria-label={compareMode === 'normal' ? 'Compare original vs processed voice' : 'Exit compare mode'}
                           aria-pressed={compareMode !== 'normal'}
                           className={`flex items-center gap-1.5 h-8 px-3 rounded-lg border text-xs font-bold font-ui uppercase tracking-wider transition-colors ${
                             compareMode !== 'normal'
@@ -893,14 +893,14 @@ export default function LiveDemoPage() {
                         <div className="mt-2 flex items-center gap-2 rounded-lg bg-indigo-500/10 border border-indigo-500/20 px-3 py-2">
                           <div className="h-1.5 w-1.5 rounded-full bg-indigo-400 animate-pulse flex-shrink-0" />
                           <p className="text-[10px] text-indigo-200/80 font-body leading-relaxed">
-                            <strong className="text-indigo-200">{compareMode === 'original' ? 'Original voice' : 'Masked voice'}</strong>
+                            <strong className="text-indigo-200">{compareMode === 'original' ? 'Original voice' : 'Processed voice'}</strong>
                             {' '}playing — toggles every 3 seconds.
-                            Your mic input is always protected.
+                            This demo audio stays local to your browser.
                           </p>
                         </div>
                       ) : (
                         <p className="mt-2 text-[10px] text-white/30 font-body">
-                          Speak into your microphone — hear your anonymised voice through your speakers.
+                          Speak into your microphone and hear the browser effect through your speakers.
                         </p>
                       )}
                     </div>
@@ -916,7 +916,7 @@ export default function LiveDemoPage() {
                 <div
                   className="grid grid-cols-2 gap-2.5"
                   role="radiogroup"
-                  aria-label="Voice masking presets"
+                  aria-label="Voice effects presets"
                 >
                   {VOICE_UI_PRESETS.map((preset) => {
                     const isActive = activePreset === preset.id;
@@ -1050,7 +1050,7 @@ export default function LiveDemoPage() {
                     </div>
                     <div>
                       <p className="text-xs font-semibold text-white">{item.label}</p>
-                      <p className="text-[10px] text-emerald-400/70">Used for voice mask only</p>
+                      <p className="text-[10px] text-emerald-400/70">Used for local processing only</p>
                     </div>
                   </li>
                 ))}
@@ -1126,7 +1126,7 @@ export default function LiveDemoPage() {
               You just experienced
             </p>
             <h2 className="font-heading text-lg font-semibold text-white mt-1">
-              Anonymous avatars + real-time voice masking
+              Anonymous avatars + local Effects Mode voice processing
             </h2>
           </div>
           <div className="p-6">
@@ -1147,17 +1147,16 @@ export default function LiveDemoPage() {
                   <Mic className="h-5 w-5" aria-hidden="true" />
                 </div>
                 <div>
-                  <p className="text-sm font-semibold text-white">Your voice is masked</p>
+                  <p className="text-sm font-semibold text-white">Your voice is processed locally</p>
                   <p className="text-xs text-white/45 font-body mt-0.5">
-                    Pitch-shifted in real time via AudioWorklet. Zero audio data leaves your device.
+                    Pitch-shifted in real time via AudioWorklet. This is the available browser fallback, not full neural voice replacement.
                   </p>
                 </div>
               </div>
             </div>
             <p className="text-sm text-white/50 font-body mb-5 leading-relaxed">
-              These two technologies — avatar + voice mask — are the core of how H.I.P.S. keeps participants
-              anonymous in live sessions. Combined with the Identity Vault, they form a complete privacy
-              architecture.
+              The avatar system is live today, and Effects Mode is the current local audio fallback.
+              Enhanced Neural voice replacement is a separate backend path that stays locked until returned audio is ready.
             </p>
             <div className="flex flex-col sm:flex-row gap-3">
               <Link

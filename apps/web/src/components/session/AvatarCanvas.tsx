@@ -9,6 +9,7 @@ import VirtualOfficeAvatar, {
   paletteColors,
   fallbackColors,
   type AvatarGesture,
+  type AvatarEmotion,
 } from "../session-ui/avatars/VirtualOfficeAvatar";
 import { OfficeRoomScene } from "../session-ui/office/OfficeRoomScene";
 import { WebGLFallback, isWebGLAvailable } from "../session-ui/WebGLFallback";
@@ -65,6 +66,7 @@ interface AvatarCanvasProps {
   raisedHands: Set<string>;
   activeSpeakerIdentity?: string | null;
   gesture?: AvatarGesture;
+  localEmotion?: AvatarEmotion;
 }
 
 // Task 5.5 — Three.js virtual office room scene (max 50 draw calls, 60fps on M1)
@@ -75,6 +77,7 @@ export default function AvatarCanvas({
   raisedHands,
   activeSpeakerIdentity,
   gesture = "idle",
+  localEmotion = "neutral",
 }: AvatarCanvasProps) {
   const participants = useParticipants();
 
@@ -174,9 +177,24 @@ export default function AvatarCanvas({
           }
         }
 
-        const color = isLocal
-          ? localColor
-          : fallbackColors[index % fallbackColors.length] ?? "#173B57";
+        const remoteStyle = participant.attributes['avatar-style'];
+        const remotePalette = participant.attributes['avatar-palette'];
+        const remoteEmotion = participant.attributes['avatar-emotion'];
+
+        const styleIndex = isLocal
+          ? avatar.style
+          : (remoteStyle ? parseInt(remoteStyle, 10) : index % 12);
+
+        let color = fallbackColors[index % fallbackColors.length] ?? "#173B57";
+        if (isLocal) {
+          color = localColor;
+        } else if (remotePalette && remotePalette in paletteColors) {
+          color = paletteColors[remotePalette as keyof typeof paletteColors];
+        }
+
+        const emotion = isLocal
+          ? localEmotion
+          : ((remoteEmotion as AvatarEmotion) || "neutral");
 
         const isSpeaking = participant.isSpeaking || participant.identity === activeSpeakerIdentity;
 
@@ -199,9 +217,10 @@ export default function AvatarCanvas({
             key={participant.identity}
             position={[x, 0, z]}
             raisedHand={raisedHands.has(participant.identity)}
-            styleIndex={isLocal ? avatar.style : index % 12}
+            styleIndex={styleIndex}
             gesture={isLocal ? gesture : ("idle" as AvatarGesture)}
             isHost={isHost}
+            emotion={emotion}
           />
         );
       })}

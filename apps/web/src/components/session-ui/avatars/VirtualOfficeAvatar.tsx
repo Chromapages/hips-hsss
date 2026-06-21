@@ -13,6 +13,7 @@ import { useReducedMotion } from "@/hooks/useReducedMotion";
 export type AvatarStyle = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11;
 export type AvatarPalette = "coastal" | "sunrise" | "forest";
 export type AvatarGesture = "idle" | "nodding" | "raised-hand" | "thinking" | "applause";
+export type AvatarEmotion = "neutral" | "happy" | "thoughtful" | "distressed";
 
 interface AvatarConfig {
   color: string;
@@ -23,6 +24,7 @@ interface AvatarConfig {
   styleIndex: number; // 0-11 maps to different bob amplitudes / proportions
   gesture: AvatarGesture;
   isHost?: boolean;
+  emotion?: AvatarEmotion;
 }
 
 // 12 avatar styles with different proportions and bob amplitudes
@@ -71,7 +73,7 @@ const renderHairAndAccessories = (styleIndex: number, headSize: number, paletteC
   const hairColorStr = hairColors[styleIndex % hairColors.length] ?? hairColors[0];
   const hairColor = new Color(hairColorStr);
   const accColor = new Color(paletteColor);
-  
+
   const darkMaterial = <meshStandardMaterial color="#18181b" roughness={0.8} />;
   const hairMaterial = <meshStandardMaterial color={hairColor} roughness={0.8} />;
   const accMaterial = <meshStandardMaterial color={accColor} roughness={0.5} />;
@@ -438,6 +440,7 @@ export default function VirtualOfficeAvatar({
   styleIndex,
   gesture = "idle",
   isHost = false,
+  emotion = "neutral",
 }: AvatarConfig) {
   const groupRef = useRef<Group>(null);
   const headMatRef = useRef<MeshStandardMaterial>(null);
@@ -450,6 +453,8 @@ export default function VirtualOfficeAvatar({
 
   const leftEyeGroupRef = useRef<Group>(null);
   const rightEyeGroupRef = useRef<Group>(null);
+  const leftEyebrowRef = useRef<Mesh>(null);
+  const rightEyebrowRef = useRef<Mesh>(null);
   const mouthRef = useRef<Group>(null);
 
   const blinkTimerRef = useRef<number>(0);
@@ -462,7 +467,9 @@ export default function VirtualOfficeAvatar({
     ? styleIndex
     : 0;
   const safeGesture = avatarGestures.includes(gesture) ? gesture : "idle";
-  
+  const avatarEmotions: AvatarEmotion[] = ["neutral", "happy", "thoughtful", "distressed"];
+  const safeEmotion = avatarEmotions.includes(emotion) ? emotion : "neutral";
+
   // Safe color parsing
   let safeColorStr = "#06b6d4";
   if (color && (color.startsWith("#") || color.startsWith("rgb") || color.startsWith("hsl"))) {
@@ -587,6 +594,74 @@ export default function VirtualOfficeAvatar({
         applauseRightRef.current.position.y = -0.5 + Math.abs(Math.sin(elapsed * 8 + 0.5)) * 0.2;
       }
     }
+
+    // -- Eye Contact / Gaze Tracking Simulation --
+    if (leftEyeGroupRef.current && rightEyeGroupRef.current) {
+      const camPos = state.camera.position;
+
+      const dx = camPos.x - position[0];
+      const dy = camPos.y - (position[1] + 0.88);
+      const dz = camPos.z - position[2];
+      const dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
+
+      if (dist > 0.1) {
+        const maxOffset = headSize * 0.12;
+        const targetOffsetX = Math.max(-maxOffset, Math.min(maxOffset, (dx / dist) * maxOffset));
+        const targetOffsetY = Math.max(-maxOffset, Math.min(maxOffset, (dy / dist) * maxOffset));
+
+        const leftPupil = leftEyeGroupRef.current.children[1] as Mesh;
+        const rightPupil = rightEyeGroupRef.current.children[1] as Mesh;
+
+        if (leftPupil && rightPupil) {
+          leftPupil.position.x += (targetOffsetX - leftPupil.position.x) * 0.15;
+          leftPupil.position.y += (targetOffsetY - leftPupil.position.y) * 0.15;
+          rightPupil.position.x += (targetOffsetX - rightPupil.position.x) * 0.15;
+          rightPupil.position.y += (targetOffsetY - rightPupil.position.y) * 0.15;
+        }
+      }
+    }
+
+    // -- Procedural Emotional Expressions --
+    let targetLEyebrowRot = -0.06;
+    let targetREyebrowRot = 0.06;
+    let targetHeadTiltZ = 0;
+    let targetMouthScaleX = 1.0;
+
+    if (safeEmotion === "happy") {
+      targetLEyebrowRot = -0.18;
+      targetREyebrowRot = 0.18;
+      targetMouthScaleX = 1.25;
+    } else if (safeEmotion === "distressed") {
+      targetLEyebrowRot = 0.12;
+      targetREyebrowRot = -0.12;
+      targetMouthScaleX = 0.8;
+    } else if (safeEmotion === "thoughtful") {
+      targetLEyebrowRot = 0.02;
+      targetREyebrowRot = 0.10;
+      targetHeadTiltZ = -0.06;
+    }
+
+    if (leftEyebrowRef.current && rightEyebrowRef.current) {
+      if (reduced) {
+        leftEyebrowRef.current.rotation.z = targetLEyebrowRot;
+        rightEyebrowRef.current.rotation.z = targetREyebrowRot;
+      } else {
+        leftEyebrowRef.current.rotation.z += (targetLEyebrowRot - leftEyebrowRef.current.rotation.z) * 0.15;
+        rightEyebrowRef.current.rotation.z += (targetREyebrowRot - rightEyebrowRef.current.rotation.z) * 0.15;
+      }
+    }
+
+    if (mouthRef.current) {
+      mouthRef.current.scale.x += (targetMouthScaleX - mouthRef.current.scale.x) * 0.15;
+    }
+
+    if (groupRef.current) {
+      if (reduced) {
+        groupRef.current.rotation.z = targetHeadTiltZ;
+      } else {
+        groupRef.current.rotation.z += (targetHeadTiltZ - groupRef.current.rotation.z) * 0.15;
+      }
+    }
   });
 
   const skinToneColor = skinTones[safeStyleIndex % skinTones.length] ?? skinTones[0];
@@ -688,11 +763,11 @@ export default function VirtualOfficeAvatar({
         </group>
 
         {/* Eyebrows */}
-        <mesh position={[-headSize * 0.32, headSize * 0.3, headSize * 0.88]} rotation={[0, 0, -0.06]}>
+        <mesh ref={leftEyebrowRef} position={[-headSize * 0.32, headSize * 0.3, headSize * 0.88]} rotation={[0, 0, -0.06]}>
           <boxGeometry args={[headSize * 0.25, headSize * 0.04, headSize * 0.03]} />
           <meshStandardMaterial color="#27272a" roughness={0.9} />
         </mesh>
-        <mesh position={[headSize * 0.32, headSize * 0.3, headSize * 0.88]} rotation={[0, 0, 0.06]}>
+        <mesh ref={rightEyebrowRef} position={[headSize * 0.32, headSize * 0.3, headSize * 0.88]} rotation={[0, 0, 0.06]}>
           <boxGeometry args={[headSize * 0.25, headSize * 0.04, headSize * 0.03]} />
           <meshStandardMaterial color="#27272a" roughness={0.9} />
         </mesh>
