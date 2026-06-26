@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400">
+  <!-- T-Shirt Body -->
+  <path fill="var(--avatar-clothing)" d="M24 400c8-45 45-75 106-85 18 20 82 20 100 0 61 10 98 40 106 85z"/>
+  <!-- Collar Shadow -->
+  <path fill="#202833" opacity="0.18" d="M130 315c18 20 82 20 100 0-10 22-90 22-100 0z"/>
+</svg>

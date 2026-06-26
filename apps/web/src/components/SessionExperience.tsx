@@ -9,8 +9,6 @@ const gestures: AvatarGesture[] = [
   "idle",
   "nodding",
   "raised-hand",
-  "thinking",
-  "applause",
 ];
 
 const participants = [

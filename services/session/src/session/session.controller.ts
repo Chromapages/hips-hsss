@@ -13,6 +13,7 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import type { Request } from 'express';
+import type { AvatarProfile } from '@hips/types';
 import { randomUUID } from 'node:crypto';
 import { getAdminAuth } from '../firebase-init.js';
 import { SessionService } from './session.service.js';
@@ -54,7 +55,7 @@ interface LiveKitTokenResponse {
   roomName: string;
   anonymousIdentity: string;
   expiresAt: string;
-  avatar: { style: number; palette: string; gesture: string };
+  avatar: AvatarProfile;
 }
 
 interface SessionResponse {
@@ -159,11 +160,7 @@ export class SessionController {
       roomName: token.roomName,
       anonymousIdentity: token.anonymousIdentity,
       expiresAt: token.expiresAt.toISOString(),
-      avatar: {
-        style: token.avatar.style,
-        palette: token.avatar.palette,
-        gesture: token.avatar.gesture,
-      },
+      avatar: token.avatar,
     };
   }
 

@@ -309,7 +309,7 @@ export const SERVICES_FAQ: FAQ[] = [
   {
     question: "How anonymous is 'anonymous' really?",
     answer:
-      "Mathematically anonymous. We use a token-based system where your real identity is never linked to your session presence. Audio is masked in real time. No cameras. No recording. No logs that can be subpoenaed. Your peers only see an abstract 3D avatar.",
+      "Mathematically anonymous. We use a token-based system where your real identity is never linked to your session presence. Audio is masked in real time. No cameras. No recording. No logs that can be subpoenaed. Your peers only see an abstract avatar.",
   },
   {
     question: "Is this a medical service?",

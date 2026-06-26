@@ -44,7 +44,7 @@ export default function VaultDemoPage() {
             <p className="text-sm text-white/60 font-body leading-relaxed mb-5">
               The Identity Vault protects <em>who you are</em> (your PII). The next demo shows how
               H.I.P.S. also protects <em>how you show up</em> — your voice and your visual presence
-              in a session — through real-time voice masking and anonymous 3D avatars.
+              in a session — through real-time voice masking and anonymous avatars.
             </p>
             <div className="flex items-center gap-3">
               <Link

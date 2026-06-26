@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400">
+  <!-- Buzzcut Base -->
+  <path fill="var(--avatar-hair)" d="M200 82c58 0 88 32 88 88 0 8-3 15-5 20-3-15-7-35-15-45-12-15-28-18-68-18c-40 0-56 3-68 18-8 10-12 30-15 45-2-5-5-12-5-20 0-56 30-88 88-88z"/>
+  <!-- Hair Texture Highlight (Subtle) -->
+  <path fill="var(--avatar-hair)" d="M132 140c12-32 38-48 68-48 20 0 38 7 50 18-20-7-42-8-68-4-22 4-38 12-50 34z" opacity="0.12"/>
+</svg>

@@ -19,7 +19,8 @@ import {
   ShieldCheck,
   TriangleAlert,
 } from 'lucide-react';
-import type { AvatarProfile, UserRole } from '@hips/types';
+import type { Avatar2DConfig, AvatarProfile, UserRole } from '@hips/types';
+import { DEFAULT_AVATAR_2D } from '@hips/types';
 import { createLocalAudioTrack, LocalAudioTrack, Room } from 'livekit-client';
 import { toast } from 'sonner';
 import { useAuth } from '../auth/AuthProvider';
@@ -29,19 +30,28 @@ import { CrisisEscalation } from './CrisisEscalation';
 import { createLowLatencyVoiceMaskProcessor } from '@/lib/voice-mask-processor';
 import { SessionHeader } from '../session-ui/SessionHeader';
 import { VoiceControlsBar } from '../session-ui/VoiceControlsBar';
-import { WebGLFallback } from '../session-ui/WebGLFallback';
 import { MobileBlockPage } from '../session-ui/MobileBlockPage';
 import { MediaToolbar } from '../session-ui/MediaToolbar';
 import { useMediaDevices } from '@/hooks/useMediaDevices';
 import { useVoiceEffects } from '@/hooks/useVoiceEffects';
 import { useNeuralVoiceMasking } from '@/hooks/session/useNeuralVoiceMasking';
 import { getBrowserMediaDevices } from '@/lib/browser-media';
-import type { AvatarGesture, AvatarEmotion } from '../session-ui/avatars/VirtualOfficeAvatar';
+import { normalizeAvatarEmotion, normalizeSkinTone, paletteColors } from '../session-ui/avatar-options';
+import type { AvatarGesture, AvatarEmotion } from '@hips/types';
 import { SessionExitState } from './SessionExitState';
 import { RaisedHandQueue } from './RaisedHandQueue';
 import type { VoicePreset } from '@/lib/voice-mask-presets';
 import type { VoiceWorkerControlMessage } from '@/lib/streaming-voice-client';
 import { asError } from '@/lib/errors';
+
+const parseAvatar2DConfig = (raw: string | null): Avatar2DConfig | null => {
+  if (!raw) return null;
+  try {
+    return JSON.parse(raw) as Avatar2DConfig;
+  } catch {
+    return null;
+  }
+};
 
 type LiveKitTokenResponse = {
   token: string;
@@ -423,7 +433,36 @@ function SessionContent({
   const participants = useParticipants();
   const { localParticipant } = useLocalParticipant();
   const [raisedHands, setRaisedHands] = useState<Set<string>>(new Set());
-  const [localEmotion, setLocalEmotion] = useState<AvatarEmotion>('neutral');
+  const [localEmotion, setLocalEmotion] = useState<AvatarEmotion>(() => {
+    if (typeof window !== "undefined") {
+      const hostConfigStr = localStorage.getItem("hips-host-avatar");
+      if (hostConfigStr) {
+        try {
+          const config = JSON.parse(hostConfigStr);
+          return normalizeAvatarEmotion(config.emotion);
+        } catch {}
+      }
+      const saved = sessionStorage.getItem("hips-avatar-emotion");
+      if (saved) return normalizeAvatarEmotion(saved);
+    }
+    return "neutral";
+  });
+
+  const handleEmotionChange = (emo: AvatarEmotion) => {
+    setLocalEmotion(emo);
+    if (typeof window !== "undefined") {
+      sessionStorage.setItem("hips-avatar-emotion", emo);
+      const hostConfigStr = localStorage.getItem("hips-host-avatar");
+      if (hostConfigStr) {
+        try {
+          const config = JSON.parse(hostConfigStr);
+          config.emotion = emo;
+          localStorage.setItem("hips-host-avatar", JSON.stringify(config));
+        } catch {}
+      }
+    }
+  };
+
   const [localAudioTrack, setLocalAudioTrack] = useState<LocalAudioTrack | MediaStreamTrack | null>(null);
   const [micEnabled, setMicEnabled] = useState(false);
   const [micBusy, setMicBusy] = useState(false);
@@ -510,20 +549,146 @@ function SessionContent({
   }, []);
 
   useEffect(() => {
-    const configStr = localStorage.getItem("hips-host-avatar");
-    if (configStr) {
+    // Try host config first
+    const hostConfigStr = localStorage.getItem("hips-host-avatar");
+    if (hostConfigStr) {
       try {
-        const config = JSON.parse(configStr);
+        const config = JSON.parse(hostConfigStr);
         if (config.anonymizationMode) setAnonymizationMode(config.anonymizationMode);
         if (config.selectedPersona) setSelectedPersona(config.selectedPersona);
         if (typeof config.isAntiCadenceEnabled === "boolean") setIsAntiCadenceEnabled(config.isAntiCadenceEnabled);
-        if (config.voicePreset) setPreset(config.voicePreset);
+        if (config.voicePreset) {
+          const mappedPreset = config.voicePreset === "subtle" ? "sofi"
+            : config.voicePreset === "deep" ? "guardian"
+            : config.voicePreset === "high" ? "lark"
+            : config.voicePreset === "cyber" ? "cyber"
+            : config.voicePreset === "custom" ? "sofi"
+            : (config.voicePreset as VoicePreset);
+          setPreset(mappedPreset);
+        }
         if (typeof config.semitones === "number") setSemitones(config.semitones);
+        return;
       } catch (err) {
-        console.warn("Failed to load voice configuration:", err);
+        console.warn("Failed to load voice configuration from host:", err);
       }
     }
+
+    // Try guest config next
+    const guestPreset = sessionStorage.getItem("hips-voice-preset");
+    if (guestPreset) {
+      const mappedPreset = guestPreset === "subtle" ? "sofi"
+        : guestPreset === "deep" ? "guardian"
+        : guestPreset === "high" ? "lark"
+        : guestPreset === "cyber" ? "cyber"
+        : guestPreset === "custom" ? "sofi"
+        : (guestPreset as VoicePreset);
+      setPreset(mappedPreset);
+      const guestSemitones = sessionStorage.getItem("hips-voice-semitones");
+      if (guestSemitones) setSemitones(parseInt(guestSemitones, 10));
+      const guestAnonymization = sessionStorage.getItem("hips-voice-anonymization");
+      if (guestAnonymization) setAnonymizationMode(guestAnonymization as any);
+      const guestPersona = sessionStorage.getItem("hips-voice-persona");
+      if (guestPersona) setSelectedPersona(guestPersona as any);
+      const guestAnticadence = sessionStorage.getItem("hips-voice-anticadence");
+      if (guestAnticadence) setIsAntiCadenceEnabled(guestAnticadence === "true");
+    }
   }, [setPreset, setSemitones]);
+
+  const localAvatarConfig = useMemo(() => {
+    if (typeof window === "undefined") {
+      return {
+        style: String(avatar.style),
+	        palette: avatar.palette,
+	        bodyType: String(avatar.bodyType ?? 1),
+	        skinTone: normalizeSkinTone(avatar.skinTone),
+	        hairStyle: String(avatar.style),
+	        hairColor: "#1c1917",
+	        eyeColor: "#1c1917",
+	        faceShape: "0",
+	        noseStyle: "0",
+	        eyeStyle: "0",
+	        eyebrowStyle: "0",
+	        mouthStyle: "0",
+	        clothingType: "0",
+	        clothingColor: paletteColors[avatar.palette as keyof typeof paletteColors] || "#06b6d4",
+	        accessoryType: "0",
+	        renderMode: "2d",
+          avatar2D: DEFAULT_AVATAR_2D,
+	      };
+    }
+
+    // Try host configuration first
+    const hostConfigStr = localStorage.getItem("hips-host-avatar");
+    if (hostConfigStr) {
+      try {
+        const config = JSON.parse(hostConfigStr);
+        return {
+          style: String(config.avatarStyle ?? avatar.style),
+	          palette: avatar.palette,
+	          bodyType: String(config.bodyType ?? 1),
+	          skinTone: normalizeSkinTone(config.skinTone),
+	          hairStyle: String(config.hairStyle ?? config.avatarStyle ?? 0),
+	          hairColor: config.hairColor ?? "#1c1917",
+	          eyeColor: config.eyeColor ?? "#1c1917",
+	          faceShape: String(config.faceShape ?? 0),
+	          noseStyle: String(config.noseStyle ?? 0),
+	          eyeStyle: String(config.eyeStyle ?? 0),
+	          eyebrowStyle: String(config.eyebrowStyle ?? 0),
+	          mouthStyle: String(config.mouthStyle ?? 0),
+	          clothingType: String(config.clothingType ?? 0),
+	          clothingColor: config.clothingColor ?? config.avatarColor ?? "#06b6d4",
+	          accessoryType: String(config.accessoryType ?? 0),
+	          renderMode: "2d",
+            avatar2D: config.avatar2D ?? DEFAULT_AVATAR_2D,
+	        };
+      } catch {}
+    }
+
+    // Try guest/lobby configuration next
+    const guestColor = sessionStorage.getItem("hips-avatar-color");
+    if (guestColor) {
+      return {
+        style: sessionStorage.getItem("hips-avatar-style") || String(avatar.style),
+	        palette: avatar.palette,
+	        bodyType: sessionStorage.getItem("hips-avatar-body") || "1",
+	        skinTone: normalizeSkinTone(sessionStorage.getItem("hips-avatar-skin-tone")),
+	        hairStyle: sessionStorage.getItem("hips-avatar-hair") || sessionStorage.getItem("hips-avatar-style") || "0",
+	        hairColor: sessionStorage.getItem("hips-avatar-hair-color") || "#1c1917",
+	        eyeColor: sessionStorage.getItem("hips-avatar-eye-color") || "#1c1917",
+	        faceShape: sessionStorage.getItem("hips-avatar-face-shape") || "0",
+	        noseStyle: sessionStorage.getItem("hips-avatar-nose") || "0",
+	        eyeStyle: sessionStorage.getItem("hips-avatar-eye") || "0",
+	        eyebrowStyle: sessionStorage.getItem("hips-avatar-eyebrow") || "0",
+	        mouthStyle: sessionStorage.getItem("hips-avatar-mouth") || "0",
+	        clothingType: sessionStorage.getItem("hips-avatar-clothing") || "0",
+	        clothingColor: sessionStorage.getItem("hips-avatar-clothing-color") || guestColor,
+	        accessoryType: sessionStorage.getItem("hips-avatar-accessory") || "0",
+	        renderMode: "2d",
+          avatar2D: parseAvatar2DConfig(sessionStorage.getItem("hips-avatar-2d")) ?? DEFAULT_AVATAR_2D,
+	      };
+    }
+
+    // Default fallback
+    return {
+      style: String(avatar.style),
+	      palette: avatar.palette,
+	      bodyType: String(avatar.bodyType ?? 1),
+	      skinTone: normalizeSkinTone(avatar.skinTone),
+	      hairStyle: String(avatar.style),
+	      hairColor: "#1c1917",
+	      eyeColor: "#1c1917",
+	      faceShape: "0",
+	      noseStyle: "0",
+	      eyeStyle: "0",
+	      eyebrowStyle: "0",
+	      mouthStyle: "0",
+	      clothingType: "0",
+	      clothingColor: paletteColors[avatar.palette as keyof typeof paletteColors] || "#06b6d4",
+	      accessoryType: "0",
+	      renderMode: "2d",
+        avatar2D: DEFAULT_AVATAR_2D,
+	    };
+  }, [avatar]);
 
   // Media devices for toolbar
   const {
@@ -599,20 +764,48 @@ function SessionContent({
     const syncAttributes = async () => {
       try {
         await localParticipant.setAttributes({
-          'voice-masking': 'local-dsp',
+          'voice-masking': anonymizationMode === 'neural' ? 'server-worker' : 'local-dsp',
           'voice-preset': activePreset,
           'voice-semitones': String(semitones),
-          'avatar-style': String(avatar.style),
-          'avatar-palette': avatar.palette,
+          ...(anonymizationMode === 'neural' ? {
+            'voice-persona': selectedPersona,
+            'anti-cadence': String(isAntiCadenceEnabled),
+          } : {}),
+          'avatar-style': localAvatarConfig.style,
+          'avatar-palette': localAvatarConfig.palette,
           'avatar-emotion': localEmotion,
-        });
+	          'avatar-body': localAvatarConfig.bodyType,
+	          'avatar-skin-tone': localAvatarConfig.skinTone,
+	          'avatar-hair': localAvatarConfig.hairStyle,
+	          'avatar-hair-color': localAvatarConfig.hairColor,
+	          'avatar-eye-color': localAvatarConfig.eyeColor,
+	          'avatar-face-shape': localAvatarConfig.faceShape,
+	          'avatar-nose': localAvatarConfig.noseStyle,
+	          'avatar-eye': localAvatarConfig.eyeStyle,
+	          'avatar-eyebrow': localAvatarConfig.eyebrowStyle,
+	          'avatar-mouth': localAvatarConfig.mouthStyle,
+	          'avatar-clothing': localAvatarConfig.clothingType,
+	          'avatar-clothing-color': localAvatarConfig.clothingColor,
+	          'avatar-accessory': localAvatarConfig.accessoryType,
+	          'avatar-render-mode': localAvatarConfig.renderMode,
+            'avatar-2d': JSON.stringify(localAvatarConfig.avatar2D),
+	        });
       } catch (err) {
         console.warn('[SessionRoom] Failed to sync participant attributes:', err);
       }
     };
 
     void syncAttributes();
-  }, [localParticipant, activePreset, semitones, avatar.style, avatar.palette, localEmotion]);
+  }, [
+    localParticipant,
+    anonymizationMode,
+    activePreset,
+    semitones,
+    selectedPersona,
+    isAntiCadenceEnabled,
+    localAvatarConfig,
+    localEmotion,
+  ]);
 
   // Task 5.8 — Session timer counting up from first render
   useEffect(() => {
@@ -732,7 +925,25 @@ function SessionContent({
             'voice-masking': 'server-worker',
             'voice-persona': selectedPersona,
             'anti-cadence': String(isAntiCadenceEnabled),
-          });
+            'avatar-style': localAvatarConfig.style,
+            'avatar-palette': localAvatarConfig.palette,
+            'avatar-emotion': localEmotion,
+	            'avatar-body': localAvatarConfig.bodyType,
+	            'avatar-skin-tone': localAvatarConfig.skinTone,
+	            'avatar-hair': localAvatarConfig.hairStyle,
+	            'avatar-hair-color': localAvatarConfig.hairColor,
+	            'avatar-eye-color': localAvatarConfig.eyeColor,
+	            'avatar-face-shape': localAvatarConfig.faceShape,
+	            'avatar-nose': localAvatarConfig.noseStyle,
+	            'avatar-eye': localAvatarConfig.eyeStyle,
+	            'avatar-eyebrow': localAvatarConfig.eyebrowStyle,
+	            'avatar-mouth': localAvatarConfig.mouthStyle,
+	            'avatar-clothing': localAvatarConfig.clothingType,
+	            'avatar-clothing-color': localAvatarConfig.clothingColor,
+	            'avatar-accessory': localAvatarConfig.accessoryType,
+	            'avatar-render-mode': localAvatarConfig.renderMode,
+              'avatar-2d': JSON.stringify(localAvatarConfig.avatar2D),
+	          });
 
           neuralSourceTrackRef.current = track;
           setLocalAudioTrack(processedTrack);
@@ -787,10 +998,25 @@ function SessionContent({
           'voice-masking': 'local-dsp',
           'voice-preset': activePreset,
           'voice-semitones': String(semitones),
-          'avatar-style': String(avatar.style),
-          'avatar-palette': avatar.palette,
+          'avatar-style': localAvatarConfig.style,
+          'avatar-palette': localAvatarConfig.palette,
           'avatar-emotion': localEmotion,
-        });
+	            'avatar-body': localAvatarConfig.bodyType,
+	            'avatar-skin-tone': localAvatarConfig.skinTone,
+	            'avatar-hair': localAvatarConfig.hairStyle,
+	            'avatar-hair-color': localAvatarConfig.hairColor,
+	            'avatar-eye-color': localAvatarConfig.eyeColor,
+	            'avatar-face-shape': localAvatarConfig.faceShape,
+	            'avatar-nose': localAvatarConfig.noseStyle,
+	            'avatar-eye': localAvatarConfig.eyeStyle,
+	            'avatar-eyebrow': localAvatarConfig.eyebrowStyle,
+	            'avatar-mouth': localAvatarConfig.mouthStyle,
+	            'avatar-clothing': localAvatarConfig.clothingType,
+	            'avatar-clothing-color': localAvatarConfig.clothingColor,
+	            'avatar-accessory': localAvatarConfig.accessoryType,
+	            'avatar-render-mode': localAvatarConfig.renderMode,
+              'avatar-2d': JSON.stringify(localAvatarConfig.avatar2D),
+	        });
       } catch (attrErr) {
         console.warn('[SessionRoom] Failed to set participant attributes:', attrErr);
       }
@@ -986,7 +1212,25 @@ function SessionContent({
             'voice-masking': 'local-dsp',
             'voice-preset': activePreset,
             'voice-semitones': String(semitones),
-          });
+            'avatar-style': localAvatarConfig.style,
+            'avatar-palette': localAvatarConfig.palette,
+	            'avatar-emotion': localEmotion,
+	            'avatar-body': localAvatarConfig.bodyType,
+	            'avatar-skin-tone': localAvatarConfig.skinTone,
+	            'avatar-hair': localAvatarConfig.hairStyle,
+	            'avatar-hair-color': localAvatarConfig.hairColor,
+	            'avatar-eye-color': localAvatarConfig.eyeColor,
+	            'avatar-face-shape': localAvatarConfig.faceShape,
+	            'avatar-nose': localAvatarConfig.noseStyle,
+	            'avatar-eye': localAvatarConfig.eyeStyle,
+	            'avatar-eyebrow': localAvatarConfig.eyebrowStyle,
+	            'avatar-mouth': localAvatarConfig.mouthStyle,
+	            'avatar-clothing': localAvatarConfig.clothingType,
+	            'avatar-clothing-color': localAvatarConfig.clothingColor,
+	            'avatar-accessory': localAvatarConfig.accessoryType,
+	            'avatar-render-mode': localAvatarConfig.renderMode,
+              'avatar-2d': JSON.stringify(localAvatarConfig.avatar2D),
+	          });
         } catch (attrErr) {
           console.warn('[SessionRoom] Failed to set participant attributes:', attrErr);
         }
@@ -1063,18 +1307,12 @@ function SessionContent({
 
       <section className="grid min-h-0 grid-cols-[1fr_360px]">
         <div className="relative min-w-0 overflow-hidden bg-[radial-gradient(circle_at_50%_20%,rgba(99,102,241,0.16),transparent_45%),black]">
-          {webGLSupported ? (
-            <Suspense fallback={<div className="flex h-full items-center justify-center"><div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" /></div>}>
               <AvatarCanvas
                 avatar={avatar}
                 localIdentity={localParticipant.identity}
                 raisedHands={raisedHands}
                 localEmotion={localEmotion}
               />
-            </Suspense>
-          ) : (
-            <WebGLFallback avatar={avatar} roomName={localParticipant.identity} />
-          )}
           {voiceMaskWarning ? (
             <div
               role="alert"
@@ -1167,7 +1405,7 @@ function SessionContent({
         onVoiceWetDryChange={handleVoiceWetDryChange}
         voiceMaskActive={micEnabled && !voiceMaskWarning}
         activeEmotion={localEmotion}
-        onEmotionChange={setLocalEmotion}
+        onEmotionChange={handleEmotionChange}
       />
     </main>
   );

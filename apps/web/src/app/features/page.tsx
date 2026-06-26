@@ -57,7 +57,7 @@ const FeaturesPage = () => {
             </div>
             <div className="prose prose-slate dark:prose-invert max-w-none">
               <p className="text-text-muted font-body leading-relaxed mb-4">
-                To remove social barriers and camera fatigue, all communication within HSSS is video-free. Participants are represented by customizable, neutral 3D abstract avatars that represent emotional expressions dynamically without revealing physical characteristics.
+                To remove social barriers and camera fatigue, all communication within HSSS is video-free. Participants are represented by customizable, neutral abstract avatars that represent emotional expressions dynamically without revealing physical characteristics.
               </p>
               <p className="text-text-muted font-body leading-relaxed">
                 This camera-free interaction format ensures that you remain completely unseen, letting you focus entirely on your mental health and peer support without concern for styling or facial tracking.

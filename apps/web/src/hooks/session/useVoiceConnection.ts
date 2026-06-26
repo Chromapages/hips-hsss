@@ -17,7 +17,7 @@ export type ConnectionQuality = "good" | "fair" | "poor";
 export type ControlMessage = {
   type: "HAND_RAISED" | "HAND_LOWERED" | "GESTURE";
   participantIdentity: string;
-  gesture?: "nodding" | "raised-hand" | "thinking" | "applause" | "idle";
+  gesture?: "nodding" | "raised-hand" | "idle";
   at: string;
 };
 

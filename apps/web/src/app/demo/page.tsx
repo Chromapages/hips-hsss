@@ -22,7 +22,7 @@ const demoCards = [
     href: '/demo/live',
     label: 'Live Experience',
     badge: 'Interactive',
-    description: 'Experience anonymous 3D avatars and real-time voice masking in your browser. Requires microphone. No download.',
+    description: 'Experience anonymous avatars and real-time voice masking in your browser. Requires microphone. No download.',
     cta: 'Start the live demo',
     accent: 'indigo',
     icon: <Users className="h-6 w-6" />,

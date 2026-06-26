@@ -20,12 +20,25 @@ function makeAvatar(seed: string) {
   const first = seed.charCodeAt(0) || 1;
   const second = seed.charCodeAt(1) || 2;
 
-  return {
-    style: (first % 12) as any,
-    palette: palettes[second % palettes.length] || 'coastal',
-    gesture: 'idle',
-  };
-}
+	  return {
+	    style: (first % 12) as any,
+	    palette: palettes[second % palettes.length] || 'coastal',
+	    gesture: 'idle',
+		    bodyType: (first % 2) as 0 | 1,
+	    skinTone: ['#E8B092', '#C58A63', '#905C38', '#5C3826'][first % 4],
+		    hairStyle: first % 16,
+	    hairColor: ['#1c1917', '#292524', '#44403c', '#78716c', '#ca8a04', '#d97706', '#8b5cf6', '#0ea5e9'][second % 8],
+	    eyeColor: ['#1c1917', '#3f2d20', '#6b7280', '#2563eb', '#059669', '#a16207'][second % 6],
+	    faceShape: first % 4,
+	    noseStyle: second % 4,
+	    eyeStyle: (second % 7) as any,
+	    eyebrowStyle: (first % 4) as any,
+	    mouthStyle: (second % 4) as any,
+	    clothingType: (second % 6) as any,
+	    clothingColor: ['#173B57', '#C59A35', '#10B981', '#FBBF24', '#EF4444', '#06B6D4'][first % 6],
+	    accessoryType: (first % 6) as any,
+	  };
+	}
 
 import { Phase5Session, Phase5SessionSchema } from '@/lib/schemas/session';
 

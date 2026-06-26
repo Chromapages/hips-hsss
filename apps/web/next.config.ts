@@ -63,19 +63,20 @@ const cspDirectives = [
   // 'unsafe-inline' is required for Next.js webpack bundles (HMR in dev, compiled scripts in prod)
   // 'unsafe-eval' is required for webpack HMR Fast Refresh in development only
   isDev
-    ? "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://fonts.googleapis.com https://www.googletagmanager.com https://apis.google.com"
-    : "script-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://www.googletagmanager.com https://apis.google.com",
+    ? "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://fonts.googleapis.com https://www.googletagmanager.com https://apis.google.com https://esm.sh"
+    : "script-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://www.googletagmanager.com https://apis.google.com https://esm.sh",
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
   "font-src 'self' https://fonts.gstatic.com",
   "img-src 'self' data: blob: https://images.unsplash.com https://hips-hsss.firebasestorage.app https://*.googleusercontent.com",
   // Firebase Auth token refresh, Firestore, Identity Toolkit, LiveKit, GTM
   [
-    "connect-src 'self' https://www.googleapis.com https://firestore.googleapis.com https://firebase.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://www.googletagmanager.com wss://hips-hsss-wm8okbqu.livekit.cloud https://hips-hsss-wm8okbqu.livekit.cloud https://api.stripe.com",
+    "connect-src 'self' https://www.googleapis.com https://firestore.googleapis.com https://firebase.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://www.googletagmanager.com wss://hips-hsss-wm8okbqu.livekit.cloud https://hips-hsss-wm8okbqu.livekit.cloud https://api.stripe.com https://esm.sh https://met4citizen.github.io",
     neuralVoiceChangerOrigin,
   ].filter(Boolean).join(" "),
   // Google OAuth/GTM iframes + Firebase Auth popup
   "frame-src 'self' https://accounts.google.com https://apis.google.com https://hips-hsss.firebaseapp.com https://js.stripe.com",
   "object-src 'none'",
+  "worker-src 'self' blob:",
   "base-uri 'self'",
   "form-action 'self'",
   "frame-ancestors 'none'",

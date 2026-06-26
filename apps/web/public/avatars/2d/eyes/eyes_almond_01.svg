@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400">
+  <g fill="var(--avatar-eye-iris)">
+    <ellipse cx="159" cy="174" rx="7" ry="10"/>
+    <ellipse cx="241" cy="174" rx="7" ry="10"/>
+  </g>
+</svg>

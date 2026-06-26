@@ -173,11 +173,9 @@ export function VoiceControlsBar({
                       : "border border-white/10 bg-zinc-950/95"
                   ].join(" ")}
                 >
-                  {(["neutral", "happy", "thoughtful", "distressed"] as AvatarEmotion[]).map((emo) => {
+                  {(["neutral", "distressed"] as AvatarEmotion[]).map((emo) => {
                     const labelMap = {
                       neutral: "😐 Neutral",
-                      happy: "😊 Happy",
-                      thoughtful: "🤔 Thoughtful",
                       distressed: "😟 Distressed",
                     };
                     const isSelected = activeEmotion === emo;

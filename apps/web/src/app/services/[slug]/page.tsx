@@ -43,7 +43,7 @@ const HOW_IT_WORKS = [
   {
     icon: EyeOff,
     title: "Avatar Native",
-    desc: "Represent yourself with a curated 3D abstract avatar. No cameras, no prejudice, no exposure.",
+    desc: "Represent yourself with a curated abstract avatar. No cameras, no prejudice, no exposure.",
   },
   {
     icon: MessageSquare,

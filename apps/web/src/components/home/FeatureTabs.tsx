@@ -81,7 +81,7 @@ export function FeatureTabs() {
             <EyeOff className="w-4 h-4 text-accent" />
           </div>
           <span className="text-base font-bold text-primary font-heading leading-tight">Avatar Privacy</span>
-          <span className="text-sm text-muted-foreground font-body leading-snug">No cameras. Curated 3D avatars only.</span>
+          <span className="text-sm text-muted-foreground font-body leading-snug">No cameras. Curated avatars only.</span>
         </button>
 
         {/* Tab 2 — Safety Engine */}
@@ -203,7 +203,7 @@ export function FeatureTabs() {
             >
               <div className="px-6 pb-6">
                 <p className="text-sm text-muted-foreground font-body leading-relaxed mb-4">
-                  No cameras. You are represented by a curated 3D abstract avatar that protects your visual identity completely. Choose from a library of non-identifiable personas, each designed to express emotion without revealing anything about your real appearance.
+                  No cameras. You are represented by a curated abstract avatar that protects your visual identity completely. Choose from a library of non-identifiable personas, each designed to express emotion without revealing anything about your real appearance.
                 </p>
                 <Button variant="ghost" asChild className="h-9 px-5 rounded-lg border border-primary/40 text-primary hover:bg-primary hover:text-white text-xs font-bold transition-all duration-200">
                   <Link href="/features#avatar-native">

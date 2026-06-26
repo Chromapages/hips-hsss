@@ -34,4 +34,5 @@ export * from "./copy-policy.js";
 export * from "./email.js";
 export * from "./safety.js";
 export * from "./session.js";
+export * from "./avatar2d.js";
 export * from "./packages.js";

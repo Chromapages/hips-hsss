@@ -1,64 +1,23 @@
 "use client";
 
-import { Canvas, useThree } from "@react-three/fiber";
 import { useParticipants } from "@livekit/components-react";
-import { ACESFilmicToneMapping } from "three";
-import { EffectComposer, Bloom, Vignette } from "@react-three/postprocessing";
-import type { AvatarProfile } from "@hips/types";
-import VirtualOfficeAvatar, {
-  paletteColors,
-  fallbackColors,
-  type AvatarGesture,
-  type AvatarEmotion,
-} from "../session-ui/avatars/VirtualOfficeAvatar";
-import { OfficeRoomScene } from "../session-ui/office/OfficeRoomScene";
-import { WebGLFallback, isWebGLAvailable } from "../session-ui/WebGLFallback";
-import { useState, useCallback, useEffect, type ReactNode } from "react";
+import type { Avatar2DConfig, Avatar2DExpression, AvatarEmotion, AvatarGesture, AvatarProfile } from "@hips/types";
+import { DEFAULT_AVATAR_2D } from "@hips/types";
+import { AvatarCompositor } from "@/components/avatar/AvatarCompositor";
 
-// Context loss handler — lives inside Canvas so it has access to the R3F state
-function WebGLContextHandler({
-  onContextLost,
-  onContextRestored,
-}: {
-  onContextLost: () => void;
-  onContextRestored: () => void;
-}) {
-  const { gl } = useThree();
-
-  useEffect(() => {
-    const canvas = gl.domElement;
-
-    const handleContextLost = (event: Event) => {
-      event.preventDefault();
-      onContextLost();
-    };
-
-    const handleContextRestored = () => {
-      onContextRestored();
-    };
-
-    canvas.addEventListener("webglcontextlost", handleContextLost, { passive: false });
-    canvas.addEventListener("webglcontextrestored", handleContextRestored, { passive: false });
-
-    return () => {
-      canvas.removeEventListener("webglcontextlost", handleContextLost);
-      canvas.removeEventListener("webglcontextrestored", handleContextRestored);
-    };
-  }, [gl, onContextLost, onContextRestored]);
-
-  return null;
-}
-
-// GuardedEffectComposer — wraps EffectComposer with null context check
-function GuardedEffectComposer({ children }: { children: any }) {
-  const { gl } = useThree();
-
-  if (!gl || !(gl as any).context) {
+const parseAvatar2DConfig = (raw: string | undefined): Avatar2DConfig | null => {
+  if (!raw) return null;
+  try {
+    return JSON.parse(raw) as Avatar2DConfig;
+  } catch {
     return null;
   }
+};
 
-  return <EffectComposer>{children}</EffectComposer>;
-}
+const mapEmotionToExpression = (emotion: AvatarEmotion): Avatar2DExpression => {
+  if (emotion === "distressed") return "concerned";
+  return "neutral";
+};
 
 interface AvatarCanvasProps {
   avatar: AvatarProfile;
@@ -69,173 +28,91 @@ interface AvatarCanvasProps {
   localEmotion?: AvatarEmotion;
 }
 
-// Task 5.5 — Three.js virtual office room scene (max 50 draw calls, 60fps on M1)
-// Task 5.10 — Active speaker detection + avatar ring animation
 export default function AvatarCanvas({
-  avatar,
   localIdentity,
   raisedHands,
   activeSpeakerIdentity,
-  gesture = "idle",
   localEmotion = "neutral",
 }: AvatarCanvasProps) {
   const participants = useParticipants();
 
-  const webglAvailable = isWebGLAvailable();
-
-  // Track WebGL context loss — when true, show fallback UI instead of crashing
-  const [contextLost, setContextLost] = useState(false);
-  const [canvasKey, setCanvasKey] = useState(0);
-  const [enablePostProcessing, setEnablePostProcessing] = useState(true);
-
-  const handleContextLost = useCallback(() => {
-    setContextLost(true);
-  }, []);
-
-  const handleContextRestored = useCallback(() => {
-    setContextLost(false);
-    setCanvasKey((prev) => prev + 1);
-  }, []);
-
-  useEffect(() => {
-    if (typeof navigator !== 'undefined') {
-      const isLowEnd = (navigator.hardwareConcurrency && navigator.hardwareConcurrency < 4) ||
-        /Mobi|Android|iPhone/i.test(navigator.userAgent);
-      if (isLowEnd || participants.length > 8) {
-        setEnablePostProcessing(false);
-      } else {
-        setEnablePostProcessing(true);
-      }
-    }
-  }, [participants.length]);
-
-  if (!webglAvailable || contextLost) {
-    return <WebGLFallback avatar={avatar} roomName={localIdentity} />;
-  }
-
-  const radius = participants.length > 1 ? Math.min(4.2, 2.4 + participants.length * 0.2) : 0;
-  const angleStep = participants.length > 0 ? (Math.PI * 2) / participants.length : 0;
-
   return (
-    <Canvas
-      key={canvasKey}
-      camera={{ position: [0, 3.5, 8], fov: 46 }}
-      gl={{
-        toneMapping: ACESFilmicToneMapping,
-        toneMappingExposure: 1.15,
-        antialias: true,
-      }}
-      onCreated={({ gl: renderer }) => {
-        // Ensure renderer is valid before any post-processing
-        if (!(renderer as any).context) {
-          setContextLost(true);
-        }
-      }}
-    >
-      {/* WebGL context loss listener */}
-      <WebGLContextHandler onContextLost={handleContextLost} onContextRestored={handleContextRestored} />
+    <div className="w-full h-full flex flex-col items-center justify-center p-6 md:p-8 overflow-y-auto bg-[radial-gradient(circle_at_50%_20%,rgba(99,102,241,0.08),transparent_50%),black]">
+      <div className="w-full max-w-5xl flex flex-wrap justify-center gap-6 md:gap-8">
+        {participants.map((participant) => {
+          const isLocal = participant.identity === localIdentity;
+          const remoteEmotion = participant.attributes["avatar-emotion"];
+          const emotion = isLocal ? localEmotion : ((remoteEmotion as AvatarEmotion) || "neutral");
+          const isSpeaking = participant.isSpeaking || participant.identity === activeSpeakerIdentity;
+          const isHandRaised = raisedHands.has(participant.identity);
+          const avatar2D = {
+            ...DEFAULT_AVATAR_2D,
+            ...(parseAvatar2DConfig(participant.attributes["avatar-2d"]) ?? {}),
+            expression: isSpeaking ? "surprised" : mapEmotionToExpression(emotion),
+          } satisfies Avatar2DConfig;
 
-      {/* Scene fog for depth */}
-      <fog attach="fog" args={["#030712", 14, 38]} />
-
-      {/* Ambient — very dim, sanctuary is lit by emissives */}
-      <ambientLight intensity={0.18} />
-
-      {/* Warm amber key from top-right */}
-      <directionalLight color="#fde68a" intensity={0.7} position={[5, 9, 4]} />
-
-      {/* Cool indigo fill from left */}
-      <directionalLight color="#173B57" intensity={0.35} position={[-6, 4, -4]} />
-
-      {/* Central indigo point — drives avatar glow */}
-      <pointLight color="#173B57" intensity={18} position={[0, 2.5, 0]} distance={18} decay={2} />
-
-      <OfficeRoomScene />
-
-      {participants.map((participant, index) => {
-        const angle = index * angleStep - Math.PI / 2;
-        const isLocal = participant.identity === localIdentity;
-        const x = Math.cos(angle) * radius;
-        const z = Math.sin(angle) * radius;
-
-        // CRIT-3 & MAJ-8: Local participant's color can be overridden by sessionStorage (from avatar selector modal)
-        // or localStorage (from host avatar setup configuration).
-        let localColor: string = paletteColors[avatar.palette] || "#06b6d4";
-        if (isLocal) {
-          const hostConfigStr = typeof window !== 'undefined' ? localStorage.getItem('hips-host-avatar') : null;
-          if (hostConfigStr) {
+          let isHost = false;
+          if (participant.metadata) {
             try {
-              const hostConfig = JSON.parse(hostConfigStr);
-              if (hostConfig.avatarColor) {
-                localColor = hostConfig.avatarColor;
-              }
+              const parsed = JSON.parse(participant.metadata);
+              isHost = ["FACILITATOR", "ADMIN", "SUPER_ADMIN"].includes(parsed.role);
             } catch {}
           }
-          const storedColor = typeof window !== 'undefined' ? sessionStorage.getItem('hips-avatar-color') : null;
-          if (storedColor) {
-            localColor = storedColor;
-          }
-        }
 
-        const remoteStyle = participant.attributes['avatar-style'];
-        const remotePalette = participant.attributes['avatar-palette'];
-        const remoteEmotion = participant.attributes['avatar-emotion'];
+          const displayName = isLocal
+            ? "You"
+            : participant.identity.startsWith("anon-")
+              ? participant.identity
+              : `anon-${participant.identity.slice(0, 6)}`;
 
-        const styleIndex = isLocal
-          ? avatar.style
-          : (remoteStyle ? parseInt(remoteStyle, 10) : index % 12);
+          return (
+            <div
+              key={participant.identity}
+              className={`relative rounded-2xl border bg-zinc-900/40 p-5 flex flex-col items-center justify-between shadow-xl transition-all duration-300 backdrop-blur-md overflow-hidden w-full sm:w-[200px] aspect-[4/5] ${
+                isSpeaking
+                  ? "border-accent/40 shadow-[0_0_24px_rgba(6,182,212,0.15)] ring-1 ring-accent/30"
+                  : "border-white/5"
+              }`}
+            >
+              <div className="absolute top-3 left-3 right-3 flex justify-between items-center gap-2 pointer-events-none">
+                {isHost ? (
+                  <span className="px-2 py-0.5 rounded-full bg-accent/20 border border-accent/20 text-[8px] font-bold text-accent tracking-wider uppercase font-ui">
+                    Host
+                  </span>
+                ) : (
+                  <span />
+                )}
+                {isHandRaised ? (
+                  <span className="px-2 py-0.5 rounded-full bg-amber-500/20 border border-amber-500/30 text-[8px] font-bold text-amber-200 tracking-wider uppercase font-ui flex items-center gap-1 animate-bounce">
+                    Hand
+                  </span>
+                ) : null}
+              </div>
 
-        let color = fallbackColors[index % fallbackColors.length] ?? "#173B57";
-        if (isLocal) {
-          color = localColor;
-        } else if (remotePalette && remotePalette in paletteColors) {
-          color = paletteColors[remotePalette as keyof typeof paletteColors];
-        }
+              <div className="w-32 h-32 mt-4 flex items-center justify-center">
+                <AvatarCompositor
+                  config={avatar2D}
+                  className={`h-full w-full rounded-2xl border border-white/10 bg-slate-100 transition-transform duration-300 ${
+                    isSpeaking ? "scale-105" : ""
+                  } ${isHandRaised ? "ring-2 ring-amber-300/60" : ""}`}
+                />
+              </div>
 
-        const emotion = isLocal
-          ? localEmotion
-          : ((remoteEmotion as AvatarEmotion) || "neutral");
-
-        const isSpeaking = participant.isSpeaking || participant.identity === activeSpeakerIdentity;
-
-        // Metadata is issued server-side from the authoritative Commerce role.
-        // SECURITY WARNING (CRIT-1): isHost derived from client metadata is strictly
-        // for rendering the visual crown badge. DO NOT use isHost or metadata role
-        // for any server-side or client-side authorization/privilege decisions.
-        let isHost = false;
-        if (participant.metadata) {
-          try {
-            const parsed = JSON.parse(participant.metadata);
-            isHost = ['FACILITATOR', 'ADMIN', 'SUPER_ADMIN'].includes(parsed.role);
-          } catch {}
-        }
-        return (
-          <VirtualOfficeAvatar
-            color={color}
-            isLocal={isLocal}
-            isSpeaking={isSpeaking}
-            key={participant.identity}
-            position={[x, 0, z]}
-            raisedHand={raisedHands.has(participant.identity)}
-            styleIndex={styleIndex}
-            gesture={isLocal ? gesture : ("idle" as AvatarGesture)}
-            isHost={isHost}
-            emotion={emotion}
-          />
-        );
-      })}
-
-      {enablePostProcessing && (
-        <GuardedEffectComposer>
-          <Bloom
-            luminanceThreshold={0.05}
-            luminanceSmoothing={0.85}
-            intensity={0.35}
-            mipmapBlur
-          />
-          <Vignette eskil={false} offset={0.38} darkness={0.55} />
-        </GuardedEffectComposer>
-      )}
-    </Canvas>
+              <div className="text-center w-full mt-4">
+                <div className="text-xs font-bold text-white tracking-wide font-ui truncate px-2">
+                  {displayName}
+                </div>
+                <div className="mt-1 flex items-center justify-center gap-1.5">
+                  <span className={`w-1.5 h-1.5 rounded-full ${isSpeaking ? "bg-accent animate-ping" : "bg-emerald-500"}`} />
+                  <span className="text-[9px] text-white/40 uppercase tracking-widest font-ui font-semibold">
+                    {isSpeaking ? "Speaking" : "Connected"}
+                  </span>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
   );
 }

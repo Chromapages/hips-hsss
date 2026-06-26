@@ -36,7 +36,7 @@ const BOARD_CREDS: BoardDemoCredential[] = [
     roleName: 'Participant (Peer)',
     email: 'board-participant@hips-demo.dev',
     targetDashboard: '/dashboard',
-    description: 'Experience self-service session booking, package purchasing with Stripe bypass, and joining a 3D avatar voice room.'
+    description: 'Experience self-service session booking, package purchasing with Stripe bypass, and joining an avatar voice room.'
   },
   {
     role: 'FACILITATOR',
@@ -77,7 +77,7 @@ const SCENARIOS: RoleScenario[] = [
       { id: 'p3', text: 'Go to the Services tab, select a package, and click "Purchase".' },
       { id: 'p4', text: 'Fill in the simulated credit card, check terms, and click "Pay Demo Amount". Checkout is fully simulated (no real cards needed).' },
       { id: 'p5', text: 'After payment, you are redirected to the Participant Dashboard. Click "Try Demo Session" in the Quick Actions sidebar.' },
-      { id: 'p6', text: 'Allow audio permissions, check your microphone connection, and enter the WebRTC voice space with our interactive 3D avatar.' }
+      { id: 'p6', text: 'Allow audio permissions, check your microphone connection, and enter the WebRTC voice space with our interactive avatar.' }
     ]
   },
   {

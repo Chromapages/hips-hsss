@@ -17,14 +17,18 @@ export default function HostPracticePage() {
     const avatarConfig = localStorage.getItem("hips-host-avatar");
     if (avatarConfig) {
       try {
-        const parsed = JSON.parse(avatarConfig) as { avatarColor?: string };
+        const parsed = JSON.parse(avatarConfig) as { avatarColor?: string; avatar2D?: unknown };
         if (parsed.avatarColor) {
           sessionStorage.setItem("hips-avatar-color", parsed.avatarColor);
+        }
+        if (parsed.avatar2D) {
+          sessionStorage.setItem("hips-avatar-2d", JSON.stringify(parsed.avatar2D));
         }
       } catch {
         // Ignore parse errors
       }
     }
+    sessionStorage.setItem("hips-avatar-render-mode", "2d");
   }, []);
 
   return (

@@ -207,7 +207,7 @@ export default function HomePage() {
               </h3>
               {/* Description */}
               <p className="text-sm text-text-muted leading-relaxed font-body max-w-[28ch] mx-auto">
-                Enter your camera-free 3D avatar room. Your voice is masked in transit, your identity is never logged, and a human facilitator ensures the space stays safe.
+                Enter your camera-free avatar room. Your voice is masked in transit, your identity is never logged, and a human facilitator ensures the space stays safe.
               </p>
             </div>
 

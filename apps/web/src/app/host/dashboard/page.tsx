@@ -158,7 +158,7 @@ export default function HostDashboard() {
             <div>
               <p className="font-bold text-text font-ui text-sm">Complete your avatar setup</p>
               <p className="text-xs text-text-muted font-body mt-0.5">
-                Configure your 3D avatar and voice settings before hosting sessions.
+                Configure your avatar and voice settings before hosting sessions.
               </p>
             </div>
           </div>

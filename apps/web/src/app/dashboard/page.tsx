@@ -379,7 +379,7 @@ export default function DashboardPage() {
                     Try Demo Session
                     <span className="text-[9px] px-1.5 py-0.5 rounded bg-accent/20 text-accent font-bold uppercase tracking-wider">Demo</span>
                   </span>
-                  <span className="text-[10px] text-text-secondary font-body mt-0.5">Test WebRTC voice &amp; 3D avatar</span>
+                  <span className="text-[10px] text-text-secondary font-body mt-0.5">Test WebRTC voice &amp; avatar</span>
                 </div>
                 <ArrowRight className="w-4 h-4 text-accent group-hover:translate-x-1 transition-all" />
               </Link>

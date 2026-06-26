@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400">
+  <!-- Lip Line -->
+  <path fill="none" stroke="#7f4638" stroke-linecap="round" stroke-width="4.2" d="M180 258c10 3 30 3 40 0" opacity="0.85"/>
+  <!-- Under-lip shadow -->
+  <path fill="none" stroke="var(--avatar-skin-shadow)" stroke-linecap="round" stroke-width="3" d="M185 267c8 3 22 3 30 0" opacity="0.5"/>
+</svg>
