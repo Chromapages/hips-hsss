@@ -4,7 +4,15 @@ export type AvatarFaceShape =
   | "face_square_01"
   | "face_heart_01";
 
-export type AvatarHairStyle = "hair_short_01";
+export type AvatarHairStyle =
+  | "hair_short_01"
+  | "hair_long_01"
+  | "hair_bob_01"
+  | "hair_bun_01"
+  | "hair_curly_tight_01"
+  | "hair_locs_long_01"
+  | "hair_shaved_01"
+  | "cover_hijab_01";
 
 export type AvatarEyeShape =
   | "eyes_almond_01"

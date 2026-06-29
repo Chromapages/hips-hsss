@@ -11,9 +11,12 @@ type SvgLayerProps = {
 
 export function SvgLayer({ src, className }: SvgLayerProps) {
   const [svgContent, setSvgContent] = useState("");
+  const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
+    let timer: any = null;
+    setIsLoaded(false);
 
     async function loadSvg() {
       if (!src) {
@@ -24,6 +27,9 @@ export function SvgLayer({ src, className }: SvgLayerProps) {
       const cached = svgCache.get(src);
       if (cached) {
         setSvgContent(cached);
+        timer = setTimeout(() => {
+          if (!cancelled) setIsLoaded(true);
+        }, 16);
         return;
       }
 
@@ -32,7 +38,12 @@ export function SvgLayer({ src, className }: SvgLayerProps) {
         if (!response.ok) throw new Error(`Could not load ${src}`);
         const text = await response.text();
         svgCache.set(src, text);
-        if (!cancelled) setSvgContent(text);
+        if (!cancelled) {
+          setSvgContent(text);
+          timer = setTimeout(() => {
+            if (!cancelled) setIsLoaded(true);
+          }, 16);
+        }
       } catch {
         if (!cancelled) setSvgContent("");
       }
@@ -41,16 +52,65 @@ export function SvgLayer({ src, className }: SvgLayerProps) {
     void loadSvg();
     return () => {
       cancelled = true;
+      if (timer) clearTimeout(timer);
     };
   }, [src]);
 
   if (!svgContent) return null;
 
+  // Apply premium filters and styles based on layer type
+  let premiumFilterClass = "";
+  let targetOpacity = 1.0;
+  const animationClasses: string[] = [];
+
+  if (src?.includes("/face/") || src?.includes("/body/")) {
+    premiumFilterClass = "[filter:url(#premium-fitzpatrick-recolor)_url(#premium-inner-glow)]";
+  } else if (src?.includes("/hair-back/")) {
+    premiumFilterClass = "[filter:url(#premium-drop-shadow)]";
+    targetOpacity = 0.85;
+  } else if (
+    src?.includes("/hair-front/") ||
+    src?.includes("/accessories/") ||
+    src?.includes("/clothing/")
+  ) {
+    premiumFilterClass = "[filter:url(#premium-drop-shadow)]";
+  } else if (src?.includes("/brows/") || src?.includes("/nose/")) {
+    premiumFilterClass = "[filter:url(#premium-feature-shadow)]";
+  }
+
+  // Determine if it is a head-related layer for head sway
+  const isHeadLayer =
+    src?.includes("/face/") ||
+    src?.includes("/eyes/") ||
+    src?.includes("/brows/") ||
+    src?.includes("/nose/") ||
+    src?.includes("/mouth/") ||
+    src?.includes("/beard/") ||
+    src?.includes("/hair-front/") ||
+    src?.includes("/accessories/");
+
+  if (isHeadLayer) {
+    animationClasses.push("animate-[avatar-sway_6s_ease-in-out_infinite] origin-[200px_280px]");
+  }
+
+  if (src?.includes("/eyes/")) {
+    animationClasses.push("animate-[avatar-blink_4s_infinite] origin-[200px_180px]");
+  }
+
   return (
     <div
       aria-hidden="true"
-      className={`absolute inset-0 ${className ?? ""}`}
-      dangerouslySetInnerHTML={{ __html: svgContent }}
-    />
+      className={`absolute inset-0 ${premiumFilterClass} ${animationClasses.join(" ")} ${className ?? ""}`}
+      style={{ opacity: targetOpacity }}
+    >
+      <div
+        className="w-full h-full transition-all duration-300 ease-out origin-center"
+        style={{
+          opacity: isLoaded ? 1 : 0,
+          transform: isLoaded ? "scale(1)" : "scale(0.96)",
+        }}
+        dangerouslySetInnerHTML={{ __html: svgContent }}
+      />
+    </div>
   );
 }

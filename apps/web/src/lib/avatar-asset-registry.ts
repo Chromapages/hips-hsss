@@ -32,6 +32,13 @@ export const avatar2DOptions = {
   ],
   hairStyles: [
     { id: "hair_short_01", label: "Short" },
+    { id: "hair_long_01", label: "Long" },
+    { id: "hair_bob_01", label: "Bob" },
+    { id: "hair_bun_01", label: "Bun" },
+    { id: "hair_curly_tight_01", label: "Curly" },
+    { id: "hair_locs_long_01", label: "Locs" },
+    { id: "hair_shaved_01", label: "Shaved" },
+    { id: "cover_hijab_01", label: "Hijab" },
   ],
   eyeShapes: [
     { id: "eyes_almond_01", label: "Almond" },
@@ -105,7 +112,10 @@ function src(folder: string, file: string | null) {
   return file ? `${avatarAssetRoot}/${folder}/${file}.svg` : null;
 }
 
-export function getHairBackSrc(_hairStyle: Avatar2DConfig["hairStyle"]) {
+export function getHairBackSrc(hairStyle: Avatar2DConfig["hairStyle"]) {
+  if (hairStyle === "hair_long_01") return src("hair-back", "hair_long_back_01");
+  if (hairStyle === "hair_locs_long_01") return src("hair-back", "hair_locs_long_back_01");
+  if (hairStyle === "cover_hijab_01") return src("hair-back", "cover_hijab_back_01");
   return null;
 }
 
@@ -119,10 +129,10 @@ export function layerRenderOrder(config: Avatar2DConfig) {
     : expressionPresets[config.expression];
   return [
     src("background", config.background),
+    getHairBackSrc(config.hairStyle),
     src("body", "body_shoulders_01"),
     src("face", config.faceShape),
     src("clothing", config.clothingStyle),
-    getHairBackSrc(config.hairStyle),
     src("eyes", preset.eyes),
     src("brows", preset.brow),
     src("nose", config.nose),
