@@ -28,6 +28,12 @@ import AvatarCanvas from './AvatarCanvas';
 import SafetyMonitor from './SafetyMonitor';
 import { CrisisEscalation } from './CrisisEscalation';
 import { createLowLatencyVoiceMaskProcessor } from '@/lib/voice-mask-processor';
+import {
+  ENHANCED_NEURAL_UNAVAILABLE_MESSAGE,
+  prepareDspVoiceTrack,
+  prepareNeuralVoiceTrack,
+} from '@/lib/session-audio-publishing';
+import { reportVoiceMaskingEvent } from '@/lib/voice-masking-observability';
 import { SessionHeader } from '../session-ui/SessionHeader';
 import { VoiceControlsBar } from '../session-ui/VoiceControlsBar';
 import { MobileBlockPage } from '../session-ui/MobileBlockPage';
@@ -44,13 +50,11 @@ import type { VoicePreset } from '@/lib/voice-mask-presets';
 import type { VoiceWorkerControlMessage } from '@/lib/streaming-voice-client';
 import { asError } from '@/lib/errors';
 
+import { parseAvatar2DConfigString, sanitizeLiveKitAttributes, migrateLegacySessionStorage } from '@/lib/avatar2d-schema';
+
 const parseAvatar2DConfig = (raw: string | null): Avatar2DConfig | null => {
   if (!raw) return null;
-  try {
-    return JSON.parse(raw) as Avatar2DConfig;
-  } catch {
-    return null;
-  }
+  return parseAvatar2DConfigString(raw);
 };
 
 type LiveKitTokenResponse = {
@@ -85,9 +89,6 @@ type VoiceMaskingStatus = {
 // TODO [Phase 3]: Refactor to generate tokens server-side and remove NEXT_PUBLIC_LIVEKIT_URL.
 const liveKitUrl = process.env.NEXT_PUBLIC_LIVEKIT_URL || process.env.NEXT_PUBLIC_LIVEKIT_WS_URL || 'ws://localhost:7880';
 const textEncoder = new TextEncoder();
-const ENHANCED_NEURAL_UNAVAILABLE_MESSAGE =
-  'Enhanced Neural Masking is not live yet. Use Effects Mode for microphone audio while the returned-audio backend is being connected.';
-
 function decodeControlMessage(payload: Uint8Array): SessionControlMessage | null {
   try {
     const parsed = JSON.parse(new TextDecoder().decode(payload)) as Partial<SessionControlMessage>;
@@ -128,7 +129,9 @@ function getVoiceMaskingFallbackReason(neural: Record<string, unknown>): string 
   if (!(neural.health as { reachable?: boolean } | undefined)?.reachable) return 'Worker unreachable';
   if (!neural.liveReady) return 'Worker not live-ready';
   if (!neural.publicEndpointConfigured) return 'Public WebSocket missing';
-  if (neural.sharedSecretConfigured && !neural.browserToken) return 'Browser token missing';
+  if (neural.sharedSecretConfigured && !neural.jwtConfigured && !neural.browserToken) {
+    return 'Worker auth token unavailable';
+  }
   return 'Enhanced path unavailable';
 }
 
@@ -477,6 +480,7 @@ function SessionContent({
 
   // Two-tier voice replacement state
   const [anonymizationMode, setAnonymizationMode] = useState<'dsp' | 'neural'>('dsp');
+  const [isEnhancedNeuralConsentAccepted, setIsEnhancedNeuralConsentAccepted] = useState(false);
   const [selectedPersona, setSelectedPersona] = useState<'clara' | 'arthur'>('clara');
   const [isAntiCadenceEnabled, setIsAntiCadenceEnabled] = useState(false);
   const [serverMaskingReady, setServerMaskingReady] = useState(false);
@@ -554,7 +558,11 @@ function SessionContent({
     if (hostConfigStr) {
       try {
         const config = JSON.parse(hostConfigStr);
-        if (config.anonymizationMode) setAnonymizationMode(config.anonymizationMode);
+        const consentAccepted = config.isEnhancedNeuralConsentAccepted === true;
+        setIsEnhancedNeuralConsentAccepted(consentAccepted);
+        if (config.anonymizationMode) {
+          setAnonymizationMode(config.anonymizationMode === 'neural' && !consentAccepted ? 'dsp' : config.anonymizationMode);
+        }
         if (config.selectedPersona) setSelectedPersona(config.selectedPersona);
         if (typeof config.isAntiCadenceEnabled === "boolean") setIsAntiCadenceEnabled(config.isAntiCadenceEnabled);
         if (config.voicePreset) {
@@ -586,7 +594,11 @@ function SessionContent({
       const guestSemitones = sessionStorage.getItem("hips-voice-semitones");
       if (guestSemitones) setSemitones(parseInt(guestSemitones, 10));
       const guestAnonymization = sessionStorage.getItem("hips-voice-anonymization");
-      if (guestAnonymization) setAnonymizationMode(guestAnonymization as any);
+      const guestConsentAccepted = sessionStorage.getItem("hips-voice-enhanced-neural-consent") === "true";
+      setIsEnhancedNeuralConsentAccepted(guestConsentAccepted);
+      if (guestAnonymization) {
+        setAnonymizationMode(guestAnonymization === 'neural' && !guestConsentAccepted ? 'dsp' : guestAnonymization as any);
+      }
       const guestPersona = sessionStorage.getItem("hips-voice-persona");
       if (guestPersona) setSelectedPersona(guestPersona as any);
       const guestAnticadence = sessionStorage.getItem("hips-voice-anticadence");
@@ -598,96 +610,100 @@ function SessionContent({
     if (typeof window === "undefined") {
       return {
         style: String(avatar.style),
-	        palette: avatar.palette,
-	        bodyType: String(avatar.bodyType ?? 1),
-	        skinTone: normalizeSkinTone(avatar.skinTone),
-	        hairStyle: String(avatar.style),
-	        hairColor: "#1c1917",
-	        eyeColor: "#1c1917",
-	        faceShape: "0",
-	        noseStyle: "0",
-	        eyeStyle: "0",
-	        eyebrowStyle: "0",
-	        mouthStyle: "0",
-	        clothingType: "0",
-	        clothingColor: paletteColors[avatar.palette as keyof typeof paletteColors] || "#06b6d4",
-	        accessoryType: "0",
-	        renderMode: "2d",
-          avatar2D: DEFAULT_AVATAR_2D,
-	      };
+        palette: avatar.palette,
+        bodyType: String(avatar.bodyType ?? 1),
+        skinTone: normalizeSkinTone(avatar.skinTone),
+        hairStyle: String(avatar.style),
+        hairColor: "#1c1917",
+        eyeColor: "#1c1917",
+        faceShape: "0",
+        noseStyle: "0",
+        eyeStyle: "0",
+        eyebrowStyle: "0",
+        mouthStyle: "0",
+        clothingType: "0",
+        clothingColor: paletteColors[avatar.palette as keyof typeof paletteColors] || "#06b6d4",
+        accessoryType: "0",
+        renderMode: "2d",
+        avatar2D: DEFAULT_AVATAR_2D,
+      };
     }
 
-    // Try host configuration first
+    // Run migration from legacy sessionStorage keys if present
+    migrateLegacySessionStorage();
+
+    // Check new canonical key first
+    const stored2d = sessionStorage.getItem("hips-avatar-2d");
+    if (stored2d) {
+      const config2D = parseAvatar2DConfig(stored2d) || DEFAULT_AVATAR_2D;
+      return {
+        style: "0",
+        palette: avatar.palette,
+        bodyType: "0", // Default to man (0)
+        skinTone: config2D.skinTone,
+        hairStyle: config2D.hairStyle,
+        hairColor: config2D.hairColor,
+        eyeColor: config2D.eyeColor,
+        faceShape: config2D.faceShape,
+        noseStyle: "0",
+        eyeStyle: config2D.eyeShape,
+        eyebrowStyle: config2D.eyebrow,
+        mouthStyle: config2D.mouth,
+        clothingType: "0",
+        clothingColor: config2D.clothingColor,
+        accessoryType: "0",
+        renderMode: "2d",
+        avatar2D: config2D,
+      };
+    }
+
+    // Try host configuration next
     const hostConfigStr = localStorage.getItem("hips-host-avatar");
     if (hostConfigStr) {
       try {
         const config = JSON.parse(hostConfigStr);
         return {
           style: String(config.avatarStyle ?? avatar.style),
-	          palette: avatar.palette,
-	          bodyType: String(config.bodyType ?? 1),
-	          skinTone: normalizeSkinTone(config.skinTone),
-	          hairStyle: String(config.hairStyle ?? config.avatarStyle ?? 0),
-	          hairColor: config.hairColor ?? "#1c1917",
-	          eyeColor: config.eyeColor ?? "#1c1917",
-	          faceShape: String(config.faceShape ?? 0),
-	          noseStyle: String(config.noseStyle ?? 0),
-	          eyeStyle: String(config.eyeStyle ?? 0),
-	          eyebrowStyle: String(config.eyebrowStyle ?? 0),
-	          mouthStyle: String(config.mouthStyle ?? 0),
-	          clothingType: String(config.clothingType ?? 0),
-	          clothingColor: config.clothingColor ?? config.avatarColor ?? "#06b6d4",
-	          accessoryType: String(config.accessoryType ?? 0),
-	          renderMode: "2d",
-            avatar2D: config.avatar2D ?? DEFAULT_AVATAR_2D,
-	        };
+          palette: avatar.palette,
+          bodyType: String(config.bodyType ?? 1),
+          skinTone: normalizeSkinTone(config.skinTone),
+          hairStyle: String(config.hairStyle ?? config.avatarStyle ?? 0),
+          hairColor: config.hairColor ?? "#1c1917",
+          eyeColor: config.eyeColor ?? "#1c1917",
+          faceShape: String(config.faceShape ?? 0),
+          noseStyle: String(config.noseStyle ?? 0),
+          eyeStyle: String(config.eyeStyle ?? 0),
+          eyebrowStyle: String(config.eyebrowStyle ?? 0),
+          mouthStyle: String(config.mouthStyle ?? 0),
+          clothingType: String(config.clothingType ?? 0),
+          clothingColor: config.clothingColor ?? config.avatarColor ?? "#06b6d4",
+          accessoryType: String(config.accessoryType ?? 0),
+          renderMode: "2d",
+          avatar2D: config.avatar2D ?? DEFAULT_AVATAR_2D,
+        };
       } catch {}
-    }
-
-    // Try guest/lobby configuration next
-    const guestColor = sessionStorage.getItem("hips-avatar-color");
-    if (guestColor) {
-      return {
-        style: sessionStorage.getItem("hips-avatar-style") || String(avatar.style),
-	        palette: avatar.palette,
-	        bodyType: sessionStorage.getItem("hips-avatar-body") || "1",
-	        skinTone: normalizeSkinTone(sessionStorage.getItem("hips-avatar-skin-tone")),
-	        hairStyle: sessionStorage.getItem("hips-avatar-hair") || sessionStorage.getItem("hips-avatar-style") || "0",
-	        hairColor: sessionStorage.getItem("hips-avatar-hair-color") || "#1c1917",
-	        eyeColor: sessionStorage.getItem("hips-avatar-eye-color") || "#1c1917",
-	        faceShape: sessionStorage.getItem("hips-avatar-face-shape") || "0",
-	        noseStyle: sessionStorage.getItem("hips-avatar-nose") || "0",
-	        eyeStyle: sessionStorage.getItem("hips-avatar-eye") || "0",
-	        eyebrowStyle: sessionStorage.getItem("hips-avatar-eyebrow") || "0",
-	        mouthStyle: sessionStorage.getItem("hips-avatar-mouth") || "0",
-	        clothingType: sessionStorage.getItem("hips-avatar-clothing") || "0",
-	        clothingColor: sessionStorage.getItem("hips-avatar-clothing-color") || guestColor,
-	        accessoryType: sessionStorage.getItem("hips-avatar-accessory") || "0",
-	        renderMode: "2d",
-          avatar2D: parseAvatar2DConfig(sessionStorage.getItem("hips-avatar-2d")) ?? DEFAULT_AVATAR_2D,
-	      };
     }
 
     // Default fallback
     return {
       style: String(avatar.style),
-	      palette: avatar.palette,
-	      bodyType: String(avatar.bodyType ?? 1),
-	      skinTone: normalizeSkinTone(avatar.skinTone),
-	      hairStyle: String(avatar.style),
-	      hairColor: "#1c1917",
-	      eyeColor: "#1c1917",
-	      faceShape: "0",
-	      noseStyle: "0",
-	      eyeStyle: "0",
-	      eyebrowStyle: "0",
-	      mouthStyle: "0",
-	      clothingType: "0",
-	      clothingColor: paletteColors[avatar.palette as keyof typeof paletteColors] || "#06b6d4",
-	      accessoryType: "0",
-	      renderMode: "2d",
-        avatar2D: DEFAULT_AVATAR_2D,
-	    };
+      palette: avatar.palette,
+      bodyType: String(avatar.bodyType ?? 1),
+      skinTone: normalizeSkinTone(avatar.skinTone),
+      hairStyle: String(avatar.style),
+      hairColor: "#1c1917",
+      eyeColor: "#1c1917",
+      faceShape: "0",
+      noseStyle: "0",
+      eyeStyle: "0",
+      eyebrowStyle: "0",
+      mouthStyle: "0",
+      clothingType: "0",
+      clothingColor: paletteColors[avatar.palette as keyof typeof paletteColors] || "#06b6d4",
+      accessoryType: "0",
+      renderMode: "2d",
+      avatar2D: DEFAULT_AVATAR_2D,
+    };
   }, [avatar]);
 
   // Media devices for toolbar
@@ -763,7 +779,7 @@ function SessionContent({
 
     const syncAttributes = async () => {
       try {
-        await localParticipant.setAttributes({
+        await localParticipant.setAttributes(sanitizeLiveKitAttributes({
           'voice-masking': anonymizationMode === 'neural' ? 'server-worker' : 'local-dsp',
           'voice-preset': activePreset,
           'voice-semitones': String(semitones),
@@ -774,22 +790,22 @@ function SessionContent({
           'avatar-style': localAvatarConfig.style,
           'avatar-palette': localAvatarConfig.palette,
           'avatar-emotion': localEmotion,
-	          'avatar-body': localAvatarConfig.bodyType,
-	          'avatar-skin-tone': localAvatarConfig.skinTone,
-	          'avatar-hair': localAvatarConfig.hairStyle,
-	          'avatar-hair-color': localAvatarConfig.hairColor,
-	          'avatar-eye-color': localAvatarConfig.eyeColor,
-	          'avatar-face-shape': localAvatarConfig.faceShape,
-	          'avatar-nose': localAvatarConfig.noseStyle,
-	          'avatar-eye': localAvatarConfig.eyeStyle,
-	          'avatar-eyebrow': localAvatarConfig.eyebrowStyle,
-	          'avatar-mouth': localAvatarConfig.mouthStyle,
-	          'avatar-clothing': localAvatarConfig.clothingType,
-	          'avatar-clothing-color': localAvatarConfig.clothingColor,
-	          'avatar-accessory': localAvatarConfig.accessoryType,
-	          'avatar-render-mode': localAvatarConfig.renderMode,
-            'avatar-2d': JSON.stringify(localAvatarConfig.avatar2D),
-	        });
+          'avatar-body': localAvatarConfig.bodyType,
+          'avatar-skin-tone': localAvatarConfig.skinTone,
+          'avatar-hair': localAvatarConfig.hairStyle,
+          'avatar-hair-color': localAvatarConfig.hairColor,
+          'avatar-eye-color': localAvatarConfig.eyeColor,
+          'avatar-face-shape': localAvatarConfig.faceShape,
+          'avatar-nose': localAvatarConfig.noseStyle,
+          'avatar-eye': localAvatarConfig.eyeStyle,
+          'avatar-eyebrow': localAvatarConfig.eyebrowStyle,
+          'avatar-mouth': localAvatarConfig.mouthStyle,
+          'avatar-clothing': localAvatarConfig.clothingType,
+          'avatar-clothing-color': localAvatarConfig.clothingColor,
+          'avatar-accessory': localAvatarConfig.accessoryType,
+          'avatar-render-mode': localAvatarConfig.renderMode,
+          'avatar-2d': JSON.stringify(localAvatarConfig.avatar2D),
+        }));
       } catch (err) {
         console.warn('[SessionRoom] Failed to sync participant attributes:', err);
       }
@@ -896,94 +912,110 @@ function SessionContent({
         voiceIsolation: true,
       });
 
-      if (anonymizationMode === 'neural' && (!serverMaskingReady || !voiceWorkerUrl)) {
-        setVoiceMaskWarning(ENHANCED_NEURAL_UNAVAILABLE_MESSAGE);
-        stopLiveKitLocalAudioTrack(track);
-        setLocalAudioTrack(null);
-        setMicEnabled(false);
-        setMicBusy(false);
-        return;
-      }
-
       if (anonymizationMode === 'neural') {
-        try {
-          const sourceSampleRate = track.mediaStreamTrack.getSettings().sampleRate;
-          const processedTrack = await startNeuralVoiceMasking({
-            workerUrl: voiceWorkerUrl!,
-            ...(voiceWorkerToken ? { workerToken: voiceWorkerToken } : {}),
-            sessionId: roomName.replace(/^session-/, ''),
+        const sessionId = roomName.replace(/^session-/, '');
+
+        if (!isEnhancedNeuralConsentAccepted) {
+          const message = 'Enhanced Neural Masking requires explicit opt-in consent. Your microphone is off. Choose Effects Mode or accept consent in voice setup.';
+          setVoiceMaskWarning(message);
+          toast.error(message);
+          reportVoiceMaskingEvent({
+            name: 'voice_masking.raw_publish_blocked',
+            mode: 'neural',
+            reason: message,
+            sessionId,
             participantIdentity: localParticipant.identity,
-            sourceTrack: track.mediaStreamTrack,
-            persona: selectedPersona,
-            antiCadence: isAntiCadenceEnabled,
-            pseudoSpeakerSeed: `${roomName}:${localParticipant.identity}:${selectedPersona}`,
-            ...(typeof sourceSampleRate === 'number' ? { sampleRate: sourceSampleRate } : {}),
           });
-
-          await localParticipant.publishTrack(processedTrack, { name: 'voice-masking:server-worker' });
-          await localParticipant.setAttributes({
-            'voice-masking': 'server-worker',
-            'voice-persona': selectedPersona,
-            'anti-cadence': String(isAntiCadenceEnabled),
-            'avatar-style': localAvatarConfig.style,
-            'avatar-palette': localAvatarConfig.palette,
-            'avatar-emotion': localEmotion,
-	            'avatar-body': localAvatarConfig.bodyType,
-	            'avatar-skin-tone': localAvatarConfig.skinTone,
-	            'avatar-hair': localAvatarConfig.hairStyle,
-	            'avatar-hair-color': localAvatarConfig.hairColor,
-	            'avatar-eye-color': localAvatarConfig.eyeColor,
-	            'avatar-face-shape': localAvatarConfig.faceShape,
-	            'avatar-nose': localAvatarConfig.noseStyle,
-	            'avatar-eye': localAvatarConfig.eyeStyle,
-	            'avatar-eyebrow': localAvatarConfig.eyebrowStyle,
-	            'avatar-mouth': localAvatarConfig.mouthStyle,
-	            'avatar-clothing': localAvatarConfig.clothingType,
-	            'avatar-clothing-color': localAvatarConfig.clothingColor,
-	            'avatar-accessory': localAvatarConfig.accessoryType,
-	            'avatar-render-mode': localAvatarConfig.renderMode,
-              'avatar-2d': JSON.stringify(localAvatarConfig.avatar2D),
-	          });
-
-          neuralSourceTrackRef.current = track;
-          setLocalAudioTrack(processedTrack);
-          setMicEnabled(true);
-          return;
-        } catch (neuralError) {
-          console.error('[SessionRoom] Enhanced Neural Masking failed:', neuralError);
-          setVoiceMaskWarning(
-            neuralError instanceof Error
-              ? `Enhanced Neural Masking failed: ${neuralError.message}. Use Effects Mode for now.`
-              : 'Enhanced Neural Masking failed. Use Effects Mode for now.',
-          );
-          stopNeuralVoiceMasking();
           stopLiveKitLocalAudioTrack(track);
           setLocalAudioTrack(null);
           setMicEnabled(false);
           setMicBusy(false);
           return;
         }
+
+        const workerToken = voiceWorkerToken ?? await requestVoiceWorkerToken({
+          sessionId,
+          participantIdentity: localParticipant.identity,
+        });
+
+        const prepared = await prepareNeuralVoiceTrack({
+          track,
+          serverMaskingReady,
+          voiceWorkerUrl,
+          voiceWorkerToken: workerToken,
+          sessionId,
+          participantIdentity: localParticipant.identity,
+          selectedPersona,
+          antiCadence: isAntiCadenceEnabled,
+          startNeuralVoiceMasking,
+          stopNeuralVoiceMasking,
+        });
+
+        if (prepared.status === 'blocked') {
+          setVoiceMaskWarning(prepared.warning);
+          reportVoiceMaskingEvent({
+            name: 'voice_masking.raw_publish_blocked',
+            mode: 'neural',
+            reason: prepared.warning,
+            sessionId,
+            participantIdentity: localParticipant.identity,
+          });
+          setLocalAudioTrack(null);
+          setMicEnabled(false);
+          setMicBusy(false);
+          return;
+        }
+
+        await localParticipant.publishTrack(prepared.processedTrack, { name: 'voice-masking:server-worker' });
+        await localParticipant.setAttributes(sanitizeLiveKitAttributes({
+          'voice-masking': 'server-worker',
+          'voice-persona': selectedPersona,
+          'anti-cadence': String(isAntiCadenceEnabled),
+          'avatar-style': localAvatarConfig.style,
+          'avatar-palette': localAvatarConfig.palette,
+          'avatar-emotion': localEmotion,
+          'avatar-body': localAvatarConfig.bodyType,
+          'avatar-skin-tone': localAvatarConfig.skinTone,
+          'avatar-hair': localAvatarConfig.hairStyle,
+          'avatar-hair-color': localAvatarConfig.hairColor,
+          'avatar-eye-color': localAvatarConfig.eyeColor,
+          'avatar-face-shape': localAvatarConfig.faceShape,
+          'avatar-nose': localAvatarConfig.noseStyle,
+          'avatar-eye': localAvatarConfig.eyeStyle,
+          'avatar-eyebrow': localAvatarConfig.eyebrowStyle,
+          'avatar-mouth': localAvatarConfig.mouthStyle,
+          'avatar-clothing': localAvatarConfig.clothingType,
+          'avatar-clothing-color': localAvatarConfig.clothingColor,
+          'avatar-accessory': localAvatarConfig.accessoryType,
+          'avatar-render-mode': localAvatarConfig.renderMode,
+          'avatar-2d': JSON.stringify(localAvatarConfig.avatar2D),
+        }));
+
+        neuralSourceTrackRef.current = prepared.sourceTrack;
+        setLocalAudioTrack(prepared.processedTrack);
+        setMicEnabled(true);
+        return;
       }
 
       // CRITICAL FIX: apply voice mask processor BEFORE publishing.
       // Publishing the raw track first would leak unmasked audio to peers
       // if setProcessor() throws — and there would be no way to unpublish
       // synchronously. The track is only published after processor succeeds.
-      try {
-        await track.setProcessor(createLowLatencyVoiceMaskProcessor({ preset: activePreset, semitones, wetDryRatio }));
-      } catch (processorError) {
-        // Processor failed — do NOT publish the raw track.
-        // Stop the track and surface an actionable error to the user.
-        setVoiceMaskWarning(
-          processorError instanceof Error
-            ? `Voice mask unavailable: ${processorError.message}. Try Chrome or Edge for full support.`
-            : 'Voice mask unavailable in this browser. Try Chrome or Edge for full support.',
-        );
-        try {
-          track.stop();
-        } catch (stopErr) {
-          console.warn('[SessionRoom] Failed to stop raw track after processor error:', stopErr);
-        }
+      const preparedDsp = await prepareDspVoiceTrack({
+        track,
+        processorOptions: { preset: activePreset, semitones, wetDryRatio },
+        createProcessor: createLowLatencyVoiceMaskProcessor,
+      });
+
+      if (preparedDsp.status === 'blocked') {
+        setVoiceMaskWarning(preparedDsp.warning);
+        reportVoiceMaskingEvent({
+          name: 'voice_masking.raw_publish_blocked',
+          mode: 'dsp',
+          reason: preparedDsp.warning,
+          sessionId: roomName,
+          participantIdentity: localParticipant.identity,
+        });
         setLocalAudioTrack(null);
         setMicEnabled(false);
         setMicBusy(false);
@@ -991,32 +1023,32 @@ function SessionContent({
       }
 
       // Only reach reach here once the processor was successfully applied.
-      await localParticipant.publishTrack(track as unknown as MediaStreamTrack);
+      await localParticipant.publishTrack(preparedDsp.track as unknown as MediaStreamTrack);
 
       try {
-        await localParticipant.setAttributes({
+        await localParticipant.setAttributes(sanitizeLiveKitAttributes({
           'voice-masking': 'local-dsp',
           'voice-preset': activePreset,
           'voice-semitones': String(semitones),
           'avatar-style': localAvatarConfig.style,
           'avatar-palette': localAvatarConfig.palette,
           'avatar-emotion': localEmotion,
-	            'avatar-body': localAvatarConfig.bodyType,
-	            'avatar-skin-tone': localAvatarConfig.skinTone,
-	            'avatar-hair': localAvatarConfig.hairStyle,
-	            'avatar-hair-color': localAvatarConfig.hairColor,
-	            'avatar-eye-color': localAvatarConfig.eyeColor,
-	            'avatar-face-shape': localAvatarConfig.faceShape,
-	            'avatar-nose': localAvatarConfig.noseStyle,
-	            'avatar-eye': localAvatarConfig.eyeStyle,
-	            'avatar-eyebrow': localAvatarConfig.eyebrowStyle,
-	            'avatar-mouth': localAvatarConfig.mouthStyle,
-	            'avatar-clothing': localAvatarConfig.clothingType,
-	            'avatar-clothing-color': localAvatarConfig.clothingColor,
-	            'avatar-accessory': localAvatarConfig.accessoryType,
-	            'avatar-render-mode': localAvatarConfig.renderMode,
-              'avatar-2d': JSON.stringify(localAvatarConfig.avatar2D),
-	        });
+          'avatar-body': localAvatarConfig.bodyType,
+          'avatar-skin-tone': localAvatarConfig.skinTone,
+          'avatar-hair': localAvatarConfig.hairStyle,
+          'avatar-hair-color': localAvatarConfig.hairColor,
+          'avatar-eye-color': localAvatarConfig.eyeColor,
+          'avatar-face-shape': localAvatarConfig.faceShape,
+          'avatar-nose': localAvatarConfig.noseStyle,
+          'avatar-eye': localAvatarConfig.eyeStyle,
+          'avatar-eyebrow': localAvatarConfig.eyebrowStyle,
+          'avatar-mouth': localAvatarConfig.mouthStyle,
+          'avatar-clothing': localAvatarConfig.clothingType,
+          'avatar-clothing-color': localAvatarConfig.clothingColor,
+          'avatar-accessory': localAvatarConfig.accessoryType,
+          'avatar-render-mode': localAvatarConfig.renderMode,
+          'avatar-2d': JSON.stringify(localAvatarConfig.avatar2D),
+        }));
       } catch (attrErr) {
         console.warn('[SessionRoom] Failed to set participant attributes:', attrErr);
       }
@@ -1046,6 +1078,7 @@ function SessionContent({
     semitones,
     wetDryRatio,
     anonymizationMode,
+    isEnhancedNeuralConsentAccepted,
     serverMaskingReady,
     voiceWorkerUrl,
     voiceWorkerToken,
@@ -1208,29 +1241,29 @@ function SessionContent({
         await localParticipant.publishTrack(newTrack as unknown as MediaStreamTrack);
 
         try {
-          await localParticipant.setAttributes({
+          await localParticipant.setAttributes(sanitizeLiveKitAttributes({
             'voice-masking': 'local-dsp',
             'voice-preset': activePreset,
             'voice-semitones': String(semitones),
             'avatar-style': localAvatarConfig.style,
             'avatar-palette': localAvatarConfig.palette,
-	            'avatar-emotion': localEmotion,
-	            'avatar-body': localAvatarConfig.bodyType,
-	            'avatar-skin-tone': localAvatarConfig.skinTone,
-	            'avatar-hair': localAvatarConfig.hairStyle,
-	            'avatar-hair-color': localAvatarConfig.hairColor,
-	            'avatar-eye-color': localAvatarConfig.eyeColor,
-	            'avatar-face-shape': localAvatarConfig.faceShape,
-	            'avatar-nose': localAvatarConfig.noseStyle,
-	            'avatar-eye': localAvatarConfig.eyeStyle,
-	            'avatar-eyebrow': localAvatarConfig.eyebrowStyle,
-	            'avatar-mouth': localAvatarConfig.mouthStyle,
-	            'avatar-clothing': localAvatarConfig.clothingType,
-	            'avatar-clothing-color': localAvatarConfig.clothingColor,
-	            'avatar-accessory': localAvatarConfig.accessoryType,
-	            'avatar-render-mode': localAvatarConfig.renderMode,
-              'avatar-2d': JSON.stringify(localAvatarConfig.avatar2D),
-	          });
+            'avatar-emotion': localEmotion,
+            'avatar-body': localAvatarConfig.bodyType,
+            'avatar-skin-tone': localAvatarConfig.skinTone,
+            'avatar-hair': localAvatarConfig.hairStyle,
+            'avatar-hair-color': localAvatarConfig.hairColor,
+            'avatar-eye-color': localAvatarConfig.eyeColor,
+            'avatar-face-shape': localAvatarConfig.faceShape,
+            'avatar-nose': localAvatarConfig.noseStyle,
+            'avatar-eye': localAvatarConfig.eyeStyle,
+            'avatar-eyebrow': localAvatarConfig.eyebrowStyle,
+            'avatar-mouth': localAvatarConfig.mouthStyle,
+            'avatar-clothing': localAvatarConfig.clothingType,
+            'avatar-clothing-color': localAvatarConfig.clothingColor,
+            'avatar-accessory': localAvatarConfig.accessoryType,
+            'avatar-render-mode': localAvatarConfig.renderMode,
+            'avatar-2d': JSON.stringify(localAvatarConfig.avatar2D),
+          }));
         } catch (attrErr) {
           console.warn('[SessionRoom] Failed to set participant attributes:', attrErr);
         }
@@ -1409,6 +1442,24 @@ function SessionContent({
       />
     </main>
   );
+}
+
+async function requestVoiceWorkerToken(options: {
+  sessionId: string;
+  participantIdentity: string;
+}): Promise<string | null> {
+  const response = await fetch('/api/voice-masking/token', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify(options),
+  });
+
+  if (!response.ok) {
+    return null;
+  }
+
+  const data = await response.json().catch(() => null) as { token?: unknown } | null;
+  return typeof data?.token === 'string' ? data.token : null;
 }
 
 function VoiceMaskingDebugPanel({

@@ -1,0 +1,3 @@
+# Optional local evaluation dependencies for ASR/WER scoring.
+# Keep these out of production app and worker runtimes.
+jiwer>=4.0.0,<5

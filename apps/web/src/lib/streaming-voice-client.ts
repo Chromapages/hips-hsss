@@ -50,7 +50,12 @@ export class StreamingVoiceClient {
     const audioContext = new AudioCtx();
     this.audioContext = audioContext;
 
-    const ws = new WebSocket(withToken(this.options.url, this.options.token));
+    const ws = new WebSocket(withAuthParams({
+      url: this.options.url,
+      token: this.options.token,
+      sessionId: this.options.sessionId,
+      participantIdentity: this.options.participantIdentity,
+    }));
     ws.binaryType = 'arraybuffer';
     this.ws = ws;
 
@@ -146,10 +151,17 @@ function estimateChunkMs(chunkSize: number, sampleRate: number): number {
   return Math.max(10, Math.round((chunkSize / sampleRate) * 1000));
 }
 
-function withToken(url: string, token: string | undefined): string {
-  if (!token) return url;
+function withAuthParams(options: {
+  url: string;
+  token: string | undefined;
+  sessionId: string;
+  participantIdentity: string;
+}): string {
+  const { url, token, sessionId, participantIdentity } = options;
   const parsed = new URL(url);
-  parsed.searchParams.set('token', token);
+  if (token) parsed.searchParams.set('token', token);
+  parsed.searchParams.set('sessionId', sessionId);
+  parsed.searchParams.set('participantIdentity', participantIdentity);
   return parsed.toString();
 }
 

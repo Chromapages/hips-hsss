@@ -46,6 +46,29 @@ docker compose --env-file .env -f docker-compose.yml -f docker-compose.gpu.yml l
 
 ## Web App Settings
 
+This folder describes the legacy `w-okada/voice-changer` POC. The current
+H.I.P.S. streaming worker uses `VOICE_WORKER_*` settings instead:
+
+```bash
+VOICE_WORKER_ENABLED=true
+VOICE_WORKER_WS_URL=ws://127.0.0.1:3010/v1/stream
+VOICE_WORKER_HEALTH_URL=http://127.0.0.1:3010/health
+VOICE_WORKER_PUBLIC_WS_URL=wss://voice-worker.example.com/v1/stream
+VOICE_WORKER_RUNTIME=cpu-dsp-v1
+VOICE_WORKER_LIVE_READY=false
+VOICE_WORKER_JWT_SECRET=replace-with-strong-worker-jwt-secret
+VOICE_WORKER_SHARED_SECRET=legacy-fallback-secret
+VOICE_WORKER_BROWSER_TOKEN=legacy-static-browser-token
+VOICE_WORKER_TIMEOUT_MS=2500
+```
+
+The preferred browser-to-worker auth path is now a short-lived stream JWT minted
+by the web app and validated during the worker WebSocket upgrade. Keep
+`VOICE_WORKER_BROWSER_TOKEN` only for local or legacy fallback environments.
+
+The older variables below are retained only for documenting this raw
+voice-changer container experiment.
+
 After the backend is reachable from the web process:
 
 ```bash

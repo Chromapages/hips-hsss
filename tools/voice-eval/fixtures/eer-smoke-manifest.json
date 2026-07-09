@@ -1,0 +1,62 @@
+{
+  "name": "eer-score-smoke",
+  "description": "Score-only EER smoke manifest. It contains no participant audio.",
+  "trials": [
+    {
+      "id": "lazy_target_0001",
+      "target": true,
+      "condition": "lazyInformed",
+      "genderCondition": "same-gender",
+      "score": 0.62
+    },
+    {
+      "id": "lazy_target_0002",
+      "target": true,
+      "condition": "lazyInformed",
+      "genderCondition": "same-gender",
+      "score": 0.58
+    },
+    {
+      "id": "lazy_nontarget_0001",
+      "target": false,
+      "condition": "lazyInformed",
+      "genderCondition": "same-gender",
+      "score": 0.47
+    },
+    {
+      "id": "lazy_nontarget_0002",
+      "target": false,
+      "condition": "lazyInformed",
+      "genderCondition": "cross-gender",
+      "score": 0.22
+    },
+    {
+      "id": "semi_target_0001",
+      "target": true,
+      "condition": "semiInformed",
+      "genderCondition": "same-gender",
+      "score": 0.71
+    },
+    {
+      "id": "semi_target_0002",
+      "target": true,
+      "condition": "semiInformed",
+      "genderCondition": "same-gender",
+      "score": 0.54
+    },
+    {
+      "id": "semi_nontarget_0001",
+      "target": false,
+      "condition": "semiInformed",
+      "genderCondition": "same-gender",
+      "score": 0.57
+    },
+    {
+      "id": "semi_nontarget_0002",
+      "target": false,
+      "condition": "semiInformed",
+      "genderCondition": "cross-gender",
+      "score": 0.31
+    }
+  ]
+}

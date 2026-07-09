@@ -73,6 +73,7 @@ export default function LiveDemoPage() {
     sessionStorage.setItem("hips-voice-anonymization", updatedConfig.anonymizationMode || "dsp");
     sessionStorage.setItem("hips-voice-persona", updatedConfig.selectedPersona || "clara");
     sessionStorage.setItem("hips-voice-anticadence", String(updatedConfig.isAntiCadenceEnabled));
+    sessionStorage.setItem("hips-voice-enhanced-neural-consent", String(updatedConfig.isEnhancedNeuralConsentAccepted));
 
     localStorage.setItem("hips-host-avatar", JSON.stringify(updatedConfig));
   };

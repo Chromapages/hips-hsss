@@ -62,6 +62,32 @@ Current VPS finding:
 
 ## Environment
 
+The implemented H.I.P.S. worker path uses the `VOICE_WORKER_*` environment
+model. The older `NEURAL_VOICE_CHANGER_*` names below are legacy POC
+terminology for the raw `w-okada/voice-changer` experiment and should not be
+used for the current browser-to-worker returned-audio path.
+
+Current voice worker path:
+
+```bash
+VOICE_WORKER_ENABLED=true
+VOICE_WORKER_WS_URL=ws://127.0.0.1:3010/v1/stream
+VOICE_WORKER_HEALTH_URL=http://127.0.0.1:3010/health
+VOICE_WORKER_PUBLIC_WS_URL=wss://voice-worker.example.com/v1/stream
+VOICE_WORKER_RUNTIME=cpu-dsp-v1
+VOICE_WORKER_LIVE_READY=false
+VOICE_WORKER_JWT_SECRET=replace-with-strong-worker-jwt-secret
+VOICE_WORKER_SHARED_SECRET=legacy-fallback-secret
+VOICE_WORKER_BROWSER_TOKEN=legacy-static-browser-token
+VOICE_WORKER_TIMEOUT_MS=2500
+```
+
+Use `VOICE_WORKER_JWT_SECRET` for the production path. The web app mints a
+short-lived stream token and the worker validates it during WebSocket upgrade.
+`VOICE_WORKER_BROWSER_TOKEN` is retained only as a local or legacy fallback.
+
+Legacy voice-changer POC:
+
 Web app:
 
 ```bash

@@ -10,6 +10,7 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
+    "jose": "^6.2.3",
     "ws": "^8.18.3",
     "zod": "^4.4.3"
   },

@@ -62,9 +62,10 @@ const cspDirectives = [
   "default-src 'self'",
   // 'unsafe-inline' is required for Next.js webpack bundles (HMR in dev, compiled scripts in prod)
   // 'unsafe-eval' is required for webpack HMR Fast Refresh in development only
+  // blob: is required for AudioWorklet modules loaded from generated Blob URLs.
   isDev
-    ? "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://fonts.googleapis.com https://www.googletagmanager.com https://apis.google.com https://esm.sh"
-    : "script-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://www.googletagmanager.com https://apis.google.com https://esm.sh",
+    ? "script-src 'self' 'unsafe-inline' 'unsafe-eval' blob: https://fonts.googleapis.com https://www.googletagmanager.com https://apis.google.com https://esm.sh"
+    : "script-src 'self' 'unsafe-inline' blob: https://fonts.googleapis.com https://www.googletagmanager.com https://apis.google.com https://esm.sh",
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
   "font-src 'self' https://fonts.gstatic.com",
   "img-src 'self' data: blob: https://images.unsplash.com https://hips-hsss.firebasestorage.app https://*.googleusercontent.com",

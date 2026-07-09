@@ -1,0 +1,43 @@
+{
+  "name": "voicepat-bridge-smoke",
+  "sampleRate": 16000,
+  "description": "Path-only VoicePAT export smoke manifest. It contains no participant audio.",
+  "utterances": [
+    {
+      "id": "synthetic_0001",
+      "speakerId": "synthetic_a",
+      "language": "en",
+      "path": "data/original/synthetic_0001.wav",
+      "anonymizedPath": "data/anonymized/synthetic_0001.wav",
+      "reference": "we meet in a quiet room and speak with steady care",
+      "hypothesis": "we meet in a quiet room and speak with steady care"
+    },
+    {
+      "id": "synthetic_0002",
+      "speakerId": "synthetic_b",
+      "language": "en",
+      "path": "data/original/synthetic_0002.wav",
+      "anonymizedPath": "data/anonymized/synthetic_0002.wav",
+      "reference": "enhanced neural masking should preserve the words",
+      "hypothesis": "enhanced neural masking should preserve words"
+    }
+  ],
+  "trials": [
+    {
+      "id": "synthetic_target_0001",
+      "enrollmentSpeakerId": "synthetic_a",
+      "trialUtteranceId": "synthetic_0001",
+      "target": true,
+      "condition": "semiInformed",
+      "genderCondition": "same-gender"
+    },
+    {
+      "id": "synthetic_nontarget_0001",
+      "enrollmentSpeakerId": "synthetic_a",
+      "trialUtteranceId": "synthetic_0002",
+      "target": false,
+      "condition": "semiInformed",
+      "genderCondition": "cross-gender"
+    }
+  ]
+}

@@ -10,10 +10,11 @@ type AvatarCompositorProps = {
   config: Avatar2DConfig;
   className?: string;
   isMini?: boolean;
+  isOnline?: boolean;
 };
 
-export function AvatarCompositor({ config, className, isMini }: AvatarCompositorProps) {
-  const layers = layerRenderOrder(config);
+export function AvatarCompositor({ config, className, isMini, isOnline = true }: AvatarCompositorProps) {
+  const layers = layerRenderOrder(config, isOnline);
   const bgLayer = layers[0];
   const characterLayers = layers.slice(1);
 

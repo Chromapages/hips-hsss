@@ -22,7 +22,7 @@ export function normalizeAvatarEmotion(value?: string | null): AvatarEmotion {
 }
 
 export function normalizeAvatarBodyType(value?: string | number | null): AvatarBodyType {
-  return Number(value) === 0 ? 0 : 1;
+  return Number(value) === 1 ? 1 : 0;
 }
 
 export const paletteColors = {

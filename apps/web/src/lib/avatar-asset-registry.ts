@@ -37,13 +37,14 @@ export const avatar2DOptions = {
     { id: "hair_bun_01", label: "Bun" },
     { id: "hair_curly_tight_01", label: "Curly" },
     { id: "hair_locs_long_01", label: "Locs" },
-    { id: "hair_shaved_01", label: "Shaved" },
+    { id: "hair_shaved_01", label: "Bald" },
     { id: "cover_hijab_01", label: "Hijab" },
+    { id: "hair_pixie_01", label: "Pixie" },
+    { id: "hair_waves_01", label: "Waves" },
+    { id: "hair_spacebuns_01", label: "Space Buns" },
   ],
   eyeShapes: [
     { id: "eyes_almond_01", label: "Almond" },
-    { id: "eyes_round_01", label: "Round" },
-    { id: "eyes_wide_01", label: "Wide" },
     { id: "eyes_sleepy_01", label: "Soft" },
   ],
   eyebrows: [
@@ -53,8 +54,6 @@ export const avatar2DOptions = {
   ],
   noses: [
     { id: "nose_button_01", label: "Button" },
-    { id: "nose_soft_01", label: "Soft" },
-    { id: "nose_wide_01", label: "Wide" },
   ],
   mouths: [
     { id: "mouth_neutral_01", label: "Neutral" },
@@ -116,29 +115,43 @@ export function getHairBackSrc(hairStyle: Avatar2DConfig["hairStyle"]) {
   if (hairStyle === "hair_long_01") return src("hair-back", "hair_long_back_01");
   if (hairStyle === "hair_locs_long_01") return src("hair-back", "hair_locs_long_back_01");
   if (hairStyle === "cover_hijab_01") return src("hair-back", "cover_hijab_back_01");
+  if (
+    hairStyle === "hair_waves_01" ||
+    hairStyle === "hair_spacebuns_01"
+  ) {
+    return src("hair-back", hairStyle);
+  }
   return null;
 }
 
 export function getHairFrontSrc(hairStyle: Avatar2DConfig["hairStyle"]) {
+  if (hairStyle === "hair_shaved_01") return null;
   return src("hair-front", hairStyle);
 }
 
-export function layerRenderOrder(config: Avatar2DConfig) {
-  const preset = config.expression === "neutral"
-    ? { eyes: config.eyeShape, mouth: config.mouth, brow: config.eyebrow }
-    : expressionPresets[config.expression];
+export function layerRenderOrder(config: Avatar2DConfig, isOnline: boolean = true) {
+  const finalConfig = {
+    ...config,
+    eyeShape: isOnline ? "eyes_almond_01" as const : "eyes_sleepy_01" as const,
+  };
+  const preset = finalConfig.expression === "neutral"
+    ? { eyes: finalConfig.eyeShape, mouth: finalConfig.mouth, brow: finalConfig.eyebrow }
+    : expressionPresets[finalConfig.expression];
+
+  const eyesToRender = isOnline ? preset.eyes : "eyes_sleepy_01";
+
   return [
-    src("background", config.background),
-    getHairBackSrc(config.hairStyle),
+    src("background", finalConfig.background),
+    getHairBackSrc(finalConfig.hairStyle),
     src("body", "body_shoulders_01"),
-    src("face", config.faceShape),
-    src("clothing", config.clothingStyle),
-    src("eyes", preset.eyes),
+    src("face", finalConfig.faceShape),
+    src("clothing", finalConfig.clothingStyle),
+    src("eyes", eyesToRender),
     src("brows", preset.brow),
-    src("nose", config.nose),
+    src("nose", finalConfig.nose),
     src("mouth", preset.mouth),
-    src("beard", config.facialHair),
-    getHairFrontSrc(config.hairStyle),
-    src("accessories", config.accessory),
+    src("beard", finalConfig.facialHair),
+    getHairFrontSrc(finalConfig.hairStyle),
+    src("accessories", finalConfig.accessory),
   ];
 }

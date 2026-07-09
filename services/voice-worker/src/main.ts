@@ -11,6 +11,7 @@ import {
 } from './protocol.js';
 import { CPU_DSP_RUNTIME, VoiceMasker, buildVoiceMaskerConfig, type VoiceMaskerConfig } from './dsp.js';
 import { detectSpeech, int16Rms, silenceLike } from './vad.js';
+import { authorizeVoiceWorkerUrl, type VoiceWorkerAuthResult } from './auth.js';
 
 type ClientState = {
   started: boolean;
@@ -34,10 +35,15 @@ const port = Number(process.env.PORT ?? process.env.VOICE_WORKER_PORT ?? 3010);
 const host = process.env.HOST ?? process.env.VOICE_WORKER_HOST ?? '0.0.0.0';
 const sharedSecret = process.env.VOICE_WORKER_SHARED_SECRET?.trim() || '';
 const browserToken = process.env.VOICE_WORKER_BROWSER_TOKEN?.trim() || '';
+const jwtSecret =
+  process.env.VOICE_WORKER_JWT_SECRET?.trim() ||
+  process.env.SERVICE_JWT_SECRET?.trim() ||
+  sharedSecret;
 const liveReady = process.env.VOICE_WORKER_LIVE_READY === 'true';
 const vadThreshold = parseNumber(process.env.VOICE_WORKER_VAD_THRESHOLD, DEFAULT_VAD_THRESHOLD);
 const maxPayloadBytes = parseInteger(process.env.VOICE_WORKER_MAX_PAYLOAD_BYTES, 256 * 1024);
 const defaultMaskerConfig = buildVoiceMaskerConfig();
+const authMetrics = createAuthMetrics();
 
 const server = http.createServer((req, res) => {
   if (req.url?.startsWith('/health')) {
@@ -50,6 +56,9 @@ const server = http.createServer((req, res) => {
       vad: {
         enabled: true,
         threshold: vadThreshold,
+      },
+      metrics: {
+        auth: authMetrics,
       },
     });
 
@@ -73,11 +82,19 @@ const wss = new WebSocketServer({
   perMessageDeflate: false,
 });
 
-wss.on('connection', (ws, req) => {
-  if (!isAuthorized(req.url)) {
+wss.on('connection', async (ws, req) => {
+  const auth = await authorizeVoiceWorkerUrl(req.url, {
+    jwtSecret,
+    sharedSecret,
+    browserToken,
+  });
+
+  if (!auth.ok) {
+    recordAuthResult(auth);
     ws.close(1008, 'unauthorized');
     return;
   }
+  recordAuthResult(auth);
 
   const state: ClientState = {
     started: false,
@@ -269,16 +286,52 @@ function rawDataToBuffer(data: RawData): Buffer {
   return Buffer.concat(data);
 }
 
-function isAuthorized(url: string | undefined): boolean {
-  if (!sharedSecret && !browserToken) return true;
-  if (!url) return false;
+function createAuthMetrics() {
+  return {
+    accepted: {
+      jwt: 0,
+      legacyToken: 0,
+      open: 0,
+    },
+    rejected: {
+      missingToken: 0,
+      invalid: 0,
+      expired: 0,
+      wrongScope: 0,
+      wrongSession: 0,
+      wrongParticipant: 0,
+    },
+  };
+}
 
-  try {
-    const parsed = new URL(url, 'ws://localhost');
-    const token = parsed.searchParams.get('token');
-    return token === sharedSecret || token === browserToken;
-  } catch {
-    return false;
+function recordAuthResult(auth: VoiceWorkerAuthResult) {
+  if (auth.ok) {
+    if (auth.mode === 'legacy-token') {
+      authMetrics.accepted.legacyToken += 1;
+      return;
+    }
+
+    authMetrics.accepted[auth.mode] += 1;
+    return;
+  }
+
+  authMetrics.rejected[toAuthMetricKey(auth.reason)] += 1;
+}
+
+function toAuthMetricKey(
+  reason: Exclude<VoiceWorkerAuthResult, { ok: true }>['reason'],
+): keyof ReturnType<typeof createAuthMetrics>['rejected'] {
+  switch (reason) {
+    case 'missing_token':
+      return 'missingToken';
+    case 'wrong_scope':
+      return 'wrongScope';
+    case 'wrong_session':
+      return 'wrongSession';
+    case 'wrong_participant':
+      return 'wrongParticipant';
+    default:
+      return reason;
   }
 }
 

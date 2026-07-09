@@ -65,7 +65,7 @@ Why this architecture:
   target.
 - Do not attempt codec-layer LiveKit integration first.
 - Do not promise strong anonymity on CPU-only VPS hardware.
-- Do not set `NEURAL_VOICE_CHANGER_LIVE_READY=true` until only transformed
+- Do not set `VOICE_WORKER_LIVE_READY=true` until only transformed
   audio is being published and the latency budget is measured.
 
 ## Repo Mapping
@@ -191,20 +191,28 @@ That means our real deployment strategy should be:
 
 ### Phase 2: Streaming Worker Skeleton
 
-- Add `services/voice-worker/` (initial scaffold added)
-- Add `wss://` streaming endpoint (initial `ws://` local endpoint added at
-  `/v1/stream`)
-- Add chunk protocol (JSON control messages + binary PCM16 frames)
-- Add VAD (initial RMS threshold gate added)
-- Return looped or pass-through transformed frames first for transport testing
-  (initial pass-through/silence behavior added)
+Status: mostly implemented as a transport-first CPU DSP worker.
+
+- `services/voice-worker/` exists.
+- `/v1/stream` exists for local `ws://` development and should run behind
+  `wss://` in deployed environments.
+- The chunk protocol exists: JSON control messages plus binary PCM16 frames.
+- VAD exists as an RMS threshold gate.
+- The worker returns CPU-DSP transformed frames for speech and silence-like
+  frames for non-speech.
+- Browser returned-audio plumbing exists in:
+  - `apps/web/src/lib/streaming-voice-client.ts`
+  - `apps/web/src/lib/voice-track-rebuilder.ts`
+  - `apps/web/src/hooks/session/useNeuralVoiceMasking.ts`
 
 Success criteria:
 
-- browser can send mic chunks
-- worker can return audio chunks
-- browser can publish returned audio into LiveKit
-- no raw track is published in enhanced mode
+- browser can send mic chunks (implemented)
+- worker can return audio chunks (implemented)
+- browser can publish returned audio into LiveKit (implemented in the primary
+  `SessionRoom` path)
+- no raw track is published in enhanced mode (implemented structurally; needs
+  automated regression coverage)
 
 ### Phase 3: Real Anonymization Model Integration
 
@@ -246,6 +254,7 @@ We should track:
 - `VOICE_WORKER_WS_URL`
 - `VOICE_WORKER_HEALTH_URL`
 - `VOICE_WORKER_PUBLIC_WS_URL`
+- `VOICE_WORKER_JWT_SECRET`
 - `VOICE_WORKER_SHARED_SECRET`
 - `VOICE_WORKER_BROWSER_TOKEN`
 - `VOICE_WORKER_TIMEOUT_MS`
@@ -268,14 +277,17 @@ We should track:
 
 ## Immediate Next Step
 
-The next build step should be a transport-first implementation:
+The transport-first implementation now exists. The next build step is
+validation-first hardening:
 
-1. Add a dedicated `voice-worker` service folder.
-2. Define the browser-to-worker chunk protocol.
-3. Wire a browser client that can publish returned audio instead of raw mic
-   audio.
-4. Keep the current DSP path as fallback until the neural worker proves
-   healthier and stronger.
+1. Add readiness matrix tests for `/api/voice-masking/status`.
+2. Add protocol and VAD tests for `services/voice-worker`.
+3. Add browser/session regression tests proving the raw mic track is not
+   published when DSP or enhanced-worker setup fails.
+4. Create the VoicePrivacy-style evaluation workspace for EER, WER, UAR, RTF,
+   and latency.
+5. Keep the current DSP path as fallback until a neural worker proves healthier
+   and stronger.
 
 That is the shortest path from “research” to something this codebase can
 actually validate.

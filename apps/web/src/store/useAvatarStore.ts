@@ -1,37 +1,14 @@
 import { create } from "zustand";
 import type {
   Avatar2DConfig,
-  AvatarBodyType,
-  AvatarClothingType,
-  AvatarAccessoryType,
-  AvatarFaceStyle,
-  AvatarRenderMode,
   AvatarEmotion,
 } from "@hips/types";
 import { DEFAULT_AVATAR_2D } from "@hips/types";
 
 export interface AvatarState {
-  // Avatar Styling Configuration
-  avatarColor: string;
-  avatarStyle: number;
-  bodyType: AvatarBodyType;
-  skinTone: string;
-  hairStyle: number;
-  hairColor: string;
-  backgroundColor: string;
-  eyeColor: string;
-  faceShape: number;
-  noseStyle: number;
-  eyeStyle: AvatarFaceStyle;
-  eyebrowStyle: AvatarFaceStyle;
-  mouthStyle: AvatarFaceStyle;
-  clothingType: AvatarClothingType;
-  clothingColor: string;
-  accessoryType: AvatarAccessoryType;
-  avatarRenderMode: AvatarRenderMode;
-  emotion: AvatarEmotion;
+  // Canonical Avatar Configuration
   avatar2D: Avatar2DConfig;
-
+  emotion: AvatarEmotion;
 
   // Voice Anonymization Configuration
   voicePreset: string;
@@ -40,6 +17,7 @@ export interface AvatarState {
   anonymizationMode: "dsp" | "neural";
   selectedPersona: "clara" | "arthur";
   isAntiCadenceEnabled: boolean;
+  isEnhancedNeuralConsentAccepted: boolean;
 
   // State Actions
   setAvatarConfig: (config: Partial<Omit<
@@ -53,25 +31,8 @@ export interface AvatarState {
 }
 
 export const useAvatarStore = create<AvatarState>((set, get) => ({
-  avatarColor: "#173B57",
-  avatarStyle: 0,
-  bodyType: 1,
-  skinTone: "#E8B092",
-  hairStyle: 0,
-  hairColor: "#1c1917",
-  backgroundColor: "#eef0ff",
-  eyeColor: "#1c1917",
-  faceShape: 0,
-  noseStyle: 0,
-  eyeStyle: 0,
-  eyebrowStyle: 0,
-  mouthStyle: 0,
-  clothingType: 0,
-  clothingColor: "#173B57",
-  accessoryType: 0,
-  avatarRenderMode: "2d",
-  emotion: "neutral",
   avatar2D: DEFAULT_AVATAR_2D,
+  emotion: "neutral",
 
   voicePreset: "subtle",
   semitones: -2,
@@ -79,6 +40,7 @@ export const useAvatarStore = create<AvatarState>((set, get) => ({
   anonymizationMode: "dsp",
   selectedPersona: "clara",
   isAntiCadenceEnabled: false,
+  isEnhancedNeuralConsentAccepted: false,
 
   setAvatarConfig: (config) =>
     set((state) => ({
@@ -109,25 +71,8 @@ export const useAvatarStore = create<AvatarState>((set, get) => ({
 
   resetConfig: () =>
     set({
-      avatarColor: "#173B57",
-      avatarStyle: 0,
-      bodyType: 1,
-      skinTone: "#E8B092",
-      hairStyle: 0,
-      hairColor: "#1c1917",
-      backgroundColor: "#eef0ff",
-      eyeColor: "#1c1917",
-      faceShape: 0,
-      noseStyle: 0,
-      eyeStyle: 0,
-      eyebrowStyle: 0,
-      mouthStyle: 0,
-      clothingType: 0,
-      clothingColor: "#173B57",
-      accessoryType: 0,
-      avatarRenderMode: "2d",
-      emotion: "neutral",
       avatar2D: DEFAULT_AVATAR_2D,
+      emotion: "neutral",
 
       voicePreset: "subtle",
       semitones: -2,
@@ -135,5 +80,6 @@ export const useAvatarStore = create<AvatarState>((set, get) => ({
       anonymizationMode: "dsp",
       selectedPersona: "clara",
       isAntiCadenceEnabled: false,
+      isEnhancedNeuralConsentAccepted: false,
     }),
 }));

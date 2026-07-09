@@ -5,13 +5,11 @@ import type { Avatar2DConfig, Avatar2DExpression, AvatarEmotion, AvatarGesture, 
 import { DEFAULT_AVATAR_2D } from "@hips/types";
 import { AvatarCompositor } from "@/components/avatar/AvatarCompositor";
 
+import { parseAvatar2DConfigString } from "@/lib/avatar2d-schema";
+
 const parseAvatar2DConfig = (raw: string | undefined): Avatar2DConfig | null => {
   if (!raw) return null;
-  try {
-    return JSON.parse(raw) as Avatar2DConfig;
-  } catch {
-    return null;
-  }
+  return parseAvatar2DConfigString(raw);
 };
 
 const mapEmotionToExpression = (emotion: AvatarEmotion): Avatar2DExpression => {

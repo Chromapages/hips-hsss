@@ -12,7 +12,10 @@ export type AvatarHairStyle =
   | "hair_curly_tight_01"
   | "hair_locs_long_01"
   | "hair_shaved_01"
-  | "cover_hijab_01";
+  | "cover_hijab_01"
+  | "hair_pixie_01"
+  | "hair_waves_01"
+  | "hair_spacebuns_01";
 
 export type AvatarEyeShape =
   | "eyes_almond_01"

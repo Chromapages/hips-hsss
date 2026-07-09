@@ -18,7 +18,15 @@
     "test:phase9": "vitest run tests/data-separation.spec.ts",
     "separation": "node scripts/check-data-separation.mjs",
     "check:copy": "node scripts/check-copy.mjs",
-    "db:seed-demo": "tsx scripts/seed-demo-data.ts"
+    "db:seed-demo": "tsx scripts/seed-demo-data.ts",
+    "voice:eval:smoke": "tsx tools/voice-eval/src/run-dsp-smoke.ts",
+    "voice:eval:wer": "python3 tools/voice-eval/adapters/asr/score_wer.py",
+    "voice:eval:wer:smoke": "python3 tools/voice-eval/adapters/asr/score_wer.py --manifest tools/voice-eval/fixtures/wer-smoke-manifest.json --allow-missing-jiwer",
+    "voice:eval:eer": "python3 tools/voice-eval/adapters/asv/score_eer.py",
+    "voice:eval:eer:smoke": "python3 tools/voice-eval/adapters/asv/score_eer.py --manifest tools/voice-eval/fixtures/eer-smoke-manifest.json --allow-missing-model",
+    "voice:eval:voicepat:export": "tsx tools/voice-eval/src/export-voicepat.ts",
+    "voice:eval:voicepat:import": "tsx tools/voice-eval/src/import-voicepat.ts",
+    "voice:eval:voicepat:smoke": "tsx tools/voice-eval/src/export-voicepat.ts --manifest tools/voice-eval/fixtures/voicepat-smoke-manifest.json --out-dir tools/voice-eval/runs/voicepat-smoke"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

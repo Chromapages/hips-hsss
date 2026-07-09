@@ -8,6 +8,7 @@ type NeuralVoiceMaskingConfig = {
   runtime: string;
   liveReady: boolean;
   sharedSecretConfigured: boolean;
+  jwtConfigured: boolean;
   browserToken: string | null;
   timeoutMs: number;
 };
@@ -28,6 +29,11 @@ export function getNeuralVoiceMaskingConfig(): NeuralVoiceMaskingConfig {
     null;
   const publicWsUrl = process.env.VOICE_WORKER_PUBLIC_WS_URL?.trim() || null;
   const browserToken = process.env.VOICE_WORKER_BROWSER_TOKEN?.trim() || null;
+  const jwtConfigured = Boolean(
+    process.env.VOICE_WORKER_JWT_SECRET?.trim() ||
+    process.env.SERVICE_JWT_SECRET?.trim() ||
+    process.env.VOICE_WORKER_SHARED_SECRET?.trim()
+  );
 
   return {
     enabled: process.env.VOICE_WORKER_ENABLED === 'true' && Boolean(healthUrl),
@@ -37,7 +43,8 @@ export function getNeuralVoiceMaskingConfig(): NeuralVoiceMaskingConfig {
     runtime: process.env.VOICE_WORKER_RUNTIME?.trim() || 'transport-passthrough-vad',
     liveReady: process.env.VOICE_WORKER_LIVE_READY === 'true',
     sharedSecretConfigured: Boolean(process.env.VOICE_WORKER_SHARED_SECRET),
-    browserToken,
+    jwtConfigured,
+    browserToken: jwtConfigured ? null : browserToken,
     timeoutMs: parseTimeout(process.env.VOICE_WORKER_TIMEOUT_MS),
   };
 }

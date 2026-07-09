@@ -277,13 +277,12 @@ export function MicSetupScreen({ onBack, onMicReady }: MicSetupScreenProps) {
   }, []);
 
   // Inline pitch-shift worklet for the masked preview.
-  // Mirrors the algorithm in voice-mask-processor.ts but self-contained here
-  // so it can be instantiated without the LiveKit TrackProcessor lifecycle.
+  // Mirrors the original simple mic-test path so preview playback stays local.
   const pitchShiftWorkletSrc = `
 class PitchShiftPreview extends AudioWorkletProcessor {
   constructor() {
     super();
-    this.ratio = Math.pow(2, 4 / 12); // +4 semitones (subtle preset default)
+    this.ratio = Math.pow(2, 4 / 12); // +4 semitones
     this.BUF_SIZE = 2048;
     this.MASK = this.BUF_SIZE - 1;
     this.HALF = this.BUF_SIZE >> 1;
@@ -301,7 +300,7 @@ class PitchShiftPreview extends AudioWorkletProcessor {
   win(n) {
     return 0.5 * (1 - Math.cos(6.2831853 * n / this.HALF));
   }
-  process(inputs, outputs,) {
+  process(inputs, outputs) {
     const src = inputs[0]?.[0];
     const dst = outputs[0]?.[0];
     if (!src || !dst) return true;
@@ -309,7 +308,10 @@ class PitchShiftPreview extends AudioWorkletProcessor {
       this.buf[this.wp & this.MASK] = src[i];
       this.wp++;
       this.frac += this.ratio;
-      if (this.frac >= 1) { this.baseRp += Math.floor(this.frac); this.frac -= Math.floor(this.frac); }
+      if (this.frac >= 1) {
+        this.baseRp += Math.floor(this.frac);
+        this.frac -= Math.floor(this.frac);
+      }
       const rp0 = this.baseRp & this.MASK;
       dst[i] = this.lerp(this.baseRp) * this.win(rp0)
              + this.lerp((this.baseRp + this.HALF) & this.MASK) * this.win((this.baseRp + this.HALF) & this.MASK);
@@ -331,6 +333,9 @@ registerProcessor('pitch-shift-preview', PitchShiftPreview);
       previewContextRef.current = ctx;
       const source = ctx.createMediaStreamSource(stream);
       source.connect(ctx.destination);
+      if (ctx.state === 'suspended') {
+        await ctx.resume();
+      }
       setPreviewing('original');
     } catch (err) {
       console.warn('[MicSetupScreen] Original preview failed:', err);
@@ -347,12 +352,18 @@ registerProcessor('pitch-shift-preview', PitchShiftPreview);
       previewContextRef.current = ctx;
       const blob = new Blob([pitchShiftWorkletSrc], { type: 'application/javascript' });
       const url = URL.createObjectURL(blob);
-      await ctx.audioWorklet.addModule(url);
-      URL.revokeObjectURL(url);
+      try {
+        await ctx.audioWorklet.addModule(url);
+      } finally {
+        URL.revokeObjectURL(url);
+      }
       const source = ctx.createMediaStreamSource(stream);
       const worklet = new AudioWorkletNode(ctx, 'pitch-shift-preview');
       source.connect(worklet);
       worklet.connect(ctx.destination);
+      if (ctx.state === 'suspended') {
+        await ctx.resume();
+      }
       setPreviewing('masked');
     } catch (err) {
       console.warn('[MicSetupScreen] Masked preview failed:', err);

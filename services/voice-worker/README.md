@@ -33,8 +33,20 @@ Connect to:
 ws://127.0.0.1:3010/v1/stream
 ```
 
-If `VOICE_WORKER_SHARED_SECRET` or `VOICE_WORKER_BROWSER_TOKEN` is set, pass
-one of those values as `?token=...`.
+In production, the browser should connect with a short-lived JWT minted by the
+web app. The worker validates that token during the WebSocket upgrade before it
+accepts audio frames.
+
+```bash
+VOICE_WORKER_JWT_SECRET=replace-with-strong-worker-jwt-secret
+SERVICE_JWT_SECRET=optional-shared-service-jwt-secret
+VOICE_WORKER_SHARED_SECRET=legacy-fallback-secret
+VOICE_WORKER_BROWSER_TOKEN=legacy-static-browser-token
+```
+
+Pass the JWT as `?token=...` along with `sessionId` and
+`participantIdentity`. `VOICE_WORKER_BROWSER_TOKEN` is only a legacy fallback
+when JWT auth is not configured.
 
 Send a start message before binary audio:
 

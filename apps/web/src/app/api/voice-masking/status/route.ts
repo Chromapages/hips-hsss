@@ -21,10 +21,11 @@ export async function GET() {
         Boolean(health.workerLiveReady) &&
         health.reachable &&
         Boolean(config.publicWsUrl) &&
-        (!config.sharedSecretConfigured || Boolean(config.browserToken)),
+        (config.jwtConfigured || !config.sharedSecretConfigured || Boolean(config.browserToken)),
       publicEndpointConfigured: Boolean(config.publicWsUrl),
       publicWsUrl: config.publicWsUrl,
       browserToken: config.browserToken,
+      jwtConfigured: config.jwtConfigured,
       sharedSecretConfigured: config.sharedSecretConfigured,
       health,
     },

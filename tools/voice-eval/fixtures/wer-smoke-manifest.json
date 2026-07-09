@@ -1,0 +1,21 @@
+{
+  "name": "wer-transcript-smoke",
+  "sampleRate": 16000,
+  "description": "Transcript-only smoke manifest. It contains no participant audio.",
+  "utterances": [
+    {
+      "id": "synthetic_0001",
+      "speakerId": "synthetic_a",
+      "language": "en",
+      "reference": "we meet in a quiet room and speak with steady care",
+      "hypothesis": "we meet in a quiet room and speak with steady care"
+    },
+    {
+      "id": "synthetic_0002",
+      "speakerId": "synthetic_b",
+      "language": "en",
+      "reference": "enhanced neural masking should preserve the words",
+      "hypothesis": "enhanced neural masking should preserve words"
+    }
+  ]
+}

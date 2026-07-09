@@ -2,25 +2,17 @@
 
 import { useState, useEffect, useRef } from "react";
 import { AvatarCustomizer } from "./AvatarCustomizer";
-import { normalizeAvatarBodyType, normalizeAvatarEmotion } from "./avatar-options";
-import type {
-  Avatar2DConfig,
-  AvatarBodyType,
-  AvatarClothingType,
-  AvatarAccessoryType,
-  AvatarFaceStyle,
-  AvatarRenderMode,
-} from "@hips/types";
+import { normalizeAvatarEmotion } from "./avatar-options";
+import type { Avatar2DConfig } from "@hips/types";
+import { DEFAULT_AVATAR_2D } from "@hips/types";
+
+import { parseAvatar2DConfigString } from "@/lib/avatar2d-schema";
 
 const parseStoredAvatar2D = (): Avatar2DConfig | undefined => {
   if (typeof window === "undefined") return undefined;
   const raw = sessionStorage.getItem("hips-avatar-2d");
   if (!raw) return undefined;
-  try {
-    return JSON.parse(raw) as Avatar2DConfig;
-  } catch {
-    return undefined;
-  }
+  return parseAvatar2DConfigString(raw) ?? undefined;
 };
 
 export function AvatarSelectorModal() {
@@ -77,81 +69,46 @@ export function AvatarSelectorModal() {
   const getInitialConfig = () => {
     if (typeof window === "undefined") {
       return {
-	        avatarColor: undefined,
-	        avatarStyle: undefined,
-	        bodyType: undefined,
-	        skinTone: undefined,
-	        hairStyle: undefined,
-	        hairColor: undefined,
-	        backgroundColor: undefined,
-	        eyeColor: undefined,
-	        faceShape: undefined,
-	        noseStyle: undefined,
-	        eyeStyle: undefined,
-	        eyebrowStyle: undefined,
-	        mouthStyle: undefined,
-	        clothingType: undefined,
-        clothingColor: undefined,
-        accessoryType: undefined,
-        avatarRenderMode: "2d" as AvatarRenderMode,
-        avatar2D: undefined,
-        emotion: undefined,
-        voicePreset: undefined,
-        semitones: undefined,
-        reverbLevel: undefined,
-        anonymizationMode: undefined,
-        selectedPersona: undefined,
+        avatar2D: DEFAULT_AVATAR_2D,
+        emotion: "neutral" as const,
         isAntiCadenceEnabled: false,
+        isEnhancedNeuralConsentAccepted: false,
       };
     }
-    return {
-	      avatarColor: sessionStorage.getItem("hips-avatar-color") || undefined,
-	      avatarStyle: sessionStorage.getItem("hips-avatar-style") ? parseInt(sessionStorage.getItem("hips-avatar-style")!, 10) : undefined,
-	      bodyType: normalizeAvatarBodyType(sessionStorage.getItem("hips-avatar-body")),
-	      skinTone: sessionStorage.getItem("hips-avatar-skin-tone") || undefined,
-	      hairStyle: sessionStorage.getItem("hips-avatar-hair") ? parseInt(sessionStorage.getItem("hips-avatar-hair")!, 10) : undefined,
-	      hairColor: sessionStorage.getItem("hips-avatar-hair-color") || undefined,
-	      backgroundColor: sessionStorage.getItem("hips-avatar-background") || undefined,
-	      eyeColor: sessionStorage.getItem("hips-avatar-eye-color") || undefined,
-	      faceShape: sessionStorage.getItem("hips-avatar-face-shape") ? parseInt(sessionStorage.getItem("hips-avatar-face-shape")!, 10) : undefined,
-	      noseStyle: sessionStorage.getItem("hips-avatar-nose") ? parseInt(sessionStorage.getItem("hips-avatar-nose")!, 10) : undefined,
-	      eyeStyle: sessionStorage.getItem("hips-avatar-eye") ? parseInt(sessionStorage.getItem("hips-avatar-eye")!, 10) as AvatarFaceStyle : undefined,
-	      eyebrowStyle: sessionStorage.getItem("hips-avatar-eyebrow") ? parseInt(sessionStorage.getItem("hips-avatar-eyebrow")!, 10) as AvatarFaceStyle : undefined,
-	      mouthStyle: sessionStorage.getItem("hips-avatar-mouth") ? parseInt(sessionStorage.getItem("hips-avatar-mouth")!, 10) as AvatarFaceStyle : undefined,
-	      clothingType: sessionStorage.getItem("hips-avatar-clothing") ? parseInt(sessionStorage.getItem("hips-avatar-clothing")!, 10) as AvatarClothingType : undefined,
-      clothingColor: sessionStorage.getItem("hips-avatar-clothing-color") || undefined,
-      accessoryType: sessionStorage.getItem("hips-avatar-accessory") ? parseInt(sessionStorage.getItem("hips-avatar-accessory")!, 10) as AvatarAccessoryType : undefined,
-      avatarRenderMode: "2d" as AvatarRenderMode,
-      avatar2D: parseStoredAvatar2D(),
-      emotion: normalizeAvatarEmotion(sessionStorage.getItem("hips-avatar-emotion")),
-      // Guest voice options
-      voicePreset: sessionStorage.getItem("hips-voice-preset") || undefined,
-      semitones: sessionStorage.getItem("hips-voice-semitones") ? parseInt(sessionStorage.getItem("hips-voice-semitones")!, 10) : undefined,
-      reverbLevel: (sessionStorage.getItem("hips-voice-reverb") as any) || undefined,
-      anonymizationMode: (sessionStorage.getItem("hips-voice-anonymization") as any) || undefined,
-      selectedPersona: (sessionStorage.getItem("hips-voice-persona") as any) || undefined,
+
+    const config: any = {
+      avatar2D: parseStoredAvatar2D() || DEFAULT_AVATAR_2D,
       isAntiCadenceEnabled: sessionStorage.getItem("hips-voice-anticadence") === "true",
+      isEnhancedNeuralConsentAccepted: sessionStorage.getItem("hips-voice-enhanced-neural-consent") === "true",
     };
+
+    const emotion = sessionStorage.getItem("hips-avatar-emotion");
+    if (emotion) config.emotion = normalizeAvatarEmotion(emotion);
+
+    const voicePreset = sessionStorage.getItem("hips-voice-preset");
+    if (voicePreset) config.voicePreset = voicePreset;
+
+    const semitones = sessionStorage.getItem("hips-voice-semitones");
+    if (semitones) config.semitones = parseInt(semitones, 10);
+
+    const reverb = sessionStorage.getItem("hips-voice-reverb");
+    if (reverb) config.reverbLevel = reverb;
+
+    const anonymization = sessionStorage.getItem("hips-voice-anonymization");
+    if (anonymization) {
+      config.anonymizationMode =
+        anonymization === "neural" && !config.isEnhancedNeuralConsentAccepted
+          ? "dsp"
+          : anonymization;
+    }
+
+    const persona = sessionStorage.getItem("hips-voice-persona");
+    if (persona) config.selectedPersona = persona;
+
+    return config;
   };
 
   const handleSave = (config: any) => {
-	    sessionStorage.setItem("hips-avatar-color", config.avatarColor);
-	    sessionStorage.setItem("hips-avatar-style", String(config.avatarStyle));
-	    sessionStorage.setItem("hips-avatar-body", String(normalizeAvatarBodyType(config.bodyType)));
-	    sessionStorage.setItem("hips-avatar-skin-tone", config.skinTone);
-	    sessionStorage.setItem("hips-avatar-hair", String(config.hairStyle));
-	    sessionStorage.setItem("hips-avatar-hair-color", config.hairColor);
-	    sessionStorage.setItem("hips-avatar-background", config.backgroundColor || "#eef0ff");
-	    sessionStorage.setItem("hips-avatar-eye-color", config.eyeColor || "#1c1917");
-	    sessionStorage.setItem("hips-avatar-face-shape", String(config.faceShape ?? 0));
-	    sessionStorage.setItem("hips-avatar-nose", String(config.noseStyle ?? 0));
-	    sessionStorage.setItem("hips-avatar-eye", String(config.eyeStyle));
-	    sessionStorage.setItem("hips-avatar-eyebrow", String(config.eyebrowStyle));
-	    sessionStorage.setItem("hips-avatar-mouth", String(config.mouthStyle));
-	    sessionStorage.setItem("hips-avatar-clothing", String(config.clothingType));
-    sessionStorage.setItem("hips-avatar-clothing-color", config.clothingColor);
-    sessionStorage.setItem("hips-avatar-accessory", String(config.accessoryType));
-    sessionStorage.setItem("hips-avatar-render-mode", "2d");
     if (config.avatar2D) {
       sessionStorage.setItem("hips-avatar-2d", JSON.stringify(config.avatar2D));
     }
@@ -163,6 +120,7 @@ export function AvatarSelectorModal() {
     sessionStorage.setItem("hips-voice-anonymization", config.anonymizationMode || "dsp");
     sessionStorage.setItem("hips-voice-persona", config.selectedPersona || "clara");
     sessionStorage.setItem("hips-voice-anticadence", String(config.isAntiCadenceEnabled));
+    sessionStorage.setItem("hips-voice-enhanced-neural-consent", String(config.isEnhancedNeuralConsentAccepted));
 
     setAnnouncement("Avatar and voice configuration locked successfully.");
     setTimeout(() => {
