@@ -76,7 +76,7 @@ if (isCI || isProd) {
   describe('Required variables are set', () => {
     for (const [name, spec] of Object.entries(vars)) {
       it(`${name} is set`, () => {
-        expect(results[name].set, `${name} is not set — ${spec.hint ?? ''}`).toBe(true);
+        expect(results[name]!.set, `${name} is not set — ${spec.hint ?? ''}`).toBe(true);
       });
     }
   });
@@ -86,7 +86,7 @@ if (isCI || isProd) {
       if (!spec.pattern) continue;
       it(`${name} format is valid`, () => {
         const val = process.env[name] ?? '';
-        expect(spec.pattern.test(val), `${name}="${val}" format invalid — ${spec.hint ?? ''}`).toBe(true);
+        expect(spec.pattern!.test(val), `${name}="${val}" format invalid — ${spec.hint ?? ''}`).toBe(true);
       });
     }
   });
@@ -94,7 +94,7 @@ if (isCI || isProd) {
   describe('No placeholder values', () => {
     for (const [name] of Object.entries(vars)) {
       it(`${name} is not a placeholder`, () => {
-        expect(results[name].placeholder, `${name} has placeholder value: "${process.env[name] ?? ''}"`).toBe(false);
+        expect(results[name]!.placeholder, `${name} has placeholder value: "${process.env[name] ?? ''}"`).toBe(false);
       });
     }
   });

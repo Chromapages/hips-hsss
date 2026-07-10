@@ -1,39 +1,43 @@
+"use client";
+
 import React from "react";
-import { Navbar } from "@/components/polish/Navbar";
+import { usePathname } from "next/navigation";
+import { AuthBrandPanel } from "@/components/auth/AuthBrandPanel";
 
 export default function AuthLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const pathname = usePathname();
+  
+  let variant: "participant" | "facilitator" | "admin" | "host" = "participant";
+  if (pathname?.startsWith("/login/admin") === true) {
+    variant = "admin";
+  } else if (pathname?.startsWith("/login/facilitator") === true) {
+    variant = "facilitator";
+  } else if (pathname?.startsWith("/login/host") === true) {
+    variant = "host";
+  }
+
   return (
-    <div className="min-h-screen bg-surface text-text selection:bg-primary/30 overflow-hidden">
-      <Navbar />
-
-      {/* Dynamic Background Elements */}
-      <div className="fixed top-0 left-0 w-full h-full pointer-events-none">
-        <div className="absolute top-1/4 left-1/4 w-[600px] h-[600px] bg-primary/5 rounded-full blur-[140px] animate-pulse" />
-        <div className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] bg-accent/5 rounded-full blur-[120px] animate-pulse [animation-delay:2s]" />
+    <div className="min-h-screen bg-bg text-text selection:bg-primary/30 overflow-x-hidden">
+      <div className="min-h-screen flex flex-col lg:grid lg:grid-cols-[3fr_2fr]">
+        {/* Brand Panel */}
+        <AuthBrandPanel variant={variant} />
+        
+        {/* Form Area */}
+        <main
+          id="main"
+          tabIndex={-1}
+          className="relative flex-1 flex items-center justify-center p-6 sm:p-8 bg-surface min-h-[calc(100vh-140px)] lg:min-h-0 overflow-y-auto"
+        >
+          <div className="w-full max-w-md animate-in fade-in slide-in-from-bottom-4 duration-700">
+            {children}
+          </div>
+        </main>
       </div>
-
-      <main className="relative z-10 flex min-h-screen items-center justify-center p-6">
-        <div className="w-full max-w-[440px] animate-in fade-in slide-in-from-bottom-8 duration-1000">
-          <div className="rounded-3xl border border-border bg-surface p-8 md:p-12 shadow-xl relative overflow-hidden">
-            {/* Subtle inner glow */}
-            <div className="absolute -top-12 -right-12 w-48 h-48 bg-primary/5 rounded-full blur-[60px]" />
-
-            <div className="relative z-10">
-              {children}
-            </div>
-          </div>
-
-          <div className="mt-8 text-center animate-in fade-in duration-1000 delay-500">
-            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-text-muted">
-              Secured by Hard Anonymity Protocol
-            </p>
-          </div>
-        </div>
-      </main>
     </div>
   );
 }
+

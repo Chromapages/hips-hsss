@@ -77,7 +77,7 @@ describe('VaultAccessController - POST /vault/access-request', () => {
       justification: 'test',
     };
 
-    await expect(controller.submitAccessRequest(input, undefined))
+    await expect(controller.submitAccessRequest(input, undefined as any))
       .rejects.toThrow('Invalid vault secret');
   });
 
@@ -142,7 +142,7 @@ describe('VaultEmergencyContactController - POST /vault/emergency-contact', () =
     await expect(
       controller.accessEmergencyContact(
         { subjectRef: 'subject-001', accessRequestId: 'req-123' },
-        undefined,
+        undefined as any,
         'crisis-reviewer-001',
         'Approved'
       )

@@ -20,6 +20,19 @@ const defaultRules: SafetyKeywordRule[] = [
   { term: "harm", level: "crisis" },
 ];
 
+function mapToQueueItem(dbItem: any): EscalationQueueItem {
+  return {
+    id: dbItem.id,
+    sessionRef: dbItem.sessionRef,
+    level: dbItem.level as SafetyLevel,
+    source: dbItem.source as any,
+    summary: dbItem.summary,
+    status: dbItem.status as any,
+    reviewerHandle: dbItem.reviewerHandle ?? undefined,
+    createdAt: dbItem.createdAt,
+  };
+}
+
 @Injectable()
 export class SafetyEngine {
   constructor(
@@ -67,20 +80,22 @@ export class SafetyEngine {
       throw new Error("Vault access requires a clear justification");
     }
 
-    return this.prisma.escalationQueue.update({
+    const updated = await this.prisma.escalationQueue.update({
       where: { id: request.escalationId },
       data: {
         status: "reviewing",
         reviewerHandle: request.reviewerHandle,
       },
     });
+    return mapToQueueItem(updated);
   }
 
   async listQueue(): Promise<EscalationQueueItem[]> {
-    return this.prisma.escalationQueue.findMany({
+    const items = await this.prisma.escalationQueue.findMany({
       where: { status: { not: "resolved" } },
       orderBy: { createdAt: "desc" },
     });
+    return items.map(mapToQueueItem);
   }
 
   async resolveEscalation(id: string): Promise<void> {
@@ -102,6 +117,6 @@ export class SafetyEngine {
         status: "open",
       },
     });
-    return event;
+    return mapToQueueItem(event);
   }
 }

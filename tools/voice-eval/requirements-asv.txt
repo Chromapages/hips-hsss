@@ -1,0 +1,6 @@
+# Optional local evaluation dependencies for ASV/EER scoring.
+# Keep these out of production app and worker runtimes.
+#
+# NeMo installation can vary by Python, CUDA, and platform. Review the NeMo
+# install matrix before pinning this in CI or containers.
+nemo_toolkit[asr]>=2.0.0

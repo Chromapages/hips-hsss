@@ -1,4 +1,4 @@
-import { Injectable, CanActivate, ExecutionContext, UnauthorizedException } from '@nestjs/common';
+import { Injectable, CanActivate, ExecutionContext, UnauthorizedException, ForbiddenException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { jwtVerify } from 'jose';
 
@@ -11,12 +11,17 @@ export class SessionGuard implements CanActivate {
     if (!secretStr) {
       throw new Error('SESSION_SERVICE_SECRET environment variable is required');
     }
+    if (secretStr.length < 32) {
+      throw new Error('SESSION_SERVICE_SECRET must be at least 32 characters for HS256 brute-force resistance');
+    }
     this.secret = new TextEncoder().encode(secretStr);
   }
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
-    const authHeader = request.headers.get('authorization');
+    const authHeader = typeof request.headers.get === 'function'
+      ? request.headers.get('authorization')
+      : request.headers.authorization;
 
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       throw new UnauthorizedException('Missing or invalid session token');
@@ -26,10 +31,10 @@ export class SessionGuard implements CanActivate {
 
     try {
       const { payload } = await jwtVerify(token, this.secret);
-      
+
       // Inject the session reference into the request for use in controllers
       request['sessionRef'] = payload.ref;
-      
+      request['sessionUid'] = payload.sub as string;
       return true;
     } catch {
       throw new UnauthorizedException('Invalid or expired session token');

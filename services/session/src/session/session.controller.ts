@@ -10,12 +10,16 @@ import {
   NotFoundException,
   HttpCode,
   UseGuards,
+  BadRequestException,
 } from '@nestjs/common';
 import type { Request } from 'express';
+import type { AvatarProfile } from '@hips/types';
+import { randomUUID } from 'node:crypto';
 import { getAdminAuth } from '../firebase-init.js';
 import { SessionService } from './session.service.js';
 import { SessionTokenStore } from '../session-token-store.js';
 import { PrismaService } from '../prisma.service.js';
+import { hashOwnerUid } from './anonymisation.js';
 
 /** Firebase-authenticated request */
 interface AuthRequest extends Request {
@@ -51,7 +55,7 @@ interface LiveKitTokenResponse {
   roomName: string;
   anonymousIdentity: string;
   expiresAt: string;
-  avatar: { style: number; palette: string; gesture: string; locked: boolean };
+  avatar: AvatarProfile;
 }
 
 interface SessionResponse {
@@ -71,15 +75,11 @@ interface ReconnectResponse {
 
 @Controller('api/sessions')
 export class SessionController {
-  private readonly tokenStore: SessionTokenStore;
-
   constructor(
     private readonly sessionService: SessionService,
     private readonly prisma: PrismaService,
-  ) {
-    // SessionTokenStore is a singleton used across token + session ops
-    this.tokenStore = new SessionTokenStore();
-  }
+    private readonly tokenStore: SessionTokenStore,
+  ) {}
 
   /**
    * POST /api/sessions — create a new session
@@ -103,11 +103,13 @@ export class SessionController {
     }
 
     // Create session via the session service
+    // Enforce participantLimit upper bound to prevent resource exhaustion
+    const participantLimit = Math.min(Math.max(body.participantLimit ?? 2, 2), 10);
     const session = await this.sessionService.createSession({
       ownerUid: userId,
       startsAt,
       endsAt,
-      participantLimit: body.participantLimit ?? 2,
+      participantLimit,
     });
 
     return session;
@@ -135,6 +137,7 @@ export class SessionController {
 
   /**
    * POST /api/sessions/:id/join — get LiveKit token for session
+   * Only issues tokens for PENDING (pre-join window) or ACTIVE sessions.
    */
   @Post(':id/join')
   @HttpCode(200)
@@ -143,7 +146,12 @@ export class SessionController {
     @Req() req: AuthRequest,
   ): Promise<LiveKitTokenResponse> {
     const userId = await this.requireAuth(req);
-    await this.loadAndAuthorize(sessionId, userId);
+    const session = await this.loadAndAuthorize(sessionId, userId);
+
+    // Only allow joining PENDING or ACTIVE sessions; ENDED/EXPIRED sessions cannot be joined
+    if (session.status !== 'PENDING' && session.status !== 'ACTIVE') {
+      throw new BadRequestException(`Cannot join session in status ${session.status}`);
+    }
 
     const token = await this.sessionService.issueLiveKitToken(sessionId);
 
@@ -152,12 +160,7 @@ export class SessionController {
       roomName: token.roomName,
       anonymousIdentity: token.anonymousIdentity,
       expiresAt: token.expiresAt.toISOString(),
-      avatar: {
-        style: token.avatar.style,
-        palette: token.avatar.palette,
-        gesture: token.avatar.gesture,
-        locked: token.avatar.locked,
-      },
+      avatar: token.avatar,
     };
   }
 
@@ -203,7 +206,7 @@ export class SessionController {
     const userId = await this.requireAuth(req);
     await this.loadAndAuthorize(sessionId, userId);
 
-    const flagId = `flag_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+    const flagId = `flag_${randomUUID()}`;
 
     await this.prisma.auditEvent.create({
       data: {
@@ -286,8 +289,12 @@ export class SessionController {
   }
 
   /**
-   * Load the session and assert the caller owns it. C4 (Sprint 1) closes the
-   * IDOR where any auth user could act on any session by id.
+   * Load the session and assert the caller owns it.
+   *
+   * Authorization model (C4): only the session owner (facilitator who created the session)
+   * may act on it. Participants are read-only participants — they join via joinSession
+   * which issues LiveKit tokens without requiring session ownership.
+   * The `anonymousParticipantId` field stores the owner's UID.
    */
   private async loadAndAuthorize(sessionId: string, userId: string) {
     const session = await this.prisma.sessionRecord.findUnique({
@@ -298,7 +305,7 @@ export class SessionController {
       throw new NotFoundException(`Session ${sessionId} not found`);
     }
 
-    if (session.anonymousParticipantId !== userId) {
+    if (session.anonymousParticipantId !== hashOwnerUid(userId)) {
       throw new ForbiddenException('Not authorized for this session');
     }
 

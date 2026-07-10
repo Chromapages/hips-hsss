@@ -1,7 +1,5 @@
-"use client";
-
-import { AuthGuard } from "@/components/auth/AuthGuard";
+import { ClientShell } from "@/components/auth/ClientShell";
 
 export default function SessionLayout({ children }: { children: React.ReactNode }) {
-  return <AuthGuard>{children}</AuthGuard>;
+  return <ClientShell>{children}</ClientShell>;
 }

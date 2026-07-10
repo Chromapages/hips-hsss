@@ -1,19 +1,21 @@
 "use client";
 
 import { useState } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, FormProvider } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
+import * as z from "zod/v3";
 import { useToast } from "@/components/polish/ToastProvider";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { FormField } from "@/components/ui/FormField";
+import { useAuth } from "@/components/auth/AuthProvider";
 import { Check, ChevronRight, ChevronLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const scholarshipSchema = z.object({
   employmentStatus: z.enum(["employed", "unemployed", "student", "disabled"], {
-    errorMap: () => ({ message: "Please select your status" }),
+    message: "Please select your status",
   }),
   incomeRange: z.string().min(1, "Income estimate is required"),
   serviceType: z.string().min(1, "Please select a service"),
@@ -31,15 +33,10 @@ const STEPS = ["Eligibility", "Details", "Review"];
 export function ScholarshipForm() {
   const [currentStep, setCurrentStep] = useState(0);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const { getToken } = useAuth();
   const toast = useToast();
 
-  const {
-    register,
-    handleSubmit,
-    trigger,
-    watch,
-    formState: { errors, isSubmitting },
-  } = useForm<ScholarshipValues>({
+  const methods = useForm<ScholarshipValues>({
     resolver: zodResolver(scholarshipSchema),
     defaultValues: {
       incomeRange: "",
@@ -50,7 +47,15 @@ export function ScholarshipForm() {
     },
   });
 
-  const watchAll = watch(["employmentStatus", "incomeRange", "serviceType", "personalStatement", "referralSource", "consentAcknowledged"]);
+  const {
+    register,
+    handleSubmit,
+    trigger,
+    watch,
+    formState: { errors, isSubmitting },
+  } = methods;
+
+  const watchAll = watch();
 
   const nextStep = async () => {
     let fieldsToValidate: (keyof ScholarshipValues)[] = [];
@@ -72,15 +77,42 @@ export function ScholarshipForm() {
 
   const onSubmit = async (values: ScholarshipValues) => {
     try {
+      const token = await getToken();
+      if (!token) {
+        toast("error", "You must be logged in to apply.");
+        return;
+      }
+
+      const requestedCents =
+        values.serviceType === "peer-support" ? 15000 :
+        values.serviceType === "group-coaching" ? 10000 :
+        values.serviceType === "care-navigation" ? 5000 : 10000;
+
       const res = await fetch('/api/scholarships/apply', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(values),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          requestedCents,
+          employmentStatus: values.employmentStatus,
+          incomeRange: values.incomeRange,
+          serviceType: values.serviceType,
+          personalStatement: values.personalStatement,
+          referralSource: values.referralSource,
+          consentAcknowledged: values.consentAcknowledged,
+        }),
       });
       const data = await res.json();
 
       if (!res.ok) {
-        toast("error", data.error || "Failed to submit application.");
+        const message = data.code === 'DEADLINE_PASSED'
+          ? 'Applications are closed for this cycle. Please check back next time.'
+          : data.code === 'DUPLICATE_APPLICATION'
+            ? 'You already have an active application under review.'
+            : data.error || 'Failed to submit application.';
+        toast("error", message);
         return;
       }
 
@@ -132,7 +164,7 @@ export function ScholarshipForm() {
               {currentStep > index ? (
                 <Check className="w-5 h-5 text-emerald-400" />
               ) : (
-                <span className={cn("text-sm font-bold", currentStep === index ? "text-white" : "text-text-muted0")}>
+                <span className={cn("text-sm font-bold", currentStep === index ? "text-white" : "text-muted-foreground")}>
                   {index + 1}
                 </span>
               )}
@@ -147,147 +179,161 @@ export function ScholarshipForm() {
         ))}
       </div>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-8 bg-surface/5 border border-white/10 rounded-[2.5rem] p-8 backdrop-blur-xl">
-        {currentStep === 0 && (
-          <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500">
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-text-muted ml-1" htmlFor="employmentStatus">Employment Status</label>
-              <select
-                id="employmentStatus"
-                {...register("employmentStatus")}
-                className="w-full h-12 rounded-2xl border border-white/5 bg-surface/5 px-4 text-sm text-white focus:ring-1 focus:ring-primary focus:border-primary/50 outline-none transition-all appearance-none"
-              >
-                <option value="" className="bg-text">Select your status</option>
-                <option value="employed" className="bg-text">Employed</option>
-                <option value="unemployed" className="bg-text">Unemployed</option>
-                <option value="student" className="bg-text">Student</option>
-                <option value="disabled" className="bg-text">Disabled</option>
-              </select>
-              {errors.employmentStatus && <p className="text-xs text-destructive0 ml-1">{errors.employmentStatus.message}</p>}
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-text-muted ml-1">Monthly Income Estimate</label>
-              <Input 
-                placeholder="e.g. $2,500"
-                {...register("incomeRange")}
-              />
-              {errors.incomeRange && <p className="text-xs text-destructive0 ml-1">{errors.incomeRange.message}</p>}
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-text-muted ml-1" htmlFor="serviceType">Desired Service</label>
-              <select
-                id="serviceType"
-                {...register("serviceType")}
-                className="w-full h-12 rounded-2xl border border-white/5 bg-surface/5 px-4 text-sm text-white focus:ring-1 focus:ring-primary focus:border-primary/50 outline-none transition-all appearance-none"
-              >
-                <option value="" className="bg-text">Select a service</option>
-                <option value="peer-support" className="bg-text">1:1 Peer Support</option>
-                <option value="group-coaching" className="bg-text">Group Coaching</option>
-                <option value="care-navigation" className="bg-text">Care Navigation</option>
-              </select>
-              {errors.serviceType && <p className="text-xs text-destructive0 ml-1">{errors.serviceType.message}</p>}
-            </div>
-          </div>
-        )}
-
-        {currentStep === 1 && (
-          <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500">
-            <div className="space-y-2">
-              <div className="flex justify-between items-center ml-1">
-                <label className="text-sm font-medium text-text-muted">Personal Statement</label>
-                <span className={cn(
-                  "text-[10px] font-bold uppercase tracking-tighter",
-                  watchAll.personalStatement.length >= 50 ? "text-emerald-500" : "text-text-muted0"
-                )}>
-                  {watchAll.personalStatement.length}/500
-                </span>
+      <FormProvider {...methods}>
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-8 bg-surface/5 border border-white/10 rounded-[2.5rem] p-8 backdrop-blur-xl">
+          {currentStep === 0 && (
+            <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500">
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-text-muted ml-1" htmlFor="employmentStatus">Employment Status</label>
+                <FormField name="employmentStatus">
+                  <select
+                    id="employmentStatus"
+                    {...register("employmentStatus")}
+                    className="w-full h-12 rounded-2xl border border-white/5 bg-surface/5 px-4 text-sm text-white focus:ring-1 focus:ring-primary focus:border-primary/50 outline-none transition-all appearance-none"
+                  >
+                    <option value="" className="bg-text">Select your status</option>
+                    <option value="employed" className="bg-text">Employed</option>
+                    <option value="unemployed" className="bg-text">Unemployed</option>
+                    <option value="student" className="bg-text">Student</option>
+                    <option value="disabled" className="bg-text">Disabled</option>
+                  </select>
+                </FormField>
               </div>
-              <Textarea 
-                placeholder="Briefly describe why you are seeking support access..."
-                className="min-h-[160px]"
-                {...register("personalStatement")}
-              />
-              <p className="text-[10px] text-text-muted0 ml-1">Min 50 characters required for review.</p>
-              {errors.personalStatement && <p className="text-xs text-destructive0 ml-1">{errors.personalStatement.message}</p>}
-            </div>
 
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-text-muted ml-1">How did you hear about us?</label>
-              <Input 
-                placeholder="e.g. Social media, Friend, Healthcare provider"
-                {...register("referralSource")}
-              />
-              {errors.referralSource && <p className="text-xs text-destructive0 ml-1">{errors.referralSource.message}</p>}
-            </div>
-          </div>
-        )}
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-text-muted ml-1" htmlFor="incomeRange">Monthly Income Estimate</label>
+                <FormField name="incomeRange">
+                  <Input 
+                    placeholder="e.g. $2,500"
+                    {...register("incomeRange")}
+                  />
+                </FormField>
+              </div>
 
-        {currentStep === 2 && (
-          <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500">
-            <div className="rounded-2xl bg-black/40 border border-white/5 divide-y divide-white/5 overflow-hidden">
-              {[
-                { label: "Status", value: watchAll.employmentStatus },
-                { label: "Income", value: watchAll.incomeRange },
-                { label: "Service", value: watchAll.serviceType },
-              ].map((item) => (
-                <div key={item.label} className="flex justify-between px-5 py-4 text-sm">
-                  <span className="text-text-muted0">{item.label}</span>
-                  <span className="text-text-muted font-medium capitalize">{item.value}</span>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-text-muted ml-1" htmlFor="serviceType">Desired Service</label>
+                <FormField name="serviceType">
+                  <select
+                    id="serviceType"
+                    {...register("serviceType")}
+                    className="w-full h-12 rounded-2xl border border-white/5 bg-surface/5 px-4 text-sm text-white focus:ring-1 focus:ring-primary focus:border-primary/50 outline-none transition-all appearance-none"
+                  >
+                    <option value="" className="bg-text">Select a service</option>
+                    <option value="peer-support" className="bg-text">1:1 Peer Support</option>
+                    <option value="group-coaching" className="bg-text">Group Coaching</option>
+                    <option value="care-navigation" className="bg-text">Care Navigation</option>
+                  </select>
+                </FormField>
+              </div>
+            </div>
+          )}
+
+          {currentStep === 1 && (
+            <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500">
+              <div className="space-y-2">
+                <div className="flex justify-between items-center ml-1">
+                  <label className="text-sm font-medium text-text-muted" htmlFor="personalStatement">Personal Statement</label>
+                  <span className={cn(
+                    "text-[10px] font-bold uppercase tracking-tighter",
+                    watchAll.personalStatement.length >= 50 ? "text-emerald-500" : "text-muted-foreground"
+                  )}>
+                    {watchAll.personalStatement.length}/500
+                  </span>
                 </div>
-              ))}
-            </div>
+                <FormField name="personalStatement">
+                  <Textarea 
+                    placeholder="Briefly describe why you are seeking support access..."
+                    className="min-h-[160px]"
+                    {...register("personalStatement")}
+                  />
+                </FormField>
+                <p className="text-[10px] text-muted-foreground ml-1">Min 50 characters required for review.</p>
+              </div>
 
-            <div className="space-y-3 px-1">
-              <label className="flex gap-3 cursor-pointer group">
-                <input 
-                  type="checkbox" 
-                  className="mt-1 h-4 w-4 rounded border-border-strong bg-zinc-950 text-text focus:ring-primary focus:ring-offset-black"
-                  {...register("consentAcknowledged")}
-                />
-                <span className="text-xs text-text leading-relaxed group-hover:text-text-muted transition-colors">
-                  I confirm that the information provided is accurate and that I am requesting access support in good faith.
-                </span>
-              </label>
-              {errors.consentAcknowledged && <p className="text-xs text-destructive0 ml-7">{errors.consentAcknowledged.message}</p>}
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-text-muted ml-1" htmlFor="referralSource">How did you hear about us?</label>
+                <FormField name="referralSource">
+                  <Input 
+                    placeholder="e.g. Social media, Friend, Healthcare provider"
+                    {...register("referralSource")}
+                  />
+                </FormField>
+              </div>
             </div>
+          )}
+
+          {currentStep === 2 && (
+            <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500">
+              <div className="rounded-2xl bg-black/40 border border-white/5 divide-y divide-white/5 overflow-hidden">
+                {[
+                  { label: "Status", value: watchAll.employmentStatus },
+                  { label: "Income", value: watchAll.incomeRange },
+                  { label: "Service", value: watchAll.serviceType },
+                ].map((item) => (
+                  <div key={item.label} className="flex justify-between px-5 py-4 text-sm">
+                    <span className="text-muted-foreground">{item.label}</span>
+                    <span className="text-text-muted font-medium capitalize">{item.value}</span>
+                  </div>
+                ))}
+              </div>
+
+              <div className="space-y-3 px-1">
+                <label className="flex gap-3 cursor-pointer group">
+                  <input 
+                    type="checkbox" 
+                    id="consentAcknowledged"
+                    aria-invalid={!!errors.consentAcknowledged}
+                    aria-describedby={errors.consentAcknowledged ? "consentAcknowledged-error" : undefined}
+                    className="mt-1 h-4 w-4 rounded border-border-strong bg-zinc-950 text-text focus:ring-primary focus:ring-offset-black"
+                    {...register("consentAcknowledged")}
+                  />
+                  <span className="text-xs text-text leading-relaxed group-hover:text-text-muted transition-colors">
+                    I confirm that the information provided is accurate and that I am requesting access support in good faith.
+                  </span>
+                </label>
+                {errors.consentAcknowledged && (
+                  <p id="consentAcknowledged-error" role="alert" className="text-xs text-destructive ml-7">
+                    {errors.consentAcknowledged.message}
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Form Actions */}
+          <div className="flex gap-4 pt-4">
+            {currentStep > 0 && (
+              <Button 
+                type="button" 
+                variant="secondary" 
+                onClick={prevStep}
+                className="flex-1 h-12 rounded-2xl"
+              >
+                <ChevronLeft className="w-4 h-4 mr-2" />
+                Back
+              </Button>
+            )}
+            {currentStep < STEPS.length - 1 ? (
+              <Button 
+                type="button" 
+                onClick={nextStep}
+                className="flex-1 h-12 rounded-2xl bg-primary hover:bg-primary shadow-lg shadow-primary/20"
+              >
+                Continue
+                <ChevronRight className="w-4 h-4 ml-2" />
+              </Button>
+            ) : (
+              <Button 
+                type="submit" 
+                isLoading={isSubmitting}
+                className="flex-1 h-12 rounded-2xl bg-primary hover:bg-primary shadow-lg shadow-primary/20"
+              >
+                Submit Application
+              </Button>
+            )}
           </div>
-        )}
-
-        {/* Form Actions */}
-        <div className="flex gap-4 pt-4">
-          {currentStep > 0 && (
-            <Button 
-              type="button" 
-              variant="secondary" 
-              onClick={prevStep}
-              className="flex-1 h-12 rounded-2xl"
-            >
-              <ChevronLeft className="w-4 h-4 mr-2" />
-              Back
-            </Button>
-          )}
-          {currentStep < STEPS.length - 1 ? (
-            <Button 
-              type="button" 
-              onClick={nextStep}
-              className="flex-1 h-12 rounded-2xl bg-primary hover:bg-primary shadow-lg shadow-primary/20"
-            >
-              Continue
-              <ChevronRight className="w-4 h-4 ml-2" />
-            </Button>
-          ) : (
-            <Button 
-              type="submit" 
-              isLoading={isSubmitting}
-              className="flex-1 h-12 rounded-2xl bg-primary hover:bg-primary shadow-lg shadow-primary/20"
-            >
-              Submit Application
-            </Button>
-          )}
-        </div>
-      </form>
+        </form>
+      </FormProvider>
     </div>
   );
 }

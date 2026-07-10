@@ -1,6 +1,6 @@
 export default function ServicesLoading() {
   return (
-    <main
+    <main id="main" tabIndex={-1}
       role="status"
       aria-live="polite"
       aria-label="Loading services"

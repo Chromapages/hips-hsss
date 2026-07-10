@@ -9,14 +9,14 @@ export function RaisedHandQueue({ raisedHands, onLowerHand }: RaisedHandQueuePro
   return (
     <div className="border-b border-white/10 p-4">
       <div className="flex items-center justify-between">
-        <p className="text-[10px] font-bold uppercase tracking-widest text-text-muted0">Facilitator Queue</p>
+        <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Facilitator Queue</p>
         <span className="rounded-full bg-amber-500/10 px-2 py-1 text-xs font-bold text-amber-200">
           {raisedHands.length}
         </span>
       </div>
       <div className="mt-3 space-y-2">
         {raisedHands.length === 0 ? (
-          <p className="text-sm text-text-muted0">No raised hands.</p>
+          <p className="text-sm text-muted-foreground">No raised hands.</p>
         ) : (
           raisedHands.map((identity) => (
             <div

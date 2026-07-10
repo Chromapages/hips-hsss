@@ -44,7 +44,7 @@ export function MobileBlockPage({ returnUrl = "/dashboard" }: MobileBlockPagePro
         device with a screen width of at least 1024 pixels.
       </p>
       <div className="mt-4 rounded-xl border border-white/10 bg-surface/5 px-4 py-2">
-        <p className="font-mono text-xs text-text-muted0">
+        <p className="font-mono text-xs text-muted-foreground">
           Current width: {viewportWidth}px | Required: ≥1024px
         </p>
       </div>

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { adminAuth } from '@/lib/firebase-admin';
+import { verifyFirebaseIdToken } from '@/lib/firebase-auth';
 
 // Lazy import to avoid initialization at module load time
 import { getDb } from '@/lib/firebase-admin';
@@ -67,6 +67,10 @@ function createEmptyDashboardPayload(warning?: string) {
   };
 }
 
+function isLocalDemoMode() {
+  return process.env.NODE_ENV !== 'production' && process.env.NEXT_PUBLIC_DEMO_MODE === 'true';
+}
+
 export async function GET(req: NextRequest) {
   // Initialize Firestore lazily — return 503 if not configured
   const db = getDb();
@@ -91,7 +95,7 @@ export async function GET(req: NextRequest) {
 
     if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-    const payload = await adminAuth.verifyIdToken(token);
+    const payload = await verifyFirebaseIdToken(token);
     const userId = payload.uid;
 
     // Look up the user's internal anonymous ID and fetch data in parallel
@@ -103,7 +107,17 @@ export async function GET(req: NextRequest) {
         .orderBy('createdAt', 'desc').limit(50).get(),
     ]);
 
-    if (!userDoc.exists) return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    if (!userDoc.exists) {
+      if (isLocalDemoMode()) {
+        return NextResponse.json(
+          createEmptyDashboardPayload(
+            'No Firestore dashboard profile exists for this demo user yet.'
+          )
+        );
+      }
+
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    }
 
     const sessions = sessionsSnapshot.docs.map(doc => ({
       id: doc.id,

@@ -1,6 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -10,34 +7,60 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model IdentityRecord {
-  id                            String    @id @default(cuid())
-  subjectRef                    String    @unique
-  encryptedRealName             Bytes
-  encryptedEmergencyContact    Bytes
-  encryptedRegion              Bytes
-  encryptedDisclosure          Bytes?
-  encryptedIpAddress           Bytes?
-  ipExpiresAt                  DateTime?
-  encryptedDeviceFingerprint  Bytes?
-  deviceFingerprintExpiresAt   DateTime?
-  createdAt                    DateTime  @default(now())
-  updatedAt                    DateTime  @updatedAt
+enum VaultAccessPurpose {
+  RECORD_CREATE
+  RECORD_READ
+  CRISIS_DISCLOSURE
+  AUDIT_REVIEW
+}
 
-  @@map("identity_record")
+model IdentityRecord {
+  id                         String   @id @default(uuid()) @db.Uuid
+  subjectRef                 String   @unique
+  encryptedRealName          Bytes
+  encryptedEmergencyContact  Bytes
+  encryptedRegion            Bytes
+  encryptedDisclosure        Bytes?
+  encryptedIpAddress         Bytes?
+  encryptedDeviceFingerprint Bytes?
+  ipExpiresAt                DateTime?
+  deviceFingerprintExpiresAt DateTime?
+  createdAt                  DateTime @default(now())
+  updatedAt                  DateTime @updatedAt
+
+  @@index([subjectRef])
+  @@index([ipExpiresAt])
+  @@index([deviceFingerprintExpiresAt])
 }
 
 model VaultAccessLog {
-  id          String   @id @default(cuid())
+  id          String             @id @default(uuid()) @db.Uuid
   subjectRef  String
+  purpose     VaultAccessPurpose
   actorRef    String
-  purpose     String
   action      String?
-  metadata    Json     @default("{}")
-  timestamp   DateTime @default(now())
+  requestId   String
+  createdAt   DateTime           @default(now())
 
   @@index([subjectRef])
-  @@index([actorRef])
-  @@index([timestamp])
-  @@map("vault_access_log")
+  @@index([purpose])
+  @@index([createdAt])
 }
+
+model VaultAccessRequest {
+  id            String    @id @default(uuid()) @db.Uuid
+  subjectRef    String
+  requesterRef  String
+  justification String
+  status        String    @default("PENDING")
+  accessedAt    DateTime?
+  metadata      Json      @default("{}")
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([subjectRef])
+  @@index([requesterRef])
+  @@index([status])
+  @@index([createdAt])
+}
+

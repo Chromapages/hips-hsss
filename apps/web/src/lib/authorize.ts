@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server';
-import { verifyFirebaseIdToken } from './auth-edge';
-import { ROLES, type Role } from './roles';
+import { authenticateRequest } from './request-auth';
+import { type Role } from './roles';
 
 export interface AuthResult {
   uid: string;
@@ -19,33 +19,10 @@ export async function authorize(
   req: NextRequest,
   allowedRoles?: readonly Role[]
 ): Promise<AuthResult | null> {
-  const authHeader = req.headers.get('authorization');
-  const token = authHeader?.startsWith('Bearer ') ? authHeader.split(' ')[1] : null;
-
-  if (!token) {
-    return null;
-  }
-
-  try {
-    const payload = await verifyFirebaseIdToken(token);
-    const uid = typeof payload.sub === 'string' ? payload.sub : null;
-    const role = (payload.role as string) || ROLES.PARTICIPANT;
-
-    if (!uid) {
-      return null;
-    }
-
-    // If allowedRoles specified, check role membership
-    if (allowedRoles && allowedRoles.length > 0) {
-      if (!allowedRoles.includes(role as Role)) {
-        return null;
-      }
-    }
-
-    return { uid, role };
-  } catch {
-    return null;
-  }
+  const result = await authenticateRequest(req);
+  if (result.error) return null;
+  if (allowedRoles?.length && !allowedRoles.includes(result.user.role)) return null;
+  return { uid: result.user.uid, role: result.user.role };
 }
 
 /**

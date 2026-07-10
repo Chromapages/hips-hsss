@@ -1,5 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'crypto';
+import { z } from 'zod';
+import { getDb } from '@/lib/firebase-admin';
+import { logger } from '@/lib/logger';
+import { Phase5SessionSchema } from '@/lib/schemas/session';
+
+export const dynamic = 'force-dynamic';
 
 /**
  * Phase 5 — Session Flag/Report Handler (5.11)
@@ -27,8 +33,6 @@ interface FlagReport {
 }
 
 // In-memory ephemeral store (resets on server restart)
-// For production, use Redis with TTL or short-lived Firestore documents
-// Key type is FlagReport for single-flag lookups, FlagReport[] for session-grouped lookups
 const ephemeralFlags = new Map<string, FlagReport | FlagReport[]>();
 
 const VALID_REASONS = ['inappropriate_content', 'harassment', 'technical_issue', 'other'] as const;
@@ -38,6 +42,12 @@ const SEVERITY_MAP: Record<string, 'low' | 'medium' | 'high' | 'critical'> = {
   technical_issue: 'medium',
   other: 'low',
 };
+
+const flagPostSchema = z.object({
+  reporterIdentity: z.string().min(4).max(128),
+  reasonType: z.enum(VALID_REASONS),
+  description: z.string().max(500).optional(),
+});
 
 /**
  * POST — Submit a flag/report for a session
@@ -57,27 +67,49 @@ export async function POST(
     }
 
     const body = await req.json().catch(() => ({}));
-    const { reporterIdentity, reasonType, description } = body;
-
-    // Validate reporter identity (anonymous token, not Firebase UID)
-    if (!reporterIdentity || typeof reporterIdentity !== 'string' || reporterIdentity.trim().length < 4) {
+    const parsed = flagPostSchema.safeParse(body);
+    if (!parsed.success) {
       return NextResponse.json(
-        { error: 'Valid anonymous reporter identity required' },
+        { error: 'Invalid input parameters', details: parsed.error.format() },
         { status: 400 }
       );
     }
 
-    // Validate reason type
-    if (!reasonType || !VALID_REASONS.includes(reasonType)) {
+    const { reporterIdentity, reasonType, description } = parsed.data;
+
+    // Verify session existence and membership in Firestore
+    const db = getDb();
+    if (!db) {
+      return NextResponse.json({ error: 'Database unavailable' }, { status: 503 });
+    }
+
+    const sessionDoc = await db.collection('phase5_sessions').doc(sessionId).get();
+    if (!sessionDoc.exists) {
+      return NextResponse.json({ error: 'Session not found' }, { status: 404 });
+    }
+
+    const sessionParsed = Phase5SessionSchema.safeParse({ id: sessionDoc.id, ...sessionDoc.data() });
+    if (!sessionParsed.success) {
+      return NextResponse.json({ error: 'Invalid session data structure' }, { status: 422 });
+    }
+
+    const sessionData = sessionParsed.data;
+    const isMember =
+      sessionData.facilitatorId === reporterIdentity ||
+      sessionData.metadata?.facilitatorId === reporterIdentity ||
+      (Array.isArray(sessionData.participantIdentities) &&
+        sessionData.participantIdentities.includes(reporterIdentity));
+
+    if (!isMember) {
       return NextResponse.json(
-        { error: `Reason must be one of: ${VALID_REASONS.join(', ')}` },
-        { status: 400 }
+        { error: 'Forbidden: you are not a member of this session' },
+        { status: 403 }
       );
     }
 
     // Build reason string (type + optional description)
-    let reason = reasonType;
-    if (description && typeof description === 'string' && description.trim().length > 0) {
+    let reason: string = reasonType;
+    if (description && description.trim().length > 0) {
       reason = `${reasonType}: ${description.trim().slice(0, 500)}`;
     }
 
@@ -108,9 +140,14 @@ export async function POST(
     const existing = ephemeralFlags.get(`session:${sessionId}`);
     const sessionFlags: FlagReport[] = Array.isArray(existing) ? existing : [];
     sessionFlags.push(flagReport);
-    ephemeralFlags.set(`session:${sessionId}`, sessionFlags as FlagReport[]);
+    ephemeralFlags.set(`session:${sessionId}`, sessionFlags);
 
-    console.log(`[SessionFlag] Flag ${flagId} created for session ${sessionId}: ${reasonType} by ${reporterIdentity}`);
+    logger.info('[SessionFlag] Flag created', {
+      flagId,
+      sessionId,
+      reasonType,
+      reporterIdentitySuffix: reporterIdentity.slice(-6),
+    });
 
     return NextResponse.json({
       success: true,
@@ -120,7 +157,7 @@ export async function POST(
     });
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    console.error('[SessionFlag] POST Error:', errorMessage);
+    logger.error('[SessionFlag] POST Error', { error: errorMessage });
     return NextResponse.json(
       { error: 'Failed to submit report', details: errorMessage },
       { status: 500 }
@@ -175,7 +212,7 @@ export async function GET(
     });
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    console.error('[SessionFlag] GET Error:', errorMessage);
+    logger.error('[SessionFlag] GET Error', { error: errorMessage });
     return NextResponse.json(
       { error: 'Failed to retrieve flags', details: errorMessage },
       { status: 500 }

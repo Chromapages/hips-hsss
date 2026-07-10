@@ -18,6 +18,9 @@ import {
   Download,
   Heart,
   Bug,
+  Mail,
+  Calendar,
+  FileText,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import {
@@ -37,6 +40,7 @@ import {
 import { cn } from "@/lib/utils";
 import { ROLES } from "@/lib/roles";
 import { useAuth } from "@/components/auth/AuthProvider";
+import { useRole } from "@/hooks/useRole";
 import { SidebarUserFooter } from "@/components/sidebar/sidebar-user-footer";
 
 type NavItem = {
@@ -72,8 +76,12 @@ const adminNav: NavItem[] = [
   { title: "User Ops", href: "/admin/users", icon: Users },
   { title: "Safety Feed", href: "/admin/safety", icon: ShieldAlert },
   { title: "Grants", href: "/admin/scholarships", icon: Award },
+  { title: "Inquiries", href: "/admin/inquiries", icon: Mail },
+  { title: "Contact Forms", href: "/admin/inquiries/contact", icon: Mail },
+  { title: "Bookings", href: "/admin/bookings", icon: Calendar },
+  { title: "Audit Log", href: "/admin/audit-log", icon: FileText },
   { title: "Technical Logs", href: "/admin/errors", icon: Bug },
-  { title: "Settings", href: "/dashboard/settings", icon: Settings },
+  { title: "Settings", href: "/admin/settings", icon: Settings },
 ];
 
 type ConsoleContext = {
@@ -145,7 +153,8 @@ const NavItemRow = ({ item, isActive }: { item: NavItem; isActive: boolean }) =>
 
 export function AppSidebar() {
   const pathname = usePathname();
-  const { user, role, loading, logout } = useAuth();
+  const { user, loading, logout } = useAuth();
+  const { role } = useRole();
 
   const isAdmin = pathname?.startsWith("/admin") ?? false;
   const isFacilitator = !isAdmin && (pathname?.startsWith("/facilitator") ?? false);
@@ -163,7 +172,7 @@ export function AppSidebar() {
       : pathname?.startsWith(item.href) ?? false;
 
   const extraNavItems: NavItem[] = [];
-  if (role === ROLES.ADMIN) {
+  if (role === ROLES.ADMIN || role === ROLES.SUPER_ADMIN) {
     if (!isAdmin) extraNavItems.push({ title: "Admin Console", href: "/admin", icon: Server });
     if (!isFacilitator) extraNavItems.push({ title: "Lead Console", href: "/facilitator", icon: ListChecks });
     if (isAdmin || isFacilitator) {

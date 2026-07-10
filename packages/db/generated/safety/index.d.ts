@@ -19,6 +19,11 @@ export type PrismaPromise<T> = $Public.PrismaPromise<T>
  */
 export type SafetyAlert = $Result.DefaultSelection<Prisma.$SafetyAlertPayload>
 /**
+ * Model KeywordRule
+ * 
+ */
+export type KeywordRule = $Result.DefaultSelection<Prisma.$KeywordRulePayload>
+/**
  * Model SafetyMitigation
  * 
  */
@@ -33,6 +38,96 @@ export type SafetyStrike = $Result.DefaultSelection<Prisma.$SafetyStrikePayload>
  * 
  */
 export type SafetyAuditLog = $Result.DefaultSelection<Prisma.$SafetyAuditLogPayload>
+/**
+ * Model EscalationQueue
+ * 
+ */
+export type EscalationQueue = $Result.DefaultSelection<Prisma.$EscalationQueuePayload>
+
+/**
+ * Enums
+ */
+export namespace $Enums {
+  export const SafetySeverity: {
+  LOW: 'LOW',
+  MEDIUM: 'MEDIUM',
+  HIGH: 'HIGH',
+  CRITICAL: 'CRITICAL'
+};
+
+export type SafetySeverity = (typeof SafetySeverity)[keyof typeof SafetySeverity]
+
+
+export const SafetyCategory: {
+  HARM: 'HARM',
+  SELF_HARM: 'SELF_HARM',
+  HARASSMENT: 'HARASSMENT',
+  DISCLOSURE: 'DISCLOSURE'
+};
+
+export type SafetyCategory = (typeof SafetyCategory)[keyof typeof SafetyCategory]
+
+
+export const MitigationAction: {
+  WARNING: 'WARNING',
+  MUTE: 'MUTE',
+  KICK: 'KICK',
+  ESCALATE: 'ESCALATE'
+};
+
+export type MitigationAction = (typeof MitigationAction)[keyof typeof MitigationAction]
+
+
+export const EscalationLevel: {
+  watch: 'watch',
+  urgent: 'urgent',
+  crisis: 'crisis'
+};
+
+export type EscalationLevel = (typeof EscalationLevel)[keyof typeof EscalationLevel]
+
+
+export const EscalationSource: {
+  keyword: 'keyword',
+  manual: 'manual'
+};
+
+export type EscalationSource = (typeof EscalationSource)[keyof typeof EscalationSource]
+
+
+export const EscalationStatus: {
+  open: 'open',
+  reviewing: 'reviewing',
+  resolved: 'resolved'
+};
+
+export type EscalationStatus = (typeof EscalationStatus)[keyof typeof EscalationStatus]
+
+}
+
+export type SafetySeverity = $Enums.SafetySeverity
+
+export const SafetySeverity: typeof $Enums.SafetySeverity
+
+export type SafetyCategory = $Enums.SafetyCategory
+
+export const SafetyCategory: typeof $Enums.SafetyCategory
+
+export type MitigationAction = $Enums.MitigationAction
+
+export const MitigationAction: typeof $Enums.MitigationAction
+
+export type EscalationLevel = $Enums.EscalationLevel
+
+export const EscalationLevel: typeof $Enums.EscalationLevel
+
+export type EscalationSource = $Enums.EscalationSource
+
+export const EscalationSource: typeof $Enums.EscalationSource
+
+export type EscalationStatus = $Enums.EscalationStatus
+
+export const EscalationStatus: typeof $Enums.EscalationStatus
 
 /**
  * ##  Prisma Client ʲˢ
@@ -168,6 +263,16 @@ export class PrismaClient<
   get safetyAlert(): Prisma.SafetyAlertDelegate<ExtArgs>;
 
   /**
+   * `prisma.keywordRule`: Exposes CRUD operations for the **KeywordRule** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more KeywordRules
+    * const keywordRules = await prisma.keywordRule.findMany()
+    * ```
+    */
+  get keywordRule(): Prisma.KeywordRuleDelegate<ExtArgs>;
+
+  /**
    * `prisma.safetyMitigation`: Exposes CRUD operations for the **SafetyMitigation** model.
     * Example usage:
     * ```ts
@@ -196,6 +301,16 @@ export class PrismaClient<
     * ```
     */
   get safetyAuditLog(): Prisma.SafetyAuditLogDelegate<ExtArgs>;
+
+  /**
+   * `prisma.escalationQueue`: Exposes CRUD operations for the **EscalationQueue** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more EscalationQueues
+    * const escalationQueues = await prisma.escalationQueue.findMany()
+    * ```
+    */
+  get escalationQueue(): Prisma.EscalationQueueDelegate<ExtArgs>;
 }
 
 export namespace Prisma {
@@ -637,9 +752,11 @@ export namespace Prisma {
 
   export const ModelName: {
     SafetyAlert: 'SafetyAlert',
+    KeywordRule: 'KeywordRule',
     SafetyMitigation: 'SafetyMitigation',
     SafetyStrike: 'SafetyStrike',
-    SafetyAuditLog: 'SafetyAuditLog'
+    SafetyAuditLog: 'SafetyAuditLog',
+    EscalationQueue: 'EscalationQueue'
   };
 
   export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -655,7 +772,7 @@ export namespace Prisma {
 
   export type TypeMap<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, ClientOptions = {}> = {
     meta: {
-      modelProps: "safetyAlert" | "safetyMitigation" | "safetyStrike" | "safetyAuditLog"
+      modelProps: "safetyAlert" | "keywordRule" | "safetyMitigation" | "safetyStrike" | "safetyAuditLog" | "escalationQueue"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -726,6 +843,76 @@ export namespace Prisma {
           count: {
             args: Prisma.SafetyAlertCountArgs<ExtArgs>
             result: $Utils.Optional<SafetyAlertCountAggregateOutputType> | number
+          }
+        }
+      }
+      KeywordRule: {
+        payload: Prisma.$KeywordRulePayload<ExtArgs>
+        fields: Prisma.KeywordRuleFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.KeywordRuleFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$KeywordRulePayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.KeywordRuleFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$KeywordRulePayload>
+          }
+          findFirst: {
+            args: Prisma.KeywordRuleFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$KeywordRulePayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.KeywordRuleFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$KeywordRulePayload>
+          }
+          findMany: {
+            args: Prisma.KeywordRuleFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$KeywordRulePayload>[]
+          }
+          create: {
+            args: Prisma.KeywordRuleCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$KeywordRulePayload>
+          }
+          createMany: {
+            args: Prisma.KeywordRuleCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.KeywordRuleCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$KeywordRulePayload>[]
+          }
+          delete: {
+            args: Prisma.KeywordRuleDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$KeywordRulePayload>
+          }
+          update: {
+            args: Prisma.KeywordRuleUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$KeywordRulePayload>
+          }
+          deleteMany: {
+            args: Prisma.KeywordRuleDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.KeywordRuleUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          upsert: {
+            args: Prisma.KeywordRuleUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$KeywordRulePayload>
+          }
+          aggregate: {
+            args: Prisma.KeywordRuleAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateKeywordRule>
+          }
+          groupBy: {
+            args: Prisma.KeywordRuleGroupByArgs<ExtArgs>
+            result: $Utils.Optional<KeywordRuleGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.KeywordRuleCountArgs<ExtArgs>
+            result: $Utils.Optional<KeywordRuleCountAggregateOutputType> | number
           }
         }
       }
@@ -939,6 +1126,76 @@ export namespace Prisma {
           }
         }
       }
+      EscalationQueue: {
+        payload: Prisma.$EscalationQueuePayload<ExtArgs>
+        fields: Prisma.EscalationQueueFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.EscalationQueueFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$EscalationQueuePayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.EscalationQueueFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$EscalationQueuePayload>
+          }
+          findFirst: {
+            args: Prisma.EscalationQueueFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$EscalationQueuePayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.EscalationQueueFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$EscalationQueuePayload>
+          }
+          findMany: {
+            args: Prisma.EscalationQueueFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$EscalationQueuePayload>[]
+          }
+          create: {
+            args: Prisma.EscalationQueueCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$EscalationQueuePayload>
+          }
+          createMany: {
+            args: Prisma.EscalationQueueCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.EscalationQueueCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$EscalationQueuePayload>[]
+          }
+          delete: {
+            args: Prisma.EscalationQueueDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$EscalationQueuePayload>
+          }
+          update: {
+            args: Prisma.EscalationQueueUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$EscalationQueuePayload>
+          }
+          deleteMany: {
+            args: Prisma.EscalationQueueDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.EscalationQueueUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          upsert: {
+            args: Prisma.EscalationQueueUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$EscalationQueuePayload>
+          }
+          aggregate: {
+            args: Prisma.EscalationQueueAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateEscalationQueue>
+          }
+          groupBy: {
+            args: Prisma.EscalationQueueGroupByArgs<ExtArgs>
+            result: $Utils.Optional<EscalationQueueGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.EscalationQueueCountArgs<ExtArgs>
+            result: $Utils.Optional<EscalationQueueCountAggregateOutputType> | number
+          }
+        }
+      }
     }
   } & {
     other: {
@@ -1101,10 +1358,12 @@ export namespace Prisma {
 
   export type SafetyAlertCountOutputType = {
     mitigations: number
+    escalations: number
   }
 
   export type SafetyAlertCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     mitigations?: boolean | SafetyAlertCountOutputTypeCountMitigationsArgs
+    escalations?: boolean | SafetyAlertCountOutputTypeCountEscalationsArgs
   }
 
   // Custom InputTypes
@@ -1125,6 +1384,13 @@ export namespace Prisma {
     where?: SafetyMitigationWhereInput
   }
 
+  /**
+   * SafetyAlertCountOutputType without action
+   */
+  export type SafetyAlertCountOutputTypeCountEscalationsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: EscalationQueueWhereInput
+  }
+
 
   /**
    * Models
@@ -1143,23 +1409,25 @@ export namespace Prisma {
   export type SafetyAlertMinAggregateOutputType = {
     id: string | null
     sessionId: string | null
-    severity: string | null
-    category: string | null
+    severity: $Enums.SafetySeverity | null
+    category: $Enums.SafetyCategory | null
     anonymizedReason: string | null
     transcriptChunk: string | null
     isResolved: boolean | null
     createdAt: Date | null
+    updatedAt: Date | null
   }
 
   export type SafetyAlertMaxAggregateOutputType = {
     id: string | null
     sessionId: string | null
-    severity: string | null
-    category: string | null
+    severity: $Enums.SafetySeverity | null
+    category: $Enums.SafetyCategory | null
     anonymizedReason: string | null
     transcriptChunk: string | null
     isResolved: boolean | null
     createdAt: Date | null
+    updatedAt: Date | null
   }
 
   export type SafetyAlertCountAggregateOutputType = {
@@ -1171,6 +1439,7 @@ export namespace Prisma {
     transcriptChunk: number
     isResolved: number
     createdAt: number
+    updatedAt: number
     _all: number
   }
 
@@ -1184,6 +1453,7 @@ export namespace Prisma {
     transcriptChunk?: true
     isResolved?: true
     createdAt?: true
+    updatedAt?: true
   }
 
   export type SafetyAlertMaxAggregateInputType = {
@@ -1195,6 +1465,7 @@ export namespace Prisma {
     transcriptChunk?: true
     isResolved?: true
     createdAt?: true
+    updatedAt?: true
   }
 
   export type SafetyAlertCountAggregateInputType = {
@@ -1206,6 +1477,7 @@ export namespace Prisma {
     transcriptChunk?: true
     isResolved?: true
     createdAt?: true
+    updatedAt?: true
     _all?: true
   }
 
@@ -1284,12 +1556,13 @@ export namespace Prisma {
   export type SafetyAlertGroupByOutputType = {
     id: string
     sessionId: string
-    severity: string
-    category: string
+    severity: $Enums.SafetySeverity
+    category: $Enums.SafetyCategory
     anonymizedReason: string
     transcriptChunk: string | null
     isResolved: boolean
     createdAt: Date
+    updatedAt: Date
     _count: SafetyAlertCountAggregateOutputType | null
     _min: SafetyAlertMinAggregateOutputType | null
     _max: SafetyAlertMaxAggregateOutputType | null
@@ -1318,7 +1591,9 @@ export namespace Prisma {
     transcriptChunk?: boolean
     isResolved?: boolean
     createdAt?: boolean
+    updatedAt?: boolean
     mitigations?: boolean | SafetyAlert$mitigationsArgs<ExtArgs>
+    escalations?: boolean | SafetyAlert$escalationsArgs<ExtArgs>
     _count?: boolean | SafetyAlertCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["safetyAlert"]>
 
@@ -1331,6 +1606,7 @@ export namespace Prisma {
     transcriptChunk?: boolean
     isResolved?: boolean
     createdAt?: boolean
+    updatedAt?: boolean
   }, ExtArgs["result"]["safetyAlert"]>
 
   export type SafetyAlertSelectScalar = {
@@ -1342,10 +1618,12 @@ export namespace Prisma {
     transcriptChunk?: boolean
     isResolved?: boolean
     createdAt?: boolean
+    updatedAt?: boolean
   }
 
   export type SafetyAlertInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     mitigations?: boolean | SafetyAlert$mitigationsArgs<ExtArgs>
+    escalations?: boolean | SafetyAlert$escalationsArgs<ExtArgs>
     _count?: boolean | SafetyAlertCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type SafetyAlertIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
@@ -1354,16 +1632,18 @@ export namespace Prisma {
     name: "SafetyAlert"
     objects: {
       mitigations: Prisma.$SafetyMitigationPayload<ExtArgs>[]
+      escalations: Prisma.$EscalationQueuePayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
       sessionId: string
-      severity: string
-      category: string
+      severity: $Enums.SafetySeverity
+      category: $Enums.SafetyCategory
       anonymizedReason: string
       transcriptChunk: string | null
       isResolved: boolean
       createdAt: Date
+      updatedAt: Date
     }, ExtArgs["result"]["safetyAlert"]>
     composites: {}
   }
@@ -1729,6 +2009,7 @@ export namespace Prisma {
   export interface Prisma__SafetyAlertClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: "PrismaPromise"
     mitigations<T extends SafetyAlert$mitigationsArgs<ExtArgs> = {}>(args?: Subset<T, SafetyAlert$mitigationsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$SafetyMitigationPayload<ExtArgs>, T, "findMany"> | Null>
+    escalations<T extends SafetyAlert$escalationsArgs<ExtArgs> = {}>(args?: Subset<T, SafetyAlert$escalationsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$EscalationQueuePayload<ExtArgs>, T, "findMany"> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1760,12 +2041,13 @@ export namespace Prisma {
   interface SafetyAlertFieldRefs {
     readonly id: FieldRef<"SafetyAlert", 'String'>
     readonly sessionId: FieldRef<"SafetyAlert", 'String'>
-    readonly severity: FieldRef<"SafetyAlert", 'String'>
-    readonly category: FieldRef<"SafetyAlert", 'String'>
+    readonly severity: FieldRef<"SafetyAlert", 'SafetySeverity'>
+    readonly category: FieldRef<"SafetyAlert", 'SafetyCategory'>
     readonly anonymizedReason: FieldRef<"SafetyAlert", 'String'>
     readonly transcriptChunk: FieldRef<"SafetyAlert", 'String'>
     readonly isResolved: FieldRef<"SafetyAlert", 'Boolean'>
     readonly createdAt: FieldRef<"SafetyAlert", 'DateTime'>
+    readonly updatedAt: FieldRef<"SafetyAlert", 'DateTime'>
   }
     
 
@@ -2100,6 +2382,26 @@ export namespace Prisma {
   }
 
   /**
+   * SafetyAlert.escalations
+   */
+  export type SafetyAlert$escalationsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the EscalationQueue
+     */
+    select?: EscalationQueueSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: EscalationQueueInclude<ExtArgs> | null
+    where?: EscalationQueueWhereInput
+    orderBy?: EscalationQueueOrderByWithRelationInput | EscalationQueueOrderByWithRelationInput[]
+    cursor?: EscalationQueueWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: EscalationQueueScalarFieldEnum | EscalationQueueScalarFieldEnum[]
+  }
+
+  /**
    * SafetyAlert without action
    */
   export type SafetyAlertDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -2111,6 +2413,908 @@ export namespace Prisma {
      * Choose, which related nodes to fetch as well
      */
     include?: SafetyAlertInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model KeywordRule
+   */
+
+  export type AggregateKeywordRule = {
+    _count: KeywordRuleCountAggregateOutputType | null
+    _min: KeywordRuleMinAggregateOutputType | null
+    _max: KeywordRuleMaxAggregateOutputType | null
+  }
+
+  export type KeywordRuleMinAggregateOutputType = {
+    id: string | null
+    term: string | null
+    severity: $Enums.SafetySeverity | null
+    category: $Enums.SafetyCategory | null
+    enabled: boolean | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type KeywordRuleMaxAggregateOutputType = {
+    id: string | null
+    term: string | null
+    severity: $Enums.SafetySeverity | null
+    category: $Enums.SafetyCategory | null
+    enabled: boolean | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type KeywordRuleCountAggregateOutputType = {
+    id: number
+    term: number
+    severity: number
+    category: number
+    enabled: number
+    createdAt: number
+    updatedAt: number
+    _all: number
+  }
+
+
+  export type KeywordRuleMinAggregateInputType = {
+    id?: true
+    term?: true
+    severity?: true
+    category?: true
+    enabled?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type KeywordRuleMaxAggregateInputType = {
+    id?: true
+    term?: true
+    severity?: true
+    category?: true
+    enabled?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type KeywordRuleCountAggregateInputType = {
+    id?: true
+    term?: true
+    severity?: true
+    category?: true
+    enabled?: true
+    createdAt?: true
+    updatedAt?: true
+    _all?: true
+  }
+
+  export type KeywordRuleAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which KeywordRule to aggregate.
+     */
+    where?: KeywordRuleWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of KeywordRules to fetch.
+     */
+    orderBy?: KeywordRuleOrderByWithRelationInput | KeywordRuleOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: KeywordRuleWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` KeywordRules from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` KeywordRules.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned KeywordRules
+    **/
+    _count?: true | KeywordRuleCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: KeywordRuleMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: KeywordRuleMaxAggregateInputType
+  }
+
+  export type GetKeywordRuleAggregateType<T extends KeywordRuleAggregateArgs> = {
+        [P in keyof T & keyof AggregateKeywordRule]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateKeywordRule[P]>
+      : GetScalarType<T[P], AggregateKeywordRule[P]>
+  }
+
+
+
+
+  export type KeywordRuleGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: KeywordRuleWhereInput
+    orderBy?: KeywordRuleOrderByWithAggregationInput | KeywordRuleOrderByWithAggregationInput[]
+    by: KeywordRuleScalarFieldEnum[] | KeywordRuleScalarFieldEnum
+    having?: KeywordRuleScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: KeywordRuleCountAggregateInputType | true
+    _min?: KeywordRuleMinAggregateInputType
+    _max?: KeywordRuleMaxAggregateInputType
+  }
+
+  export type KeywordRuleGroupByOutputType = {
+    id: string
+    term: string
+    severity: $Enums.SafetySeverity
+    category: $Enums.SafetyCategory
+    enabled: boolean
+    createdAt: Date
+    updatedAt: Date
+    _count: KeywordRuleCountAggregateOutputType | null
+    _min: KeywordRuleMinAggregateOutputType | null
+    _max: KeywordRuleMaxAggregateOutputType | null
+  }
+
+  type GetKeywordRuleGroupByPayload<T extends KeywordRuleGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<KeywordRuleGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof KeywordRuleGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], KeywordRuleGroupByOutputType[P]>
+            : GetScalarType<T[P], KeywordRuleGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type KeywordRuleSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    term?: boolean
+    severity?: boolean
+    category?: boolean
+    enabled?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }, ExtArgs["result"]["keywordRule"]>
+
+  export type KeywordRuleSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    term?: boolean
+    severity?: boolean
+    category?: boolean
+    enabled?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }, ExtArgs["result"]["keywordRule"]>
+
+  export type KeywordRuleSelectScalar = {
+    id?: boolean
+    term?: boolean
+    severity?: boolean
+    category?: boolean
+    enabled?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }
+
+
+  export type $KeywordRulePayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "KeywordRule"
+    objects: {}
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      term: string
+      severity: $Enums.SafetySeverity
+      category: $Enums.SafetyCategory
+      enabled: boolean
+      createdAt: Date
+      updatedAt: Date
+    }, ExtArgs["result"]["keywordRule"]>
+    composites: {}
+  }
+
+  type KeywordRuleGetPayload<S extends boolean | null | undefined | KeywordRuleDefaultArgs> = $Result.GetResult<Prisma.$KeywordRulePayload, S>
+
+  type KeywordRuleCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = 
+    Omit<KeywordRuleFindManyArgs, 'select' | 'include' | 'distinct'> & {
+      select?: KeywordRuleCountAggregateInputType | true
+    }
+
+  export interface KeywordRuleDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['KeywordRule'], meta: { name: 'KeywordRule' } }
+    /**
+     * Find zero or one KeywordRule that matches the filter.
+     * @param {KeywordRuleFindUniqueArgs} args - Arguments to find a KeywordRule
+     * @example
+     * // Get one KeywordRule
+     * const keywordRule = await prisma.keywordRule.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends KeywordRuleFindUniqueArgs>(args: SelectSubset<T, KeywordRuleFindUniqueArgs<ExtArgs>>): Prisma__KeywordRuleClient<$Result.GetResult<Prisma.$KeywordRulePayload<ExtArgs>, T, "findUnique"> | null, null, ExtArgs>
+
+    /**
+     * Find one KeywordRule that matches the filter or throw an error with `error.code='P2025'` 
+     * if no matches were found.
+     * @param {KeywordRuleFindUniqueOrThrowArgs} args - Arguments to find a KeywordRule
+     * @example
+     * // Get one KeywordRule
+     * const keywordRule = await prisma.keywordRule.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends KeywordRuleFindUniqueOrThrowArgs>(args: SelectSubset<T, KeywordRuleFindUniqueOrThrowArgs<ExtArgs>>): Prisma__KeywordRuleClient<$Result.GetResult<Prisma.$KeywordRulePayload<ExtArgs>, T, "findUniqueOrThrow">, never, ExtArgs>
+
+    /**
+     * Find the first KeywordRule that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {KeywordRuleFindFirstArgs} args - Arguments to find a KeywordRule
+     * @example
+     * // Get one KeywordRule
+     * const keywordRule = await prisma.keywordRule.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends KeywordRuleFindFirstArgs>(args?: SelectSubset<T, KeywordRuleFindFirstArgs<ExtArgs>>): Prisma__KeywordRuleClient<$Result.GetResult<Prisma.$KeywordRulePayload<ExtArgs>, T, "findFirst"> | null, null, ExtArgs>
+
+    /**
+     * Find the first KeywordRule that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {KeywordRuleFindFirstOrThrowArgs} args - Arguments to find a KeywordRule
+     * @example
+     * // Get one KeywordRule
+     * const keywordRule = await prisma.keywordRule.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends KeywordRuleFindFirstOrThrowArgs>(args?: SelectSubset<T, KeywordRuleFindFirstOrThrowArgs<ExtArgs>>): Prisma__KeywordRuleClient<$Result.GetResult<Prisma.$KeywordRulePayload<ExtArgs>, T, "findFirstOrThrow">, never, ExtArgs>
+
+    /**
+     * Find zero or more KeywordRules that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {KeywordRuleFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all KeywordRules
+     * const keywordRules = await prisma.keywordRule.findMany()
+     * 
+     * // Get first 10 KeywordRules
+     * const keywordRules = await prisma.keywordRule.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const keywordRuleWithIdOnly = await prisma.keywordRule.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends KeywordRuleFindManyArgs>(args?: SelectSubset<T, KeywordRuleFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$KeywordRulePayload<ExtArgs>, T, "findMany">>
+
+    /**
+     * Create a KeywordRule.
+     * @param {KeywordRuleCreateArgs} args - Arguments to create a KeywordRule.
+     * @example
+     * // Create one KeywordRule
+     * const KeywordRule = await prisma.keywordRule.create({
+     *   data: {
+     *     // ... data to create a KeywordRule
+     *   }
+     * })
+     * 
+     */
+    create<T extends KeywordRuleCreateArgs>(args: SelectSubset<T, KeywordRuleCreateArgs<ExtArgs>>): Prisma__KeywordRuleClient<$Result.GetResult<Prisma.$KeywordRulePayload<ExtArgs>, T, "create">, never, ExtArgs>
+
+    /**
+     * Create many KeywordRules.
+     * @param {KeywordRuleCreateManyArgs} args - Arguments to create many KeywordRules.
+     * @example
+     * // Create many KeywordRules
+     * const keywordRule = await prisma.keywordRule.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends KeywordRuleCreateManyArgs>(args?: SelectSubset<T, KeywordRuleCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many KeywordRules and returns the data saved in the database.
+     * @param {KeywordRuleCreateManyAndReturnArgs} args - Arguments to create many KeywordRules.
+     * @example
+     * // Create many KeywordRules
+     * const keywordRule = await prisma.keywordRule.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many KeywordRules and only return the `id`
+     * const keywordRuleWithIdOnly = await prisma.keywordRule.createManyAndReturn({ 
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends KeywordRuleCreateManyAndReturnArgs>(args?: SelectSubset<T, KeywordRuleCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$KeywordRulePayload<ExtArgs>, T, "createManyAndReturn">>
+
+    /**
+     * Delete a KeywordRule.
+     * @param {KeywordRuleDeleteArgs} args - Arguments to delete one KeywordRule.
+     * @example
+     * // Delete one KeywordRule
+     * const KeywordRule = await prisma.keywordRule.delete({
+     *   where: {
+     *     // ... filter to delete one KeywordRule
+     *   }
+     * })
+     * 
+     */
+    delete<T extends KeywordRuleDeleteArgs>(args: SelectSubset<T, KeywordRuleDeleteArgs<ExtArgs>>): Prisma__KeywordRuleClient<$Result.GetResult<Prisma.$KeywordRulePayload<ExtArgs>, T, "delete">, never, ExtArgs>
+
+    /**
+     * Update one KeywordRule.
+     * @param {KeywordRuleUpdateArgs} args - Arguments to update one KeywordRule.
+     * @example
+     * // Update one KeywordRule
+     * const keywordRule = await prisma.keywordRule.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends KeywordRuleUpdateArgs>(args: SelectSubset<T, KeywordRuleUpdateArgs<ExtArgs>>): Prisma__KeywordRuleClient<$Result.GetResult<Prisma.$KeywordRulePayload<ExtArgs>, T, "update">, never, ExtArgs>
+
+    /**
+     * Delete zero or more KeywordRules.
+     * @param {KeywordRuleDeleteManyArgs} args - Arguments to filter KeywordRules to delete.
+     * @example
+     * // Delete a few KeywordRules
+     * const { count } = await prisma.keywordRule.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends KeywordRuleDeleteManyArgs>(args?: SelectSubset<T, KeywordRuleDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more KeywordRules.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {KeywordRuleUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many KeywordRules
+     * const keywordRule = await prisma.keywordRule.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends KeywordRuleUpdateManyArgs>(args: SelectSubset<T, KeywordRuleUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create or update one KeywordRule.
+     * @param {KeywordRuleUpsertArgs} args - Arguments to update or create a KeywordRule.
+     * @example
+     * // Update or create a KeywordRule
+     * const keywordRule = await prisma.keywordRule.upsert({
+     *   create: {
+     *     // ... data to create a KeywordRule
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the KeywordRule we want to update
+     *   }
+     * })
+     */
+    upsert<T extends KeywordRuleUpsertArgs>(args: SelectSubset<T, KeywordRuleUpsertArgs<ExtArgs>>): Prisma__KeywordRuleClient<$Result.GetResult<Prisma.$KeywordRulePayload<ExtArgs>, T, "upsert">, never, ExtArgs>
+
+
+    /**
+     * Count the number of KeywordRules.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {KeywordRuleCountArgs} args - Arguments to filter KeywordRules to count.
+     * @example
+     * // Count the number of KeywordRules
+     * const count = await prisma.keywordRule.count({
+     *   where: {
+     *     // ... the filter for the KeywordRules we want to count
+     *   }
+     * })
+    **/
+    count<T extends KeywordRuleCountArgs>(
+      args?: Subset<T, KeywordRuleCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], KeywordRuleCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a KeywordRule.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {KeywordRuleAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends KeywordRuleAggregateArgs>(args: Subset<T, KeywordRuleAggregateArgs>): Prisma.PrismaPromise<GetKeywordRuleAggregateType<T>>
+
+    /**
+     * Group by KeywordRule.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {KeywordRuleGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends KeywordRuleGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: KeywordRuleGroupByArgs['orderBy'] }
+        : { orderBy?: KeywordRuleGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, KeywordRuleGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetKeywordRuleGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the KeywordRule model
+   */
+  readonly fields: KeywordRuleFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for KeywordRule.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__KeywordRuleClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the KeywordRule model
+   */ 
+  interface KeywordRuleFieldRefs {
+    readonly id: FieldRef<"KeywordRule", 'String'>
+    readonly term: FieldRef<"KeywordRule", 'String'>
+    readonly severity: FieldRef<"KeywordRule", 'SafetySeverity'>
+    readonly category: FieldRef<"KeywordRule", 'SafetyCategory'>
+    readonly enabled: FieldRef<"KeywordRule", 'Boolean'>
+    readonly createdAt: FieldRef<"KeywordRule", 'DateTime'>
+    readonly updatedAt: FieldRef<"KeywordRule", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * KeywordRule findUnique
+   */
+  export type KeywordRuleFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the KeywordRule
+     */
+    select?: KeywordRuleSelect<ExtArgs> | null
+    /**
+     * Filter, which KeywordRule to fetch.
+     */
+    where: KeywordRuleWhereUniqueInput
+  }
+
+  /**
+   * KeywordRule findUniqueOrThrow
+   */
+  export type KeywordRuleFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the KeywordRule
+     */
+    select?: KeywordRuleSelect<ExtArgs> | null
+    /**
+     * Filter, which KeywordRule to fetch.
+     */
+    where: KeywordRuleWhereUniqueInput
+  }
+
+  /**
+   * KeywordRule findFirst
+   */
+  export type KeywordRuleFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the KeywordRule
+     */
+    select?: KeywordRuleSelect<ExtArgs> | null
+    /**
+     * Filter, which KeywordRule to fetch.
+     */
+    where?: KeywordRuleWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of KeywordRules to fetch.
+     */
+    orderBy?: KeywordRuleOrderByWithRelationInput | KeywordRuleOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for KeywordRules.
+     */
+    cursor?: KeywordRuleWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` KeywordRules from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` KeywordRules.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of KeywordRules.
+     */
+    distinct?: KeywordRuleScalarFieldEnum | KeywordRuleScalarFieldEnum[]
+  }
+
+  /**
+   * KeywordRule findFirstOrThrow
+   */
+  export type KeywordRuleFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the KeywordRule
+     */
+    select?: KeywordRuleSelect<ExtArgs> | null
+    /**
+     * Filter, which KeywordRule to fetch.
+     */
+    where?: KeywordRuleWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of KeywordRules to fetch.
+     */
+    orderBy?: KeywordRuleOrderByWithRelationInput | KeywordRuleOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for KeywordRules.
+     */
+    cursor?: KeywordRuleWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` KeywordRules from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` KeywordRules.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of KeywordRules.
+     */
+    distinct?: KeywordRuleScalarFieldEnum | KeywordRuleScalarFieldEnum[]
+  }
+
+  /**
+   * KeywordRule findMany
+   */
+  export type KeywordRuleFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the KeywordRule
+     */
+    select?: KeywordRuleSelect<ExtArgs> | null
+    /**
+     * Filter, which KeywordRules to fetch.
+     */
+    where?: KeywordRuleWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of KeywordRules to fetch.
+     */
+    orderBy?: KeywordRuleOrderByWithRelationInput | KeywordRuleOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing KeywordRules.
+     */
+    cursor?: KeywordRuleWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` KeywordRules from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` KeywordRules.
+     */
+    skip?: number
+    distinct?: KeywordRuleScalarFieldEnum | KeywordRuleScalarFieldEnum[]
+  }
+
+  /**
+   * KeywordRule create
+   */
+  export type KeywordRuleCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the KeywordRule
+     */
+    select?: KeywordRuleSelect<ExtArgs> | null
+    /**
+     * The data needed to create a KeywordRule.
+     */
+    data: XOR<KeywordRuleCreateInput, KeywordRuleUncheckedCreateInput>
+  }
+
+  /**
+   * KeywordRule createMany
+   */
+  export type KeywordRuleCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many KeywordRules.
+     */
+    data: KeywordRuleCreateManyInput | KeywordRuleCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * KeywordRule createManyAndReturn
+   */
+  export type KeywordRuleCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the KeywordRule
+     */
+    select?: KeywordRuleSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * The data used to create many KeywordRules.
+     */
+    data: KeywordRuleCreateManyInput | KeywordRuleCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * KeywordRule update
+   */
+  export type KeywordRuleUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the KeywordRule
+     */
+    select?: KeywordRuleSelect<ExtArgs> | null
+    /**
+     * The data needed to update a KeywordRule.
+     */
+    data: XOR<KeywordRuleUpdateInput, KeywordRuleUncheckedUpdateInput>
+    /**
+     * Choose, which KeywordRule to update.
+     */
+    where: KeywordRuleWhereUniqueInput
+  }
+
+  /**
+   * KeywordRule updateMany
+   */
+  export type KeywordRuleUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update KeywordRules.
+     */
+    data: XOR<KeywordRuleUpdateManyMutationInput, KeywordRuleUncheckedUpdateManyInput>
+    /**
+     * Filter which KeywordRules to update
+     */
+    where?: KeywordRuleWhereInput
+  }
+
+  /**
+   * KeywordRule upsert
+   */
+  export type KeywordRuleUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the KeywordRule
+     */
+    select?: KeywordRuleSelect<ExtArgs> | null
+    /**
+     * The filter to search for the KeywordRule to update in case it exists.
+     */
+    where: KeywordRuleWhereUniqueInput
+    /**
+     * In case the KeywordRule found by the `where` argument doesn't exist, create a new KeywordRule with this data.
+     */
+    create: XOR<KeywordRuleCreateInput, KeywordRuleUncheckedCreateInput>
+    /**
+     * In case the KeywordRule was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<KeywordRuleUpdateInput, KeywordRuleUncheckedUpdateInput>
+  }
+
+  /**
+   * KeywordRule delete
+   */
+  export type KeywordRuleDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the KeywordRule
+     */
+    select?: KeywordRuleSelect<ExtArgs> | null
+    /**
+     * Filter which KeywordRule to delete.
+     */
+    where: KeywordRuleWhereUniqueInput
+  }
+
+  /**
+   * KeywordRule deleteMany
+   */
+  export type KeywordRuleDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which KeywordRules to delete
+     */
+    where?: KeywordRuleWhereInput
+  }
+
+  /**
+   * KeywordRule without action
+   */
+  export type KeywordRuleDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the KeywordRule
+     */
+    select?: KeywordRuleSelect<ExtArgs> | null
   }
 
 
@@ -2127,7 +3331,7 @@ export namespace Prisma {
   export type SafetyMitigationMinAggregateOutputType = {
     id: string | null
     alertId: string | null
-    action: string | null
+    action: $Enums.MitigationAction | null
     success: boolean | null
     createdAt: Date | null
   }
@@ -2135,7 +3339,7 @@ export namespace Prisma {
   export type SafetyMitigationMaxAggregateOutputType = {
     id: string | null
     alertId: string | null
-    action: string | null
+    action: $Enums.MitigationAction | null
     success: boolean | null
     createdAt: Date | null
   }
@@ -2252,7 +3456,7 @@ export namespace Prisma {
   export type SafetyMitigationGroupByOutputType = {
     id: string
     alertId: string
-    action: string
+    action: $Enums.MitigationAction
     success: boolean
     metadata: JsonValue | null
     createdAt: Date
@@ -2319,7 +3523,7 @@ export namespace Prisma {
     scalars: $Extensions.GetPayloadResult<{
       id: string
       alertId: string
-      action: string
+      action: $Enums.MitigationAction
       success: boolean
       metadata: Prisma.JsonValue | null
       createdAt: Date
@@ -2719,7 +3923,7 @@ export namespace Prisma {
   interface SafetyMitigationFieldRefs {
     readonly id: FieldRef<"SafetyMitigation", 'String'>
     readonly alertId: FieldRef<"SafetyMitigation", 'String'>
-    readonly action: FieldRef<"SafetyMitigation", 'String'>
+    readonly action: FieldRef<"SafetyMitigation", 'MitigationAction'>
     readonly success: FieldRef<"SafetyMitigation", 'Boolean'>
     readonly metadata: FieldRef<"SafetyMitigation", 'Json'>
     readonly createdAt: FieldRef<"SafetyMitigation", 'DateTime'>
@@ -3082,6 +4286,7 @@ export namespace Prisma {
     count: number | null
     lastStrikeAt: Date | null
     createdAt: Date | null
+    updatedAt: Date | null
   }
 
   export type SafetyStrikeMaxAggregateOutputType = {
@@ -3091,6 +4296,7 @@ export namespace Prisma {
     count: number | null
     lastStrikeAt: Date | null
     createdAt: Date | null
+    updatedAt: Date | null
   }
 
   export type SafetyStrikeCountAggregateOutputType = {
@@ -3100,6 +4306,7 @@ export namespace Prisma {
     count: number
     lastStrikeAt: number
     createdAt: number
+    updatedAt: number
     _all: number
   }
 
@@ -3119,6 +4326,7 @@ export namespace Prisma {
     count?: true
     lastStrikeAt?: true
     createdAt?: true
+    updatedAt?: true
   }
 
   export type SafetyStrikeMaxAggregateInputType = {
@@ -3128,6 +4336,7 @@ export namespace Prisma {
     count?: true
     lastStrikeAt?: true
     createdAt?: true
+    updatedAt?: true
   }
 
   export type SafetyStrikeCountAggregateInputType = {
@@ -3137,6 +4346,7 @@ export namespace Prisma {
     count?: true
     lastStrikeAt?: true
     createdAt?: true
+    updatedAt?: true
     _all?: true
   }
 
@@ -3233,6 +4443,7 @@ export namespace Prisma {
     count: number
     lastStrikeAt: Date
     createdAt: Date
+    updatedAt: Date
     _count: SafetyStrikeCountAggregateOutputType | null
     _avg: SafetyStrikeAvgAggregateOutputType | null
     _sum: SafetyStrikeSumAggregateOutputType | null
@@ -3261,6 +4472,7 @@ export namespace Prisma {
     count?: boolean
     lastStrikeAt?: boolean
     createdAt?: boolean
+    updatedAt?: boolean
   }, ExtArgs["result"]["safetyStrike"]>
 
   export type SafetyStrikeSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
@@ -3270,6 +4482,7 @@ export namespace Prisma {
     count?: boolean
     lastStrikeAt?: boolean
     createdAt?: boolean
+    updatedAt?: boolean
   }, ExtArgs["result"]["safetyStrike"]>
 
   export type SafetyStrikeSelectScalar = {
@@ -3279,6 +4492,7 @@ export namespace Prisma {
     count?: boolean
     lastStrikeAt?: boolean
     createdAt?: boolean
+    updatedAt?: boolean
   }
 
 
@@ -3292,6 +4506,7 @@ export namespace Prisma {
       count: number
       lastStrikeAt: Date
       createdAt: Date
+      updatedAt: Date
     }, ExtArgs["result"]["safetyStrike"]>
     composites: {}
   }
@@ -3691,6 +4906,7 @@ export namespace Prisma {
     readonly count: FieldRef<"SafetyStrike", 'Int'>
     readonly lastStrikeAt: FieldRef<"SafetyStrike", 'DateTime'>
     readonly createdAt: FieldRef<"SafetyStrike", 'DateTime'>
+    readonly updatedAt: FieldRef<"SafetyStrike", 'DateTime'>
   }
     
 
@@ -3994,6 +5210,7 @@ export namespace Prisma {
     action: string | null
     actor: string | null
     createdAt: Date | null
+    updatedAt: Date | null
   }
 
   export type SafetyAuditLogMaxAggregateOutputType = {
@@ -4001,6 +5218,7 @@ export namespace Prisma {
     action: string | null
     actor: string | null
     createdAt: Date | null
+    updatedAt: Date | null
   }
 
   export type SafetyAuditLogCountAggregateOutputType = {
@@ -4009,6 +5227,7 @@ export namespace Prisma {
     actor: number
     metadata: number
     createdAt: number
+    updatedAt: number
     _all: number
   }
 
@@ -4018,6 +5237,7 @@ export namespace Prisma {
     action?: true
     actor?: true
     createdAt?: true
+    updatedAt?: true
   }
 
   export type SafetyAuditLogMaxAggregateInputType = {
@@ -4025,6 +5245,7 @@ export namespace Prisma {
     action?: true
     actor?: true
     createdAt?: true
+    updatedAt?: true
   }
 
   export type SafetyAuditLogCountAggregateInputType = {
@@ -4033,6 +5254,7 @@ export namespace Prisma {
     actor?: true
     metadata?: true
     createdAt?: true
+    updatedAt?: true
     _all?: true
   }
 
@@ -4114,6 +5336,7 @@ export namespace Prisma {
     actor: string
     metadata: JsonValue
     createdAt: Date
+    updatedAt: Date
     _count: SafetyAuditLogCountAggregateOutputType | null
     _min: SafetyAuditLogMinAggregateOutputType | null
     _max: SafetyAuditLogMaxAggregateOutputType | null
@@ -4139,6 +5362,7 @@ export namespace Prisma {
     actor?: boolean
     metadata?: boolean
     createdAt?: boolean
+    updatedAt?: boolean
   }, ExtArgs["result"]["safetyAuditLog"]>
 
   export type SafetyAuditLogSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
@@ -4147,6 +5371,7 @@ export namespace Prisma {
     actor?: boolean
     metadata?: boolean
     createdAt?: boolean
+    updatedAt?: boolean
   }, ExtArgs["result"]["safetyAuditLog"]>
 
   export type SafetyAuditLogSelectScalar = {
@@ -4155,6 +5380,7 @@ export namespace Prisma {
     actor?: boolean
     metadata?: boolean
     createdAt?: boolean
+    updatedAt?: boolean
   }
 
 
@@ -4167,6 +5393,7 @@ export namespace Prisma {
       actor: string
       metadata: Prisma.JsonValue
       createdAt: Date
+      updatedAt: Date
     }, ExtArgs["result"]["safetyAuditLog"]>
     composites: {}
   }
@@ -4565,6 +5792,7 @@ export namespace Prisma {
     readonly actor: FieldRef<"SafetyAuditLog", 'String'>
     readonly metadata: FieldRef<"SafetyAuditLog", 'Json'>
     readonly createdAt: FieldRef<"SafetyAuditLog", 'DateTime'>
+    readonly updatedAt: FieldRef<"SafetyAuditLog", 'DateTime'>
   }
     
 
@@ -4854,6 +6082,1014 @@ export namespace Prisma {
 
 
   /**
+   * Model EscalationQueue
+   */
+
+  export type AggregateEscalationQueue = {
+    _count: EscalationQueueCountAggregateOutputType | null
+    _min: EscalationQueueMinAggregateOutputType | null
+    _max: EscalationQueueMaxAggregateOutputType | null
+  }
+
+  export type EscalationQueueMinAggregateOutputType = {
+    id: string | null
+    sessionRef: string | null
+    level: $Enums.EscalationLevel | null
+    source: $Enums.EscalationSource | null
+    summary: string | null
+    status: $Enums.EscalationStatus | null
+    reviewerHandle: string | null
+    createdAt: Date | null
+    updatedAt: Date | null
+    alertId: string | null
+  }
+
+  export type EscalationQueueMaxAggregateOutputType = {
+    id: string | null
+    sessionRef: string | null
+    level: $Enums.EscalationLevel | null
+    source: $Enums.EscalationSource | null
+    summary: string | null
+    status: $Enums.EscalationStatus | null
+    reviewerHandle: string | null
+    createdAt: Date | null
+    updatedAt: Date | null
+    alertId: string | null
+  }
+
+  export type EscalationQueueCountAggregateOutputType = {
+    id: number
+    sessionRef: number
+    level: number
+    source: number
+    summary: number
+    status: number
+    reviewerHandle: number
+    createdAt: number
+    updatedAt: number
+    alertId: number
+    _all: number
+  }
+
+
+  export type EscalationQueueMinAggregateInputType = {
+    id?: true
+    sessionRef?: true
+    level?: true
+    source?: true
+    summary?: true
+    status?: true
+    reviewerHandle?: true
+    createdAt?: true
+    updatedAt?: true
+    alertId?: true
+  }
+
+  export type EscalationQueueMaxAggregateInputType = {
+    id?: true
+    sessionRef?: true
+    level?: true
+    source?: true
+    summary?: true
+    status?: true
+    reviewerHandle?: true
+    createdAt?: true
+    updatedAt?: true
+    alertId?: true
+  }
+
+  export type EscalationQueueCountAggregateInputType = {
+    id?: true
+    sessionRef?: true
+    level?: true
+    source?: true
+    summary?: true
+    status?: true
+    reviewerHandle?: true
+    createdAt?: true
+    updatedAt?: true
+    alertId?: true
+    _all?: true
+  }
+
+  export type EscalationQueueAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which EscalationQueue to aggregate.
+     */
+    where?: EscalationQueueWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of EscalationQueues to fetch.
+     */
+    orderBy?: EscalationQueueOrderByWithRelationInput | EscalationQueueOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: EscalationQueueWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` EscalationQueues from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` EscalationQueues.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned EscalationQueues
+    **/
+    _count?: true | EscalationQueueCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: EscalationQueueMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: EscalationQueueMaxAggregateInputType
+  }
+
+  export type GetEscalationQueueAggregateType<T extends EscalationQueueAggregateArgs> = {
+        [P in keyof T & keyof AggregateEscalationQueue]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateEscalationQueue[P]>
+      : GetScalarType<T[P], AggregateEscalationQueue[P]>
+  }
+
+
+
+
+  export type EscalationQueueGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: EscalationQueueWhereInput
+    orderBy?: EscalationQueueOrderByWithAggregationInput | EscalationQueueOrderByWithAggregationInput[]
+    by: EscalationQueueScalarFieldEnum[] | EscalationQueueScalarFieldEnum
+    having?: EscalationQueueScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: EscalationQueueCountAggregateInputType | true
+    _min?: EscalationQueueMinAggregateInputType
+    _max?: EscalationQueueMaxAggregateInputType
+  }
+
+  export type EscalationQueueGroupByOutputType = {
+    id: string
+    sessionRef: string
+    level: $Enums.EscalationLevel
+    source: $Enums.EscalationSource
+    summary: string
+    status: $Enums.EscalationStatus
+    reviewerHandle: string | null
+    createdAt: Date
+    updatedAt: Date
+    alertId: string | null
+    _count: EscalationQueueCountAggregateOutputType | null
+    _min: EscalationQueueMinAggregateOutputType | null
+    _max: EscalationQueueMaxAggregateOutputType | null
+  }
+
+  type GetEscalationQueueGroupByPayload<T extends EscalationQueueGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<EscalationQueueGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof EscalationQueueGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], EscalationQueueGroupByOutputType[P]>
+            : GetScalarType<T[P], EscalationQueueGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type EscalationQueueSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    sessionRef?: boolean
+    level?: boolean
+    source?: boolean
+    summary?: boolean
+    status?: boolean
+    reviewerHandle?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    alertId?: boolean
+    alert?: boolean | EscalationQueue$alertArgs<ExtArgs>
+  }, ExtArgs["result"]["escalationQueue"]>
+
+  export type EscalationQueueSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    sessionRef?: boolean
+    level?: boolean
+    source?: boolean
+    summary?: boolean
+    status?: boolean
+    reviewerHandle?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    alertId?: boolean
+    alert?: boolean | EscalationQueue$alertArgs<ExtArgs>
+  }, ExtArgs["result"]["escalationQueue"]>
+
+  export type EscalationQueueSelectScalar = {
+    id?: boolean
+    sessionRef?: boolean
+    level?: boolean
+    source?: boolean
+    summary?: boolean
+    status?: boolean
+    reviewerHandle?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    alertId?: boolean
+  }
+
+  export type EscalationQueueInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    alert?: boolean | EscalationQueue$alertArgs<ExtArgs>
+  }
+  export type EscalationQueueIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    alert?: boolean | EscalationQueue$alertArgs<ExtArgs>
+  }
+
+  export type $EscalationQueuePayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "EscalationQueue"
+    objects: {
+      alert: Prisma.$SafetyAlertPayload<ExtArgs> | null
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      sessionRef: string
+      level: $Enums.EscalationLevel
+      source: $Enums.EscalationSource
+      summary: string
+      status: $Enums.EscalationStatus
+      reviewerHandle: string | null
+      createdAt: Date
+      updatedAt: Date
+      alertId: string | null
+    }, ExtArgs["result"]["escalationQueue"]>
+    composites: {}
+  }
+
+  type EscalationQueueGetPayload<S extends boolean | null | undefined | EscalationQueueDefaultArgs> = $Result.GetResult<Prisma.$EscalationQueuePayload, S>
+
+  type EscalationQueueCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = 
+    Omit<EscalationQueueFindManyArgs, 'select' | 'include' | 'distinct'> & {
+      select?: EscalationQueueCountAggregateInputType | true
+    }
+
+  export interface EscalationQueueDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['EscalationQueue'], meta: { name: 'EscalationQueue' } }
+    /**
+     * Find zero or one EscalationQueue that matches the filter.
+     * @param {EscalationQueueFindUniqueArgs} args - Arguments to find a EscalationQueue
+     * @example
+     * // Get one EscalationQueue
+     * const escalationQueue = await prisma.escalationQueue.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends EscalationQueueFindUniqueArgs>(args: SelectSubset<T, EscalationQueueFindUniqueArgs<ExtArgs>>): Prisma__EscalationQueueClient<$Result.GetResult<Prisma.$EscalationQueuePayload<ExtArgs>, T, "findUnique"> | null, null, ExtArgs>
+
+    /**
+     * Find one EscalationQueue that matches the filter or throw an error with `error.code='P2025'` 
+     * if no matches were found.
+     * @param {EscalationQueueFindUniqueOrThrowArgs} args - Arguments to find a EscalationQueue
+     * @example
+     * // Get one EscalationQueue
+     * const escalationQueue = await prisma.escalationQueue.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends EscalationQueueFindUniqueOrThrowArgs>(args: SelectSubset<T, EscalationQueueFindUniqueOrThrowArgs<ExtArgs>>): Prisma__EscalationQueueClient<$Result.GetResult<Prisma.$EscalationQueuePayload<ExtArgs>, T, "findUniqueOrThrow">, never, ExtArgs>
+
+    /**
+     * Find the first EscalationQueue that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {EscalationQueueFindFirstArgs} args - Arguments to find a EscalationQueue
+     * @example
+     * // Get one EscalationQueue
+     * const escalationQueue = await prisma.escalationQueue.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends EscalationQueueFindFirstArgs>(args?: SelectSubset<T, EscalationQueueFindFirstArgs<ExtArgs>>): Prisma__EscalationQueueClient<$Result.GetResult<Prisma.$EscalationQueuePayload<ExtArgs>, T, "findFirst"> | null, null, ExtArgs>
+
+    /**
+     * Find the first EscalationQueue that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {EscalationQueueFindFirstOrThrowArgs} args - Arguments to find a EscalationQueue
+     * @example
+     * // Get one EscalationQueue
+     * const escalationQueue = await prisma.escalationQueue.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends EscalationQueueFindFirstOrThrowArgs>(args?: SelectSubset<T, EscalationQueueFindFirstOrThrowArgs<ExtArgs>>): Prisma__EscalationQueueClient<$Result.GetResult<Prisma.$EscalationQueuePayload<ExtArgs>, T, "findFirstOrThrow">, never, ExtArgs>
+
+    /**
+     * Find zero or more EscalationQueues that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {EscalationQueueFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all EscalationQueues
+     * const escalationQueues = await prisma.escalationQueue.findMany()
+     * 
+     * // Get first 10 EscalationQueues
+     * const escalationQueues = await prisma.escalationQueue.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const escalationQueueWithIdOnly = await prisma.escalationQueue.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends EscalationQueueFindManyArgs>(args?: SelectSubset<T, EscalationQueueFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$EscalationQueuePayload<ExtArgs>, T, "findMany">>
+
+    /**
+     * Create a EscalationQueue.
+     * @param {EscalationQueueCreateArgs} args - Arguments to create a EscalationQueue.
+     * @example
+     * // Create one EscalationQueue
+     * const EscalationQueue = await prisma.escalationQueue.create({
+     *   data: {
+     *     // ... data to create a EscalationQueue
+     *   }
+     * })
+     * 
+     */
+    create<T extends EscalationQueueCreateArgs>(args: SelectSubset<T, EscalationQueueCreateArgs<ExtArgs>>): Prisma__EscalationQueueClient<$Result.GetResult<Prisma.$EscalationQueuePayload<ExtArgs>, T, "create">, never, ExtArgs>
+
+    /**
+     * Create many EscalationQueues.
+     * @param {EscalationQueueCreateManyArgs} args - Arguments to create many EscalationQueues.
+     * @example
+     * // Create many EscalationQueues
+     * const escalationQueue = await prisma.escalationQueue.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends EscalationQueueCreateManyArgs>(args?: SelectSubset<T, EscalationQueueCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many EscalationQueues and returns the data saved in the database.
+     * @param {EscalationQueueCreateManyAndReturnArgs} args - Arguments to create many EscalationQueues.
+     * @example
+     * // Create many EscalationQueues
+     * const escalationQueue = await prisma.escalationQueue.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many EscalationQueues and only return the `id`
+     * const escalationQueueWithIdOnly = await prisma.escalationQueue.createManyAndReturn({ 
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends EscalationQueueCreateManyAndReturnArgs>(args?: SelectSubset<T, EscalationQueueCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$EscalationQueuePayload<ExtArgs>, T, "createManyAndReturn">>
+
+    /**
+     * Delete a EscalationQueue.
+     * @param {EscalationQueueDeleteArgs} args - Arguments to delete one EscalationQueue.
+     * @example
+     * // Delete one EscalationQueue
+     * const EscalationQueue = await prisma.escalationQueue.delete({
+     *   where: {
+     *     // ... filter to delete one EscalationQueue
+     *   }
+     * })
+     * 
+     */
+    delete<T extends EscalationQueueDeleteArgs>(args: SelectSubset<T, EscalationQueueDeleteArgs<ExtArgs>>): Prisma__EscalationQueueClient<$Result.GetResult<Prisma.$EscalationQueuePayload<ExtArgs>, T, "delete">, never, ExtArgs>
+
+    /**
+     * Update one EscalationQueue.
+     * @param {EscalationQueueUpdateArgs} args - Arguments to update one EscalationQueue.
+     * @example
+     * // Update one EscalationQueue
+     * const escalationQueue = await prisma.escalationQueue.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends EscalationQueueUpdateArgs>(args: SelectSubset<T, EscalationQueueUpdateArgs<ExtArgs>>): Prisma__EscalationQueueClient<$Result.GetResult<Prisma.$EscalationQueuePayload<ExtArgs>, T, "update">, never, ExtArgs>
+
+    /**
+     * Delete zero or more EscalationQueues.
+     * @param {EscalationQueueDeleteManyArgs} args - Arguments to filter EscalationQueues to delete.
+     * @example
+     * // Delete a few EscalationQueues
+     * const { count } = await prisma.escalationQueue.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends EscalationQueueDeleteManyArgs>(args?: SelectSubset<T, EscalationQueueDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more EscalationQueues.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {EscalationQueueUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many EscalationQueues
+     * const escalationQueue = await prisma.escalationQueue.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends EscalationQueueUpdateManyArgs>(args: SelectSubset<T, EscalationQueueUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create or update one EscalationQueue.
+     * @param {EscalationQueueUpsertArgs} args - Arguments to update or create a EscalationQueue.
+     * @example
+     * // Update or create a EscalationQueue
+     * const escalationQueue = await prisma.escalationQueue.upsert({
+     *   create: {
+     *     // ... data to create a EscalationQueue
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the EscalationQueue we want to update
+     *   }
+     * })
+     */
+    upsert<T extends EscalationQueueUpsertArgs>(args: SelectSubset<T, EscalationQueueUpsertArgs<ExtArgs>>): Prisma__EscalationQueueClient<$Result.GetResult<Prisma.$EscalationQueuePayload<ExtArgs>, T, "upsert">, never, ExtArgs>
+
+
+    /**
+     * Count the number of EscalationQueues.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {EscalationQueueCountArgs} args - Arguments to filter EscalationQueues to count.
+     * @example
+     * // Count the number of EscalationQueues
+     * const count = await prisma.escalationQueue.count({
+     *   where: {
+     *     // ... the filter for the EscalationQueues we want to count
+     *   }
+     * })
+    **/
+    count<T extends EscalationQueueCountArgs>(
+      args?: Subset<T, EscalationQueueCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], EscalationQueueCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a EscalationQueue.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {EscalationQueueAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends EscalationQueueAggregateArgs>(args: Subset<T, EscalationQueueAggregateArgs>): Prisma.PrismaPromise<GetEscalationQueueAggregateType<T>>
+
+    /**
+     * Group by EscalationQueue.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {EscalationQueueGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends EscalationQueueGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: EscalationQueueGroupByArgs['orderBy'] }
+        : { orderBy?: EscalationQueueGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, EscalationQueueGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetEscalationQueueGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the EscalationQueue model
+   */
+  readonly fields: EscalationQueueFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for EscalationQueue.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__EscalationQueueClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    alert<T extends EscalationQueue$alertArgs<ExtArgs> = {}>(args?: Subset<T, EscalationQueue$alertArgs<ExtArgs>>): Prisma__SafetyAlertClient<$Result.GetResult<Prisma.$SafetyAlertPayload<ExtArgs>, T, "findUniqueOrThrow"> | null, null, ExtArgs>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the EscalationQueue model
+   */ 
+  interface EscalationQueueFieldRefs {
+    readonly id: FieldRef<"EscalationQueue", 'String'>
+    readonly sessionRef: FieldRef<"EscalationQueue", 'String'>
+    readonly level: FieldRef<"EscalationQueue", 'EscalationLevel'>
+    readonly source: FieldRef<"EscalationQueue", 'EscalationSource'>
+    readonly summary: FieldRef<"EscalationQueue", 'String'>
+    readonly status: FieldRef<"EscalationQueue", 'EscalationStatus'>
+    readonly reviewerHandle: FieldRef<"EscalationQueue", 'String'>
+    readonly createdAt: FieldRef<"EscalationQueue", 'DateTime'>
+    readonly updatedAt: FieldRef<"EscalationQueue", 'DateTime'>
+    readonly alertId: FieldRef<"EscalationQueue", 'String'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * EscalationQueue findUnique
+   */
+  export type EscalationQueueFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the EscalationQueue
+     */
+    select?: EscalationQueueSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: EscalationQueueInclude<ExtArgs> | null
+    /**
+     * Filter, which EscalationQueue to fetch.
+     */
+    where: EscalationQueueWhereUniqueInput
+  }
+
+  /**
+   * EscalationQueue findUniqueOrThrow
+   */
+  export type EscalationQueueFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the EscalationQueue
+     */
+    select?: EscalationQueueSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: EscalationQueueInclude<ExtArgs> | null
+    /**
+     * Filter, which EscalationQueue to fetch.
+     */
+    where: EscalationQueueWhereUniqueInput
+  }
+
+  /**
+   * EscalationQueue findFirst
+   */
+  export type EscalationQueueFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the EscalationQueue
+     */
+    select?: EscalationQueueSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: EscalationQueueInclude<ExtArgs> | null
+    /**
+     * Filter, which EscalationQueue to fetch.
+     */
+    where?: EscalationQueueWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of EscalationQueues to fetch.
+     */
+    orderBy?: EscalationQueueOrderByWithRelationInput | EscalationQueueOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for EscalationQueues.
+     */
+    cursor?: EscalationQueueWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` EscalationQueues from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` EscalationQueues.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of EscalationQueues.
+     */
+    distinct?: EscalationQueueScalarFieldEnum | EscalationQueueScalarFieldEnum[]
+  }
+
+  /**
+   * EscalationQueue findFirstOrThrow
+   */
+  export type EscalationQueueFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the EscalationQueue
+     */
+    select?: EscalationQueueSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: EscalationQueueInclude<ExtArgs> | null
+    /**
+     * Filter, which EscalationQueue to fetch.
+     */
+    where?: EscalationQueueWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of EscalationQueues to fetch.
+     */
+    orderBy?: EscalationQueueOrderByWithRelationInput | EscalationQueueOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for EscalationQueues.
+     */
+    cursor?: EscalationQueueWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` EscalationQueues from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` EscalationQueues.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of EscalationQueues.
+     */
+    distinct?: EscalationQueueScalarFieldEnum | EscalationQueueScalarFieldEnum[]
+  }
+
+  /**
+   * EscalationQueue findMany
+   */
+  export type EscalationQueueFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the EscalationQueue
+     */
+    select?: EscalationQueueSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: EscalationQueueInclude<ExtArgs> | null
+    /**
+     * Filter, which EscalationQueues to fetch.
+     */
+    where?: EscalationQueueWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of EscalationQueues to fetch.
+     */
+    orderBy?: EscalationQueueOrderByWithRelationInput | EscalationQueueOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing EscalationQueues.
+     */
+    cursor?: EscalationQueueWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` EscalationQueues from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` EscalationQueues.
+     */
+    skip?: number
+    distinct?: EscalationQueueScalarFieldEnum | EscalationQueueScalarFieldEnum[]
+  }
+
+  /**
+   * EscalationQueue create
+   */
+  export type EscalationQueueCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the EscalationQueue
+     */
+    select?: EscalationQueueSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: EscalationQueueInclude<ExtArgs> | null
+    /**
+     * The data needed to create a EscalationQueue.
+     */
+    data: XOR<EscalationQueueCreateInput, EscalationQueueUncheckedCreateInput>
+  }
+
+  /**
+   * EscalationQueue createMany
+   */
+  export type EscalationQueueCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many EscalationQueues.
+     */
+    data: EscalationQueueCreateManyInput | EscalationQueueCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * EscalationQueue createManyAndReturn
+   */
+  export type EscalationQueueCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the EscalationQueue
+     */
+    select?: EscalationQueueSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * The data used to create many EscalationQueues.
+     */
+    data: EscalationQueueCreateManyInput | EscalationQueueCreateManyInput[]
+    skipDuplicates?: boolean
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: EscalationQueueIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * EscalationQueue update
+   */
+  export type EscalationQueueUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the EscalationQueue
+     */
+    select?: EscalationQueueSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: EscalationQueueInclude<ExtArgs> | null
+    /**
+     * The data needed to update a EscalationQueue.
+     */
+    data: XOR<EscalationQueueUpdateInput, EscalationQueueUncheckedUpdateInput>
+    /**
+     * Choose, which EscalationQueue to update.
+     */
+    where: EscalationQueueWhereUniqueInput
+  }
+
+  /**
+   * EscalationQueue updateMany
+   */
+  export type EscalationQueueUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update EscalationQueues.
+     */
+    data: XOR<EscalationQueueUpdateManyMutationInput, EscalationQueueUncheckedUpdateManyInput>
+    /**
+     * Filter which EscalationQueues to update
+     */
+    where?: EscalationQueueWhereInput
+  }
+
+  /**
+   * EscalationQueue upsert
+   */
+  export type EscalationQueueUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the EscalationQueue
+     */
+    select?: EscalationQueueSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: EscalationQueueInclude<ExtArgs> | null
+    /**
+     * The filter to search for the EscalationQueue to update in case it exists.
+     */
+    where: EscalationQueueWhereUniqueInput
+    /**
+     * In case the EscalationQueue found by the `where` argument doesn't exist, create a new EscalationQueue with this data.
+     */
+    create: XOR<EscalationQueueCreateInput, EscalationQueueUncheckedCreateInput>
+    /**
+     * In case the EscalationQueue was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<EscalationQueueUpdateInput, EscalationQueueUncheckedUpdateInput>
+  }
+
+  /**
+   * EscalationQueue delete
+   */
+  export type EscalationQueueDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the EscalationQueue
+     */
+    select?: EscalationQueueSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: EscalationQueueInclude<ExtArgs> | null
+    /**
+     * Filter which EscalationQueue to delete.
+     */
+    where: EscalationQueueWhereUniqueInput
+  }
+
+  /**
+   * EscalationQueue deleteMany
+   */
+  export type EscalationQueueDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which EscalationQueues to delete
+     */
+    where?: EscalationQueueWhereInput
+  }
+
+  /**
+   * EscalationQueue.alert
+   */
+  export type EscalationQueue$alertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SafetyAlert
+     */
+    select?: SafetyAlertSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SafetyAlertInclude<ExtArgs> | null
+    where?: SafetyAlertWhereInput
+  }
+
+  /**
+   * EscalationQueue without action
+   */
+  export type EscalationQueueDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the EscalationQueue
+     */
+    select?: EscalationQueueSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: EscalationQueueInclude<ExtArgs> | null
+  }
+
+
+  /**
    * Enums
    */
 
@@ -4875,10 +7111,24 @@ export namespace Prisma {
     anonymizedReason: 'anonymizedReason',
     transcriptChunk: 'transcriptChunk',
     isResolved: 'isResolved',
-    createdAt: 'createdAt'
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
   };
 
   export type SafetyAlertScalarFieldEnum = (typeof SafetyAlertScalarFieldEnum)[keyof typeof SafetyAlertScalarFieldEnum]
+
+
+  export const KeywordRuleScalarFieldEnum: {
+    id: 'id',
+    term: 'term',
+    severity: 'severity',
+    category: 'category',
+    enabled: 'enabled',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
+  };
+
+  export type KeywordRuleScalarFieldEnum = (typeof KeywordRuleScalarFieldEnum)[keyof typeof KeywordRuleScalarFieldEnum]
 
 
   export const SafetyMitigationScalarFieldEnum: {
@@ -4899,7 +7149,8 @@ export namespace Prisma {
     participantId: 'participantId',
     count: 'count',
     lastStrikeAt: 'lastStrikeAt',
-    createdAt: 'createdAt'
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
   };
 
   export type SafetyStrikeScalarFieldEnum = (typeof SafetyStrikeScalarFieldEnum)[keyof typeof SafetyStrikeScalarFieldEnum]
@@ -4910,10 +7161,27 @@ export namespace Prisma {
     action: 'action',
     actor: 'actor',
     metadata: 'metadata',
-    createdAt: 'createdAt'
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
   };
 
   export type SafetyAuditLogScalarFieldEnum = (typeof SafetyAuditLogScalarFieldEnum)[keyof typeof SafetyAuditLogScalarFieldEnum]
+
+
+  export const EscalationQueueScalarFieldEnum: {
+    id: 'id',
+    sessionRef: 'sessionRef',
+    level: 'level',
+    source: 'source',
+    summary: 'summary',
+    status: 'status',
+    reviewerHandle: 'reviewerHandle',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt',
+    alertId: 'alertId'
+  };
+
+  export type EscalationQueueScalarFieldEnum = (typeof EscalationQueueScalarFieldEnum)[keyof typeof EscalationQueueScalarFieldEnum]
 
 
   export const SortOrder: {
@@ -4984,6 +7252,34 @@ export namespace Prisma {
 
 
   /**
+   * Reference to a field of type 'SafetySeverity'
+   */
+  export type EnumSafetySeverityFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'SafetySeverity'>
+    
+
+
+  /**
+   * Reference to a field of type 'SafetySeverity[]'
+   */
+  export type ListEnumSafetySeverityFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'SafetySeverity[]'>
+    
+
+
+  /**
+   * Reference to a field of type 'SafetyCategory'
+   */
+  export type EnumSafetyCategoryFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'SafetyCategory'>
+    
+
+
+  /**
+   * Reference to a field of type 'SafetyCategory[]'
+   */
+  export type ListEnumSafetyCategoryFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'SafetyCategory[]'>
+    
+
+
+  /**
    * Reference to a field of type 'Boolean'
    */
   export type BooleanFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Boolean'>
@@ -5005,6 +7301,20 @@ export namespace Prisma {
 
 
   /**
+   * Reference to a field of type 'MitigationAction'
+   */
+  export type EnumMitigationActionFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'MitigationAction'>
+    
+
+
+  /**
+   * Reference to a field of type 'MitigationAction[]'
+   */
+  export type ListEnumMitigationActionFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'MitigationAction[]'>
+    
+
+
+  /**
    * Reference to a field of type 'Json'
    */
   export type JsonFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Json'>
@@ -5022,6 +7332,48 @@ export namespace Prisma {
    * Reference to a field of type 'Int[]'
    */
   export type ListIntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Int[]'>
+    
+
+
+  /**
+   * Reference to a field of type 'EscalationLevel'
+   */
+  export type EnumEscalationLevelFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'EscalationLevel'>
+    
+
+
+  /**
+   * Reference to a field of type 'EscalationLevel[]'
+   */
+  export type ListEnumEscalationLevelFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'EscalationLevel[]'>
+    
+
+
+  /**
+   * Reference to a field of type 'EscalationSource'
+   */
+  export type EnumEscalationSourceFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'EscalationSource'>
+    
+
+
+  /**
+   * Reference to a field of type 'EscalationSource[]'
+   */
+  export type ListEnumEscalationSourceFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'EscalationSource[]'>
+    
+
+
+  /**
+   * Reference to a field of type 'EscalationStatus'
+   */
+  export type EnumEscalationStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'EscalationStatus'>
+    
+
+
+  /**
+   * Reference to a field of type 'EscalationStatus[]'
+   */
+  export type ListEnumEscalationStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'EscalationStatus[]'>
     
 
 
@@ -5048,13 +7400,15 @@ export namespace Prisma {
     NOT?: SafetyAlertWhereInput | SafetyAlertWhereInput[]
     id?: UuidFilter<"SafetyAlert"> | string
     sessionId?: StringFilter<"SafetyAlert"> | string
-    severity?: StringFilter<"SafetyAlert"> | string
-    category?: StringFilter<"SafetyAlert"> | string
+    severity?: EnumSafetySeverityFilter<"SafetyAlert"> | $Enums.SafetySeverity
+    category?: EnumSafetyCategoryFilter<"SafetyAlert"> | $Enums.SafetyCategory
     anonymizedReason?: StringFilter<"SafetyAlert"> | string
     transcriptChunk?: StringNullableFilter<"SafetyAlert"> | string | null
     isResolved?: BoolFilter<"SafetyAlert"> | boolean
     createdAt?: DateTimeFilter<"SafetyAlert"> | Date | string
+    updatedAt?: DateTimeFilter<"SafetyAlert"> | Date | string
     mitigations?: SafetyMitigationListRelationFilter
+    escalations?: EscalationQueueListRelationFilter
   }
 
   export type SafetyAlertOrderByWithRelationInput = {
@@ -5066,7 +7420,9 @@ export namespace Prisma {
     transcriptChunk?: SortOrderInput | SortOrder
     isResolved?: SortOrder
     createdAt?: SortOrder
+    updatedAt?: SortOrder
     mitigations?: SafetyMitigationOrderByRelationAggregateInput
+    escalations?: EscalationQueueOrderByRelationAggregateInput
   }
 
   export type SafetyAlertWhereUniqueInput = Prisma.AtLeast<{
@@ -5075,13 +7431,15 @@ export namespace Prisma {
     OR?: SafetyAlertWhereInput[]
     NOT?: SafetyAlertWhereInput | SafetyAlertWhereInput[]
     sessionId?: StringFilter<"SafetyAlert"> | string
-    severity?: StringFilter<"SafetyAlert"> | string
-    category?: StringFilter<"SafetyAlert"> | string
+    severity?: EnumSafetySeverityFilter<"SafetyAlert"> | $Enums.SafetySeverity
+    category?: EnumSafetyCategoryFilter<"SafetyAlert"> | $Enums.SafetyCategory
     anonymizedReason?: StringFilter<"SafetyAlert"> | string
     transcriptChunk?: StringNullableFilter<"SafetyAlert"> | string | null
     isResolved?: BoolFilter<"SafetyAlert"> | boolean
     createdAt?: DateTimeFilter<"SafetyAlert"> | Date | string
+    updatedAt?: DateTimeFilter<"SafetyAlert"> | Date | string
     mitigations?: SafetyMitigationListRelationFilter
+    escalations?: EscalationQueueListRelationFilter
   }, "id">
 
   export type SafetyAlertOrderByWithAggregationInput = {
@@ -5093,6 +7451,7 @@ export namespace Prisma {
     transcriptChunk?: SortOrderInput | SortOrder
     isResolved?: SortOrder
     createdAt?: SortOrder
+    updatedAt?: SortOrder
     _count?: SafetyAlertCountOrderByAggregateInput
     _max?: SafetyAlertMaxOrderByAggregateInput
     _min?: SafetyAlertMinOrderByAggregateInput
@@ -5104,12 +7463,75 @@ export namespace Prisma {
     NOT?: SafetyAlertScalarWhereWithAggregatesInput | SafetyAlertScalarWhereWithAggregatesInput[]
     id?: UuidWithAggregatesFilter<"SafetyAlert"> | string
     sessionId?: StringWithAggregatesFilter<"SafetyAlert"> | string
-    severity?: StringWithAggregatesFilter<"SafetyAlert"> | string
-    category?: StringWithAggregatesFilter<"SafetyAlert"> | string
+    severity?: EnumSafetySeverityWithAggregatesFilter<"SafetyAlert"> | $Enums.SafetySeverity
+    category?: EnumSafetyCategoryWithAggregatesFilter<"SafetyAlert"> | $Enums.SafetyCategory
     anonymizedReason?: StringWithAggregatesFilter<"SafetyAlert"> | string
     transcriptChunk?: StringNullableWithAggregatesFilter<"SafetyAlert"> | string | null
     isResolved?: BoolWithAggregatesFilter<"SafetyAlert"> | boolean
     createdAt?: DateTimeWithAggregatesFilter<"SafetyAlert"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"SafetyAlert"> | Date | string
+  }
+
+  export type KeywordRuleWhereInput = {
+    AND?: KeywordRuleWhereInput | KeywordRuleWhereInput[]
+    OR?: KeywordRuleWhereInput[]
+    NOT?: KeywordRuleWhereInput | KeywordRuleWhereInput[]
+    id?: UuidFilter<"KeywordRule"> | string
+    term?: StringFilter<"KeywordRule"> | string
+    severity?: EnumSafetySeverityFilter<"KeywordRule"> | $Enums.SafetySeverity
+    category?: EnumSafetyCategoryFilter<"KeywordRule"> | $Enums.SafetyCategory
+    enabled?: BoolFilter<"KeywordRule"> | boolean
+    createdAt?: DateTimeFilter<"KeywordRule"> | Date | string
+    updatedAt?: DateTimeFilter<"KeywordRule"> | Date | string
+  }
+
+  export type KeywordRuleOrderByWithRelationInput = {
+    id?: SortOrder
+    term?: SortOrder
+    severity?: SortOrder
+    category?: SortOrder
+    enabled?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type KeywordRuleWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    term?: string
+    AND?: KeywordRuleWhereInput | KeywordRuleWhereInput[]
+    OR?: KeywordRuleWhereInput[]
+    NOT?: KeywordRuleWhereInput | KeywordRuleWhereInput[]
+    severity?: EnumSafetySeverityFilter<"KeywordRule"> | $Enums.SafetySeverity
+    category?: EnumSafetyCategoryFilter<"KeywordRule"> | $Enums.SafetyCategory
+    enabled?: BoolFilter<"KeywordRule"> | boolean
+    createdAt?: DateTimeFilter<"KeywordRule"> | Date | string
+    updatedAt?: DateTimeFilter<"KeywordRule"> | Date | string
+  }, "id" | "term">
+
+  export type KeywordRuleOrderByWithAggregationInput = {
+    id?: SortOrder
+    term?: SortOrder
+    severity?: SortOrder
+    category?: SortOrder
+    enabled?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    _count?: KeywordRuleCountOrderByAggregateInput
+    _max?: KeywordRuleMaxOrderByAggregateInput
+    _min?: KeywordRuleMinOrderByAggregateInput
+  }
+
+  export type KeywordRuleScalarWhereWithAggregatesInput = {
+    AND?: KeywordRuleScalarWhereWithAggregatesInput | KeywordRuleScalarWhereWithAggregatesInput[]
+    OR?: KeywordRuleScalarWhereWithAggregatesInput[]
+    NOT?: KeywordRuleScalarWhereWithAggregatesInput | KeywordRuleScalarWhereWithAggregatesInput[]
+    id?: UuidWithAggregatesFilter<"KeywordRule"> | string
+    term?: StringWithAggregatesFilter<"KeywordRule"> | string
+    severity?: EnumSafetySeverityWithAggregatesFilter<"KeywordRule"> | $Enums.SafetySeverity
+    category?: EnumSafetyCategoryWithAggregatesFilter<"KeywordRule"> | $Enums.SafetyCategory
+    enabled?: BoolWithAggregatesFilter<"KeywordRule"> | boolean
+    createdAt?: DateTimeWithAggregatesFilter<"KeywordRule"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"KeywordRule"> | Date | string
   }
 
   export type SafetyMitigationWhereInput = {
@@ -5118,7 +7540,7 @@ export namespace Prisma {
     NOT?: SafetyMitigationWhereInput | SafetyMitigationWhereInput[]
     id?: UuidFilter<"SafetyMitigation"> | string
     alertId?: UuidFilter<"SafetyMitigation"> | string
-    action?: StringFilter<"SafetyMitigation"> | string
+    action?: EnumMitigationActionFilter<"SafetyMitigation"> | $Enums.MitigationAction
     success?: BoolFilter<"SafetyMitigation"> | boolean
     metadata?: JsonNullableFilter<"SafetyMitigation">
     createdAt?: DateTimeFilter<"SafetyMitigation"> | Date | string
@@ -5141,7 +7563,7 @@ export namespace Prisma {
     OR?: SafetyMitigationWhereInput[]
     NOT?: SafetyMitigationWhereInput | SafetyMitigationWhereInput[]
     alertId?: UuidFilter<"SafetyMitigation"> | string
-    action?: StringFilter<"SafetyMitigation"> | string
+    action?: EnumMitigationActionFilter<"SafetyMitigation"> | $Enums.MitigationAction
     success?: BoolFilter<"SafetyMitigation"> | boolean
     metadata?: JsonNullableFilter<"SafetyMitigation">
     createdAt?: DateTimeFilter<"SafetyMitigation"> | Date | string
@@ -5166,7 +7588,7 @@ export namespace Prisma {
     NOT?: SafetyMitigationScalarWhereWithAggregatesInput | SafetyMitigationScalarWhereWithAggregatesInput[]
     id?: UuidWithAggregatesFilter<"SafetyMitigation"> | string
     alertId?: UuidWithAggregatesFilter<"SafetyMitigation"> | string
-    action?: StringWithAggregatesFilter<"SafetyMitigation"> | string
+    action?: EnumMitigationActionWithAggregatesFilter<"SafetyMitigation"> | $Enums.MitigationAction
     success?: BoolWithAggregatesFilter<"SafetyMitigation"> | boolean
     metadata?: JsonNullableWithAggregatesFilter<"SafetyMitigation">
     createdAt?: DateTimeWithAggregatesFilter<"SafetyMitigation"> | Date | string
@@ -5182,6 +7604,7 @@ export namespace Prisma {
     count?: IntFilter<"SafetyStrike"> | number
     lastStrikeAt?: DateTimeFilter<"SafetyStrike"> | Date | string
     createdAt?: DateTimeFilter<"SafetyStrike"> | Date | string
+    updatedAt?: DateTimeFilter<"SafetyStrike"> | Date | string
   }
 
   export type SafetyStrikeOrderByWithRelationInput = {
@@ -5191,6 +7614,7 @@ export namespace Prisma {
     count?: SortOrder
     lastStrikeAt?: SortOrder
     createdAt?: SortOrder
+    updatedAt?: SortOrder
   }
 
   export type SafetyStrikeWhereUniqueInput = Prisma.AtLeast<{
@@ -5204,6 +7628,7 @@ export namespace Prisma {
     count?: IntFilter<"SafetyStrike"> | number
     lastStrikeAt?: DateTimeFilter<"SafetyStrike"> | Date | string
     createdAt?: DateTimeFilter<"SafetyStrike"> | Date | string
+    updatedAt?: DateTimeFilter<"SafetyStrike"> | Date | string
   }, "id" | "sessionId_participantId">
 
   export type SafetyStrikeOrderByWithAggregationInput = {
@@ -5213,6 +7638,7 @@ export namespace Prisma {
     count?: SortOrder
     lastStrikeAt?: SortOrder
     createdAt?: SortOrder
+    updatedAt?: SortOrder
     _count?: SafetyStrikeCountOrderByAggregateInput
     _avg?: SafetyStrikeAvgOrderByAggregateInput
     _max?: SafetyStrikeMaxOrderByAggregateInput
@@ -5230,6 +7656,7 @@ export namespace Prisma {
     count?: IntWithAggregatesFilter<"SafetyStrike"> | number
     lastStrikeAt?: DateTimeWithAggregatesFilter<"SafetyStrike"> | Date | string
     createdAt?: DateTimeWithAggregatesFilter<"SafetyStrike"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"SafetyStrike"> | Date | string
   }
 
   export type SafetyAuditLogWhereInput = {
@@ -5241,6 +7668,7 @@ export namespace Prisma {
     actor?: StringFilter<"SafetyAuditLog"> | string
     metadata?: JsonFilter<"SafetyAuditLog">
     createdAt?: DateTimeFilter<"SafetyAuditLog"> | Date | string
+    updatedAt?: DateTimeFilter<"SafetyAuditLog"> | Date | string
   }
 
   export type SafetyAuditLogOrderByWithRelationInput = {
@@ -5249,6 +7677,7 @@ export namespace Prisma {
     actor?: SortOrder
     metadata?: SortOrder
     createdAt?: SortOrder
+    updatedAt?: SortOrder
   }
 
   export type SafetyAuditLogWhereUniqueInput = Prisma.AtLeast<{
@@ -5260,6 +7689,7 @@ export namespace Prisma {
     actor?: StringFilter<"SafetyAuditLog"> | string
     metadata?: JsonFilter<"SafetyAuditLog">
     createdAt?: DateTimeFilter<"SafetyAuditLog"> | Date | string
+    updatedAt?: DateTimeFilter<"SafetyAuditLog"> | Date | string
   }, "id">
 
   export type SafetyAuditLogOrderByWithAggregationInput = {
@@ -5268,6 +7698,7 @@ export namespace Prisma {
     actor?: SortOrder
     metadata?: SortOrder
     createdAt?: SortOrder
+    updatedAt?: SortOrder
     _count?: SafetyAuditLogCountOrderByAggregateInput
     _max?: SafetyAuditLogMaxOrderByAggregateInput
     _min?: SafetyAuditLogMinOrderByAggregateInput
@@ -5282,92 +7713,254 @@ export namespace Prisma {
     actor?: StringWithAggregatesFilter<"SafetyAuditLog"> | string
     metadata?: JsonWithAggregatesFilter<"SafetyAuditLog">
     createdAt?: DateTimeWithAggregatesFilter<"SafetyAuditLog"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"SafetyAuditLog"> | Date | string
+  }
+
+  export type EscalationQueueWhereInput = {
+    AND?: EscalationQueueWhereInput | EscalationQueueWhereInput[]
+    OR?: EscalationQueueWhereInput[]
+    NOT?: EscalationQueueWhereInput | EscalationQueueWhereInput[]
+    id?: UuidFilter<"EscalationQueue"> | string
+    sessionRef?: StringFilter<"EscalationQueue"> | string
+    level?: EnumEscalationLevelFilter<"EscalationQueue"> | $Enums.EscalationLevel
+    source?: EnumEscalationSourceFilter<"EscalationQueue"> | $Enums.EscalationSource
+    summary?: StringFilter<"EscalationQueue"> | string
+    status?: EnumEscalationStatusFilter<"EscalationQueue"> | $Enums.EscalationStatus
+    reviewerHandle?: StringNullableFilter<"EscalationQueue"> | string | null
+    createdAt?: DateTimeFilter<"EscalationQueue"> | Date | string
+    updatedAt?: DateTimeFilter<"EscalationQueue"> | Date | string
+    alertId?: UuidNullableFilter<"EscalationQueue"> | string | null
+    alert?: XOR<SafetyAlertNullableScalarRelationFilter, SafetyAlertWhereInput> | null
+  }
+
+  export type EscalationQueueOrderByWithRelationInput = {
+    id?: SortOrder
+    sessionRef?: SortOrder
+    level?: SortOrder
+    source?: SortOrder
+    summary?: SortOrder
+    status?: SortOrder
+    reviewerHandle?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    alertId?: SortOrderInput | SortOrder
+    alert?: SafetyAlertOrderByWithRelationInput
+  }
+
+  export type EscalationQueueWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    AND?: EscalationQueueWhereInput | EscalationQueueWhereInput[]
+    OR?: EscalationQueueWhereInput[]
+    NOT?: EscalationQueueWhereInput | EscalationQueueWhereInput[]
+    sessionRef?: StringFilter<"EscalationQueue"> | string
+    level?: EnumEscalationLevelFilter<"EscalationQueue"> | $Enums.EscalationLevel
+    source?: EnumEscalationSourceFilter<"EscalationQueue"> | $Enums.EscalationSource
+    summary?: StringFilter<"EscalationQueue"> | string
+    status?: EnumEscalationStatusFilter<"EscalationQueue"> | $Enums.EscalationStatus
+    reviewerHandle?: StringNullableFilter<"EscalationQueue"> | string | null
+    createdAt?: DateTimeFilter<"EscalationQueue"> | Date | string
+    updatedAt?: DateTimeFilter<"EscalationQueue"> | Date | string
+    alertId?: UuidNullableFilter<"EscalationQueue"> | string | null
+    alert?: XOR<SafetyAlertNullableScalarRelationFilter, SafetyAlertWhereInput> | null
+  }, "id">
+
+  export type EscalationQueueOrderByWithAggregationInput = {
+    id?: SortOrder
+    sessionRef?: SortOrder
+    level?: SortOrder
+    source?: SortOrder
+    summary?: SortOrder
+    status?: SortOrder
+    reviewerHandle?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    alertId?: SortOrderInput | SortOrder
+    _count?: EscalationQueueCountOrderByAggregateInput
+    _max?: EscalationQueueMaxOrderByAggregateInput
+    _min?: EscalationQueueMinOrderByAggregateInput
+  }
+
+  export type EscalationQueueScalarWhereWithAggregatesInput = {
+    AND?: EscalationQueueScalarWhereWithAggregatesInput | EscalationQueueScalarWhereWithAggregatesInput[]
+    OR?: EscalationQueueScalarWhereWithAggregatesInput[]
+    NOT?: EscalationQueueScalarWhereWithAggregatesInput | EscalationQueueScalarWhereWithAggregatesInput[]
+    id?: UuidWithAggregatesFilter<"EscalationQueue"> | string
+    sessionRef?: StringWithAggregatesFilter<"EscalationQueue"> | string
+    level?: EnumEscalationLevelWithAggregatesFilter<"EscalationQueue"> | $Enums.EscalationLevel
+    source?: EnumEscalationSourceWithAggregatesFilter<"EscalationQueue"> | $Enums.EscalationSource
+    summary?: StringWithAggregatesFilter<"EscalationQueue"> | string
+    status?: EnumEscalationStatusWithAggregatesFilter<"EscalationQueue"> | $Enums.EscalationStatus
+    reviewerHandle?: StringNullableWithAggregatesFilter<"EscalationQueue"> | string | null
+    createdAt?: DateTimeWithAggregatesFilter<"EscalationQueue"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"EscalationQueue"> | Date | string
+    alertId?: UuidNullableWithAggregatesFilter<"EscalationQueue"> | string | null
   }
 
   export type SafetyAlertCreateInput = {
     id?: string
     sessionId: string
-    severity: string
-    category: string
+    severity: $Enums.SafetySeverity
+    category: $Enums.SafetyCategory
     anonymizedReason: string
     transcriptChunk?: string | null
     isResolved?: boolean
     createdAt?: Date | string
+    updatedAt?: Date | string
     mitigations?: SafetyMitigationCreateNestedManyWithoutAlertInput
+    escalations?: EscalationQueueCreateNestedManyWithoutAlertInput
   }
 
   export type SafetyAlertUncheckedCreateInput = {
     id?: string
     sessionId: string
-    severity: string
-    category: string
+    severity: $Enums.SafetySeverity
+    category: $Enums.SafetyCategory
     anonymizedReason: string
     transcriptChunk?: string | null
     isResolved?: boolean
     createdAt?: Date | string
+    updatedAt?: Date | string
     mitigations?: SafetyMitigationUncheckedCreateNestedManyWithoutAlertInput
+    escalations?: EscalationQueueUncheckedCreateNestedManyWithoutAlertInput
   }
 
   export type SafetyAlertUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
     sessionId?: StringFieldUpdateOperationsInput | string
-    severity?: StringFieldUpdateOperationsInput | string
-    category?: StringFieldUpdateOperationsInput | string
+    severity?: EnumSafetySeverityFieldUpdateOperationsInput | $Enums.SafetySeverity
+    category?: EnumSafetyCategoryFieldUpdateOperationsInput | $Enums.SafetyCategory
     anonymizedReason?: StringFieldUpdateOperationsInput | string
     transcriptChunk?: NullableStringFieldUpdateOperationsInput | string | null
     isResolved?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     mitigations?: SafetyMitigationUpdateManyWithoutAlertNestedInput
+    escalations?: EscalationQueueUpdateManyWithoutAlertNestedInput
   }
 
   export type SafetyAlertUncheckedUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
     sessionId?: StringFieldUpdateOperationsInput | string
-    severity?: StringFieldUpdateOperationsInput | string
-    category?: StringFieldUpdateOperationsInput | string
+    severity?: EnumSafetySeverityFieldUpdateOperationsInput | $Enums.SafetySeverity
+    category?: EnumSafetyCategoryFieldUpdateOperationsInput | $Enums.SafetyCategory
     anonymizedReason?: StringFieldUpdateOperationsInput | string
     transcriptChunk?: NullableStringFieldUpdateOperationsInput | string | null
     isResolved?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     mitigations?: SafetyMitigationUncheckedUpdateManyWithoutAlertNestedInput
+    escalations?: EscalationQueueUncheckedUpdateManyWithoutAlertNestedInput
   }
 
   export type SafetyAlertCreateManyInput = {
     id?: string
     sessionId: string
-    severity: string
-    category: string
+    severity: $Enums.SafetySeverity
+    category: $Enums.SafetyCategory
     anonymizedReason: string
     transcriptChunk?: string | null
     isResolved?: boolean
     createdAt?: Date | string
+    updatedAt?: Date | string
   }
 
   export type SafetyAlertUpdateManyMutationInput = {
     id?: StringFieldUpdateOperationsInput | string
     sessionId?: StringFieldUpdateOperationsInput | string
-    severity?: StringFieldUpdateOperationsInput | string
-    category?: StringFieldUpdateOperationsInput | string
+    severity?: EnumSafetySeverityFieldUpdateOperationsInput | $Enums.SafetySeverity
+    category?: EnumSafetyCategoryFieldUpdateOperationsInput | $Enums.SafetyCategory
     anonymizedReason?: StringFieldUpdateOperationsInput | string
     transcriptChunk?: NullableStringFieldUpdateOperationsInput | string | null
     isResolved?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type SafetyAlertUncheckedUpdateManyInput = {
     id?: StringFieldUpdateOperationsInput | string
     sessionId?: StringFieldUpdateOperationsInput | string
-    severity?: StringFieldUpdateOperationsInput | string
-    category?: StringFieldUpdateOperationsInput | string
+    severity?: EnumSafetySeverityFieldUpdateOperationsInput | $Enums.SafetySeverity
+    category?: EnumSafetyCategoryFieldUpdateOperationsInput | $Enums.SafetyCategory
     anonymizedReason?: StringFieldUpdateOperationsInput | string
     transcriptChunk?: NullableStringFieldUpdateOperationsInput | string | null
     isResolved?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type KeywordRuleCreateInput = {
+    id?: string
+    term: string
+    severity: $Enums.SafetySeverity
+    category: $Enums.SafetyCategory
+    enabled?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type KeywordRuleUncheckedCreateInput = {
+    id?: string
+    term: string
+    severity: $Enums.SafetySeverity
+    category: $Enums.SafetyCategory
+    enabled?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type KeywordRuleUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    term?: StringFieldUpdateOperationsInput | string
+    severity?: EnumSafetySeverityFieldUpdateOperationsInput | $Enums.SafetySeverity
+    category?: EnumSafetyCategoryFieldUpdateOperationsInput | $Enums.SafetyCategory
+    enabled?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type KeywordRuleUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    term?: StringFieldUpdateOperationsInput | string
+    severity?: EnumSafetySeverityFieldUpdateOperationsInput | $Enums.SafetySeverity
+    category?: EnumSafetyCategoryFieldUpdateOperationsInput | $Enums.SafetyCategory
+    enabled?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type KeywordRuleCreateManyInput = {
+    id?: string
+    term: string
+    severity: $Enums.SafetySeverity
+    category: $Enums.SafetyCategory
+    enabled?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type KeywordRuleUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    term?: StringFieldUpdateOperationsInput | string
+    severity?: EnumSafetySeverityFieldUpdateOperationsInput | $Enums.SafetySeverity
+    category?: EnumSafetyCategoryFieldUpdateOperationsInput | $Enums.SafetyCategory
+    enabled?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type KeywordRuleUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    term?: StringFieldUpdateOperationsInput | string
+    severity?: EnumSafetySeverityFieldUpdateOperationsInput | $Enums.SafetySeverity
+    category?: EnumSafetyCategoryFieldUpdateOperationsInput | $Enums.SafetyCategory
+    enabled?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type SafetyMitigationCreateInput = {
     id?: string
-    action: string
+    action: $Enums.MitigationAction
     success: boolean
     metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
@@ -5377,7 +7970,7 @@ export namespace Prisma {
   export type SafetyMitigationUncheckedCreateInput = {
     id?: string
     alertId: string
-    action: string
+    action: $Enums.MitigationAction
     success: boolean
     metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
@@ -5385,7 +7978,7 @@ export namespace Prisma {
 
   export type SafetyMitigationUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
-    action?: StringFieldUpdateOperationsInput | string
+    action?: EnumMitigationActionFieldUpdateOperationsInput | $Enums.MitigationAction
     success?: BoolFieldUpdateOperationsInput | boolean
     metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -5395,7 +7988,7 @@ export namespace Prisma {
   export type SafetyMitigationUncheckedUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
     alertId?: StringFieldUpdateOperationsInput | string
-    action?: StringFieldUpdateOperationsInput | string
+    action?: EnumMitigationActionFieldUpdateOperationsInput | $Enums.MitigationAction
     success?: BoolFieldUpdateOperationsInput | boolean
     metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -5404,7 +7997,7 @@ export namespace Prisma {
   export type SafetyMitigationCreateManyInput = {
     id?: string
     alertId: string
-    action: string
+    action: $Enums.MitigationAction
     success: boolean
     metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
@@ -5412,7 +8005,7 @@ export namespace Prisma {
 
   export type SafetyMitigationUpdateManyMutationInput = {
     id?: StringFieldUpdateOperationsInput | string
-    action?: StringFieldUpdateOperationsInput | string
+    action?: EnumMitigationActionFieldUpdateOperationsInput | $Enums.MitigationAction
     success?: BoolFieldUpdateOperationsInput | boolean
     metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -5421,7 +8014,7 @@ export namespace Prisma {
   export type SafetyMitigationUncheckedUpdateManyInput = {
     id?: StringFieldUpdateOperationsInput | string
     alertId?: StringFieldUpdateOperationsInput | string
-    action?: StringFieldUpdateOperationsInput | string
+    action?: EnumMitigationActionFieldUpdateOperationsInput | $Enums.MitigationAction
     success?: BoolFieldUpdateOperationsInput | boolean
     metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -5434,6 +8027,7 @@ export namespace Prisma {
     count?: number
     lastStrikeAt?: Date | string
     createdAt?: Date | string
+    updatedAt?: Date | string
   }
 
   export type SafetyStrikeUncheckedCreateInput = {
@@ -5443,6 +8037,7 @@ export namespace Prisma {
     count?: number
     lastStrikeAt?: Date | string
     createdAt?: Date | string
+    updatedAt?: Date | string
   }
 
   export type SafetyStrikeUpdateInput = {
@@ -5452,6 +8047,7 @@ export namespace Prisma {
     count?: IntFieldUpdateOperationsInput | number
     lastStrikeAt?: DateTimeFieldUpdateOperationsInput | Date | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type SafetyStrikeUncheckedUpdateInput = {
@@ -5461,6 +8057,7 @@ export namespace Prisma {
     count?: IntFieldUpdateOperationsInput | number
     lastStrikeAt?: DateTimeFieldUpdateOperationsInput | Date | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type SafetyStrikeCreateManyInput = {
@@ -5470,6 +8067,7 @@ export namespace Prisma {
     count?: number
     lastStrikeAt?: Date | string
     createdAt?: Date | string
+    updatedAt?: Date | string
   }
 
   export type SafetyStrikeUpdateManyMutationInput = {
@@ -5479,6 +8077,7 @@ export namespace Prisma {
     count?: IntFieldUpdateOperationsInput | number
     lastStrikeAt?: DateTimeFieldUpdateOperationsInput | Date | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type SafetyStrikeUncheckedUpdateManyInput = {
@@ -5488,6 +8087,7 @@ export namespace Prisma {
     count?: IntFieldUpdateOperationsInput | number
     lastStrikeAt?: DateTimeFieldUpdateOperationsInput | Date | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type SafetyAuditLogCreateInput = {
@@ -5496,6 +8096,7 @@ export namespace Prisma {
     actor: string
     metadata: JsonNullValueInput | InputJsonValue
     createdAt?: Date | string
+    updatedAt?: Date | string
   }
 
   export type SafetyAuditLogUncheckedCreateInput = {
@@ -5504,6 +8105,7 @@ export namespace Prisma {
     actor: string
     metadata: JsonNullValueInput | InputJsonValue
     createdAt?: Date | string
+    updatedAt?: Date | string
   }
 
   export type SafetyAuditLogUpdateInput = {
@@ -5512,6 +8114,7 @@ export namespace Prisma {
     actor?: StringFieldUpdateOperationsInput | string
     metadata?: JsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type SafetyAuditLogUncheckedUpdateInput = {
@@ -5520,6 +8123,7 @@ export namespace Prisma {
     actor?: StringFieldUpdateOperationsInput | string
     metadata?: JsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type SafetyAuditLogCreateManyInput = {
@@ -5528,6 +8132,7 @@ export namespace Prisma {
     actor: string
     metadata: JsonNullValueInput | InputJsonValue
     createdAt?: Date | string
+    updatedAt?: Date | string
   }
 
   export type SafetyAuditLogUpdateManyMutationInput = {
@@ -5536,6 +8141,7 @@ export namespace Prisma {
     actor?: StringFieldUpdateOperationsInput | string
     metadata?: JsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type SafetyAuditLogUncheckedUpdateManyInput = {
@@ -5544,6 +8150,97 @@ export namespace Prisma {
     actor?: StringFieldUpdateOperationsInput | string
     metadata?: JsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type EscalationQueueCreateInput = {
+    id?: string
+    sessionRef: string
+    level: $Enums.EscalationLevel
+    source: $Enums.EscalationSource
+    summary: string
+    status?: $Enums.EscalationStatus
+    reviewerHandle?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    alert?: SafetyAlertCreateNestedOneWithoutEscalationsInput
+  }
+
+  export type EscalationQueueUncheckedCreateInput = {
+    id?: string
+    sessionRef: string
+    level: $Enums.EscalationLevel
+    source: $Enums.EscalationSource
+    summary: string
+    status?: $Enums.EscalationStatus
+    reviewerHandle?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    alertId?: string | null
+  }
+
+  export type EscalationQueueUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    sessionRef?: StringFieldUpdateOperationsInput | string
+    level?: EnumEscalationLevelFieldUpdateOperationsInput | $Enums.EscalationLevel
+    source?: EnumEscalationSourceFieldUpdateOperationsInput | $Enums.EscalationSource
+    summary?: StringFieldUpdateOperationsInput | string
+    status?: EnumEscalationStatusFieldUpdateOperationsInput | $Enums.EscalationStatus
+    reviewerHandle?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    alert?: SafetyAlertUpdateOneWithoutEscalationsNestedInput
+  }
+
+  export type EscalationQueueUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    sessionRef?: StringFieldUpdateOperationsInput | string
+    level?: EnumEscalationLevelFieldUpdateOperationsInput | $Enums.EscalationLevel
+    source?: EnumEscalationSourceFieldUpdateOperationsInput | $Enums.EscalationSource
+    summary?: StringFieldUpdateOperationsInput | string
+    status?: EnumEscalationStatusFieldUpdateOperationsInput | $Enums.EscalationStatus
+    reviewerHandle?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    alertId?: NullableStringFieldUpdateOperationsInput | string | null
+  }
+
+  export type EscalationQueueCreateManyInput = {
+    id?: string
+    sessionRef: string
+    level: $Enums.EscalationLevel
+    source: $Enums.EscalationSource
+    summary: string
+    status?: $Enums.EscalationStatus
+    reviewerHandle?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    alertId?: string | null
+  }
+
+  export type EscalationQueueUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    sessionRef?: StringFieldUpdateOperationsInput | string
+    level?: EnumEscalationLevelFieldUpdateOperationsInput | $Enums.EscalationLevel
+    source?: EnumEscalationSourceFieldUpdateOperationsInput | $Enums.EscalationSource
+    summary?: StringFieldUpdateOperationsInput | string
+    status?: EnumEscalationStatusFieldUpdateOperationsInput | $Enums.EscalationStatus
+    reviewerHandle?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type EscalationQueueUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    sessionRef?: StringFieldUpdateOperationsInput | string
+    level?: EnumEscalationLevelFieldUpdateOperationsInput | $Enums.EscalationLevel
+    source?: EnumEscalationSourceFieldUpdateOperationsInput | $Enums.EscalationSource
+    summary?: StringFieldUpdateOperationsInput | string
+    status?: EnumEscalationStatusFieldUpdateOperationsInput | $Enums.EscalationStatus
+    reviewerHandle?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    alertId?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type UuidFilter<$PrismaModel = never> = {
@@ -5571,6 +8268,20 @@ export namespace Prisma {
     endsWith?: string | StringFieldRefInput<$PrismaModel>
     mode?: QueryMode
     not?: NestedStringFilter<$PrismaModel> | string
+  }
+
+  export type EnumSafetySeverityFilter<$PrismaModel = never> = {
+    equals?: $Enums.SafetySeverity | EnumSafetySeverityFieldRefInput<$PrismaModel>
+    in?: $Enums.SafetySeverity[] | ListEnumSafetySeverityFieldRefInput<$PrismaModel>
+    notIn?: $Enums.SafetySeverity[] | ListEnumSafetySeverityFieldRefInput<$PrismaModel>
+    not?: NestedEnumSafetySeverityFilter<$PrismaModel> | $Enums.SafetySeverity
+  }
+
+  export type EnumSafetyCategoryFilter<$PrismaModel = never> = {
+    equals?: $Enums.SafetyCategory | EnumSafetyCategoryFieldRefInput<$PrismaModel>
+    in?: $Enums.SafetyCategory[] | ListEnumSafetyCategoryFieldRefInput<$PrismaModel>
+    notIn?: $Enums.SafetyCategory[] | ListEnumSafetyCategoryFieldRefInput<$PrismaModel>
+    not?: NestedEnumSafetyCategoryFilter<$PrismaModel> | $Enums.SafetyCategory
   }
 
   export type StringNullableFilter<$PrismaModel = never> = {
@@ -5610,12 +8321,22 @@ export namespace Prisma {
     none?: SafetyMitigationWhereInput
   }
 
+  export type EscalationQueueListRelationFilter = {
+    every?: EscalationQueueWhereInput
+    some?: EscalationQueueWhereInput
+    none?: EscalationQueueWhereInput
+  }
+
   export type SortOrderInput = {
     sort: SortOrder
     nulls?: NullsOrder
   }
 
   export type SafetyMitigationOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type EscalationQueueOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
 
@@ -5628,6 +8349,7 @@ export namespace Prisma {
     transcriptChunk?: SortOrder
     isResolved?: SortOrder
     createdAt?: SortOrder
+    updatedAt?: SortOrder
   }
 
   export type SafetyAlertMaxOrderByAggregateInput = {
@@ -5639,6 +8361,7 @@ export namespace Prisma {
     transcriptChunk?: SortOrder
     isResolved?: SortOrder
     createdAt?: SortOrder
+    updatedAt?: SortOrder
   }
 
   export type SafetyAlertMinOrderByAggregateInput = {
@@ -5650,6 +8373,7 @@ export namespace Prisma {
     transcriptChunk?: SortOrder
     isResolved?: SortOrder
     createdAt?: SortOrder
+    updatedAt?: SortOrder
   }
 
   export type UuidWithAggregatesFilter<$PrismaModel = never> = {
@@ -5683,6 +8407,26 @@ export namespace Prisma {
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedStringFilter<$PrismaModel>
     _max?: NestedStringFilter<$PrismaModel>
+  }
+
+  export type EnumSafetySeverityWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.SafetySeverity | EnumSafetySeverityFieldRefInput<$PrismaModel>
+    in?: $Enums.SafetySeverity[] | ListEnumSafetySeverityFieldRefInput<$PrismaModel>
+    notIn?: $Enums.SafetySeverity[] | ListEnumSafetySeverityFieldRefInput<$PrismaModel>
+    not?: NestedEnumSafetySeverityWithAggregatesFilter<$PrismaModel> | $Enums.SafetySeverity
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumSafetySeverityFilter<$PrismaModel>
+    _max?: NestedEnumSafetySeverityFilter<$PrismaModel>
+  }
+
+  export type EnumSafetyCategoryWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.SafetyCategory | EnumSafetyCategoryFieldRefInput<$PrismaModel>
+    in?: $Enums.SafetyCategory[] | ListEnumSafetyCategoryFieldRefInput<$PrismaModel>
+    notIn?: $Enums.SafetyCategory[] | ListEnumSafetyCategoryFieldRefInput<$PrismaModel>
+    not?: NestedEnumSafetyCategoryWithAggregatesFilter<$PrismaModel> | $Enums.SafetyCategory
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumSafetyCategoryFilter<$PrismaModel>
+    _max?: NestedEnumSafetyCategoryFilter<$PrismaModel>
   }
 
   export type StringNullableWithAggregatesFilter<$PrismaModel = never> = {
@@ -5723,6 +8467,43 @@ export namespace Prisma {
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedDateTimeFilter<$PrismaModel>
     _max?: NestedDateTimeFilter<$PrismaModel>
+  }
+
+  export type KeywordRuleCountOrderByAggregateInput = {
+    id?: SortOrder
+    term?: SortOrder
+    severity?: SortOrder
+    category?: SortOrder
+    enabled?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type KeywordRuleMaxOrderByAggregateInput = {
+    id?: SortOrder
+    term?: SortOrder
+    severity?: SortOrder
+    category?: SortOrder
+    enabled?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type KeywordRuleMinOrderByAggregateInput = {
+    id?: SortOrder
+    term?: SortOrder
+    severity?: SortOrder
+    category?: SortOrder
+    enabled?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type EnumMitigationActionFilter<$PrismaModel = never> = {
+    equals?: $Enums.MitigationAction | EnumMitigationActionFieldRefInput<$PrismaModel>
+    in?: $Enums.MitigationAction[] | ListEnumMitigationActionFieldRefInput<$PrismaModel>
+    notIn?: $Enums.MitigationAction[] | ListEnumMitigationActionFieldRefInput<$PrismaModel>
+    not?: NestedEnumMitigationActionFilter<$PrismaModel> | $Enums.MitigationAction
   }
   export type JsonNullableFilter<$PrismaModel = never> = 
     | PatchUndefined<
@@ -5776,6 +8557,16 @@ export namespace Prisma {
     success?: SortOrder
     createdAt?: SortOrder
   }
+
+  export type EnumMitigationActionWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.MitigationAction | EnumMitigationActionFieldRefInput<$PrismaModel>
+    in?: $Enums.MitigationAction[] | ListEnumMitigationActionFieldRefInput<$PrismaModel>
+    notIn?: $Enums.MitigationAction[] | ListEnumMitigationActionFieldRefInput<$PrismaModel>
+    not?: NestedEnumMitigationActionWithAggregatesFilter<$PrismaModel> | $Enums.MitigationAction
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumMitigationActionFilter<$PrismaModel>
+    _max?: NestedEnumMitigationActionFilter<$PrismaModel>
+  }
   export type JsonNullableWithAggregatesFilter<$PrismaModel = never> = 
     | PatchUndefined<
         Either<Required<JsonNullableWithAggregatesFilterBase<$PrismaModel>>, Exclude<keyof Required<JsonNullableWithAggregatesFilterBase<$PrismaModel>>, 'path'>>,
@@ -5825,6 +8616,7 @@ export namespace Prisma {
     count?: SortOrder
     lastStrikeAt?: SortOrder
     createdAt?: SortOrder
+    updatedAt?: SortOrder
   }
 
   export type SafetyStrikeAvgOrderByAggregateInput = {
@@ -5838,6 +8630,7 @@ export namespace Prisma {
     count?: SortOrder
     lastStrikeAt?: SortOrder
     createdAt?: SortOrder
+    updatedAt?: SortOrder
   }
 
   export type SafetyStrikeMinOrderByAggregateInput = {
@@ -5847,6 +8640,7 @@ export namespace Prisma {
     count?: SortOrder
     lastStrikeAt?: SortOrder
     createdAt?: SortOrder
+    updatedAt?: SortOrder
   }
 
   export type SafetyStrikeSumOrderByAggregateInput = {
@@ -5897,6 +8691,7 @@ export namespace Prisma {
     actor?: SortOrder
     metadata?: SortOrder
     createdAt?: SortOrder
+    updatedAt?: SortOrder
   }
 
   export type SafetyAuditLogMaxOrderByAggregateInput = {
@@ -5904,6 +8699,7 @@ export namespace Prisma {
     action?: SortOrder
     actor?: SortOrder
     createdAt?: SortOrder
+    updatedAt?: SortOrder
   }
 
   export type SafetyAuditLogMinOrderByAggregateInput = {
@@ -5911,6 +8707,7 @@ export namespace Prisma {
     action?: SortOrder
     actor?: SortOrder
     createdAt?: SortOrder
+    updatedAt?: SortOrder
   }
   export type JsonWithAggregatesFilter<$PrismaModel = never> = 
     | PatchUndefined<
@@ -5938,11 +8735,140 @@ export namespace Prisma {
     _max?: NestedJsonFilter<$PrismaModel>
   }
 
+  export type EnumEscalationLevelFilter<$PrismaModel = never> = {
+    equals?: $Enums.EscalationLevel | EnumEscalationLevelFieldRefInput<$PrismaModel>
+    in?: $Enums.EscalationLevel[] | ListEnumEscalationLevelFieldRefInput<$PrismaModel>
+    notIn?: $Enums.EscalationLevel[] | ListEnumEscalationLevelFieldRefInput<$PrismaModel>
+    not?: NestedEnumEscalationLevelFilter<$PrismaModel> | $Enums.EscalationLevel
+  }
+
+  export type EnumEscalationSourceFilter<$PrismaModel = never> = {
+    equals?: $Enums.EscalationSource | EnumEscalationSourceFieldRefInput<$PrismaModel>
+    in?: $Enums.EscalationSource[] | ListEnumEscalationSourceFieldRefInput<$PrismaModel>
+    notIn?: $Enums.EscalationSource[] | ListEnumEscalationSourceFieldRefInput<$PrismaModel>
+    not?: NestedEnumEscalationSourceFilter<$PrismaModel> | $Enums.EscalationSource
+  }
+
+  export type EnumEscalationStatusFilter<$PrismaModel = never> = {
+    equals?: $Enums.EscalationStatus | EnumEscalationStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.EscalationStatus[] | ListEnumEscalationStatusFieldRefInput<$PrismaModel>
+    notIn?: $Enums.EscalationStatus[] | ListEnumEscalationStatusFieldRefInput<$PrismaModel>
+    not?: NestedEnumEscalationStatusFilter<$PrismaModel> | $Enums.EscalationStatus
+  }
+
+  export type UuidNullableFilter<$PrismaModel = never> = {
+    equals?: string | StringFieldRefInput<$PrismaModel> | null
+    in?: string[] | ListStringFieldRefInput<$PrismaModel> | null
+    notIn?: string[] | ListStringFieldRefInput<$PrismaModel> | null
+    lt?: string | StringFieldRefInput<$PrismaModel>
+    lte?: string | StringFieldRefInput<$PrismaModel>
+    gt?: string | StringFieldRefInput<$PrismaModel>
+    gte?: string | StringFieldRefInput<$PrismaModel>
+    mode?: QueryMode
+    not?: NestedUuidNullableFilter<$PrismaModel> | string | null
+  }
+
+  export type SafetyAlertNullableScalarRelationFilter = {
+    is?: SafetyAlertWhereInput | null
+    isNot?: SafetyAlertWhereInput | null
+  }
+
+  export type EscalationQueueCountOrderByAggregateInput = {
+    id?: SortOrder
+    sessionRef?: SortOrder
+    level?: SortOrder
+    source?: SortOrder
+    summary?: SortOrder
+    status?: SortOrder
+    reviewerHandle?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    alertId?: SortOrder
+  }
+
+  export type EscalationQueueMaxOrderByAggregateInput = {
+    id?: SortOrder
+    sessionRef?: SortOrder
+    level?: SortOrder
+    source?: SortOrder
+    summary?: SortOrder
+    status?: SortOrder
+    reviewerHandle?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    alertId?: SortOrder
+  }
+
+  export type EscalationQueueMinOrderByAggregateInput = {
+    id?: SortOrder
+    sessionRef?: SortOrder
+    level?: SortOrder
+    source?: SortOrder
+    summary?: SortOrder
+    status?: SortOrder
+    reviewerHandle?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    alertId?: SortOrder
+  }
+
+  export type EnumEscalationLevelWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.EscalationLevel | EnumEscalationLevelFieldRefInput<$PrismaModel>
+    in?: $Enums.EscalationLevel[] | ListEnumEscalationLevelFieldRefInput<$PrismaModel>
+    notIn?: $Enums.EscalationLevel[] | ListEnumEscalationLevelFieldRefInput<$PrismaModel>
+    not?: NestedEnumEscalationLevelWithAggregatesFilter<$PrismaModel> | $Enums.EscalationLevel
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumEscalationLevelFilter<$PrismaModel>
+    _max?: NestedEnumEscalationLevelFilter<$PrismaModel>
+  }
+
+  export type EnumEscalationSourceWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.EscalationSource | EnumEscalationSourceFieldRefInput<$PrismaModel>
+    in?: $Enums.EscalationSource[] | ListEnumEscalationSourceFieldRefInput<$PrismaModel>
+    notIn?: $Enums.EscalationSource[] | ListEnumEscalationSourceFieldRefInput<$PrismaModel>
+    not?: NestedEnumEscalationSourceWithAggregatesFilter<$PrismaModel> | $Enums.EscalationSource
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumEscalationSourceFilter<$PrismaModel>
+    _max?: NestedEnumEscalationSourceFilter<$PrismaModel>
+  }
+
+  export type EnumEscalationStatusWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.EscalationStatus | EnumEscalationStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.EscalationStatus[] | ListEnumEscalationStatusFieldRefInput<$PrismaModel>
+    notIn?: $Enums.EscalationStatus[] | ListEnumEscalationStatusFieldRefInput<$PrismaModel>
+    not?: NestedEnumEscalationStatusWithAggregatesFilter<$PrismaModel> | $Enums.EscalationStatus
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumEscalationStatusFilter<$PrismaModel>
+    _max?: NestedEnumEscalationStatusFilter<$PrismaModel>
+  }
+
+  export type UuidNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: string | StringFieldRefInput<$PrismaModel> | null
+    in?: string[] | ListStringFieldRefInput<$PrismaModel> | null
+    notIn?: string[] | ListStringFieldRefInput<$PrismaModel> | null
+    lt?: string | StringFieldRefInput<$PrismaModel>
+    lte?: string | StringFieldRefInput<$PrismaModel>
+    gt?: string | StringFieldRefInput<$PrismaModel>
+    gte?: string | StringFieldRefInput<$PrismaModel>
+    mode?: QueryMode
+    not?: NestedUuidNullableWithAggregatesFilter<$PrismaModel> | string | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedStringNullableFilter<$PrismaModel>
+    _max?: NestedStringNullableFilter<$PrismaModel>
+  }
+
   export type SafetyMitigationCreateNestedManyWithoutAlertInput = {
     create?: XOR<SafetyMitigationCreateWithoutAlertInput, SafetyMitigationUncheckedCreateWithoutAlertInput> | SafetyMitigationCreateWithoutAlertInput[] | SafetyMitigationUncheckedCreateWithoutAlertInput[]
     connectOrCreate?: SafetyMitigationCreateOrConnectWithoutAlertInput | SafetyMitigationCreateOrConnectWithoutAlertInput[]
     createMany?: SafetyMitigationCreateManyAlertInputEnvelope
     connect?: SafetyMitigationWhereUniqueInput | SafetyMitigationWhereUniqueInput[]
+  }
+
+  export type EscalationQueueCreateNestedManyWithoutAlertInput = {
+    create?: XOR<EscalationQueueCreateWithoutAlertInput, EscalationQueueUncheckedCreateWithoutAlertInput> | EscalationQueueCreateWithoutAlertInput[] | EscalationQueueUncheckedCreateWithoutAlertInput[]
+    connectOrCreate?: EscalationQueueCreateOrConnectWithoutAlertInput | EscalationQueueCreateOrConnectWithoutAlertInput[]
+    createMany?: EscalationQueueCreateManyAlertInputEnvelope
+    connect?: EscalationQueueWhereUniqueInput | EscalationQueueWhereUniqueInput[]
   }
 
   export type SafetyMitigationUncheckedCreateNestedManyWithoutAlertInput = {
@@ -5952,8 +8878,23 @@ export namespace Prisma {
     connect?: SafetyMitigationWhereUniqueInput | SafetyMitigationWhereUniqueInput[]
   }
 
+  export type EscalationQueueUncheckedCreateNestedManyWithoutAlertInput = {
+    create?: XOR<EscalationQueueCreateWithoutAlertInput, EscalationQueueUncheckedCreateWithoutAlertInput> | EscalationQueueCreateWithoutAlertInput[] | EscalationQueueUncheckedCreateWithoutAlertInput[]
+    connectOrCreate?: EscalationQueueCreateOrConnectWithoutAlertInput | EscalationQueueCreateOrConnectWithoutAlertInput[]
+    createMany?: EscalationQueueCreateManyAlertInputEnvelope
+    connect?: EscalationQueueWhereUniqueInput | EscalationQueueWhereUniqueInput[]
+  }
+
   export type StringFieldUpdateOperationsInput = {
     set?: string
+  }
+
+  export type EnumSafetySeverityFieldUpdateOperationsInput = {
+    set?: $Enums.SafetySeverity
+  }
+
+  export type EnumSafetyCategoryFieldUpdateOperationsInput = {
+    set?: $Enums.SafetyCategory
   }
 
   export type NullableStringFieldUpdateOperationsInput = {
@@ -5982,6 +8923,20 @@ export namespace Prisma {
     deleteMany?: SafetyMitigationScalarWhereInput | SafetyMitigationScalarWhereInput[]
   }
 
+  export type EscalationQueueUpdateManyWithoutAlertNestedInput = {
+    create?: XOR<EscalationQueueCreateWithoutAlertInput, EscalationQueueUncheckedCreateWithoutAlertInput> | EscalationQueueCreateWithoutAlertInput[] | EscalationQueueUncheckedCreateWithoutAlertInput[]
+    connectOrCreate?: EscalationQueueCreateOrConnectWithoutAlertInput | EscalationQueueCreateOrConnectWithoutAlertInput[]
+    upsert?: EscalationQueueUpsertWithWhereUniqueWithoutAlertInput | EscalationQueueUpsertWithWhereUniqueWithoutAlertInput[]
+    createMany?: EscalationQueueCreateManyAlertInputEnvelope
+    set?: EscalationQueueWhereUniqueInput | EscalationQueueWhereUniqueInput[]
+    disconnect?: EscalationQueueWhereUniqueInput | EscalationQueueWhereUniqueInput[]
+    delete?: EscalationQueueWhereUniqueInput | EscalationQueueWhereUniqueInput[]
+    connect?: EscalationQueueWhereUniqueInput | EscalationQueueWhereUniqueInput[]
+    update?: EscalationQueueUpdateWithWhereUniqueWithoutAlertInput | EscalationQueueUpdateWithWhereUniqueWithoutAlertInput[]
+    updateMany?: EscalationQueueUpdateManyWithWhereWithoutAlertInput | EscalationQueueUpdateManyWithWhereWithoutAlertInput[]
+    deleteMany?: EscalationQueueScalarWhereInput | EscalationQueueScalarWhereInput[]
+  }
+
   export type SafetyMitigationUncheckedUpdateManyWithoutAlertNestedInput = {
     create?: XOR<SafetyMitigationCreateWithoutAlertInput, SafetyMitigationUncheckedCreateWithoutAlertInput> | SafetyMitigationCreateWithoutAlertInput[] | SafetyMitigationUncheckedCreateWithoutAlertInput[]
     connectOrCreate?: SafetyMitigationCreateOrConnectWithoutAlertInput | SafetyMitigationCreateOrConnectWithoutAlertInput[]
@@ -5996,10 +8951,28 @@ export namespace Prisma {
     deleteMany?: SafetyMitigationScalarWhereInput | SafetyMitigationScalarWhereInput[]
   }
 
+  export type EscalationQueueUncheckedUpdateManyWithoutAlertNestedInput = {
+    create?: XOR<EscalationQueueCreateWithoutAlertInput, EscalationQueueUncheckedCreateWithoutAlertInput> | EscalationQueueCreateWithoutAlertInput[] | EscalationQueueUncheckedCreateWithoutAlertInput[]
+    connectOrCreate?: EscalationQueueCreateOrConnectWithoutAlertInput | EscalationQueueCreateOrConnectWithoutAlertInput[]
+    upsert?: EscalationQueueUpsertWithWhereUniqueWithoutAlertInput | EscalationQueueUpsertWithWhereUniqueWithoutAlertInput[]
+    createMany?: EscalationQueueCreateManyAlertInputEnvelope
+    set?: EscalationQueueWhereUniqueInput | EscalationQueueWhereUniqueInput[]
+    disconnect?: EscalationQueueWhereUniqueInput | EscalationQueueWhereUniqueInput[]
+    delete?: EscalationQueueWhereUniqueInput | EscalationQueueWhereUniqueInput[]
+    connect?: EscalationQueueWhereUniqueInput | EscalationQueueWhereUniqueInput[]
+    update?: EscalationQueueUpdateWithWhereUniqueWithoutAlertInput | EscalationQueueUpdateWithWhereUniqueWithoutAlertInput[]
+    updateMany?: EscalationQueueUpdateManyWithWhereWithoutAlertInput | EscalationQueueUpdateManyWithWhereWithoutAlertInput[]
+    deleteMany?: EscalationQueueScalarWhereInput | EscalationQueueScalarWhereInput[]
+  }
+
   export type SafetyAlertCreateNestedOneWithoutMitigationsInput = {
     create?: XOR<SafetyAlertCreateWithoutMitigationsInput, SafetyAlertUncheckedCreateWithoutMitigationsInput>
     connectOrCreate?: SafetyAlertCreateOrConnectWithoutMitigationsInput
     connect?: SafetyAlertWhereUniqueInput
+  }
+
+  export type EnumMitigationActionFieldUpdateOperationsInput = {
+    set?: $Enums.MitigationAction
   }
 
   export type SafetyAlertUpdateOneRequiredWithoutMitigationsNestedInput = {
@@ -6016,6 +8989,34 @@ export namespace Prisma {
     decrement?: number
     multiply?: number
     divide?: number
+  }
+
+  export type SafetyAlertCreateNestedOneWithoutEscalationsInput = {
+    create?: XOR<SafetyAlertCreateWithoutEscalationsInput, SafetyAlertUncheckedCreateWithoutEscalationsInput>
+    connectOrCreate?: SafetyAlertCreateOrConnectWithoutEscalationsInput
+    connect?: SafetyAlertWhereUniqueInput
+  }
+
+  export type EnumEscalationLevelFieldUpdateOperationsInput = {
+    set?: $Enums.EscalationLevel
+  }
+
+  export type EnumEscalationSourceFieldUpdateOperationsInput = {
+    set?: $Enums.EscalationSource
+  }
+
+  export type EnumEscalationStatusFieldUpdateOperationsInput = {
+    set?: $Enums.EscalationStatus
+  }
+
+  export type SafetyAlertUpdateOneWithoutEscalationsNestedInput = {
+    create?: XOR<SafetyAlertCreateWithoutEscalationsInput, SafetyAlertUncheckedCreateWithoutEscalationsInput>
+    connectOrCreate?: SafetyAlertCreateOrConnectWithoutEscalationsInput
+    upsert?: SafetyAlertUpsertWithoutEscalationsInput
+    disconnect?: SafetyAlertWhereInput | boolean
+    delete?: SafetyAlertWhereInput | boolean
+    connect?: SafetyAlertWhereUniqueInput
+    update?: XOR<XOR<SafetyAlertUpdateToOneWithWhereWithoutEscalationsInput, SafetyAlertUpdateWithoutEscalationsInput>, SafetyAlertUncheckedUpdateWithoutEscalationsInput>
   }
 
   export type NestedUuidFilter<$PrismaModel = never> = {
@@ -6041,6 +9042,20 @@ export namespace Prisma {
     startsWith?: string | StringFieldRefInput<$PrismaModel>
     endsWith?: string | StringFieldRefInput<$PrismaModel>
     not?: NestedStringFilter<$PrismaModel> | string
+  }
+
+  export type NestedEnumSafetySeverityFilter<$PrismaModel = never> = {
+    equals?: $Enums.SafetySeverity | EnumSafetySeverityFieldRefInput<$PrismaModel>
+    in?: $Enums.SafetySeverity[] | ListEnumSafetySeverityFieldRefInput<$PrismaModel>
+    notIn?: $Enums.SafetySeverity[] | ListEnumSafetySeverityFieldRefInput<$PrismaModel>
+    not?: NestedEnumSafetySeverityFilter<$PrismaModel> | $Enums.SafetySeverity
+  }
+
+  export type NestedEnumSafetyCategoryFilter<$PrismaModel = never> = {
+    equals?: $Enums.SafetyCategory | EnumSafetyCategoryFieldRefInput<$PrismaModel>
+    in?: $Enums.SafetyCategory[] | ListEnumSafetyCategoryFieldRefInput<$PrismaModel>
+    notIn?: $Enums.SafetyCategory[] | ListEnumSafetyCategoryFieldRefInput<$PrismaModel>
+    not?: NestedEnumSafetyCategoryFilter<$PrismaModel> | $Enums.SafetyCategory
   }
 
   export type NestedStringNullableFilter<$PrismaModel = never> = {
@@ -6115,6 +9130,26 @@ export namespace Prisma {
     _max?: NestedStringFilter<$PrismaModel>
   }
 
+  export type NestedEnumSafetySeverityWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.SafetySeverity | EnumSafetySeverityFieldRefInput<$PrismaModel>
+    in?: $Enums.SafetySeverity[] | ListEnumSafetySeverityFieldRefInput<$PrismaModel>
+    notIn?: $Enums.SafetySeverity[] | ListEnumSafetySeverityFieldRefInput<$PrismaModel>
+    not?: NestedEnumSafetySeverityWithAggregatesFilter<$PrismaModel> | $Enums.SafetySeverity
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumSafetySeverityFilter<$PrismaModel>
+    _max?: NestedEnumSafetySeverityFilter<$PrismaModel>
+  }
+
+  export type NestedEnumSafetyCategoryWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.SafetyCategory | EnumSafetyCategoryFieldRefInput<$PrismaModel>
+    in?: $Enums.SafetyCategory[] | ListEnumSafetyCategoryFieldRefInput<$PrismaModel>
+    notIn?: $Enums.SafetyCategory[] | ListEnumSafetyCategoryFieldRefInput<$PrismaModel>
+    not?: NestedEnumSafetyCategoryWithAggregatesFilter<$PrismaModel> | $Enums.SafetyCategory
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumSafetyCategoryFilter<$PrismaModel>
+    _max?: NestedEnumSafetyCategoryFilter<$PrismaModel>
+  }
+
   export type NestedStringNullableWithAggregatesFilter<$PrismaModel = never> = {
     equals?: string | StringFieldRefInput<$PrismaModel> | null
     in?: string[] | ListStringFieldRefInput<$PrismaModel> | null
@@ -6163,6 +9198,23 @@ export namespace Prisma {
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedDateTimeFilter<$PrismaModel>
     _max?: NestedDateTimeFilter<$PrismaModel>
+  }
+
+  export type NestedEnumMitigationActionFilter<$PrismaModel = never> = {
+    equals?: $Enums.MitigationAction | EnumMitigationActionFieldRefInput<$PrismaModel>
+    in?: $Enums.MitigationAction[] | ListEnumMitigationActionFieldRefInput<$PrismaModel>
+    notIn?: $Enums.MitigationAction[] | ListEnumMitigationActionFieldRefInput<$PrismaModel>
+    not?: NestedEnumMitigationActionFilter<$PrismaModel> | $Enums.MitigationAction
+  }
+
+  export type NestedEnumMitigationActionWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.MitigationAction | EnumMitigationActionFieldRefInput<$PrismaModel>
+    in?: $Enums.MitigationAction[] | ListEnumMitigationActionFieldRefInput<$PrismaModel>
+    notIn?: $Enums.MitigationAction[] | ListEnumMitigationActionFieldRefInput<$PrismaModel>
+    not?: NestedEnumMitigationActionWithAggregatesFilter<$PrismaModel> | $Enums.MitigationAction
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumMitigationActionFilter<$PrismaModel>
+    _max?: NestedEnumMitigationActionFilter<$PrismaModel>
   }
   export type NestedJsonNullableFilter<$PrismaModel = never> = 
     | PatchUndefined<
@@ -6236,9 +9288,85 @@ export namespace Prisma {
     not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
   }
 
+  export type NestedEnumEscalationLevelFilter<$PrismaModel = never> = {
+    equals?: $Enums.EscalationLevel | EnumEscalationLevelFieldRefInput<$PrismaModel>
+    in?: $Enums.EscalationLevel[] | ListEnumEscalationLevelFieldRefInput<$PrismaModel>
+    notIn?: $Enums.EscalationLevel[] | ListEnumEscalationLevelFieldRefInput<$PrismaModel>
+    not?: NestedEnumEscalationLevelFilter<$PrismaModel> | $Enums.EscalationLevel
+  }
+
+  export type NestedEnumEscalationSourceFilter<$PrismaModel = never> = {
+    equals?: $Enums.EscalationSource | EnumEscalationSourceFieldRefInput<$PrismaModel>
+    in?: $Enums.EscalationSource[] | ListEnumEscalationSourceFieldRefInput<$PrismaModel>
+    notIn?: $Enums.EscalationSource[] | ListEnumEscalationSourceFieldRefInput<$PrismaModel>
+    not?: NestedEnumEscalationSourceFilter<$PrismaModel> | $Enums.EscalationSource
+  }
+
+  export type NestedEnumEscalationStatusFilter<$PrismaModel = never> = {
+    equals?: $Enums.EscalationStatus | EnumEscalationStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.EscalationStatus[] | ListEnumEscalationStatusFieldRefInput<$PrismaModel>
+    notIn?: $Enums.EscalationStatus[] | ListEnumEscalationStatusFieldRefInput<$PrismaModel>
+    not?: NestedEnumEscalationStatusFilter<$PrismaModel> | $Enums.EscalationStatus
+  }
+
+  export type NestedUuidNullableFilter<$PrismaModel = never> = {
+    equals?: string | StringFieldRefInput<$PrismaModel> | null
+    in?: string[] | ListStringFieldRefInput<$PrismaModel> | null
+    notIn?: string[] | ListStringFieldRefInput<$PrismaModel> | null
+    lt?: string | StringFieldRefInput<$PrismaModel>
+    lte?: string | StringFieldRefInput<$PrismaModel>
+    gt?: string | StringFieldRefInput<$PrismaModel>
+    gte?: string | StringFieldRefInput<$PrismaModel>
+    not?: NestedUuidNullableFilter<$PrismaModel> | string | null
+  }
+
+  export type NestedEnumEscalationLevelWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.EscalationLevel | EnumEscalationLevelFieldRefInput<$PrismaModel>
+    in?: $Enums.EscalationLevel[] | ListEnumEscalationLevelFieldRefInput<$PrismaModel>
+    notIn?: $Enums.EscalationLevel[] | ListEnumEscalationLevelFieldRefInput<$PrismaModel>
+    not?: NestedEnumEscalationLevelWithAggregatesFilter<$PrismaModel> | $Enums.EscalationLevel
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumEscalationLevelFilter<$PrismaModel>
+    _max?: NestedEnumEscalationLevelFilter<$PrismaModel>
+  }
+
+  export type NestedEnumEscalationSourceWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.EscalationSource | EnumEscalationSourceFieldRefInput<$PrismaModel>
+    in?: $Enums.EscalationSource[] | ListEnumEscalationSourceFieldRefInput<$PrismaModel>
+    notIn?: $Enums.EscalationSource[] | ListEnumEscalationSourceFieldRefInput<$PrismaModel>
+    not?: NestedEnumEscalationSourceWithAggregatesFilter<$PrismaModel> | $Enums.EscalationSource
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumEscalationSourceFilter<$PrismaModel>
+    _max?: NestedEnumEscalationSourceFilter<$PrismaModel>
+  }
+
+  export type NestedEnumEscalationStatusWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.EscalationStatus | EnumEscalationStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.EscalationStatus[] | ListEnumEscalationStatusFieldRefInput<$PrismaModel>
+    notIn?: $Enums.EscalationStatus[] | ListEnumEscalationStatusFieldRefInput<$PrismaModel>
+    not?: NestedEnumEscalationStatusWithAggregatesFilter<$PrismaModel> | $Enums.EscalationStatus
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumEscalationStatusFilter<$PrismaModel>
+    _max?: NestedEnumEscalationStatusFilter<$PrismaModel>
+  }
+
+  export type NestedUuidNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: string | StringFieldRefInput<$PrismaModel> | null
+    in?: string[] | ListStringFieldRefInput<$PrismaModel> | null
+    notIn?: string[] | ListStringFieldRefInput<$PrismaModel> | null
+    lt?: string | StringFieldRefInput<$PrismaModel>
+    lte?: string | StringFieldRefInput<$PrismaModel>
+    gt?: string | StringFieldRefInput<$PrismaModel>
+    gte?: string | StringFieldRefInput<$PrismaModel>
+    not?: NestedUuidNullableWithAggregatesFilter<$PrismaModel> | string | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedStringNullableFilter<$PrismaModel>
+    _max?: NestedStringNullableFilter<$PrismaModel>
+  }
+
   export type SafetyMitigationCreateWithoutAlertInput = {
     id?: string
-    action: string
+    action: $Enums.MitigationAction
     success: boolean
     metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
@@ -6246,7 +9374,7 @@ export namespace Prisma {
 
   export type SafetyMitigationUncheckedCreateWithoutAlertInput = {
     id?: string
-    action: string
+    action: $Enums.MitigationAction
     success: boolean
     metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
@@ -6259,6 +9387,40 @@ export namespace Prisma {
 
   export type SafetyMitigationCreateManyAlertInputEnvelope = {
     data: SafetyMitigationCreateManyAlertInput | SafetyMitigationCreateManyAlertInput[]
+    skipDuplicates?: boolean
+  }
+
+  export type EscalationQueueCreateWithoutAlertInput = {
+    id?: string
+    sessionRef: string
+    level: $Enums.EscalationLevel
+    source: $Enums.EscalationSource
+    summary: string
+    status?: $Enums.EscalationStatus
+    reviewerHandle?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type EscalationQueueUncheckedCreateWithoutAlertInput = {
+    id?: string
+    sessionRef: string
+    level: $Enums.EscalationLevel
+    source: $Enums.EscalationSource
+    summary: string
+    status?: $Enums.EscalationStatus
+    reviewerHandle?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type EscalationQueueCreateOrConnectWithoutAlertInput = {
+    where: EscalationQueueWhereUniqueInput
+    create: XOR<EscalationQueueCreateWithoutAlertInput, EscalationQueueUncheckedCreateWithoutAlertInput>
+  }
+
+  export type EscalationQueueCreateManyAlertInputEnvelope = {
+    data: EscalationQueueCreateManyAlertInput | EscalationQueueCreateManyAlertInput[]
     skipDuplicates?: boolean
   }
 
@@ -6284,32 +9446,68 @@ export namespace Prisma {
     NOT?: SafetyMitigationScalarWhereInput | SafetyMitigationScalarWhereInput[]
     id?: UuidFilter<"SafetyMitigation"> | string
     alertId?: UuidFilter<"SafetyMitigation"> | string
-    action?: StringFilter<"SafetyMitigation"> | string
+    action?: EnumMitigationActionFilter<"SafetyMitigation"> | $Enums.MitigationAction
     success?: BoolFilter<"SafetyMitigation"> | boolean
     metadata?: JsonNullableFilter<"SafetyMitigation">
     createdAt?: DateTimeFilter<"SafetyMitigation"> | Date | string
   }
 
+  export type EscalationQueueUpsertWithWhereUniqueWithoutAlertInput = {
+    where: EscalationQueueWhereUniqueInput
+    update: XOR<EscalationQueueUpdateWithoutAlertInput, EscalationQueueUncheckedUpdateWithoutAlertInput>
+    create: XOR<EscalationQueueCreateWithoutAlertInput, EscalationQueueUncheckedCreateWithoutAlertInput>
+  }
+
+  export type EscalationQueueUpdateWithWhereUniqueWithoutAlertInput = {
+    where: EscalationQueueWhereUniqueInput
+    data: XOR<EscalationQueueUpdateWithoutAlertInput, EscalationQueueUncheckedUpdateWithoutAlertInput>
+  }
+
+  export type EscalationQueueUpdateManyWithWhereWithoutAlertInput = {
+    where: EscalationQueueScalarWhereInput
+    data: XOR<EscalationQueueUpdateManyMutationInput, EscalationQueueUncheckedUpdateManyWithoutAlertInput>
+  }
+
+  export type EscalationQueueScalarWhereInput = {
+    AND?: EscalationQueueScalarWhereInput | EscalationQueueScalarWhereInput[]
+    OR?: EscalationQueueScalarWhereInput[]
+    NOT?: EscalationQueueScalarWhereInput | EscalationQueueScalarWhereInput[]
+    id?: UuidFilter<"EscalationQueue"> | string
+    sessionRef?: StringFilter<"EscalationQueue"> | string
+    level?: EnumEscalationLevelFilter<"EscalationQueue"> | $Enums.EscalationLevel
+    source?: EnumEscalationSourceFilter<"EscalationQueue"> | $Enums.EscalationSource
+    summary?: StringFilter<"EscalationQueue"> | string
+    status?: EnumEscalationStatusFilter<"EscalationQueue"> | $Enums.EscalationStatus
+    reviewerHandle?: StringNullableFilter<"EscalationQueue"> | string | null
+    createdAt?: DateTimeFilter<"EscalationQueue"> | Date | string
+    updatedAt?: DateTimeFilter<"EscalationQueue"> | Date | string
+    alertId?: UuidNullableFilter<"EscalationQueue"> | string | null
+  }
+
   export type SafetyAlertCreateWithoutMitigationsInput = {
     id?: string
     sessionId: string
-    severity: string
-    category: string
+    severity: $Enums.SafetySeverity
+    category: $Enums.SafetyCategory
     anonymizedReason: string
     transcriptChunk?: string | null
     isResolved?: boolean
     createdAt?: Date | string
+    updatedAt?: Date | string
+    escalations?: EscalationQueueCreateNestedManyWithoutAlertInput
   }
 
   export type SafetyAlertUncheckedCreateWithoutMitigationsInput = {
     id?: string
     sessionId: string
-    severity: string
-    category: string
+    severity: $Enums.SafetySeverity
+    category: $Enums.SafetyCategory
     anonymizedReason: string
     transcriptChunk?: string | null
     isResolved?: boolean
     createdAt?: Date | string
+    updatedAt?: Date | string
+    escalations?: EscalationQueueUncheckedCreateNestedManyWithoutAlertInput
   }
 
   export type SafetyAlertCreateOrConnectWithoutMitigationsInput = {
@@ -6331,36 +9529,120 @@ export namespace Prisma {
   export type SafetyAlertUpdateWithoutMitigationsInput = {
     id?: StringFieldUpdateOperationsInput | string
     sessionId?: StringFieldUpdateOperationsInput | string
-    severity?: StringFieldUpdateOperationsInput | string
-    category?: StringFieldUpdateOperationsInput | string
+    severity?: EnumSafetySeverityFieldUpdateOperationsInput | $Enums.SafetySeverity
+    category?: EnumSafetyCategoryFieldUpdateOperationsInput | $Enums.SafetyCategory
     anonymizedReason?: StringFieldUpdateOperationsInput | string
     transcriptChunk?: NullableStringFieldUpdateOperationsInput | string | null
     isResolved?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    escalations?: EscalationQueueUpdateManyWithoutAlertNestedInput
   }
 
   export type SafetyAlertUncheckedUpdateWithoutMitigationsInput = {
     id?: StringFieldUpdateOperationsInput | string
     sessionId?: StringFieldUpdateOperationsInput | string
-    severity?: StringFieldUpdateOperationsInput | string
-    category?: StringFieldUpdateOperationsInput | string
+    severity?: EnumSafetySeverityFieldUpdateOperationsInput | $Enums.SafetySeverity
+    category?: EnumSafetyCategoryFieldUpdateOperationsInput | $Enums.SafetyCategory
     anonymizedReason?: StringFieldUpdateOperationsInput | string
     transcriptChunk?: NullableStringFieldUpdateOperationsInput | string | null
     isResolved?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    escalations?: EscalationQueueUncheckedUpdateManyWithoutAlertNestedInput
+  }
+
+  export type SafetyAlertCreateWithoutEscalationsInput = {
+    id?: string
+    sessionId: string
+    severity: $Enums.SafetySeverity
+    category: $Enums.SafetyCategory
+    anonymizedReason: string
+    transcriptChunk?: string | null
+    isResolved?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    mitigations?: SafetyMitigationCreateNestedManyWithoutAlertInput
+  }
+
+  export type SafetyAlertUncheckedCreateWithoutEscalationsInput = {
+    id?: string
+    sessionId: string
+    severity: $Enums.SafetySeverity
+    category: $Enums.SafetyCategory
+    anonymizedReason: string
+    transcriptChunk?: string | null
+    isResolved?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    mitigations?: SafetyMitigationUncheckedCreateNestedManyWithoutAlertInput
+  }
+
+  export type SafetyAlertCreateOrConnectWithoutEscalationsInput = {
+    where: SafetyAlertWhereUniqueInput
+    create: XOR<SafetyAlertCreateWithoutEscalationsInput, SafetyAlertUncheckedCreateWithoutEscalationsInput>
+  }
+
+  export type SafetyAlertUpsertWithoutEscalationsInput = {
+    update: XOR<SafetyAlertUpdateWithoutEscalationsInput, SafetyAlertUncheckedUpdateWithoutEscalationsInput>
+    create: XOR<SafetyAlertCreateWithoutEscalationsInput, SafetyAlertUncheckedCreateWithoutEscalationsInput>
+    where?: SafetyAlertWhereInput
+  }
+
+  export type SafetyAlertUpdateToOneWithWhereWithoutEscalationsInput = {
+    where?: SafetyAlertWhereInput
+    data: XOR<SafetyAlertUpdateWithoutEscalationsInput, SafetyAlertUncheckedUpdateWithoutEscalationsInput>
+  }
+
+  export type SafetyAlertUpdateWithoutEscalationsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    sessionId?: StringFieldUpdateOperationsInput | string
+    severity?: EnumSafetySeverityFieldUpdateOperationsInput | $Enums.SafetySeverity
+    category?: EnumSafetyCategoryFieldUpdateOperationsInput | $Enums.SafetyCategory
+    anonymizedReason?: StringFieldUpdateOperationsInput | string
+    transcriptChunk?: NullableStringFieldUpdateOperationsInput | string | null
+    isResolved?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    mitigations?: SafetyMitigationUpdateManyWithoutAlertNestedInput
+  }
+
+  export type SafetyAlertUncheckedUpdateWithoutEscalationsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    sessionId?: StringFieldUpdateOperationsInput | string
+    severity?: EnumSafetySeverityFieldUpdateOperationsInput | $Enums.SafetySeverity
+    category?: EnumSafetyCategoryFieldUpdateOperationsInput | $Enums.SafetyCategory
+    anonymizedReason?: StringFieldUpdateOperationsInput | string
+    transcriptChunk?: NullableStringFieldUpdateOperationsInput | string | null
+    isResolved?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    mitigations?: SafetyMitigationUncheckedUpdateManyWithoutAlertNestedInput
   }
 
   export type SafetyMitigationCreateManyAlertInput = {
     id?: string
-    action: string
+    action: $Enums.MitigationAction
     success: boolean
     metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
   }
 
+  export type EscalationQueueCreateManyAlertInput = {
+    id?: string
+    sessionRef: string
+    level: $Enums.EscalationLevel
+    source: $Enums.EscalationSource
+    summary: string
+    status?: $Enums.EscalationStatus
+    reviewerHandle?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
   export type SafetyMitigationUpdateWithoutAlertInput = {
     id?: StringFieldUpdateOperationsInput | string
-    action?: StringFieldUpdateOperationsInput | string
+    action?: EnumMitigationActionFieldUpdateOperationsInput | $Enums.MitigationAction
     success?: BoolFieldUpdateOperationsInput | boolean
     metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -6368,7 +9650,7 @@ export namespace Prisma {
 
   export type SafetyMitigationUncheckedUpdateWithoutAlertInput = {
     id?: StringFieldUpdateOperationsInput | string
-    action?: StringFieldUpdateOperationsInput | string
+    action?: EnumMitigationActionFieldUpdateOperationsInput | $Enums.MitigationAction
     success?: BoolFieldUpdateOperationsInput | boolean
     metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -6376,10 +9658,46 @@ export namespace Prisma {
 
   export type SafetyMitigationUncheckedUpdateManyWithoutAlertInput = {
     id?: StringFieldUpdateOperationsInput | string
-    action?: StringFieldUpdateOperationsInput | string
+    action?: EnumMitigationActionFieldUpdateOperationsInput | $Enums.MitigationAction
     success?: BoolFieldUpdateOperationsInput | boolean
     metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type EscalationQueueUpdateWithoutAlertInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    sessionRef?: StringFieldUpdateOperationsInput | string
+    level?: EnumEscalationLevelFieldUpdateOperationsInput | $Enums.EscalationLevel
+    source?: EnumEscalationSourceFieldUpdateOperationsInput | $Enums.EscalationSource
+    summary?: StringFieldUpdateOperationsInput | string
+    status?: EnumEscalationStatusFieldUpdateOperationsInput | $Enums.EscalationStatus
+    reviewerHandle?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type EscalationQueueUncheckedUpdateWithoutAlertInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    sessionRef?: StringFieldUpdateOperationsInput | string
+    level?: EnumEscalationLevelFieldUpdateOperationsInput | $Enums.EscalationLevel
+    source?: EnumEscalationSourceFieldUpdateOperationsInput | $Enums.EscalationSource
+    summary?: StringFieldUpdateOperationsInput | string
+    status?: EnumEscalationStatusFieldUpdateOperationsInput | $Enums.EscalationStatus
+    reviewerHandle?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type EscalationQueueUncheckedUpdateManyWithoutAlertInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    sessionRef?: StringFieldUpdateOperationsInput | string
+    level?: EnumEscalationLevelFieldUpdateOperationsInput | $Enums.EscalationLevel
+    source?: EnumEscalationSourceFieldUpdateOperationsInput | $Enums.EscalationSource
+    summary?: StringFieldUpdateOperationsInput | string
+    status?: EnumEscalationStatusFieldUpdateOperationsInput | $Enums.EscalationStatus
+    reviewerHandle?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
 

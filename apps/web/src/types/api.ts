@@ -48,7 +48,7 @@ export interface Scholarship {
 }
 
 // User Types
-export type UserRole = 'PARTICIPANT' | 'FACILITATOR' | 'ADMIN';
+export type UserRole = 'PARTICIPANT' | 'FACILITATOR' | 'ADMIN' | 'SUPER_ADMIN';
 
 export interface PlatformUser {
   id: string;

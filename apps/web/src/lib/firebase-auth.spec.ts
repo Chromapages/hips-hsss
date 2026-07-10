@@ -2,13 +2,23 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { verifyFirebaseIdToken } from './firebase-auth';
 
 const mockVerifyIdToken = vi.hoisted(() => vi.fn());
+const mockFindFirst = vi.hoisted(() => vi.fn());
 
 vi.mock('./firebase-admin', () => ({
   adminAuth: {
     verifyIdToken: mockVerifyIdToken,
   },
 }));
-
+vi.mock('./prisma', () => ({
+  getPrisma: () => ({ user: { findFirst: mockFindFirst } }),
+}));
+vi.mock('./logger', () => ({
+  logger: {
+    warn: vi.fn(),
+    info: vi.fn(),
+    error: vi.fn(),
+  },
+}));
 const mockPayload = {
   uid: 'user123',
   email: 'test@example.com',
@@ -23,7 +33,10 @@ const mockPayload = {
 
 describe('verifyFirebaseIdToken', () => {
   beforeEach(() => {
+    vi.unstubAllEnvs();
     mockVerifyIdToken.mockReset();
+    mockFindFirst.mockReset();
+    mockFindFirst.mockResolvedValue({ id: 'db-user-id' });
   });
 
   it('returns decoded payload for a valid Bearer token', async () => {
@@ -32,7 +45,7 @@ describe('verifyFirebaseIdToken', () => {
     const result = await verifyFirebaseIdToken('Bearer abc123token');
 
     expect(result).toEqual(mockPayload);
-    expect(mockVerifyIdToken).toHaveBeenCalledWith('abc123token');
+    expect(mockVerifyIdToken).toHaveBeenCalledWith('abc123token', true);
   });
 
   it('returns decoded payload when header value is just the token', async () => {
@@ -41,7 +54,7 @@ describe('verifyFirebaseIdToken', () => {
     const result = await verifyFirebaseIdToken('abc123token');
 
     expect(result).toEqual(mockPayload);
-    expect(mockVerifyIdToken).toHaveBeenCalledWith('abc123token');
+    expect(mockVerifyIdToken).toHaveBeenCalledWith('abc123token', true);
   });
 
   it('throws when authorization header is null', async () => {
@@ -74,22 +87,53 @@ describe('verifyFirebaseIdToken', () => {
     );
   });
 
+  it('rejects a verified identity without an active Commerce user', async () => {
+    mockVerifyIdToken.mockResolvedValue(mockPayload as never);
+    mockFindFirst.mockResolvedValue(null);
+
+    await expect(verifyFirebaseIdToken('Bearer abc123token')).rejects.toThrow(
+      'Authenticated user is missing or disabled'
+    );
+  });
+
+  it('allows a Firebase-verified identity when Commerce DB is unreachable in local demo mode', async () => {
+    vi.stubEnv('NODE_ENV', 'development');
+    vi.stubEnv('NEXT_PUBLIC_DEMO_MODE', 'true');
+    mockVerifyIdToken.mockResolvedValue(mockPayload as never);
+    mockFindFirst.mockRejectedValue(Object.assign(new Error("Can't reach database server"), { code: 'P1001' }));
+
+    const result = await verifyFirebaseIdToken('Bearer abc123token');
+
+    expect(result).toEqual(mockPayload);
+  });
+
+  it('does not bypass missing Commerce users in demo mode', async () => {
+    vi.stubEnv('NODE_ENV', 'development');
+    vi.stubEnv('NEXT_PUBLIC_DEMO_MODE', 'true');
+    mockVerifyIdToken.mockResolvedValue(mockPayload as never);
+    mockFindFirst.mockResolvedValue(null);
+
+    await expect(verifyFirebaseIdToken('Bearer abc123token')).rejects.toThrow(
+      'Authenticated user is missing or disabled'
+    );
+  });
+
   it('trims whitespace around the token', async () => {
     mockVerifyIdToken.mockResolvedValue(mockPayload as never);
 
     await verifyFirebaseIdToken('  Bearer   abc123token  ');
 
-    expect(mockVerifyIdToken).toHaveBeenCalledWith('abc123token');
+    expect(mockVerifyIdToken).toHaveBeenCalledWith('abc123token', true);
   });
 
   it('is case-insensitive for Bearer prefix', async () => {
     mockVerifyIdToken.mockResolvedValue(mockPayload as never);
 
     await verifyFirebaseIdToken('BEARER abc123token');
-    expect(mockVerifyIdToken).toHaveBeenCalledWith('abc123token');
+    expect(mockVerifyIdToken).toHaveBeenCalledWith('abc123token', true);
 
     mockVerifyIdToken.mockClear();
     await verifyFirebaseIdToken('bearer abc123token');
-    expect(mockVerifyIdToken).toHaveBeenCalledWith('abc123token');
+    expect(mockVerifyIdToken).toHaveBeenCalledWith('abc123token', true);
   });
 });

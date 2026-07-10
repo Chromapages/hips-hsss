@@ -12,9 +12,12 @@ let redis: unknown = null;
 
 function createRedisClient(): unknown {
   try {
-    // Dynamic require - only loads if ioredis is installed
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const IORedis = require('ioredis');
+    // Dynamic require - only loads if ioredis is installed.
+    // We use eval('require') to completely hide the dependency from Next.js/Webpack static analysis,
+    // avoiding compile-time and runtime page prerendering bundle failures.
+    const req = typeof require !== 'undefined' ? eval('require') : null;
+    if (!req) return null;
+    const IORedis = req('ioredis');
     Redis = IORedis;
     const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379';
 

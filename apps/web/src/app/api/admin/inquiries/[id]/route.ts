@@ -1,36 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
-import { verifyFirebaseIdToken } from '@/lib/auth-edge';
+import { requireAdmin } from '@/lib/admin-auth';
+import { writeAuditEvent } from '@/lib/admin-audit';
 
 const inquiryUpdateSchema = z.object({
   status: z.enum(['NEW', 'CONTACTED', 'QUALIFIED', 'CLOSED']),
 });
 
-async function verifyAdmin(req: NextRequest) {
-  const authHeader = req.headers.get('authorization');
-  const token = authHeader?.startsWith('Bearer ') ? authHeader.split(' ')[1] : null;
-  if (!token) return null;
-
-  try {
-    const payload = await verifyFirebaseIdToken(token);
-    const firebaseUid = typeof payload.sub === 'string' ? payload.sub : null;
-    if (!firebaseUid) return null;
-
-    const user = await prisma.user.findUnique({ where: { firebaseUid } });
-    if (user?.role !== 'ADMIN') return null;
-    return user;
-  } catch {
-    return null;
-  }
-}
-
 export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const admin = await verifyAdmin(req);
-  if (!admin) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  const { admin, error } = await requireAdmin(req);
+  if (error) return error;
 
   try {
     const body = await req.json();
@@ -40,9 +23,29 @@ export async function PATCH(
     const { id } = await params;
     const { status } = result.data;
 
+    const currentInquiry = await prisma.orgInquiry.findUnique({ where: { id } });
+    if (!currentInquiry) {
+      return NextResponse.json({ error: 'Inquiry not found' }, { status: 404 });
+    }
+
     const inquiry = await prisma.orgInquiry.update({
       where: { id },
       data: { status },
+    });
+
+    const ip = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || undefined;
+    const userAgent = req.headers.get('user-agent') || undefined;
+    await writeAuditEvent({
+      actorId: admin.uid,
+      actorEmail: admin.email || 'unknown',
+      action: 'INQUIRY_STATUS_CHANGE',
+      targetType: 'INQUIRY',
+      targetId: id,
+      before: { status: currentInquiry.status },
+      after: { status: inquiry.status },
+      result: 'SUCCESS',
+      ip,
+      userAgent,
     });
 
     return NextResponse.json({ success: true, inquiry });

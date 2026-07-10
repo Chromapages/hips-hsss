@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { db, isFirebaseAdminReady } from '@/lib/firebase-admin';
 import { sendEmail } from '@/lib/email';
+import { checkRateLimit, getRateLimitHeaders } from '@/lib/rate-limit';
 
 const errorReportSchema = z.object({
   message: z.string(),
@@ -12,6 +13,17 @@ const errorReportSchema = z.object({
 });
 
 export async function POST(req: NextRequest) {
+  // Rate limit: 20 error reports per minute per IP
+  const forwarded = req.headers.get('x-forwarded-for');
+  const ip = forwarded?.split(',')[0]?.trim() ?? 'unknown';
+  const rateLimitResult = checkRateLimit(ip, 20, 60_000);
+  if (!rateLimitResult.allowed) {
+    return NextResponse.json(
+      { error: 'Too many error reports. Please slow down.' },
+      { status: 429, headers: getRateLimitHeaders(rateLimitResult.resetAt, 0, 20) }
+    );
+  }
+
   try {
     const body = await req.json();
     const parsed = errorReportSchema.safeParse(body);

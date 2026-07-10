@@ -16,7 +16,7 @@ interface LiveKitTokenResponse {
   token: string;
   roomName: string;
   anonymousIdentity: string;
-  avatar: { style: number; palette: string; gesture: string; locked: boolean };
+  avatar: { style: number; palette: string; gesture: string };
   expiresAt: string;
   sessionStatus: string;
 }
@@ -29,11 +29,25 @@ interface ChecklistState {
 
 const TOKEN_STORAGE_PREFIX = 'hips:join:token:';
 
+function getSessionAvatarInitials(sessionId: string): string {
+  if (typeof window === 'undefined') return '??';
+  const key = `hips:session-avatar-initials:${sessionId}`;
+  let initials = sessionStorage.getItem(key);
+  if (!initials) {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    const first = chars[Math.floor(Math.random() * chars.length)];
+    const second = chars[Math.floor(Math.random() * chars.length)];
+    initials = `${first}${second}`;
+    sessionStorage.setItem(key, initials);
+  }
+  return initials;
+}
+
 export function DirectJoinClient({ sessionId }: DirectJoinClientProps) {
   const router = useRouter();
   const { getToken, user } = useAuth();
   const [tokenCache, setTokenCache] = useState<string | null>(null);
-  const [avatarSeed, setAvatarSeed] = useState<string>('');
+  const [avatarInitials, setAvatarInitials] = useState<string>(() => getSessionAvatarInitials(sessionId));
   const [tokenError, setTokenError] = useState<string | null>(null);
   const [isJoining, setIsJoining] = useState(false);
   const [checklist, setChecklist] = useState<ChecklistState>({
@@ -79,6 +93,12 @@ export function DirectJoinClient({ sessionId }: DirectJoinClientProps) {
           body: JSON.stringify({ sessionId }),
         });
         if (!res.ok) {
+          if (res.status === 429) {
+            if (!cancelled) {
+              setTokenError("You've joined several sessions recently — please wait 30 seconds and try again.");
+            }
+            return;
+          }
           const data = await res.json().catch(() => ({}));
           if (!cancelled) {
             setTokenError(
@@ -90,7 +110,6 @@ export function DirectJoinClient({ sessionId }: DirectJoinClientProps) {
         const data: LiveKitTokenResponse = await res.json();
         if (!cancelled) {
           setTokenCache(data.token);
-          setAvatarSeed(data.anonymousIdentity);
         }
       } catch {
         if (!cancelled) {
@@ -129,6 +148,11 @@ export function DirectJoinClient({ sessionId }: DirectJoinClientProps) {
             body: JSON.stringify({ sessionId }),
           });
           if (!res.ok) {
+            if (res.status === 429) {
+              setTokenError("You've joined several sessions recently — please wait 30 seconds and try again.");
+              setIsJoining(false);
+              return;
+            }
             const data = await res.json().catch(() => ({}));
             setTokenError(
               typeof data?.error === 'string' ? data.error : 'Could not prepare the session.',
@@ -165,8 +189,14 @@ export function DirectJoinClient({ sessionId }: DirectJoinClientProps) {
   );
 
   const handleAvatarRefresh = useCallback(() => {
-    setAvatarSeed(crypto.randomUUID());
-  }, []);
+    if (typeof window === 'undefined') return;
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    const first = chars[Math.floor(Math.random() * chars.length)];
+    const second = chars[Math.floor(Math.random() * chars.length)];
+    const initials = `${first}${second}`;
+    sessionStorage.setItem(`hips:session-avatar-initials:${sessionId}`, initials);
+    setAvatarInitials(initials);
+  }, [sessionId]);
 
   const audioInputLabel =
     audioInputs.find((d) => d.deviceId === selectedAudioInput)?.label || 'Microphone';
@@ -275,7 +305,7 @@ export function DirectJoinClient({ sessionId }: DirectJoinClientProps) {
           allChecked={allChecked}
           checklist={checklist}
           onChecklistChange={setChecklist}
-          avatarSeed={avatarSeed}
+          avatarInitials={avatarInitials}
           onAvatarRefresh={handleAvatarRefresh}
           isJoining={isJoining}
           isPreparing={!tokenCache && !tokenError}

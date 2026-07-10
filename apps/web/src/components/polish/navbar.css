@@ -43,6 +43,8 @@
   color: var(--color-text-muted);
   transition: color 180ms var(--ease-out-quint);
   padding: var(--space-2) 0;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 .hips-nav-link::after {
@@ -136,6 +138,8 @@
   padding: var(--space-3) var(--space-4);
   color: var(--color-text);
   font-size: var(--text-sm);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
   transition: color var(--duration-fast) var(--ease-out-quint),
               background-color var(--duration-fast) var(--ease-out-quint);
 }
@@ -177,7 +181,7 @@
   position: fixed;
   inset: 0;
   z-index: 55;
-  background-color: oklch(0 0 0 / 0.4);
+  background-color: var(--color-backdrop);
   opacity: 0;
   pointer-events: none;
   transition: opacity var(--duration-slow) var(--ease-out-quint);
@@ -212,7 +216,9 @@
 }
 
 .hips-drawer-link {
-  display: block;
+  display: flex;
+  align-items: center;
+  min-height: 44px;
   padding: var(--space-3) var(--space-4);
   color: var(--color-text);
   border-bottom: 1px solid var(--color-divider);

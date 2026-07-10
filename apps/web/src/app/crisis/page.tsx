@@ -1,37 +1,17 @@
-'use client';
-
-import { useState, useEffect } from 'react';
+import type { Metadata } from 'next';
 import { Navbar } from '@/components/polish/Navbar';
 import { ShieldAlert, Phone, Heart, Lock, MessageCircle, ExternalLink, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
+import { BreathingCalmer } from '@/components/crisis/BreathingCalmer';
+
+export const metadata: Metadata = {
+  title: 'Crisis Support — H.I.P.S.',
+  description: 'Get immediate crisis support and contact resources.',
+};
 
 export default function CrisisPage() {
-  const [breathStage, setBreathStage] = useState<'Inhale' | 'Hold' | 'Exhale' | 'HoldOut'>('Inhale');
-  const [countdown, setCountdown] = useState(4);
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCountdown((prev) => {
-        if (prev <= 1) {
-          setBreathStage((current) => {
-            switch (current) {
-              case 'Inhale': return 'Hold';
-              case 'Hold': return 'Exhale';
-              case 'Exhale': return 'HoldOut';
-              case 'HoldOut': return 'Inhale';
-            }
-          });
-          return 4;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-
-    return () => clearInterval(timer);
-  }, []);
-
   return (
-    <main className="min-h-screen bg-surface text-primary selection:bg-primary/30 overflow-x-hidden">
+    <main id="main" tabIndex={-1} className="min-h-screen bg-surface text-primary selection:bg-primary/30 overflow-x-hidden">
       <Navbar />
 
       {/* Hero Section */}
@@ -45,7 +25,7 @@ export default function CrisisPage() {
             role="status"
             aria-live="polite"
           >
-            <span className="flex h-2 w-2 rounded-full bg-destructive0 animate-ping" />
+            <span className="flex h-2 w-2 rounded-full bg-destructive/10 animate-ping" />
             Crisis Support Available 24/7
           </div>
 
@@ -54,7 +34,7 @@ export default function CrisisPage() {
               className="p-6 bg-destructive rounded-3xl border border-destructive mb-8 animate-pulse"
               aria-hidden="true"
             >
-              <ShieldAlert className="w-16 h-16 text-destructive0" />
+              <ShieldAlert className="w-16 h-16 text-destructive" />
             </div>
 
             {/* H1 - serif heading */}
@@ -72,29 +52,7 @@ export default function CrisisPage() {
       {/* Breathing Exercise */}
       <section className="pb-16 container mx-auto px-6">
         <div className="max-w-2xl mx-auto">
-          <div
-            className="w-full py-12 bg-surface rounded-3xl border border-border"
-            role="region"
-            aria-label="Guided breathing exercise for calming"
-          >
-            <div className="flex flex-col items-center space-y-6">
-              {/* H2 - serif heading */}
-              <h2 className="font-heading text-xl font-bold text-primary">Take a Moment to Breathe</h2>
-              <div
-                className={`w-40 h-40 rounded-full border-4 border-emerald-500/50 flex items-center justify-center transition-all duration-[4000ms] ease-in-out ${
-                  breathStage === 'Inhale' ? 'scale-125 bg-emerald-500/20' :
-                  breathStage === 'Exhale' ? 'scale-75 bg-transparent' : 'scale-100'
-                }`}
-                aria-live="polite"
-              >
-                <span className="text-4xl font-bold text-emerald-600 font-heading">{countdown}</span>
-              </div>
-              <p className="text-2xl font-bold text-emerald-600 uppercase tracking-widest animate-pulse font-ui">
-                {breathStage.replace('HoldOut', 'Hold')}
-              </p>
-              <p className="text-sm text-muted font-body">Box Breathing for grounding</p>
-            </div>
-          </div>
+          <BreathingCalmer />
         </div>
       </section>
 
@@ -112,7 +70,7 @@ export default function CrisisPage() {
             <div className="p-8 rounded-3xl bg-surface border border-border hover:border-destructive/30 transition-all group">
               <div className="flex items-start gap-4 mb-6">
                 <div className="p-3 bg-destructive rounded-xl border border-destructive">
-                  <Phone className="w-6 h-6 text-destructive0" />
+                  <Phone className="w-6 h-6 text-destructive" />
                 </div>
                 <div>
                   {/* H3 - serif heading */}
@@ -126,7 +84,7 @@ export default function CrisisPage() {
               <div className="flex flex-col sm:flex-row gap-3">
                 <a
                   href="tel:988"
-                  className="flex items-center justify-center gap-2 px-6 py-3 bg-destructive hover:bg-destructive0 text-white rounded-xl font-bold transition-all shadow-lg shadow-red-900/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white font-ui uppercase tracking-wide"
+                  className="flex items-center justify-center gap-2 px-6 py-3 bg-destructive hover:bg-destructive/10 text-white rounded-xl font-bold transition-all shadow-lg shadow-red-900/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white font-ui uppercase tracking-wide"
                   aria-label="Call 988 Suicide and Crisis Lifeline"
                 >
                   <Phone className="w-4 h-4" />

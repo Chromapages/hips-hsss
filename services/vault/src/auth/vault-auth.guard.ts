@@ -8,6 +8,7 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Request } from 'express';
+import { timingSafeEqual, randomUUID } from 'node:crypto';
 import { PrismaService } from '../prisma.service.js';
 
 const VAULT_SECRET_HEADER = 'x-vault-secret';
@@ -35,7 +36,15 @@ export class VaultAuthGuard implements CanActivate {
     const expectedSecret = this.configService.get<string>('VAULT_API_SECRET');
 
     // Validate secret
-    if (!secret || secret !== expectedSecret) {
+    if (!secret || !expectedSecret) {
+      await this.logAuthFailure(request, 'INVALID_SECRET');
+      throw new UnauthorizedException('Invalid vault secret');
+    }
+
+    const a = Buffer.from(secret);
+    const b = Buffer.from(expectedSecret);
+    const valid = a.length === b.length && timingSafeEqual(a, b);
+    if (!valid) {
       await this.logAuthFailure(request, 'INVALID_SECRET');
       throw new UnauthorizedException('Invalid vault secret');
     }
@@ -52,13 +61,9 @@ export class VaultAuthGuard implements CanActivate {
         data: {
           subjectRef: 'AUTH_FAILURE',
           actorRef: clientIp,
-          purpose: failureReason,
+          purpose: failureReason as any,
           action: 'AUTH_FAILURE',
-          metadata: {
-            failureReason,
-            userAgent: request.headers['user-agent'] || 'unknown',
-            path: request.path,
-          },
+          requestId: `auth-fail-${randomUUID()}`,
         },
       });
     } catch (error) {

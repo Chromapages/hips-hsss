@@ -19,7 +19,7 @@ export default function TestSessionPage() {
   const testSessionId = 'prototype-demo-room';
 
   return (
-    <main className="min-h-screen bg-black">
+    <main id="main" tabIndex={-1} className="min-h-screen bg-black">
       <div className="p-4 bg-text text-white border-b border-border-strong">
         <h1 className="text-xl font-bold">H.I.P.S. Prototype - Session Engine Test</h1>
         <p className="text-sm text-text">Testing Hard Anonymity: 3D Avatars + WebRTC Audio</p>

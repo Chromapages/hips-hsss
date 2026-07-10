@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/firebase-admin";
-import { adminAuth } from "@/lib/firebase-admin";
+import { verifyFirebaseIdToken } from "@/lib/firebase-auth";
 import { signSessionToken } from "@/lib/session-auth";
 import { isAfter, subMinutes, addMinutes } from "date-fns";
 
@@ -19,7 +19,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const payload = await adminAuth.verifyIdToken(token);
+    const payload = await verifyFirebaseIdToken(token);
 
     // 2. Validate Input
     const body = await req.json();
@@ -64,7 +64,9 @@ export async function POST(req: NextRequest) {
 
     // 4. Issue Opaque Session Token
     // We sign the sessionTokenRef, which is a random UUID with no PII.
-    const sessionToken = await signSessionToken(session.sessionTokenRef);
+    // Layer 3: pass the user's firebaseUid so the issued jti is tracked
+    // and can be bulk-revoked.
+    const sessionToken = await signSessionToken(session.sessionTokenRef, payload.uid);
 
     return NextResponse.json({
       success: true,

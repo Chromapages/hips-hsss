@@ -28,14 +28,14 @@ import { AudioAvatar } from '@/components/demo/audio-avatar';
 import { ConnectingOverlay } from '@/components/demo/connecting-overlay';
 import { DemoModeProvider } from '@/contexts/DemoModeContext';
 import { SessionHeader } from '@/components/session-ui/SessionHeader';
+import { getBrowserMediaDevices } from '@/lib/browser-media';
 import { VoiceControlsBar } from '@/components/session-ui/VoiceControlsBar';
 import { MediaToolbar } from '@/components/session-ui/MediaToolbar';
 import SafetyMonitor from '@/components/session/SafetyMonitor';
 import { useMediaDevices } from '@/hooks/useMediaDevices';
 import { useVoiceEffects } from '@/hooks/useVoiceEffects';
 import type { VoicePreset } from '@/lib/voice-mask-presets';
-import { createVoiceMaskProcessor } from '@/lib/voice-mask-processor';
-import type { AvatarGesture } from '@hips/types';
+import { createLowLatencyVoiceMaskProcessor } from '@/lib/voice-mask-processor';
 
 // SECURITY NOTE: NEXT_PUBLIC_LIVEKIT_URL exposes internal infrastructure for WebSocket connections.
 // This is acceptable for demo mode as no real user data is involved.
@@ -76,7 +76,7 @@ function DemoLobby({ onEnter, error, loading }: { onEnter: () => void; error: st
             Demo Mode
           </div>
           <h1 className="font-heading text-3xl font-extrabold tracking-tight">Welcome to the Demo</h1>
-          <p className="text-sm text-text-muted0">
+          <p className="text-sm text-muted-foreground">
             This is a sandboxed environment where you can explore the session features without joining a real session.
           </p>
         </div>
@@ -104,7 +104,7 @@ function DemoLobby({ onEnter, error, loading }: { onEnter: () => void; error: st
         </div>
 
         {error && (
-          <div className="rounded-xl border border-destructive/20 bg-destructive0/10 px-4 py-3 text-sm text-destructive">
+          <div className="rounded-xl border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm text-destructive">
             {error}
           </div>
         )}
@@ -141,7 +141,7 @@ function DemoRoomContent({ roomName }: { roomName: string }) {
   const [cameraEnabled, setCameraEnabled] = useState(false);
   const [isReconnecting, setIsReconnecting] = useState(false);
 
-  const { activePreset, semitones, setPreset, setSemitones } = useVoiceEffects('subtle', 4);
+  const { activePreset, semitones, wetDryRatio, setPreset, setSemitones, setWetDryRatio } = useVoiceEffects('sofi', 4);
 
   const {
     audioInputs,
@@ -246,17 +246,28 @@ function DemoRoomContent({ roomName }: { roomName: string }) {
         voiceIsolation: true,
       });
 
-      await localParticipant.publishTrack(track as unknown as MediaStreamTrack);
-
+      // CRITICAL: apply processor BEFORE publishing to prevent unmasked audio leak.
       try {
-        await track.setProcessor(createVoiceMaskProcessor({ preset: activePreset, semitones }));
+        await track.setProcessor(createLowLatencyVoiceMaskProcessor({ preset: activePreset, semitones, wetDryRatio }));
       } catch (processorError) {
+        // Processor unavailable — stop the raw track and surface an actionable warning.
         setVoiceMaskWarning(
           processorError instanceof Error
-            ? `Voice mask unavailable: ${processorError.message}`
-            : 'Voice mask unavailable in this browser.',
+            ? `Voice mask unavailable: ${processorError.message}. Try Chrome or Edge for full support.`
+            : 'Voice mask unavailable in this browser. Try Chrome or Edge for full support.',
         );
+        try {
+          track.stop();
+        } catch {
+          // ignore
+        }
+        setLocalAudioTrack(null);
+        setMicEnabled(false);
+        setMicBusy(false);
+        return;
       }
+
+      await localParticipant.publishTrack(track as unknown as MediaStreamTrack);
 
       setLocalAudioTrack(track);
       setMicEnabled(true);
@@ -276,7 +287,7 @@ function DemoRoomContent({ roomName }: { roomName: string }) {
     } finally {
       setMicBusy(false);
     }
-  }, [localParticipant, activePreset, semitones]);
+  }, [localParticipant, activePreset, semitones, wetDryRatio]);
 
   const toggleMicrophone = useCallback(async () => {
     if (micBusy) return;
@@ -345,6 +356,10 @@ function DemoRoomContent({ roomName }: { roomName: string }) {
     setSemitones(st);
   }, [setSemitones]);
 
+  const handleVoiceWetDryChange = useCallback((ratio: number) => {
+    setWetDryRatio(ratio);
+  }, [setWetDryRatio]);
+
   const leaveSession = async () => {
     await stopLocalAudio();
     room.disconnect();
@@ -352,7 +367,7 @@ function DemoRoomContent({ roomName }: { roomName: string }) {
   };
 
   return (
-    <main className="grid h-screen grid-rows-[auto_1fr_auto] overflow-hidden bg-black text-white">
+    <main id="main" tabIndex={-1} className="grid h-screen grid-rows-[auto_1fr_auto] overflow-hidden bg-black text-white">
       <SessionHeader
         anonymousHandle="demo-user"
         sessionSeconds={sessionSeconds}
@@ -383,7 +398,7 @@ function DemoRoomContent({ roomName }: { roomName: string }) {
 
         <aside className="grid min-h-0 grid-rows-[auto_1fr] border-l border-white/10 bg-zinc-950">
           <div className="border-b border-white/10 p-4">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-text-muted0">Demo Info</p>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Demo Info</p>
             <p className="mt-1 text-sm text-text">
               This is a sandboxed demo environment. No real sessions or data are involved.
             </p>
@@ -421,8 +436,10 @@ function DemoRoomContent({ roomName }: { roomName: string }) {
         onLeave={leaveSession}
         voicePreset={activePreset}
         voiceSemitones={semitones}
+        voiceWetDryRatio={wetDryRatio}
         onVoicePresetChange={handleVoicePresetChange}
         onVoiceSemitoneChange={handleVoiceSemitoneChange}
+        onVoiceWetDryChange={handleVoiceWetDryChange}
       />
     </main>
   );
@@ -463,7 +480,7 @@ function MicSelectorModal({ isOpen, initialError, onConfirm, onClose }: MicSelec
   const startAudioTest = useCallback(async (deviceId: string) => {
     stopAudio();
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({
+      const stream = await getBrowserMediaDevices().getUserMedia({
         audio: deviceId ? { deviceId: { exact: deviceId } } : true,
       });
       streamRef.current = stream;
@@ -492,11 +509,14 @@ function MicSelectorModal({ isOpen, initialError, onConfirm, onClose }: MicSelec
     setChecking(true);
     setPermissionError(null);
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mediaDevices = getBrowserMediaDevices();
+      const stream = await mediaDevices.getUserMedia({ audio: true });
       stream.getTracks().forEach((t) => t.stop());
       setPermissionGranted(true);
 
-      const all = await navigator.mediaDevices.enumerateDevices();
+      const all = typeof mediaDevices.enumerateDevices === 'function'
+        ? await mediaDevices.enumerateDevices()
+        : [];
       const inputs = all.filter((d) => d.kind === 'audioinput');
       setDevices(inputs);
 
@@ -699,7 +719,7 @@ function DemoRoomInner({ roomName }: { token?: string; roomName: string }) {
           setShowMicModal(true);
           return;
         }
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        const stream = await getBrowserMediaDevices().getUserMedia({ audio: true });
         stream.getTracks().forEach((track) => track.stop());
       } catch {
         setMicModalError(
@@ -752,7 +772,7 @@ function DemoRoomInner({ roomName }: { token?: string; roomName: string }) {
         <div className="w-full max-w-md space-y-6 text-center">
           {error ? (
             <>
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-destructive0/10 border border-destructive/20 text-destructive text-xs font-bold uppercase tracking-widest">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-destructive/10 border border-destructive/20 text-destructive text-xs font-bold uppercase tracking-widest">
                 Error
               </div>
               <h1 className="text-2xl font-bold">Failed to Join Demo</h1>

@@ -81,9 +81,10 @@ export function FacilitatorSessionView({
 
   // Task 5.10 — Active speaker identity for ring animation
   const activeSpeakerIdentity = useMemo(() => {
-    const speaking = participants.filter((p) => p.isSpeaking && p.identity !== room.localParticipant.identity);
-    return speaking.length > 0 ? speaking[0].identity : null;
-  }, [participants, room.localParticipant.identity]);
+    const localId = room?.localParticipant?.identity;
+    const speaking = participants.filter((p) => p.isSpeaking && p.identity !== localId);
+    return speaking.length > 0 ? speaking[0]?.identity : null;
+  }, [participants, room?.localParticipant?.identity]);
 
   // Data channel for hand control messages
   const { send } = useDataChannel("session-control", (message) => {
@@ -108,10 +109,11 @@ export function FacilitatorSessionView({
 
   const publishControlMessage = useCallback(
     async (type: "HAND_RAISED" | "HAND_LOWERED") => {
-      if (!send) return;
+      const localId = room?.localParticipant?.identity;
+      if (!send || !localId) return;
       const msg = {
         type,
-        participantIdentity: room.localParticipant.identity,
+        participantIdentity: localId,
         at: new Date().toISOString(),
       };
       await send(textEncoder.current.encode(JSON.stringify(msg)), {
@@ -119,7 +121,7 @@ export function FacilitatorSessionView({
         topic: "session-control",
       });
     },
-    [send, room.localParticipant.identity],
+    [send, room?.localParticipant?.identity],
   );
 
   const toggleHand = useCallback(async () => {
@@ -129,6 +131,8 @@ export function FacilitatorSessionView({
   }, [localHandRaised, publishControlMessage]);
 
   const handleFlag = useCallback(() => {
+    const localId = room?.localParticipant?.identity;
+    if (!localId) return;
     const reason = window.prompt("Please describe the safety concern:");
     if (!reason) return;
 
@@ -137,15 +141,15 @@ export function FacilitatorSessionView({
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         sessionId: roomName,
-        reporterId: room.localParticipant.identity,
+        reporterId: localId,
         level: "HIGH",
         reason,
       }),
     });
-  }, [roomName, room.localParticipant.identity]);
+  }, [roomName, room?.localParticipant?.identity]);
 
   const leaveSession = useCallback(async () => {
-    await room.disconnect();
+    await room?.disconnect();
     window.location.href = "/dashboard";
   }, [room]);
 
@@ -160,18 +164,22 @@ export function FacilitatorSessionView({
 
   const participantList = useMemo(
     () =>
-      livekitParticipants.map((p, index) => ({
-        identity: p.identity,
-        isSpeaking: p.isSpeaking,
-        color: p.identity === room.localParticipant.identity
-          ? paletteColors[avatar.palette]
-          : fallbackColors[index % fallbackColors.length] ?? "#173B57",
-        styleIndex: p.identity === room.localParticipant.identity
-          ? avatar.style
-          : index + 1,
-        isLocal: p.identity === room.localParticipant.identity,
-      })),
-    [livekitParticipants, room.localParticipant.identity, avatar],
+      livekitParticipants.map((p, index) => {
+        const localId = room?.localParticipant?.identity;
+        const isLocal = p.identity === localId;
+        return {
+          identity: p.identity,
+          isSpeaking: p.isSpeaking,
+          color: isLocal
+            ? paletteColors[avatar.palette]
+            : fallbackColors[index % fallbackColors.length] ?? "#173B57",
+          styleIndex: isLocal
+            ? avatar.style
+            : index + 1,
+          isLocal,
+        };
+      }),
+    [livekitParticipants, room?.localParticipant?.identity, avatar],
   );
 
   return (
@@ -190,7 +198,7 @@ export function FacilitatorSessionView({
         <div className="relative min-w-0 overflow-hidden bg-[radial-gradient(circle_at_50%_20%,rgba(99,102,241,0.16),transparent_45%),black]">
           {/* Placeholder for AvatarCanvas - would be integrated with Three.js */}
           <div className="flex h-full items-center justify-center">
-            <div className="text-center text-text-muted0">
+            <div className="text-center text-muted-foreground">
               <p className="text-sm">Virtual Sanctuary</p>
               <p className="mt-2 font-mono text-xs text-text">
                 {participants.length} participant{participants.length !== 1 ? "s" : ""}
@@ -212,7 +220,7 @@ export function FacilitatorSessionView({
           {canFacilitate ? (
             <div className="border-b border-white/10 p-4">
               <div className="flex items-center justify-between">
-                <p className="text-[10px] font-bold uppercase tracking-widest text-text-muted0">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
                   Facilitator Queue
                 </p>
                 <span className="rounded-full bg-amber-500/10 px-2 py-1 text-xs font-bold text-amber-200">
@@ -221,7 +229,7 @@ export function FacilitatorSessionView({
               </div>
               <div className="mt-3 space-y-2">
                 {raisedHands.size === 0 ? (
-                  <p className="text-sm text-text-muted0">No raised hands.</p>
+                  <p className="text-sm text-muted-foreground">No raised hands.</p>
                 ) : (
                   Array.from(raisedHands).map((identity) => (
                     <div
@@ -245,7 +253,7 @@ export function FacilitatorSessionView({
             </div>
           ) : (
             <div className="border-b border-white/10 p-4">
-              <p className="text-[10px] font-bold uppercase tracking-widest text-text-muted0">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
                 Hand Queue
               </p>
               <p className="mt-1 text-sm text-text">
@@ -256,7 +264,7 @@ export function FacilitatorSessionView({
 
           {/* Participant list */}
           <div className="flex-1 overflow-y-auto p-4">
-            <p className="mb-3 text-[10px] font-bold uppercase tracking-widest text-text-muted0">
+            <p className="mb-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
               Participants
             </p>
             <div className="space-y-2">
@@ -275,7 +283,7 @@ export function FacilitatorSessionView({
                     <p className="font-mono text-sm">
                       anon-{p.identity.slice(0, 8)}
                     </p>
-                    <p className="text-xs text-text-muted0">
+                    <p className="text-xs text-muted-foreground">
                       {p.isLocal ? "You" : "Peer"}
                     </p>
                   </div>
@@ -295,8 +303,8 @@ export function FacilitatorSessionView({
           {canFacilitate ? (
             <div className="border-t border-white/10 p-4">
               <div className="flex items-center gap-2 mb-2">
-                <MessageSquare className="h-4 w-4 text-text-muted0" />
-                <p className="text-[10px] font-bold uppercase tracking-widest text-text-muted0">
+                <MessageSquare className="h-4 w-4 text-muted-foreground" />
+                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
                   Session Notes
                 </p>
               </div>
@@ -348,7 +356,7 @@ export function FacilitatorSessionView({
                 Cancel
               </button>
               <button
-                className="h-12 flex-1 rounded-2xl bg-destructive font-bold hover:bg-destructive0"
+                className="h-12 flex-1 rounded-2xl bg-destructive font-bold hover:bg-destructive/10"
                 onClick={leaveSession}
                 type="button"
               >

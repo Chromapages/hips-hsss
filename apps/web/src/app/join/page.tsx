@@ -30,7 +30,7 @@ export default function JoinPage() {
   };
 
   return (
-    <main className="min-h-screen bg-background text-foreground antialiased flex items-center justify-center p-4">
+    <main id="main" tabIndex={-1} className="min-h-screen bg-background text-foreground antialiased flex items-center justify-center p-4">
       <div className="w-full max-w-md space-y-8">
         <div className="text-center space-y-2">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-surface border border-border text-[10px] font-bold uppercase tracking-widest text-text-secondary mb-4">

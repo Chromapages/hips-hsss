@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getDb, getAdminAuth } from '@/lib/firebase-admin';
-import { verifyFirebaseIdToken } from '@/lib/auth-edge';
-import { ROLES } from '@/lib/roles';
+import { getDb } from '@/lib/firebase-admin';
+import { FACILITATOR_ROLES } from '@/lib/roles';
+import { requireRole } from '@/lib/request-auth';
 
 export async function GET(req: NextRequest) {
   const db = getDb();
-  const auth = getAdminAuth();
+  const authResult = await requireRole(req, ...FACILITATOR_ROLES);
+  if (authResult.error) return authResult.error;
 
   const defaultAvailability = {
     monday: ['morning', 'afternoon'],
@@ -18,28 +19,7 @@ export async function GET(req: NextRequest) {
   };
 
   try {
-    const authHeader = req.headers.get('authorization');
-    const token = authHeader?.startsWith('Bearer ') ? authHeader.split(' ')[1] : null;
-
-    if (!token) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    let userId = 'mock-uid-123';
-    let role: string = ROLES.FACILITATOR;
-
-    if (process.env.NODE_ENV === 'production' || !token.startsWith('mock-token-')) {
-      if (!auth) {
-        return NextResponse.json({ availability: defaultAvailability, warning: 'Auth uninitialized. Returning defaults.' });
-      }
-      const payload = await verifyFirebaseIdToken(token);
-      userId = typeof payload.sub === 'string' ? payload.sub : 'unknown';
-      role = (payload.role as string) || ROLES.PARTICIPANT;
-    }
-
-    if (role !== ROLES.FACILITATOR && role !== ROLES.ADMIN) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-    }
+    const userId = authResult.user.uid;
 
     if (!db) {
       return NextResponse.json({ availability: defaultAvailability });
@@ -59,31 +39,11 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   const db = getDb();
-  const auth = getAdminAuth();
+  const authResult = await requireRole(req, ...FACILITATOR_ROLES);
+  if (authResult.error) return authResult.error;
 
   try {
-    const authHeader = req.headers.get('authorization');
-    const token = authHeader?.startsWith('Bearer ') ? authHeader.split(' ')[1] : null;
-
-    if (!token) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    let userId = 'mock-uid-123';
-    let role: string = ROLES.FACILITATOR;
-
-    if (process.env.NODE_ENV === 'production' || !token.startsWith('mock-token-')) {
-      if (!auth) {
-        return NextResponse.json({ success: true, warning: 'Offline mode: Availability simulated save' });
-      }
-      const payload = await verifyFirebaseIdToken(token);
-      userId = typeof payload.sub === 'string' ? payload.sub : 'unknown';
-      role = (payload.role as string) || ROLES.PARTICIPANT;
-    }
-
-    if (role !== ROLES.FACILITATOR && role !== ROLES.ADMIN) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-    }
+    const userId = authResult.user.uid;
 
     const body = await req.json();
     const { availability } = body;

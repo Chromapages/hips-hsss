@@ -7,6 +7,7 @@ import {
   useElements,
 } from "@stripe/react-stripe-js";
 import { Loader2, ShieldCheck } from "lucide-react";
+import { formatCurrency } from "@/lib/format";
 
 export function CheckoutForm({ amount }: { amount: number }) {
   const stripe = useStripe();
@@ -15,7 +16,7 @@ export function CheckoutForm({ amount }: { amount: number }) {
   const [isLoading, setIsLoading] = useState(false);
   const [elementError, setElementError] = useState<string | null>(null);
 
-  const handleChange = (event: { error?: { message?: string } }) => {
+  const handleChange = (event: any) => {
     if (event.error?.message) {
       setElementError(event.error.message);
     } else {
@@ -53,7 +54,7 @@ export function CheckoutForm({ amount }: { amount: number }) {
       </div>
 
       {elementError && (
-        <div className="p-4 rounded-2xl bg-destructive0/5 border border-destructive/10 text-destructive text-xs font-bold uppercase tracking-widest text-center animate-in shake-in duration-300">
+        <div className="p-4 rounded-2xl bg-destructive/5 border border-destructive/10 text-destructive text-xs font-bold uppercase tracking-widest text-center animate-in shake-in duration-300">
           {elementError}
         </div>
       )}
@@ -64,7 +65,7 @@ export function CheckoutForm({ amount }: { amount: number }) {
         </div>
         <div>
           <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-emerald-400 mb-1">Encrypted Gateway</p>
-          <p className="text-xs text-text-muted0 leading-relaxed font-medium">
+          <p className="text-xs text-muted-foreground leading-relaxed font-medium">
             Your connection is secured with 256-bit encryption. Payment details are handled exclusively by Stripe.
           </p>
         </div>
@@ -74,19 +75,19 @@ export function CheckoutForm({ amount }: { amount: number }) {
         disabled={isLoading || !stripe || !elements}
         className="group relative w-full h-16 items-center justify-center overflow-hidden rounded-[1.5rem] bg-surface font-bold tracking-tighter text-black transition-all hover:scale-[1.01] active:scale-[0.99] disabled:opacity-30 disabled:hover:scale-100"
       >
-        <div className="absolute inset-0 bg-gradient-to-r from-#173B57 to-Gold-500 opacity-0 transition-opacity group-hover:opacity-10" />
+        <div className="absolute inset-0 bg-gradient-to-r from-[#173B57] to-gold opacity-0 transition-opacity group-hover:opacity-10" />
         {isLoading ? (
           <div className="flex items-center justify-center gap-3">
             <Loader2 className="w-5 h-5 animate-spin" />
             <span>Authorizing...</span>
           </div>
         ) : (
-          <span className="relative z-10 text-lg">Pay Securely • {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount / 100)}</span>
+          <span className="relative z-10 text-lg">Pay Securely • {formatCurrency(amount)}</span>
         )}
       </button>
 
       {message && (
-        <div className="p-4 rounded-2xl bg-destructive0/5 border border-destructive/10 text-destructive text-xs font-bold uppercase tracking-widest text-center animate-in shake-in duration-300">
+        <div className="p-4 rounded-2xl bg-destructive/5 border border-destructive/10 text-destructive text-xs font-bold uppercase tracking-widest text-center animate-in shake-in duration-300">
           {message}
         </div>
       )}

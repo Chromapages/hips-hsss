@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDb } from '@/lib/firebase-admin';
-import { ROLES } from '@/lib/roles';
-import { verifyFirebaseIdToken } from '@/lib/auth-edge';
+import { FACILITATOR_ROLES } from '@/lib/roles';
+import { requireRole } from '@/lib/request-auth';
+import { verifyFirebaseIdToken } from '@/lib/firebase-auth';
 import { checkRateLimit, getRateLimitHeaders } from '@/lib/rate-limit';
 import crypto from 'crypto';
 
@@ -42,6 +43,22 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  // Require Firebase auth — anonymous flag submission is not permitted
+  const authHeader = req.headers.get('authorization');
+  const token = authHeader?.startsWith('Bearer ') ? authHeader.split(' ')[1] : null;
+  if (!token) {
+    return NextResponse.json({ error: 'Unauthorized: authentication required' }, { status: 401 });
+  }
+  let firebaseUid: string | null = null;
+  try {
+    firebaseUid = (await verifyFirebaseIdToken(token))?.sub ?? null;
+  } catch {
+    return NextResponse.json({ error: 'Unauthorized: invalid token' }, { status: 401 });
+  }
+  if (!firebaseUid) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   try {
     const body = await req.json().catch(() => ({}));
 
@@ -71,14 +88,8 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Optional Firebase auth — if token provided, use Firebase UID as reporterIdentity
-    const authHeader = req.headers.get('authorization');
-    const token = authHeader?.startsWith('Bearer ') ? authHeader.split(' ')[1] : null;
-    let firebaseUid: string | null = null;
-    if (token) {
-      try { firebaseUid = (await verifyFirebaseIdToken(token))?.sub ?? null; } catch { /* ignore */ }
-    }
-    const resolvedReporterIdentity = firebaseUid || reporterIdentity;
+    // Reporter identity is the authenticated user's Firebase UID (anonymous identity)
+    const resolvedReporterIdentity = firebaseUid;
 
     // Get session context for metadata
     let sessionActive = false;
@@ -155,38 +166,15 @@ export async function POST(req: NextRequest) {
  * GET — Retrieve flag status (for facilitators)
  */
 export async function GET(req: NextRequest) {
+  const authResult = await requireRole(req, ...FACILITATOR_ROLES);
+  if (authResult.error) return authResult.error;
+
   const db = getDb();
   if (!db) {
     return NextResponse.json({ error: 'Service temporarily unavailable' }, { status: 503 });
   }
 
   try {
-    // Auth: require FACILITATOR or ADMIN role
-    const authHeader = req.headers.get('authorization');
-    const token = authHeader?.startsWith('Bearer ') ? authHeader.split(' ')[1] : null;
-
-    if (!token) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    let payload;
-    try {
-      payload = await verifyFirebaseIdToken(token);
-    } catch {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const userDoc = await db.collection('users').doc(payload.uid).get();
-    if (!userDoc.exists) {
-      return NextResponse.json({ error: 'Forbidden: User record not found' }, { status: 403 });
-    }
-    const userData = userDoc.data();
-    const userRole = userData?.role || null;
-
-    if (userRole !== ROLES.FACILITATOR && userRole !== ROLES.ADMIN) {
-      return NextResponse.json({ error: 'Forbidden: Insufficient privileges' }, { status: 403 });
-    }
-
     const { searchParams } = new URL(req.url);
     const sessionId = searchParams.get('sessionId');
 

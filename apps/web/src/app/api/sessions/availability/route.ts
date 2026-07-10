@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDb } from '@/lib/firebase-admin';
 import { addDays, startOfDay, addHours, isAfter } from 'date-fns';
-import { verifyFirebaseIdToken } from '@/lib/auth-edge';
+import { verifyFirebaseIdToken } from '@/lib/firebase-auth';
 import { checkRateLimit, getRateLimitHeaders } from '@/lib/rate-limit';
 
 // In-memory cache with 1-minute TTL

@@ -4,9 +4,15 @@ import { Reflector } from '@nestjs/core';
 import { ExecutionContext, UnauthorizedException } from '@nestjs/common';
 import { RolesGuard, UserRole } from './roles.guard.js';
 
-const mockVerifyIdToken = vi.fn();
+const { mockVerifyIdToken, mockGetAuthoritativeRole } = vi.hoisted(() => ({
+  mockVerifyIdToken: vi.fn(),
+  mockGetAuthoritativeRole: vi.fn(),
+}));
 vi.mock('../firebase-init.js', () => ({
   getAdminAuth: () => ({ verifyIdToken: mockVerifyIdToken }),
+}));
+vi.mock('./commerce-role.js', () => ({
+  getAuthoritativeRole: mockGetAuthoritativeRole,
 }));
 
 class MockHeaders {
@@ -38,6 +44,7 @@ function createMockReflector(requiredRoles?: UserRole[]): Reflector {
 describe('RolesGuard', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockGetAuthoritativeRole.mockReset();
   });
 
   describe('canActivate', () => {
@@ -54,17 +61,19 @@ describe('RolesGuard', () => {
     });
 
     it('should grant access to a valid ADMIN token on an admin endpoint', async () => {
-      mockVerifyIdToken.mockResolvedValue({ uid: 'uid-1', role: 'ADMIN' });
+      mockVerifyIdToken.mockResolvedValue({ uid: 'uid-1', role: 'PARTICIPANT' });
+      mockGetAuthoritativeRole.mockResolvedValue('ADMIN');
 
       const guard = new RolesGuard(createMockReflector([UserRole.ADMIN]));
       const result = await guard.canActivate(createMockContext('Bearer admin-token'));
 
       expect(result).toBe(true);
-      expect(mockVerifyIdToken).toHaveBeenCalledWith('admin-token');
+      expect(mockVerifyIdToken).toHaveBeenCalledWith('admin-token', true);
     });
 
     it('should grant access to FACILITATOR token on facilitator endpoint', async () => {
-      mockVerifyIdToken.mockResolvedValue({ uid: 'uid-2', role: 'FACILITATOR' });
+      mockVerifyIdToken.mockResolvedValue({ uid: 'uid-2', role: 'PARTICIPANT' });
+      mockGetAuthoritativeRole.mockResolvedValue('FACILITATOR');
 
       const guard = new RolesGuard(createMockReflector([UserRole.FACILITATOR]));
       const result = await guard.canActivate(createMockContext('Bearer facilitator-token'));
@@ -74,6 +83,7 @@ describe('RolesGuard', () => {
 
     it('should reject a PARTICIPANT hitting an ADMIN-only endpoint', async () => {
       mockVerifyIdToken.mockResolvedValue({ uid: 'uid-3', role: 'PARTICIPANT' });
+      mockGetAuthoritativeRole.mockResolvedValue('PARTICIPANT');
 
       const guard = new RolesGuard(createMockReflector([UserRole.ADMIN]));
       await expect(guard.canActivate(createMockContext('Bearer participant-token')))
@@ -99,7 +109,8 @@ describe('RolesGuard', () => {
     });
 
     it('should allow access when user has one of multiple allowed roles', async () => {
-      mockVerifyIdToken.mockResolvedValue({ uid: 'uid-4', role: 'FACILITATOR' });
+      mockVerifyIdToken.mockResolvedValue({ uid: 'uid-4', role: 'PARTICIPANT' });
+      mockGetAuthoritativeRole.mockResolvedValue('FACILITATOR');
 
       const guard = new RolesGuard(createMockReflector([UserRole.ADMIN, UserRole.FACILITATOR]));
       const result = await guard.canActivate(createMockContext('Bearer facilitator-token'));
@@ -107,12 +118,13 @@ describe('RolesGuard', () => {
       expect(result).toBe(true);
     });
 
-    it('should throw when the decoded token has no role claim', async () => {
+    it('should ignore a missing token role claim and use the database role', async () => {
       mockVerifyIdToken.mockResolvedValue({ uid: 'uid-5' });
+      mockGetAuthoritativeRole.mockResolvedValue('ADMIN');
 
       const guard = new RolesGuard(createMockReflector([UserRole.ADMIN]));
       await expect(guard.canActivate(createMockContext('Bearer token-no-role')))
-        .rejects.toThrow(UnauthorizedException);
+        .resolves.toBe(true);
     });
   });
 });

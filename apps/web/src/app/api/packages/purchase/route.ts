@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
-import { verifyFirebaseIdToken } from '@/lib/auth-edge';
+import { verifyFirebaseIdToken } from '@/lib/firebase-auth';
+import { logger } from '@/lib/logger';
 import { addMonths } from 'date-fns';
 import Stripe from 'stripe';
 
@@ -81,7 +82,9 @@ export async function POST(req: NextRequest) {
       where: {
         userId: user.id,
         serviceId,
-        status: 'ACTIVE',
+        expiresAt: {
+          gt: new Date(),
+        },
       },
     });
 
@@ -123,7 +126,7 @@ export async function POST(req: NextRequest) {
     });
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Internal Server Error';
-    console.error('Package purchase failed:', message);
+    logger.error('Package purchase failed', { error: message });
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }

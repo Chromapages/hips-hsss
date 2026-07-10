@@ -12,20 +12,23 @@ export default function HostPracticePage() {
   // Auto-set practice-mode flags in sessionStorage so the session room knows
   useEffect(() => {
     sessionStorage.setItem("hips-practice-mode", "true");
-    sessionStorage.setItem("hips-host-role", "true");
 
     // Load avatar config from localStorage to pre-populate the session
     const avatarConfig = localStorage.getItem("hips-host-avatar");
     if (avatarConfig) {
       try {
-        const parsed = JSON.parse(avatarConfig) as { avatarColor?: string };
+        const parsed = JSON.parse(avatarConfig) as { avatarColor?: string; avatar2D?: unknown };
         if (parsed.avatarColor) {
           sessionStorage.setItem("hips-avatar-color", parsed.avatarColor);
+        }
+        if (parsed.avatar2D) {
+          sessionStorage.setItem("hips-avatar-2d", JSON.stringify(parsed.avatar2D));
         }
       } catch {
         // Ignore parse errors
       }
     }
+    sessionStorage.setItem("hips-avatar-render-mode", "2d");
   }, []);
 
   return (

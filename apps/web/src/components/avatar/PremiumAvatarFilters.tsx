@@ -1,0 +1,97 @@
+import { getFitzpatrickCurves } from "@/lib/avatar2d-utils";
+
+type PremiumAvatarFiltersProps = {
+  skinTone?: string;
+};
+
+export function PremiumAvatarFilters({ skinTone = "#C68642" }: PremiumAvatarFiltersProps) {
+  const { rTable, gTable, bTable } = getFitzpatrickCurves(skinTone);
+
+  return (
+    <svg width="0" height="0" className="absolute" aria-hidden="true" style={{ position: 'absolute', width: 0, height: 0 }}>
+      <style dangerouslySetInnerHTML={{ __html: `
+        @keyframes avatar-breathe {
+          0%, 100% { transform: translateY(0px); }
+          50% { transform: translateY(-3.5px); }
+        }
+        @keyframes avatar-sway {
+          0%, 100% { transform: rotate(0deg); }
+          50% { transform: rotate(0.6deg); }
+        }
+        @keyframes avatar-blink {
+          0%, 96%, 100% { transform: scaleY(1); }
+          98% { transform: scaleY(0.08); }
+        }
+        [data-avatar-compositor] svg path {
+          transition: fill 0.25s ease-out, stroke 0.25s ease-out, opacity 0.25s ease-out;
+        }
+        [data-avatar-compositor] svg [id*="highlight"],
+        [data-avatar-compositor] svg [class*="highlight"],
+        [data-avatar-compositor] svg [id*="Highlight"],
+        [data-avatar-compositor] svg path[opacity="0.12"] {
+          fill: #ffffff !important;
+          opacity: 0.20 !important;
+          mix-blend-mode: screen !important;
+        }
+        @media (prefers-reduced-motion: reduce) {
+          [data-avatar-compositor] *,
+          [data-avatar-compositor] {
+            animation: none !important;
+            transition: none !important;
+          }
+        }
+      `}} />
+      <defs>
+        {/* Fitzpatrick skin recoloring component transfer curves */}
+        <filter id="premium-fitzpatrick-recolor" x="-10%" y="-10%" width="120%" height="120%">
+          <feComponentTransfer>
+            <feFuncR type="table" tableValues={rTable} />
+            <feFuncG type="table" tableValues={gTable} />
+            <feFuncB type="table" tableValues={bTable} />
+          </feComponentTransfer>
+        </filter>
+
+        {/* Global texture noise grain overlay */}
+        <filter id="premium-noise-grain" x="0%" y="0%" width="100%" height="100%">
+          <feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="3" result="noise" />
+          <feColorMatrix type="matrix" values="0 0 0 0 0   0 0 0 0 0   0 0 0 0 0  0 0 0 0.035 0" result="coloredNoise" />
+          <feComposite operator="in" in="coloredNoise" in2="SourceGraphic" result="clippedNoise" />
+          <feBlend mode="multiply" in="SourceGraphic" in2="clippedNoise" />
+        </filter>
+
+        {/* Base skin inner glow to create spherical 3D volume */}
+        <filter id="premium-inner-glow" x="-20%" y="-20%" width="140%" height="140%">
+          <feGaussianBlur in="SourceAlpha" stdDeviation="6" result="blur" />
+          <feOffset dx="-3" dy="-3" />
+          <feComposite in2="SourceAlpha" operator="arithmetic" k2="-1" k3="1" result="shadowDiff" />
+          <feFlood floodColor="rgba(255, 255, 255, 0.35)" />
+          <feComposite in2="shadowDiff" operator="in" result="highlight" />
+          
+          <feGaussianBlur in="SourceAlpha" stdDeviation="6" result="blur2" />
+          <feOffset dx="3" dy="3" />
+          <feComposite in2="SourceAlpha" operator="arithmetic" k2="-1" k3="1" result="shadowDiff2" />
+          <feFlood floodColor="rgba(0, 0, 0, 0.12)" />
+          <feComposite in2="shadowDiff2" operator="in" result="shadow" />
+          
+          <feMerge>
+            <feMergeNode in="SourceGraphic" />
+            <feMergeNode in="highlight" />
+            <feMergeNode in="shadow" />
+          </feMerge>
+        </filter>
+
+        {/* Soft, layered drop shadow for hair and accessories */}
+        <filter id="premium-drop-shadow" x="-30%" y="-30%" width="160%" height="160%">
+          <feDropShadow dx="0" dy="5" stdDeviation="6" floodColor="#000000" floodOpacity="0.1" />
+          <feDropShadow dx="0" dy="2" stdDeviation="2" floodColor="#000000" floodOpacity="0.06" />
+        </filter>
+        
+        {/* Closer drop shadow for facial features (nose, brows) */}
+        <filter id="premium-feature-shadow" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="1.5" stdDeviation="1.5" floodColor="#000000" floodOpacity="0.08" />
+        </filter>
+      </defs>
+    </svg>
+  );
+}
+

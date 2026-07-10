@@ -21,7 +21,7 @@ export function SessionExitState({
 
   return (
     <div className="flex h-screen flex-col items-center justify-center bg-zinc-950 p-6 text-center text-white">
-      <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-full border border-destructive/20 bg-destructive0/10">
+      <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-full border border-destructive/20 bg-destructive/10">
         <Icon className="h-10 w-10 text-destructive" />
       </div>
       <h1 className="text-3xl font-bold">{title}</h1>

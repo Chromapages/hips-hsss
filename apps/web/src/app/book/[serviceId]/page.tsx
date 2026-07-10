@@ -2,7 +2,7 @@
 
 import { use } from "react";
 import { useState } from "react";
-import { AvailabilityCalendar } from "@/components/booking/AvailabilityCalendar";
+import { BookingDatePicker } from "@/components/booking/BookingDatePicker";
 import { BookingSummaryBar } from "@/components/booking/BookingSummaryBar";
 import { TimeSlotGrid } from "@/components/booking/TimeSlotGrid";
 import { Navbar } from "@/components/polish/Navbar";
@@ -20,7 +20,7 @@ export default function BookServicePage({
   return (
     <>
       <Navbar />
-      <main className="min-h-screen bg-black pb-40 text-white selection:bg-primary/30">
+      <main id="main" tabIndex={-1} className="min-h-screen bg-black pb-40 text-white selection:bg-primary/30">
         {/* Ambient Glow */}
         <div className="fixed top-0 left-1/4 w-[500px] h-[500px] bg-primary/5 rounded-full blur-[120px] pointer-events-none" />
         
@@ -33,14 +33,14 @@ export default function BookServicePage({
               Find a time that <br />
               <span className="text-text">works for you.</span>
             </h1>
-            <p className="text-lg text-text-muted0 font-medium max-w-xl leading-relaxed mb-12 animate-in fade-in slide-in-from-bottom-6 duration-1000">
+            <p className="text-lg text-muted-foreground font-medium max-w-xl leading-relaxed mb-12 animate-in fade-in slide-in-from-bottom-6 duration-1000">
               Select your preferred date and time slot. All sessions are protected by 
               our hard anonymity protocol — your identity remains entirely private.
             </p>
           </div>
 
           <div className="grid gap-8 lg:grid-cols-[1fr_400px] items-start animate-in fade-in zoom-in-95 duration-1000 delay-300">
-            <AvailabilityCalendar
+            <BookingDatePicker
               onSelect={(value) => {
                 setDate(value);
                 setTime("");

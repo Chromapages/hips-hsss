@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { getBrowserMediaDevices, hasBrowserMediaDevices } from '@/lib/browser-media';
 
 export interface UseMediaDevicesReturn {
   audioInputs: MediaDeviceInfo[];
@@ -38,9 +39,15 @@ export function useMediaDevices(): UseMediaDevicesReturn {
   const analyserRef = useRef<AnalyserNode | null>(null);
   const animationFrameRef = useRef<number | null>(null);
   const micStreamRef = useRef<MediaStream | null>(null);
+  // Track AudioContext so it can be properly closed on unmount — prevents memory leaks
+  const audioContextRef = useRef<AudioContext | null>(null);
 
   const refreshDevices = useCallback(async () => {
     try {
+      if (!hasBrowserMediaDevices() || typeof navigator.mediaDevices.enumerateDevices !== 'function') {
+        return;
+      }
+
       const devices = await navigator.mediaDevices.enumerateDevices();
       setAudioInputs(devices.filter((d) => d.kind === 'audioinput'));
       setAudioOutputs(devices.filter((d) => d.kind === 'audiooutput'));
@@ -65,13 +72,14 @@ export function useMediaDevices(): UseMediaDevicesReturn {
   // Request microphone permission and set up audio level metering
   const requestMicPermission = useCallback(async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const stream = await getBrowserMediaDevices().getUserMedia({ audio: true });
       micStreamRef.current = stream;
       setMicStream(stream);
       setMicPermissionGranted(true);
 
       // Set up analyser for audio level metering
       const audioContext = new AudioContext();
+      audioContextRef.current = audioContext; // store for cleanup
       const source = audioContext.createMediaStreamSource(stream);
       const analyser = audioContext.createAnalyser();
       analyser.fftSize = 256;
@@ -97,7 +105,7 @@ export function useMediaDevices(): UseMediaDevicesReturn {
   // Request camera permission
   const requestCameraPermission = useCallback(async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      const stream = await getBrowserMediaDevices().getUserMedia({ video: true });
       setCameraStream(stream);
       setCameraPermissionGranted(true);
     } catch {
@@ -108,6 +116,10 @@ export function useMediaDevices(): UseMediaDevicesReturn {
   // Initial device enumeration and permission requests
   useEffect(() => {
     refreshDevices();
+
+    if (!hasBrowserMediaDevices() || typeof navigator.mediaDevices.addEventListener !== 'function') {
+      return undefined;
+    }
 
     navigator.mediaDevices.addEventListener('devicechange', refreshDevices);
     return () => {
@@ -126,6 +138,11 @@ export function useMediaDevices(): UseMediaDevicesReturn {
       }
       micStreamRef.current?.getTracks().forEach((t) => t.stop());
       micStreamRef.current = null;
+      // Close the AudioContext created in requestMicPermission to prevent memory leak
+      if (audioContextRef.current) {
+        audioContextRef.current.close();
+        audioContextRef.current = null;
+      }
     };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 

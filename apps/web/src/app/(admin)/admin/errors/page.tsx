@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useFetchWithTimeout } from "@/hooks/useFetchWithTimeout";
 import { Bug, Loader2, AlertCircle, Eye, EyeOff, RefreshCw } from "lucide-react";
 import { format } from "date-fns";
+import { AdminErrorBanner } from "@/components/admin/AdminErrorBanner";
 
 type ErrorLog = {
   id: string;
@@ -24,7 +25,7 @@ export default function AdminErrorQueuePage() {
       ? "/api/admin/error-logs"
       : `/api/admin/error-logs?severity=${severityFilter}`;
 
-  const { data, isLoading, refetch } = useFetchWithTimeout<ErrorLog[]>(fetchUrl);
+  const { data, isLoading, error, refetch } = useFetchWithTimeout<ErrorLog[]>(fetchUrl);
 
   const logs = Array.isArray(data) ? data : [];
 
@@ -64,6 +65,8 @@ export default function AdminErrorQueuePage() {
           Refresh Feed
         </button>
       </header>
+
+      <AdminErrorBanner error={error} onRetry={refetch} context="error logs" />
 
       {/* Filter Tabs */}
       <div className="flex flex-wrap gap-1 p-1 rounded-xl bg-surface-offset mb-8 w-fit" role="tablist" aria-label="Error severity tabs">

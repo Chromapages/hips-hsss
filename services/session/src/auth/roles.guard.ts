@@ -2,11 +2,13 @@ import { Injectable, CanActivate, ExecutionContext, UnauthorizedException } from
 import { Reflector } from '@nestjs/core';
 import { SetMetadata } from '@nestjs/common';
 import { getAdminAuth } from '../firebase-init.js';
+import { getAuthoritativeRole } from './commerce-role.js';
 
 export enum UserRole {
   PARTICIPANT = 'PARTICIPANT',
   FACILITATOR = 'FACILITATOR',
   ADMIN = 'ADMIN',
+  SUPER_ADMIN = 'SUPER_ADMIN',
 }
 
 export const ROLES_KEY = 'roles';
@@ -33,16 +35,22 @@ export class RolesGuard implements CanActivate {
     }
 
     const request = context.switchToHttp().getRequest();
-    const idToken = request.headers.get('authorization')?.replace('Bearer ', '');
+    const authHeader = typeof request.headers.get === 'function'
+      ? request.headers.get('authorization')
+      : request.headers.authorization;
+    const idToken = authHeader?.replace('Bearer ', '');
 
     if (!idToken) {
       throw new UnauthorizedException('Missing Firebase ID token');
     }
 
     try {
-      const decoded = await getAdminAuth().verifyIdToken(idToken);
-      // Custom claims stored on the Firebase user (set via setCustomUserClaims)
-      const role = (decoded as Record<string, unknown>).role as UserRole | undefined;
+      const auth = getAdminAuth();
+      if (!auth) {
+        throw new UnauthorizedException('Authentication service unavailable');
+      }
+      const decoded = await auth.verifyIdToken(idToken, true);
+      const role = await getAuthoritativeRole(decoded.uid) as UserRole | null;
 
       if (!role || !requiredRoles.includes(role)) {
         throw new UnauthorizedException('Insufficient permissions');

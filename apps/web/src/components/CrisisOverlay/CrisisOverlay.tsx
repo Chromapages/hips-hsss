@@ -132,7 +132,7 @@ export function CrisisOverlay({
                   )}
                 </div>
                 <span className="block font-bold text-white text-xl mb-1">{resource.label}</span>
-                <span className="text-sm text-text-muted0 font-bold uppercase tracking-widest">{resource.action}</span>
+                <span className="text-sm text-muted-foreground font-bold uppercase tracking-widest">{resource.action}</span>
               </a>
             </li>
           ))}
@@ -151,7 +151,7 @@ export function CrisisOverlay({
             Stay in session
           </button>
           <button
-            className="h-14 rounded-2xl bg-destructive px-8 font-bold text-white transition-all hover:bg-destructive0 shadow-xl shadow-red-900/40"
+            className="h-14 rounded-2xl bg-destructive px-8 font-bold text-white transition-all hover:bg-destructive/10 shadow-xl shadow-red-900/40"
             onClick={onEndSession}
           >
             End session safely

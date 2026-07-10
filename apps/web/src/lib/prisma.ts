@@ -1,3 +1,4 @@
+import 'server-only';
 import { CommerceClient } from '@hips/db';
 
 const globalForPrisma = global as unknown as {

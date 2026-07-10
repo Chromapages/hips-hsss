@@ -62,7 +62,7 @@ describe('KeywordMonitoringService', () => {
       const result = await service.scanText('I have a bomb in my bag');
 
       expect(result.matched).toBe(true);
-      expect(result.matches[0].position).toBe(9);
+      expect(result.matches[0]!.position).toBe(9);
     });
 
     it('should fall back to default rules when DB is empty', async () => {
@@ -95,8 +95,8 @@ describe('KeywordMonitoringService', () => {
 
       expect(result.matched).toBe(true);
       expect(result.matches).toHaveLength(2);
-      expect(result.matches[0].severity).toBe('CRITICAL');
-      expect(result.matches[1].severity).toBe('MEDIUM');
+      expect(result.matches[0]!.severity).toBe('CRITICAL');
+      expect(result.matches[1]!.severity).toBe('MEDIUM');
     });
   });
 

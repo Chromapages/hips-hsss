@@ -21,12 +21,13 @@ export class VaultCryptoService {
 
   /**
    * Encrypts plaintext using Envelope Encryption (AWS KMS).
+   * Returns base64-encoded string for safe Prisma Bytes storage.
    * Resulting buffer contains: [EncryptedDataKeyLength(4)][EncryptedDataKey][IV(12)][AuthTag(16)][Ciphertext]
    */
   async encrypt(plaintext: string): Promise<Buffer> {
-    // If no keyId (development), use a mock/simple encryption or throw
+    // If no keyId (development), throw — never store plaintext-like data
     if (!this.keyId) {
-      return Buffer.from(`mock_encrypted:${plaintext}`);
+      throw new Error('VAULT_KMS_KEY_ID not configured — encryption unavailable');
     }
 
     // 1. Generate a Data Encryption Key (DEK)
@@ -44,12 +45,12 @@ export class VaultCryptoService {
     // 2. Encrypt the data using the DEK
     const iv = crypto.randomBytes(12);
     const cipher = crypto.createCipheriv('aes-256-gcm', dekPlaintext, iv);
-    
+
     const ciphertext = Buffer.concat([
       cipher.update(plaintext, 'utf8'),
       cipher.final(),
     ]);
-    
+
     const authTag = cipher.getAuthTag();
 
     // 3. Assemble the payload
@@ -66,11 +67,19 @@ export class VaultCryptoService {
   }
 
   /**
-   * Decrypts a buffer created by encrypt().
+   * Decrypts a base64-encoded ciphertext created by encrypt().
    */
-  async decrypt(encryptedBuffer: Buffer): Promise<string> {
-    if (!this.keyId || encryptedBuffer.toString().startsWith('mock_encrypted:')) {
-      return encryptedBuffer.toString().replace('mock_encrypted:', '');
+  async decrypt(encryptedBase64: Buffer | string): Promise<string> {
+    // Support both raw Buffer (stored directly) and base64-encoded string
+    let encryptedBuffer: Buffer;
+    if (typeof encryptedBase64 === 'string') {
+      encryptedBuffer = Buffer.from(encryptedBase64, 'base64');
+    } else {
+      encryptedBuffer = encryptedBase64;
+    }
+
+    if (!this.keyId) {
+      throw new Error('VAULT_KMS_KEY_ID not configured — decryption unavailable');
     }
 
     try {

@@ -3,6 +3,7 @@
 # dependencies
 node_modules/
 **/node_modules/
+.pnpm-store/
 /.pnp
 .pnp.*
 .yarn/*
@@ -32,6 +33,7 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
+apps/web/logs/
 
 # env files
 .env
@@ -57,6 +59,13 @@ next-env.d.ts
 # Prisma Generated Clients
 packages/db/generated/
 **/generated/
+
+# Downloaded voice-conversion model weights/cache
+deploy/voice-changer/pretrain/
+
+# Local voice evaluation datasets and generated benchmark runs
+tools/voice-eval/data/
+tools/voice-eval/runs/
 
 # Firebase Admin Service Account Key
 firebase-admin.json

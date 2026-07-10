@@ -22,6 +22,10 @@ type SidebarUserFooterProps = {
 };
 
 const ROLE_META: Record<Role, { badgeClasses: string; label: string }> = {
+  SUPER_ADMIN: {
+    badgeClasses: "bg-violet-600 text-white",
+    label: "SUPER ADMIN",
+  },
   ADMIN: {
     badgeClasses: "bg-destructive text-white",
     label: "ADMIN",
@@ -37,7 +41,7 @@ const ROLE_META: Record<Role, { badgeClasses: string; label: string }> = {
 };
 
 const isKnownRole = (role: string | null): role is Role =>
-  role === "ADMIN" || role === "FACILITATOR" || role === "PARTICIPANT";
+  role === "SUPER_ADMIN" || role === "ADMIN" || role === "FACILITATOR" || role === "PARTICIPANT";
 
 const resolveRoleMeta = (role: string | null) =>
   isKnownRole(role) ? ROLE_META[role] : ROLE_META.PARTICIPANT;

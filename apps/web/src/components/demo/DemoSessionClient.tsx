@@ -3,6 +3,8 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { screenLabels, voiceMaskActiveStyle } from './demo-utils';
 import { Mic, MicOff, Hand, Flag, PhoneOff } from 'lucide-react';
+import { VOICE_PRESETS } from '@/lib/voice-mask-presets';
+import { getBrowserMediaDevices } from '@/lib/browser-media';
 
 interface SessionControlsProps {
   isMuted: boolean;
@@ -31,7 +33,7 @@ export function SessionControls({
           aria-pressed={isMuted}
           className={`ctrl-btn flex items-center gap-2 sm:gap-3 px-4 sm:px-6 py-3 sm:py-4 rounded-2xl border font-bold transition-all hover:bg-surface/10 ${
             isMuted
-              ? 'bg-destructive0/10 border-destructive/30 text-destructive'
+              ? 'bg-destructive/10 border-destructive/30 text-destructive'
               : 'border-white/10 text-white'
           }`}
         >
@@ -66,7 +68,7 @@ export function SessionControls({
         <button
           onClick={onLeave}
           aria-label="Leave the session"
-          className="flex items-center gap-2 sm:gap-3 px-4 sm:px-6 py-3 sm:py-4 rounded-xl bg-destructive text-white font-bold transition-all hover:bg-destructive0 ml-0 sm:ml-3 leave-btn"
+          className="flex items-center gap-2 sm:gap-3 px-4 sm:px-6 py-3 sm:py-4 rounded-xl bg-destructive text-white font-bold transition-all hover:bg-destructive/80 ml-0 sm:ml-3 leave-btn"
         >
           <PhoneOff className="w-5 h-5" />
           <span className="text-sm sm:text-base">Leave</span>
@@ -122,7 +124,7 @@ export function FlagModal({ onClose, onSubmit }: FlagModalProps) {
           </button>
           <button
             onClick={handleSubmit}
-            className="flex-1 py-3 rounded-xl bg-destructive text-white font-bold hover:bg-destructive0 focus:outline-none focus:ring-2 focus:ring-red-500"
+            className="flex-1 py-3 rounded-xl bg-destructive text-white font-bold hover:bg-destructive/80 focus:outline-none focus:ring-2 focus:ring-red-500"
           >
             Submit Flag
           </button>
@@ -164,7 +166,7 @@ export function LeaveModal({ onClose, onConfirm }: LeaveModalProps) {
           </button>
           <button
             onClick={onConfirm}
-            className="flex-1 py-3 rounded-xl bg-destructive text-white font-bold hover:bg-destructive0 focus:outline-none focus:ring-2 focus:ring-red-500"
+            className="flex-1 py-3 rounded-xl bg-destructive text-white font-bold hover:bg-destructive/80 focus:outline-none focus:ring-2 focus:ring-red-500"
           >
             Leave Session
           </button>
@@ -236,7 +238,7 @@ export function ConnectingScreen({ anonId }: ConnectingScreenProps) {
   return (
     <div className="screen flex-col items-center justify-center min-h-screen px-4 sm:px-6">
       <div className="fade-in text-center">
-        <div className="w-16 h-16 border-4 border-primary/30 border-t-#173B57 rounded-full spin mx-auto mb-6" />
+        <div className="w-16 h-16 border-4 border-primary/30 border-t-[#173B57] rounded-full spin mx-auto mb-6" />
         <h2 className="font-heading text-2xl sm:text-3xl font-extrabold mb-3">
           Preparing your anonymous room...
         </h2>
@@ -257,11 +259,127 @@ interface MicSetupScreenProps {
 
 export function MicSetupScreen({ onBack, onMicReady }: MicSetupScreenProps) {
   const [micStatus, setMicStatus] = useState<'idle' | 'requesting' | 'ready' | 'denied'>('idle');
+  // Track active preview so clicking the same button stops it
+  const [previewing, setPreviewing] = useState<'original' | 'masked' | null>(null);
+  const previewContextRef = useRef<AudioContext | null>(null);
+  const previewStreamRef = useRef<MediaStream | null>(null);
+
+  const stopPreview = useCallback(() => {
+    if (previewStreamRef.current) {
+      previewStreamRef.current.getTracks().forEach((t) => t.stop());
+      previewStreamRef.current = null;
+    }
+    if (previewContextRef.current) {
+      previewContextRef.current.close();
+      previewContextRef.current = null;
+    }
+    setPreviewing(null);
+  }, []);
+
+  // Inline pitch-shift worklet for the masked preview.
+  // Mirrors the original simple mic-test path so preview playback stays local.
+  const pitchShiftWorkletSrc = `
+class PitchShiftPreview extends AudioWorkletProcessor {
+  constructor() {
+    super();
+    this.ratio = Math.pow(2, 4 / 12); // +4 semitones
+    this.BUF_SIZE = 2048;
+    this.MASK = this.BUF_SIZE - 1;
+    this.HALF = this.BUF_SIZE >> 1;
+    this.buf = new Float32Array(this.BUF_SIZE);
+    this.wp = 0;
+    this.baseRp = 0;
+    this.frac = 0;
+  }
+  lerp(pos) {
+    const i0 = Math.floor(pos) & this.MASK;
+    const i1 = (i0 + 1) & this.MASK;
+    const f = pos - Math.floor(pos);
+    return this.buf[i0] * (1 - f) + this.buf[i1] * f;
+  }
+  win(n) {
+    return 0.5 * (1 - Math.cos(6.2831853 * n / this.HALF));
+  }
+  process(inputs, outputs) {
+    const src = inputs[0]?.[0];
+    const dst = outputs[0]?.[0];
+    if (!src || !dst) return true;
+    for (let i = 0; i < src.length; i++) {
+      this.buf[this.wp & this.MASK] = src[i];
+      this.wp++;
+      this.frac += this.ratio;
+      if (this.frac >= 1) {
+        this.baseRp += Math.floor(this.frac);
+        this.frac -= Math.floor(this.frac);
+      }
+      const rp0 = this.baseRp & this.MASK;
+      dst[i] = this.lerp(this.baseRp) * this.win(rp0)
+             + this.lerp((this.baseRp + this.HALF) & this.MASK) * this.win((this.baseRp + this.HALF) & this.MASK);
+      if (this.baseRp > this.BUF_SIZE * 16) this.baseRp -= this.BUF_SIZE * 16;
+    }
+    return true;
+  }
+}
+registerProcessor('pitch-shift-preview', PitchShiftPreview);
+`;
+
+  const startOriginalPreview = async () => {
+    if (previewing === 'original') { stopPreview(); return; }
+    stopPreview();
+    try {
+      const stream = await getBrowserMediaDevices().getUserMedia({ audio: true });
+      previewStreamRef.current = stream;
+      const ctx = new AudioContext();
+      previewContextRef.current = ctx;
+      const source = ctx.createMediaStreamSource(stream);
+      source.connect(ctx.destination);
+      if (ctx.state === 'suspended') {
+        await ctx.resume();
+      }
+      setPreviewing('original');
+    } catch (err) {
+      console.warn('[MicSetupScreen] Original preview failed:', err);
+    }
+  };
+
+  const startMaskedPreview = async () => {
+    if (previewing === 'masked') { stopPreview(); return; }
+    stopPreview();
+    try {
+      const stream = await getBrowserMediaDevices().getUserMedia({ audio: true });
+      previewStreamRef.current = stream;
+      const ctx = new AudioContext();
+      previewContextRef.current = ctx;
+      const blob = new Blob([pitchShiftWorkletSrc], { type: 'application/javascript' });
+      const url = URL.createObjectURL(blob);
+      try {
+        await ctx.audioWorklet.addModule(url);
+      } finally {
+        URL.revokeObjectURL(url);
+      }
+      const source = ctx.createMediaStreamSource(stream);
+      const worklet = new AudioWorkletNode(ctx, 'pitch-shift-preview');
+      source.connect(worklet);
+      worklet.connect(ctx.destination);
+      if (ctx.state === 'suspended') {
+        await ctx.resume();
+      }
+      setPreviewing('masked');
+    } catch (err) {
+      console.warn('[MicSetupScreen] Masked preview failed:', err);
+    }
+  };
+
+  // Stop preview when component unmounts or micStatus changes
+  useEffect(() => {
+    return () => stopPreview();
+  }, [stopPreview]);
 
   const requestMic = async () => {
+    stopPreview();
     setMicStatus('requesting');
     try {
-      await navigator.mediaDevices.getUserMedia({ audio: true });
+      await getBrowserMediaDevices().getUserMedia({ audio: true });
       setMicStatus('ready');
       onMicReady();
     } catch {
@@ -292,11 +410,27 @@ export function MicSetupScreen({ onBack, onMicReady }: MicSetupScreenProps) {
             what it sounds like:
           </p>
           <div className="flex flex-col sm:flex-row gap-3">
-            <button className="btn-secondary flex-1 py-3 rounded-xl text-sm font-semibold flex items-center justify-center gap-2">
-              🔊 Hear Original
+            <button
+              onClick={startOriginalPreview}
+              className={[
+                'btn-secondary flex-1 py-3 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 transition-all',
+                previewing === 'original'
+                  ? 'border-primary/40 bg-primary/20 text-primary'
+                  : '',
+              ].join(' ')}
+            >
+              🔊 {previewing === 'original' ? 'Stop' : 'Hear Original'}
             </button>
-            <button className="btn-secondary flex-1 py-3 rounded-xl text-sm font-semibold flex items-center justify-center gap-2">
-              🎭 Hear Masked
+            <button
+              onClick={startMaskedPreview}
+              className={[
+                'btn-secondary flex-1 py-3 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 transition-all',
+                previewing === 'masked'
+                  ? 'border-primary/40 bg-primary/20 text-primary'
+                  : '',
+              ].join(' ')}
+            >
+              🎭 {previewing === 'masked' ? 'Stop' : 'Hear Masked'}
             </button>
           </div>
         </div>
@@ -339,7 +473,7 @@ export function LandingScreen({ onStart }: LandingScreenProps) {
     <div className="screen active flex-col items-center justify-center min-h-screen px-4 sm:px-6 text-center">
       <div className="fade-in max-w-2xl">
         <div className="flex items-center justify-center gap-3 mb-8">
-          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-#173B57 to-Gold-600 flex items-center justify-center text-2xl font-bold">
+          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#173B57] to-gold flex items-center justify-center text-2xl font-bold">
             H
           </div>
           <span className="text-2xl font-bold tracking-tight">H.I.P.S.</span>

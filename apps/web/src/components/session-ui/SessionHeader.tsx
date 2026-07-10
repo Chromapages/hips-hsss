@@ -41,7 +41,7 @@ function QualityIndicator({
         className={
           variant === "light"
             ? "text-[10px] font-bold uppercase tracking-widest text-text-muted"
-            : "text-[10px] font-bold uppercase tracking-widest text-text-muted0"
+            : "text-[10px] font-bold uppercase tracking-widest text-muted-foreground"
         }
       >
         Network
@@ -57,7 +57,7 @@ function QualityIndicator({
               ? "bg-emerald-500"
               : quality === "fair"
                 ? "bg-amber-500"
-                : "bg-destructive0",
+                : "bg-destructive/10",
           ].join(" ")}
         />
         <span
@@ -94,7 +94,7 @@ export function SessionHeader({
   const wrapperClass = isLight
     ? "flex items-center justify-between border-b border-border bg-background/80 px-6 py-4 backdrop-blur-2xl"
     : "flex items-center justify-between border-b border-white/10 bg-black/70 px-6 py-4 backdrop-blur-2xl";
-  const mutedLabel = isLight ? "text-text-muted" : "text-text-muted0";
+  const mutedLabel = isLight ? "text-text-muted" : "text-muted-foreground";
   const primaryText = isLight ? "text-primary" : "text-white";
   const secondaryText = isLight ? "text-text-secondary" : "text-text";
   const safetyText = isLight ? "text-success" : "text-emerald-300";

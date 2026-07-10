@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getDb, getAdminAuth } from '@/lib/firebase-admin';
-import { ROLES } from '@/lib/roles';
+import { getDb } from '@/lib/firebase-admin';
+import { FACILITATOR_ROLES } from '@/lib/roles';
+import { requireRole } from '@/lib/request-auth';
 import { z } from 'zod';
 
 const updateStatusSchema = z.object({
@@ -11,22 +12,11 @@ export async function GET(req: NextRequest) {
   const db = getDb();
   if (!db) return NextResponse.json({ error: 'Service temporarily unavailable' }, { status: 503 });
 
-  const auth = getAdminAuth();
-  if (!auth) return NextResponse.json({ error: 'Service temporarily unavailable' }, { status: 503 });
+  const authResult = await requireRole(req, ...FACILITATOR_ROLES);
+  if (authResult.error) return authResult.error;
 
   try {
-    const authHeader = req.headers.get('authorization');
-    const token = authHeader?.startsWith('Bearer ') ? authHeader.split(' ')[1] : null;
-    if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-
-    const payload = await auth.verifyIdToken(token);
-    const userId = payload.uid;
-
-    // Role check — only FACILITATOR or ADMIN can access
-    const role = (payload.role as string) || null;
-    if (role !== ROLES.FACILITATOR && role !== ROLES.ADMIN) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-    }
+    const userId = authResult.user.uid;
 
     const sessionsSnapshot = await db.collection('sessions')
       .where('facilitatorId', '==', userId)
@@ -44,23 +34,11 @@ export async function POST(req: NextRequest) {
   const db = getDb();
   if (!db) return NextResponse.json({ error: 'Service temporarily unavailable' }, { status: 503 });
 
-  const auth = getAdminAuth();
-  if (!auth) return NextResponse.json({ error: 'Service temporarily unavailable' }, { status: 503 });
+  const authResult = await requireRole(req, ...FACILITATOR_ROLES);
+  if (authResult.error) return authResult.error;
 
   try {
-    const authHeader = req.headers.get('authorization');
-    const token = authHeader?.startsWith('Bearer ') ? authHeader.split(' ')[1] : null;
-    if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-
-    const payload = await auth.verifyIdToken(token);
-    const userId = payload.uid;
-
-    // Role check
-    const role = (payload.role as string) || null;
-    if (role !== ROLES.FACILITATOR && role !== ROLES.ADMIN) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-    }
-
+    const userId = authResult.user.uid;
     const body = await req.json();
     const { action, sessionId, data } = body;
 
@@ -70,6 +48,13 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: 'Invalid status value' }, { status: 400 });
       }
       const sessionRef = db.collection('sessions').doc(sessionId);
+      const sessionDoc = await sessionRef.get();
+      if (!sessionDoc.exists) {
+        return NextResponse.json({ error: 'Session not found' }, { status: 404 });
+      }
+      if (sessionDoc.data()?.facilitatorId !== userId) {
+        return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+      }
       await sessionRef.update({ status: validation.data.status, updatedAt: new Date().toISOString() });
       return NextResponse.json({ success: true });
     }

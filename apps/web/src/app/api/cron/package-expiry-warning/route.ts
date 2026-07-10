@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getDb } from '@/lib/firebase-admin';
 import type { QueryDocumentSnapshot } from 'firebase-admin/firestore';
 import { sendPackageExpiryWarningEmail } from '@/emails';
+import { verifyCronSecret } from '@/lib/security/cron';
 
 /**
  * Cron: Package Expiry Warning
@@ -16,13 +17,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Service temporarily unavailable' }, { status: 503 });
   }
 
-  const cronSecret = process.env.CRON_SECRET;
-  if (!cronSecret) {
-    console.error('[Cron Expiry] CRON_SECRET not configured');
-    return NextResponse.json({ error: 'Cron secret not configured' }, { status: 500 });
-  }
-  const url = new URL(req.url);
-  if (url.searchParams.get('secret') !== cronSecret) {
+  if (!verifyCronSecret(req)) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 

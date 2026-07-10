@@ -18,7 +18,8 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["apps/web/src/*"],
-      "@hips/types": ["packages/types/src/index.ts"]
+      "@hips/types": ["packages/types/src/index.ts"],
+      "@hips/db": ["packages/db/index.ts"]
     },
     "forceConsistentCasingInFileNames": true,
     "noUncheckedIndexedAccess": true,
@@ -34,5 +35,5 @@
     "vitest.config.ts",
     "eslint.config.mjs"
   ],
-  "exclude": ["node_modules", ".next", "out", "apps/web/src/middleware.ts"]
+  "exclude": ["node_modules", ".next", "out"]
 }

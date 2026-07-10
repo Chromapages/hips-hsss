@@ -1,5 +1,8 @@
 import { NextResponse } from 'next/server';
 import { getDb } from '@/lib/firebase-admin';
+import { logger } from '@/lib/logger';
+
+export const dynamic = 'force-dynamic';
 
 export async function GET() {
   // Initialize Firestore lazily — return 503 if not configured
@@ -21,7 +24,9 @@ export async function GET() {
 
     return NextResponse.json(services);
   } catch (error) {
-    console.error('Failed to fetch services:', error);
+    logger.error('Failed to fetch services', {
+      error: error instanceof Error ? error.message : String(error)
+    });
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }

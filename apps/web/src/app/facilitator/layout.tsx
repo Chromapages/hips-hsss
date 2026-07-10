@@ -1,12 +1,10 @@
-"use client";
-
 import { DashboardShell } from "@/components/layout/dashboard-shell";
-import { AuthGuard } from "@/components/auth/AuthGuard";
+import { ClientShell } from "@/components/auth/ClientShell";
 
 export default function FacilitatorLayout({ children }: { children: React.ReactNode }) {
   return (
-    <AuthGuard allowedRoles={["FACILITATOR", "ADMIN"]}>
+    <ClientShell allowedRoles={["FACILITATOR", "ADMIN", "SUPER_ADMIN"]}>
       <DashboardShell>{children}</DashboardShell>
-    </AuthGuard>
+    </ClientShell>
   );
 }

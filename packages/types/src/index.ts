@@ -3,7 +3,8 @@ export type UserRole =
   | "LEADER"
   | "ORGBUYER"
   | "FACILITATOR"
-  | "ADMIN";
+  | "ADMIN"
+  | "SUPER_ADMIN";
 
 export type AnonymousSessionToken = {
   token: string;
@@ -29,7 +30,9 @@ export type ServiceCategory =
   | "FAMILY_SUPPORT"
   | "ORGANIZATION_TRAINING";
 
-export * from "./copy-policy";
-export * from "./email";
-export * from "./safety";
-export * from "./session";
+export * from "./copy-policy.js";
+export * from "./email.js";
+export * from "./safety.js";
+export * from "./session.js";
+export * from "./avatar2d.js";
+export * from "./packages.js";

@@ -1,14 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
-import { verifyFirebaseIdToken } from '@/lib/auth-edge';
+import { requireAdmin } from '@/lib/admin-auth';
+import { createServiceToken, SCOPES, AUDIENCES } from '@/lib/auth/serviceToken';
+import { getInternalServiceUrl } from '@/lib/internal-service-url';
 
-const SAFETY_SERVICE_URL = process.env.SAFETY_SERVICE_URL || 'http://localhost:3003';
-const SESSION_SERVICE_SECRET = process.env.SESSION_SERVICE_SECRET;
+const SAFETY_SERVICE_URL = getInternalServiceUrl('SAFETY_SERVICE_URL', 'http://localhost:3003');
 
 async function callSafetyService(endpoint: string) {
+  const jwt = await createServiceToken([SCOPES.SAFETY_REPORT], AUDIENCES.SAFETY, {
+    subject: 'hips-web',
+    ref: 'admin-proxy',
+  });
   const response = await fetch(`${SAFETY_SERVICE_URL}${endpoint}`, {
     headers: {
-      'Authorization': `Bearer ${SESSION_SERVICE_SECRET}`,
+      'Authorization': `Bearer ${jwt}`,
     },
   });
 
@@ -20,25 +24,14 @@ async function callSafetyService(endpoint: string) {
 }
 
 export async function GET(req: NextRequest) {
-  const token = req.headers.get('Authorization')?.split('Bearer ')[1];
-  if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const { error } = await requireAdmin(req);
+  if (error) return error;
 
-  const decodedToken = await verifyFirebaseIdToken(token);
-  if (!decodedToken) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  const firebaseUid = typeof decodedToken.sub === 'string' ? decodedToken.sub : null;
-
-  if (!firebaseUid) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  try {
+    const alerts = await callSafetyService('/safety/alerts');
+    return NextResponse.json(alerts);
+  } catch (err) {
+    console.error('Failed to contact safety service:', err);
+    return NextResponse.json({ error: 'Safety service unavailable' }, { status: 502 });
   }
-
-  const user = await prisma.user.findUnique({
-    where: { firebaseUid },
-  });
-
-  if (!user || user.role !== 'ADMIN') {
-    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-  }
-
-  const alerts = await callSafetyService('/safety/alerts');
-  return NextResponse.json(alerts);
 }

@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { AvatarGesture } from '@hips/types';
+import { getBrowserMediaDevices } from '@/lib/browser-media';
 
 interface AudioAvatarProps {
   localIdentity: string;
@@ -36,10 +37,14 @@ export function AudioAvatar({ localIdentity, micEnabled, gesture }: AudioAvatarP
   const streamRef = useRef<MediaStream | null>(null);
   const isConnectedRef = useRef(false);
   const hasInitializedRef = useRef(false);
+  
+  const handleStateChangeRef = useRef<(() => void) | null>(null);
+  const handleInteractionRef = useRef<(() => void) | null>(null);
+  const dataArrayRef = useRef<Uint8Array | null>(null);
 
-  // Brand colors
-  const darkTeal = '#0D2E2B';
-  const gold = '#D4AF37';
+  // Theme-appropriate colors (MIN-26)
+  const darkTeal = 'var(--avatar-body, #0D2E2B)';
+  const gold = 'var(--avatar-accent, #D4AF37)';
 
   const updateAnimationState = useCallback(() => {
     const baseState = getAnimationState(micEnabled, gesture);
@@ -50,15 +55,46 @@ export function AudioAvatar({ localIdentity, micEnabled, gesture }: AudioAvatarP
     updateAnimationState();
   }, [updateAnimationState]);
 
-  // Handle audio context state changes (for autoplay policy)
-  useEffect(() => {
-    const ctx = audioContextRef.current;
-    if (!ctx) return;
+  // Clean up audio visualization (MIN-5, MIN-42)
+  const cleanupAudioVisualization = useCallback(() => {
+    if (animationFrameRef.current) {
+      cancelAnimationFrame(animationFrameRef.current);
+    }
 
-    const handleStateChange = ()    => setAudioContextState(ctx.state);
+    if (handleInteractionRef.current) {
+      document.removeEventListener('click', handleInteractionRef.current);
+      document.removeEventListener('keydown', handleInteractionRef.current);
+      handleInteractionRef.current = null;
+    }
 
-    ctx.addEventListener('statechange', handleStateChange);
-    return () => ctx.removeEventListener('statechange', handleStateChange);
+    if (audioContextRef.current && handleStateChangeRef.current) {
+      try {
+        audioContextRef.current.removeEventListener('statechange', handleStateChangeRef.current);
+      } catch {}
+      handleStateChangeRef.current = null;
+    }
+
+    if (streamRef.current) {
+      try {
+        streamRef.current.getTracks().forEach((track) => track.stop());
+      } catch {
+        // Ignore cleanup errors
+      }
+      streamRef.current = null;
+    }
+
+    if (audioContextRef.current) {
+      try {
+        audioContextRef.current.close();
+      } catch {
+        // Ignore cleanup errors
+      }
+      audioContextRef.current = null;
+    }
+
+    analyserRef.current = null;
+    isConnectedRef.current = false;
+    setAmplitude(0);
   }, []);
 
   // Set up Web Audio API for amplitude visualization when mic is enabled
@@ -82,7 +118,7 @@ export function AudioAvatar({ localIdentity, micEnabled, gesture }: AudioAvatarP
       // Create a MediaStream from the microphone
       let stream: MediaStream;
       try {
-        stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        stream = await getBrowserMediaDevices().getUserMedia({ audio: true });
       } catch (permError) {
         console.warn('AudioAvatar: Microphone permission denied:', permError);
         setMicUnavailable(true);
@@ -120,14 +156,23 @@ export function AudioAvatar({ localIdentity, micEnabled, gesture }: AudioAvatarP
         // Listen for user interaction to resume
         const handleInteraction = () => {
           resumeAudio();
-          document.removeEventListener('click', handleInteraction);
-          document.removeEventListener('keydown', handleInteraction);
+          if (handleInteractionRef.current) {
+            document.removeEventListener('click', handleInteractionRef.current);
+            document.removeEventListener('keydown', handleInteractionRef.current);
+            handleInteractionRef.current = null;
+          }
         };
-        document.addEventListener('click', handleInteraction);
-        document.addEventListener('keydown', handleInteraction);
+        handleInteractionRef.current = handleInteraction;
+        document.addEventListener('click', handleInteraction, { once: true });
+        document.addEventListener('keydown', handleInteraction, { once: true });
       } else {
         setAudioContextState(audioContext.state);
       }
+
+      // Handle statechange (for autoplay policy)
+      const handleStateChange = () => setAudioContextState(audioContext.state);
+      handleStateChangeRef.current = handleStateChange;
+      audioContext.addEventListener('statechange', handleStateChange);
 
       const analyser = audioContext.createAnalyser();
       analyser.fftSize = 256;
@@ -150,14 +195,17 @@ export function AudioAvatar({ localIdentity, micEnabled, gesture }: AudioAvatarP
       hasInitializedRef.current = true;
       setMicUnavailable(false);
 
-      // Start the amplitude polling loop
-      const dataArray = new Uint8Array(analyser.frequencyBinCount);
+      // Start the amplitude polling loop (MIN-13: Hoist Uint8Array to ref)
+      if (!dataArrayRef.current || dataArrayRef.current.length !== analyser.frequencyBinCount) {
+        dataArrayRef.current = new Uint8Array(analyser.frequencyBinCount);
+      }
+      const dataArray = dataArrayRef.current;
 
       const updateAmplitude = () => {
         if (!analyserRef.current) return;
 
         try {
-          analyserRef.current.getByteFrequencyData(dataArray);
+          analyserRef.current.getByteFrequencyData(dataArray as any);
 
           // Calculate RMS amplitude
           let sum = 0;
@@ -184,35 +232,6 @@ export function AudioAvatar({ localIdentity, micEnabled, gesture }: AudioAvatarP
       hasInitializedRef.current = true;
     }
   }, [micEnabled, gesture]);
-
-  // Clean up audio visualization
-  const cleanupAudioVisualization = useCallback(() => {
-    if (animationFrameRef.current) {
-      cancelAnimationFrame(animationFrameRef.current);
-    }
-
-    if (streamRef.current) {
-      try {
-        streamRef.current.getTracks().forEach((track) => track.stop());
-      } catch {
-        // Ignore cleanup errors
-      }
-      streamRef.current = null;
-    }
-
-    if (audioContextRef.current) {
-      try {
-        audioContextRef.current.close();
-      } catch {
-        // Ignore cleanup errors
-      }
-      audioContextRef.current = null;
-    }
-
-    analyserRef.current = null;
-    isConnectedRef.current = false;
-    setAmplitude(0);
-  }, []);
 
   useEffect(() => {
     if (micEnabled) {
@@ -283,12 +302,12 @@ export function AudioAvatar({ localIdentity, micEnabled, gesture }: AudioAvatarP
         <ellipse cx="62" cy="45" rx="4" ry={5 * eyeOpenness} fill="white" />
         <circle cx="38" cy="45" r="2" fill={darkTeal} />
         <circle cx="62" cy="45" r="2" fill={darkTeal} />
-        {/* Mouth - opens based on amplitude */}
+        {/* Mouth - opens based on amplitude (MIN-38: closed-slit fallback) */}
         <ellipse
           cx="50"
           cy="62"
-          rx={6 + mouthOpenness * 8}
-          ry={3 + mouthOpenness * 6}
+          rx={3 + mouthOpenness * 11}
+          ry={0.5 + mouthOpenness * 8}
           fill={darkTeal}
         />
         {/* Mic unavailable indicator */}

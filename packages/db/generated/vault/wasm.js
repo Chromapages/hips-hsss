@@ -137,13 +137,30 @@ exports.Prisma.VaultAccessLogScalarFieldEnum = {
   subjectRef: 'subjectRef',
   purpose: 'purpose',
   actorRef: 'actorRef',
+  action: 'action',
   requestId: 'requestId',
   createdAt: 'createdAt'
+};
+
+exports.Prisma.VaultAccessRequestScalarFieldEnum = {
+  id: 'id',
+  subjectRef: 'subjectRef',
+  requesterRef: 'requesterRef',
+  justification: 'justification',
+  status: 'status',
+  accessedAt: 'accessedAt',
+  metadata: 'metadata',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
 };
 
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
+};
+
+exports.Prisma.JsonNullValueInput = {
+  JsonNull: Prisma.JsonNull
 };
 
 exports.Prisma.QueryMode = {
@@ -155,6 +172,12 @@ exports.Prisma.NullsOrder = {
   first: 'first',
   last: 'last'
 };
+
+exports.Prisma.JsonNullValueFilter = {
+  DbNull: Prisma.DbNull,
+  JsonNull: Prisma.JsonNull,
+  AnyNull: Prisma.AnyNull
+};
 exports.VaultAccessPurpose = exports.$Enums.VaultAccessPurpose = {
   RECORD_CREATE: 'RECORD_CREATE',
   RECORD_READ: 'RECORD_READ',
@@ -164,7 +187,8 @@ exports.VaultAccessPurpose = exports.$Enums.VaultAccessPurpose = {
 
 exports.Prisma.ModelName = {
   IdentityRecord: 'IdentityRecord',
-  VaultAccessLog: 'VaultAccessLog'
+  VaultAccessLog: 'VaultAccessLog',
+  VaultAccessRequest: 'VaultAccessRequest'
 };
 
 /**

@@ -9,8 +9,6 @@ const gestures: AvatarGesture[] = [
   "idle",
   "nodding",
   "raised-hand",
-  "thinking",
-  "applause",
 ];
 
 const participants = [
@@ -34,7 +32,7 @@ export function SessionExperience({ sessionId }: { sessionId: string }) {
       {/* Background Ambient Layers */}
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(99,102,241,0.08)_0%,transparent_70%)]" />
       <div className="absolute top-[20%] left-[20%] w-[500px] h-[500px] bg-primary/10 rounded-full blur-[120px] mix-blend-screen animate-pulse" />
-      <div className="absolute bottom-[10%] right-[10%] w-[600px] h-[600px] bg-Gold-500/10 rounded-full blur-[150px] mix-blend-screen" />
+      <div className="absolute bottom-[10%] right-[10%] w-[600px] h-[600px] bg-gold/10 rounded-full blur-[150px] mix-blend-screen" />
 
       <div className="lg:hidden flex min-h-screen items-center justify-center p-6 text-center relative z-20">
         <section className="max-w-md rounded-3xl border border-white/10 bg-black/60 p-10 backdrop-blur-3xl shadow-2xl">
@@ -51,7 +49,7 @@ export function SessionExperience({ sessionId }: { sessionId: string }) {
       <div className="hidden min-h-screen grid-rows-[auto_1fr_auto] lg:grid relative z-10">
         <header className="grid grid-cols-3 items-center border-b border-white/5 bg-black/40 backdrop-blur-2xl px-8 py-4 z-20">
           <div className="flex flex-col">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-text-muted0">Session Token</p>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Session Token</p>
             <p className="font-mono text-sm font-bold text-text">
               anon-{sessionId.slice(0, 6)}
             </p>
@@ -66,7 +64,7 @@ export function SessionExperience({ sessionId }: { sessionId: string }) {
           </div>
 
           <div className="flex items-center justify-end gap-3">
-            <span className="text-[10px] font-bold uppercase tracking-widest text-text-muted0">Network</span>
+            <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Network</span>
             <span className="inline-flex gap-1 items-end h-5" aria-label="Connection quality">
               <span className="h-2 w-1.5 rounded-sm bg-emerald-500" />
               <span className="h-3.5 w-1.5 rounded-sm bg-emerald-500" />
@@ -118,7 +116,7 @@ export function SessionExperience({ sessionId }: { sessionId: string }) {
                       </div>
                     ) : (
                       <div className="w-4 h-4 rounded-full bg-surface/10 flex items-center justify-center">
-                        <div className="w-1 h-1 rounded-full bg-destructive0" />
+                        <div className="w-1 h-1 rounded-full bg-destructive" />
                       </div>
                     )}
                   </div>
@@ -142,7 +140,7 @@ export function SessionExperience({ sessionId }: { sessionId: string }) {
               className={[
                 "flex items-center gap-2 h-14 rounded-2xl px-6 font-bold text-sm transition-all",
                 muted 
-                  ? "bg-destructive0/10 text-destructive0 border border-destructive/20 hover:bg-destructive0/20" 
+                  ? "bg-destructive/10 text-destructive border border-destructive/20 hover:bg-destructive/20" 
                   : "bg-surface/5 text-white border border-white/5 hover:bg-surface/10"
               ].join(" ")}
               onClick={() => setMuted((value) => !value)}
@@ -176,7 +174,7 @@ export function SessionExperience({ sessionId }: { sessionId: string }) {
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
             </button>
             
-            <button className="h-14 rounded-2xl bg-destructive px-8 font-bold text-white text-sm hover:bg-destructive0 transition-all shadow-lg shadow-red-900/20 hover:scale-105 ml-2">
+            <button className="h-14 rounded-2xl bg-destructive px-8 font-bold text-white text-sm hover:bg-destructive/80 transition-all shadow-lg shadow-red-900/20 hover:scale-105 ml-2">
               Leave
             </button>
           </div>

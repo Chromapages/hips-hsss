@@ -46,7 +46,7 @@ const moodOptions: MoodOption[] = [
     icon: AlertTriangle,
     color: "text-orange-500",
     bg: "bg-orange-500/10",
-    message: "Deep breaths. If a session gets intense, you can trigger clinical backup flags.",
+    message: "Deep breaths. If a session gets intense, you can trigger safety backup flags.",
   },
   {
     type: "burnout",

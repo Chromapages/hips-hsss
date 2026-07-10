@@ -1,6 +1,7 @@
 'use client';
 
 import React, { memo, useRef, useState, useEffect } from "react";
+import "@/app/trust-strip-animations.css";
 import { Shield, Lock, Heart, Star, CheckCircle2 } from "lucide-react";
 import { useCountUp } from "@/hooks/useCountUp";
 
@@ -87,7 +88,7 @@ function StatBlock({ stat, index, animationClass }: StatBlockProps) {
     <div
       ref={blockRef}
       className={`flex flex-col items-center text-center px-3 py-4 rounded-xl hover:bg-accent/8 transition-all duration-200 focus-within:ring-2 focus-within:ring-accent/30 ${animationClass}`}
-      style={index % 2 === 0 && index > 0 ? { borderLeft: "1px solid #D6E0E8" } : index > 1 ? { borderTop: "1px solid #D6E0E8" } : undefined}
+      style={index % 2 === 0 && index > 0 ? { borderLeft: "1px solid var(--border)" } : index > 1 ? { borderTop: "1px solid var(--border)" } : undefined}
     >
       {/* Icon */}
       <div className={`w-9 h-9 rounded-full flex items-center justify-center mb-3 ${stat.iconAccent ? 'bg-accent/10 border border-accent/20' : 'bg-accent/10 border border-accent/20'}`}>
@@ -108,7 +109,7 @@ function StatBlock({ stat, index, animationClass }: StatBlockProps) {
       </span>
 
       {/* Label */}
-      <span className="text-[10px] text-text-muted leading-relaxed font-body text-center max-w-[12ch]">
+      <span className="text-sm text-text-muted leading-relaxed font-body text-center max-w-[12ch]">
         {stat.label}
       </span>
     </div>
@@ -151,11 +152,11 @@ export const TrustStrip = memo(function TrustStrip() {
             {/* Row 1: Overlapping avatars + reassurance line */}
             <div className={`flex items-center gap-4 mb-5 ${visible ? 'trust-fade-1' : 'opacity-0'}`}>
               {/* Overlapping avatar circles */}
-              <div className="flex -space-x-2">
+              <div className="flex -space-x-2" role="img" aria-label="Illustrative avatar icons representing anonymous participants">
                 {avatarUsers.map((user, i) => (
                   <div
                     key={i}
-                    className="w-8 h-8 rounded-full border-2 border-bg-subtle flex items-center justify-center text-[9px] font-bold text-white font-heading"
+                    className="w-8 h-8 rounded-full border-2 border-bg-subtle flex items-center justify-center text-xs font-bold text-primary-foreground font-heading"
                     style={{ backgroundColor: user.bg, zIndex: 5 - i }}
                     aria-hidden="true"
                   >
@@ -185,14 +186,14 @@ export const TrustStrip = memo(function TrustStrip() {
 
             {/* Row 4: Trust badges / press logos */}
             <div className={`${visible ? 'trust-fade-4' : 'opacity-0'}`}>
-              <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-text-muted mb-3 font-ui">
+              <p className="text-xs font-bold uppercase tracking-[0.2em] text-text-muted mb-3 font-ui">
                 As seen in
               </p>
               <div className="flex flex-wrap items-center gap-4 md:gap-6">
                 {trustBadges.map((badge) => (
                   <span
                     key={badge}
-                    className="text-[10px] font-bold uppercase tracking-[0.1em] text-text/60 font-ui opacity-60"
+                    className="text-xs font-bold uppercase tracking-[0.1em] text-text/60 font-ui opacity-60"
                   >
                     {badge}
                   </span>
@@ -218,14 +219,14 @@ export const TrustStrip = memo(function TrustStrip() {
               <div className="mt-6 flex items-center justify-center md:justify-start gap-4">
                 {/* Avatar initials badge */}
                 <div
-                  className="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center text-sm font-bold font-heading shrink-0"
+                  className="w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-bold font-heading shrink-0"
                   aria-hidden="true"
                 >
                   MT
                 </div>
                 <div className="text-left">
-                  <p className="text-sm font-bold text-text font-heading">Marcus T.</p>
-                  <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-text-muted font-ui">Peer Support Participant</p>
+                  <p className="text-sm font-bold text-text font-heading">Marcus T. <span className="text-xs text-text-muted font-normal font-sans">(Illustrative Peer)</span></p>
+                  <p className="text-xs font-bold uppercase tracking-[0.15em] text-text-muted font-ui">Peer Support Participant</p>
                 </div>
               </div>
             </div>

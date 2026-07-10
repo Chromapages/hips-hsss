@@ -4,6 +4,7 @@ import { randomUUID } from 'node:crypto';
 import { LiveKitTokenService } from '../livekit-token-service.js';
 import { PrismaService } from '../prisma.service.js';
 import type { AnonymousLiveSessionToken } from '@hips/types';
+import { hashOwnerUid } from './anonymisation.js';
 
 interface CreateSessionOptions {
   ownerUid: string;
@@ -54,7 +55,7 @@ export class SessionService implements OnModuleInit {
         id: sessionId,
         sessionId: sessionTokenRef,
         // ownerUid maps to anonymousParticipantId in the schema
-        anonymousParticipantId: opts.ownerUid,
+        anonymousParticipantId: hashOwnerUid(opts.ownerUid),
         status: 'PENDING',
         startsAt: opts.startsAt,
         endsAt: opts.endsAt,
@@ -85,7 +86,7 @@ export class SessionService implements OnModuleInit {
       throw new UnauthorizedException('LiveKit not configured');
     }
 
-    const tokenData = this.livekitService.issue(session.id);
+    const tokenData = this.livekitService.issue(session.id, session.anonymousParticipantId || undefined);
 
     console.log(`[SessionService] Issued LiveKit token for session ${sessionId}. No user identity linkage.`);
 
@@ -108,7 +109,7 @@ export class SessionService implements OnModuleInit {
       throw new UnauthorizedException('LiveKit not configured');
     }
 
-    const tokenData = this.livekitService.issue(session.id);
+    const tokenData = this.livekitService.issue(session.id, session.anonymousParticipantId || undefined);
 
     console.log(`[SessionService] Issued LiveKit token for sessionRef ${sessionRef}. No user identity linkage.`);
 

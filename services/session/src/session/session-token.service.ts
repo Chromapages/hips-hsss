@@ -1,6 +1,7 @@
 import { Injectable, UnauthorizedException, ForbiddenException } from '@nestjs/common';
 import { SessionTokenStore } from '../session-token-store.js';
 import { PrismaService } from '../prisma.service.js';
+import { hashOwnerUid } from './anonymisation.js';
 
 const WINDOW_BEFORE_MINUTES = 10;
 const WINDOW_AFTER_MINUTES = 10;
@@ -41,7 +42,7 @@ export class SessionTokenService {
       throw new ForbiddenException('Session not found');
     }
 
-    if (session.anonymousParticipantId !== opts.firebaseUid) {
+    if (session.anonymousParticipantId !== hashOwnerUid(opts.firebaseUid)) {
       throw new ForbiddenException('Caller does not own this session');
     }
 

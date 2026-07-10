@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400">
+  <!-- Neck -->
+  <path fill="var(--avatar-skin)" d="M175 260h50v55c0 15-50 15-50 0z"/>
+  <!-- Neck Shadow -->
+  <path fill="var(--avatar-skin-shadow)" d="M175 262h50v20c-10 10-40 10-50 0z" opacity="0.35"/>
+</svg>

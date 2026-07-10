@@ -2,8 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getDb } from '@/lib/firebase-admin';
 import { AccessToken } from 'livekit-server-sdk';
 import crypto from 'crypto';
-import { verifyFirebaseIdToken } from '@/lib/auth-edge';
+import { verifyFirebaseIdToken } from '@/lib/firebase-auth';
 import * as admin from 'firebase-admin';
+import { getRedis } from '@/lib/redis';
 
 /**
  * Phase 5 — Session Reconnection Handler (5.14)
@@ -32,13 +33,7 @@ function calculateBackoff(attemptNumber: number): number {
   return Math.round(delay + jitter);
 }
 
-interface ReconnectRecord {
-  sessionId: string;
-  originalIdentity: string;
-  reconnectCount: number;
-  lastReconnectAt: string;
-  expiresAt: string;
-}
+import { ReconnectRecord, ReconnectRecordSchema, Phase5SessionSchema } from '@/lib/schemas/session';
 
 async function getReconnectRecord(sessionId: string, identity: string): Promise<ReconnectRecord | null> {
   const db = getDb();
@@ -47,7 +42,9 @@ async function getReconnectRecord(sessionId: string, identity: string): Promise<
   const docRef = db.collection('session_reconnects').doc(`${sessionId}_${identity}`);
   const doc = await docRef.get();
   if (!doc.exists) return null;
-  return doc.data() as ReconnectRecord;
+  const parsed = ReconnectRecordSchema.safeParse(doc.data());
+  if (!parsed.success) return null;
+  return parsed.data;
 }
 
 
@@ -98,7 +95,8 @@ export async function POST(req: NextRequest) {
         .doc(`${sessionId}_${firebaseUid}`)
         .get();
       if (participantDoc.exists) {
-        originalIdentity = participantDoc.data()?.anonymousIdentity ?? null;
+        const data = participantDoc.data();
+        originalIdentity = typeof data?.anonymousIdentity === 'string' ? data.anonymousIdentity : null;
       }
     } catch (err) {
       console.warn('[SessionReconnect] Could not read participant mapping:', err);
@@ -108,9 +106,25 @@ export async function POST(req: NextRequest) {
       // Fallback: check if they are the facilitator of the session
       try {
         const sessionDoc = await db.collection('phase5_sessions').doc(sessionId).get();
-        if (sessionDoc.exists && sessionDoc.data()?.facilitatorId === firebaseUid) {
-          const apiSecret = process.env.LIVEKIT_API_SECRET || '';
-          originalIdentity = crypto.createHmac('sha256', apiSecret).update(firebaseUid).digest('hex');
+        if (sessionDoc.exists) {
+          const parsed = Phase5SessionSchema.safeParse({ id: sessionDoc.id, ...sessionDoc.data() });
+          if (parsed.success && (parsed.data.facilitatorId === firebaseUid || parsed.data.metadata?.facilitatorId === firebaseUid)) {
+            // Generate a random 64-char hex token for the facilitator and store it in session_participants
+            originalIdentity = crypto.randomBytes(32).toString('hex');
+            await db
+              .collection('session_participants')
+              .doc(`${sessionId}_${firebaseUid}`)
+              .set(
+                {
+                  sessionId,
+                  firebaseUid,
+                  anonymousIdentity: originalIdentity,
+                  joinedAt: new Date().toISOString(),
+                  lastSeenAt: new Date().toISOString(),
+                },
+                { merge: true }
+              );
+          }
         }
       } catch (err) {
         console.warn('[SessionReconnect] Could not check facilitator status:', err);
@@ -164,7 +178,10 @@ export async function POST(req: NextRequest) {
     try {
       const sessionRef = db.collection('phase5_sessions').doc(sessionId);
       const sessionDoc = await sessionRef.get();
-      sessionActive = sessionDoc.exists && sessionDoc.data()?.status === 'active';
+      if (sessionDoc.exists) {
+        const parsed = Phase5SessionSchema.safeParse({ id: sessionDoc.id, ...sessionDoc.data() });
+        sessionActive = parsed.success && parsed.data.status === 'active';
+      }
     } catch (err) {
       console.warn('[SessionReconnect] Could not verify session:', err);
       return NextResponse.json(
@@ -193,27 +210,50 @@ export async function POST(req: NextRequest) {
 
     const roomName = `session-${sessionId}`;
 
-    const at = new AccessToken(apiKey, apiSecret, {
-      identity: originalIdentity, // Same identity for reconnection
-      ttl: '1h',
-    });
+    // Redis caching check
+    const cacheKey = `lk_token:${sessionId}:${originalIdentity}`;
+    const redis = getRedis();
+    let tokenJwt: string | null = null;
 
-    at.addGrant({
-      roomJoin: true,
-      room: roomName,
-      canPublish: true,
-      canSubscribe: true,
-      canPublishData: true,
-    });
+    if (redis) {
+      try {
+        tokenJwt = await redis.get(cacheKey);
+      } catch (err) {
+        console.warn('[SessionReconnect] Redis read error:', err);
+      }
+    }
 
-    at.metadata = JSON.stringify({
-      reconnect: true,
-      reconnectCount: (reconnectRecord?.reconnectCount || 0) + 1,
-      originalJoinedAt: reconnectRecord?.lastReconnectAt || new Date().toISOString(),
-      reason: reason || 'network_interruption',
-    });
+    if (!tokenJwt) {
+      const at = new AccessToken(apiKey, apiSecret, {
+        identity: originalIdentity, // Same identity for reconnection
+        ttl: '1h',
+      });
 
-    const tokenJwt = await at.toJwt();
+      at.addGrant({
+        roomJoin: true,
+        room: roomName,
+        canPublish: true,
+        canSubscribe: true,
+        canPublishData: true,
+      });
+
+      at.metadata = JSON.stringify({
+        reconnect: true,
+        reconnectCount: (reconnectRecord?.reconnectCount || 0) + 1,
+        originalJoinedAt: reconnectRecord?.lastReconnectAt || new Date().toISOString(),
+        reason: reason || 'network_interruption',
+      });
+
+      tokenJwt = await at.toJwt();
+
+      if (redis && tokenJwt) {
+        try {
+          await redis.set(cacheKey, tokenJwt, 'EX', 50 * 60);
+        } catch (err) {
+          console.warn('[SessionReconnect] Redis write error:', err);
+        }
+      }
+    }
 
     const attemptNumber = (reconnectRecord?.reconnectCount || 0) + 1;
 

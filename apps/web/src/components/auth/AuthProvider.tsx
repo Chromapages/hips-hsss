@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { onAuthStateChanged, User } from 'firebase/auth';
+import { onIdTokenChanged, User } from 'firebase/auth';
 import { auth } from '@/lib/firebase-client';
 import { setAuthCookie, removeAuthCookie } from '@/lib/auth-cookies';
 
@@ -22,6 +22,18 @@ const AuthContext = createContext<AuthContextType>({
   getToken: async () => null,
   logout: async () => {},
 });
+
+type AuthSyncResponse = {
+  user?: {
+    role?: string | null;
+  };
+  authTime?: number;
+  error?: string;
+  code?: string;
+  details?: string;
+  message?: string;
+  requestId?: string;
+};
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
@@ -58,9 +70,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
 
     if (!auth) {
-      setLoading(false);
-      return;
+      const unavailableTimeout = setTimeout(() => setLoading(false), 0);
+      return () => clearTimeout(unavailableTimeout);
     }
+    const firebaseAuth = auth;
 
     // Defensive hard timeout: if onAuthStateChanged never fires or its
     // internal network call to securetoken.googleapis.com hangs (CSP block,
@@ -79,45 +92,70 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       });
     }, 3000);
 
-    let syncDebounce: ReturnType<typeof setTimeout> | undefined;
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+    let adminExpiryTimeout: ReturnType<typeof setTimeout> | undefined;
+    const unsubscribe = onIdTokenChanged(firebaseAuth, async (user) => {
       try {
         if (user) {
-          // Attempt to force refresh token for latest claims, but fallback to cached token
-          // if it times out or fails (e.g. due to flaky network).
-          let idTokenResult;
+          let idToken;
           try {
-            idTokenResult = await Promise.race([
-              user.getIdTokenResult(true),
+            idToken = await Promise.race([
+              user.getIdToken(),
               new Promise<never>((_, reject) =>
-                setTimeout(() => reject(new Error('getIdTokenResult timed out after 3s')), 3000)
+                setTimeout(() => reject(new Error('getIdToken timed out after 3s')), 3000)
               ),
             ]);
           } catch (refreshError) {
-            console.warn('[AuthProvider] Token force refresh failed, falling back to cached token:', refreshError);
-            idTokenResult = await user.getIdTokenResult(false);
+            console.warn('[AuthProvider] Token retrieval failed:', refreshError);
+            throw refreshError;
           }
-          
-          setRole((idTokenResult.claims.role as string) || 'PARTICIPANT');
           setUser(user);
 
-          // Synchronize cookie for middleware (debounced to avoid rapid re-syncs)
-          setAuthCookie(idTokenResult.token);
+          // Sync identity and hydrate role from the authoritative Commerce DB.
+          const response = await fetch('/api/auth/sync', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${idToken}`,
+            },
+          });
+          const data = (await response.json().catch(() => ({}))) as AuthSyncResponse;
+          if (!response.ok) {
+            const message = data.message || data.details || data.error;
 
-          // Sync user with Commerce DB if needed (debounced)
-          if (syncDebounce) clearTimeout(syncDebounce);
-          syncDebounce = setTimeout(async () => {
-            try {
-              await fetch('/api/auth/sync', {
-                method: 'POST',
-                headers: {
-                  'Authorization': `Bearer ${idTokenResult.token}`,
-                },
+            if (response.status === 401 || response.status === 403) {
+              console.warn('[AuthProvider] Auth sync rejected credentials:', {
+                status: response.status,
+                code: data.code,
+                message,
+                requestId: data.requestId,
               });
-            } catch (error) {
-              console.error('Auth sync failed:', error);
+              await firebaseAuth.signOut();
+              return;
             }
-          }, 2000);
+
+            console.warn('[AuthProvider] Auth sync unavailable:', {
+              status: response.status,
+              code: data.code,
+              message,
+              requestId: data.requestId,
+            });
+            setRole(null);
+            return;
+          }
+          const databaseRole = data.user?.role || null;
+          if (databaseRole === 'ADMIN' || databaseRole === 'SUPER_ADMIN') {
+            if (adminExpiryTimeout) clearTimeout(adminExpiryTimeout);
+            const expiresAt = Number(data.authTime) * 1000 + 4 * 60 * 60 * 1000;
+            const remainingMs = expiresAt - Date.now();
+            if (remainingMs <= 0) {
+              await firebaseAuth.signOut();
+              return;
+            }
+            adminExpiryTimeout = setTimeout(() => {
+              void firebaseAuth.signOut();
+            }, remainingMs);
+          }
+          setRole(databaseRole);
+          await setAuthCookie(idToken);
         } else {
           setUser(null);
           setRole(null);
@@ -125,12 +163,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         }
       } catch (error) {
         console.error('Auth state initialization failed:', error);
-        // Do not clear user here unless we are sure they are logged out.
-        // If it's a completely fatal error, we might be in an inconsistent state,
-        // but it's better to stay logged in with default role.
         if (user) {
           setUser(user);
-          setRole('PARTICIPANT');
+          setRole(null);
         } else {
           setUser(null);
           setRole(null);
@@ -143,7 +178,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     return () => {
       unsubscribe();
-      if (syncDebounce) clearTimeout(syncDebounce);
+      if (adminExpiryTimeout) clearTimeout(adminExpiryTimeout);
       clearTimeout(loadingTimeout);
     };
   }, []);
@@ -174,10 +209,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const logout = async () => {
-    if (process.env.NODE_ENV === 'development') {
-      document.cookie = 'hips-auth-token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
-      setUser(null);
-      setRole(null);
+    try {
+      await fetch('/api/auth/session', { method: 'DELETE' });
+    } catch (err) {
+      console.error('[AuthProvider] Failed to clear session cookie:', err);
     }
     if (auth) {
       await auth.signOut();

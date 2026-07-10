@@ -1,48 +1,70 @@
-export type VoicePreset = 'subtle' | 'deep' | 'high' | 'robotic';
+export type VoicePreset = 'sofi' | 'guardian' | 'lark' | 'echo' | 'cave' | 'cyber';
 
 export interface VoicePresetConfig {
+  /** User-facing character name */
   label: string;
+  /** One-line description of the character */
   description: string;
-  semitoneRange: [number, number]; // [min, max]
+  /** What acoustic axis this preset targets for anonymization */
+  anonymizationAxis: string;
+  /** Allowed semitone range for pitch presets; [0, 0] for non-pitch presets */
+  semitoneRange: [number, number];
+  /** Default semitone for pitch presets; 0 for non-pitch presets */
+  defaultSemitones: number;
   character: string;
 }
 
 export const VOICE_PRESETS: Record<VoicePreset, VoicePresetConfig> = {
-  subtle: {
-    label: 'Subtle',
-    description: 'Natural anonymisation with randomised pitch shift',
-    semitoneRange: [-5, 5],
-    character: 'default',
+  sofi: {
+    label: 'Sofi',
+    description: 'Warm, gentle disguise — pitched down for deep, soft presence',
+    anonymizationAxis: 'Pitch shift + reverb',
+    semitoneRange: [-5, -1],
+    defaultSemitones: -3,
+    character: 'sofi',
   },
-  deep: {
-    label: 'Deep',
-    description: 'Lower pitch for a deeper, more commanding presence',
-    semitoneRange: [-5, -2],
-    character: 'lower',
+  guardian: {
+    label: 'Guardian',
+    description: 'Voice Shield — deeper register, heavy anonymisation',
+    anonymizationAxis: 'Pitch shift + warmth',
+    semitoneRange: [-8, -4],
+    defaultSemitones: -6,
+    character: 'guardian',
   },
-  high: {
-    label: 'High',
-    description: 'Raised pitch for a lighter, softer delivery',
-    semitoneRange: [2, 5],
-    character: 'higher',
+  lark: {
+    label: 'Lark',
+    description: 'Bright Veil — raised register, high-pitched presence',
+    anonymizationAxis: 'Pitch shift + clarity',
+    semitoneRange: [4, 8],
+    defaultSemitones: 6,
+    character: 'lark',
   },
-  robotic: {
-    label: 'Robotic',
-    description: 'Extreme pitch shift with distorted reverb — intentionally uncanny',
-    semitoneRange: [-6, 6],
-    character: 'uncanny',
+  cyber: {
+    label: 'Cyber',
+    description: 'Robotic and synthetic — ring modulation anonymises vocal profile',
+    anonymizationAxis: 'Ring modulation + pitch shift',
+    semitoneRange: [-4, 4],
+    defaultSemitones: -2,
+    character: 'cyber',
+  },
+  echo: {
+    label: 'Echo',
+    description: 'Dramatic rhythm disruption — distinct echoes break timing cues',
+    anonymizationAxis: 'Timing & rhythm (no pitch shift)',
+    semitoneRange: [0, 0],
+    defaultSemitones: 0,
+    character: 'echo',
+  },
+  cave: {
+    label: 'Cave',
+    description: 'Distant and spatial — hall reverb strips intimate presence',
+    anonymizationAxis: 'Spatial presence (no pitch shift)',
+    semitoneRange: [0, 0],
+    defaultSemitones: 0,
+    character: 'cave',
   },
 };
 
 export function getDefaultSemitoneForPreset(preset: VoicePreset): number {
-  switch (preset) {
-    case 'subtle':
-      return 4; // was default randomised in old code
-    case 'deep':
-      return -4;
-    case 'high':
-      return 4;
-    case 'robotic':
-      return 6;
-  }
+  return VOICE_PRESETS[preset]?.defaultSemitones ?? 0;
 }

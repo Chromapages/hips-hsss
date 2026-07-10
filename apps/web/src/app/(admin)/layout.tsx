@@ -1,12 +1,10 @@
-"use client";
-
 import { DashboardShell } from "@/components/layout/dashboard-shell";
-import { AuthGuard } from "@/components/auth/AuthGuard";
+import { ClientShell } from "@/components/auth/ClientShell";
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   return (
-    <AuthGuard allowedRoles={["ADMIN"]}>
+    <ClientShell allowedRoles={["ADMIN", "SUPER_ADMIN"]}>
       <DashboardShell>{children}</DashboardShell>
-    </AuthGuard>
+    </ClientShell>
   );
 }

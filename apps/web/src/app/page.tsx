@@ -1,25 +1,51 @@
-"use client";
-
-import React, { useState } from "react"
+import React from "react"
 import { Navbar } from "@/components/polish/Navbar"
-import { Shield, Lock, EyeOff, ChevronRight, PlayCircle, MousePointerClick, Zap, Key } from "lucide-react"
+import { ChevronRight, PlayCircle, MousePointerClick, Zap, Shield } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
+import { FeatureTabs } from "@/components/home/FeatureTabs"
+import { OrganizationJsonLd } from "@/components/seo/OrganizationJsonLd"
+import type { Metadata } from 'next'
+
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://hips.foundation'
+
+export const dynamic = 'force-static'
+export const revalidate = false
+
+export const metadata: Metadata = {
+  title: 'H.I.P.S. Foundation — Anonymous Peer Support Online',
+  description: 'The first anonymous peer support network — camera-free, voice-masked, and built on hard-anonymity protocols. Get matched in seconds, no sign-up required.',
+  keywords: ['anonymous peer support', 'peer support online', 'hard anonymity', 'camera-free support', 'crisis support', 'virtual sanctuary'],
+  alternates: { canonical: `${SITE_URL}/` },
+  openGraph: {
+    type: 'website',
+    title: 'H.I.P.S. Foundation — Anonymous Peer Support Online',
+    description: 'The first anonymous peer support network — camera-free, voice-masked, and built on hard-anonymity protocols. Get matched in seconds, no sign-up required.',
+    url: `${SITE_URL}/`,
+    siteName: 'H.I.P.S. Foundation',
+    images: [{ url: `${SITE_URL}/og/home`, width: 1200, height: 630, alt: 'H.I.P.S. Foundation' }],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'H.I.P.S. Foundation — Anonymous Peer Support Online',
+    description: 'The first anonymous peer support network — camera-free, voice-masked, and built on hard-anonymity protocols. Get matched in seconds, no sign-up required.',
+    images: [`${SITE_URL}/og/home`],
+  },
+}
 
 export default function HomePage() {
-  const [activeIndex, setActiveIndex] = useState(0)
 
   return (
-    <main className="min-h-screen bg-bg text-text-primary selection:bg-primary/30 overflow-x-hidden">
+    <main id="main" tabIndex={-1} className="min-h-screen bg-bg text-text-primary selection:bg-primary/30 overflow-x-hidden">
       <Navbar />
 
       {/* Hero Section */}
-      <section className="relative min-h-[80vh] pt-[clamp(2rem,4vw,3rem)] pb-[clamp(3rem,5vw,4rem)] md:pt-[clamp(3rem,5vw,5rem)] md:pb-[clamp(3.5rem,6vw,6rem)] overflow-hidden">
+      <section className="relative min-h-[80dvh] pt-[clamp(2rem,4vw,3rem)] pb-[clamp(3rem,5vw,4rem)] md:pt-[clamp(3rem,5vw,5rem)] md:pb-[clamp(3.5rem,6vw,6rem)] overflow-hidden">
         {/* Hero Background Image */}
         <div className="absolute inset-0 z-0">
           <Image
-            src="/hips_hero.png"
+            src="/hips_hero.webp"
             alt="H.I.P.S. Foundation — anonymous peer support platform"
             fill
             className="object-cover"
@@ -37,9 +63,9 @@ export default function HomePage() {
             <div className="text-left">
               {/* Announcement Pill Badge */}
               <div className="inline-flex items-center gap-3 rounded-full border border-accent/40 bg-accent/10 backdrop-blur-xl px-5 py-2 mb-8 animate-in fade-in slide-in-from-bottom-4 duration-1000">
-                <span className="text-[9px] font-bold uppercase tracking-brand text-primary font-ui">New</span>
+                <span className="text-xs font-bold uppercase tracking-brand text-primary font-ui">New</span>
                 <span className="w-px h-3 bg-primary/50" />
-                <span className="text-[10px] font-medium text-text-muted tracking-wide">First Anonymous Peer Support Network Live</span>
+                <span className="text-xs font-medium text-text-muted tracking-wide">A new standard in anonymous peer support — now live</span>
               </div>
 
               {/* H1 - Hero display headline (ExtraBold) */}
@@ -54,7 +80,7 @@ export default function HomePage() {
 
               {/* Dual CTA Layout */}
               <div className="flex flex-col sm:flex-row items-start gap-5 animate-in fade-in slide-in-from-bottom-12 duration-1000 delay-300">
-                <Button asChild className="h-14 px-10 rounded-full bg-primary text-primary-foreground hover:bg-accent hover:shadow-xl hover:shadow-accent/20 hover:scale-[1.02] active:scale-95 transition-all duration-200 ease-in-out text-base font-bold group focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
+                <Button asChild className="h-14 px-10 rounded-full bg-primary text-primary-foreground hover:bg-accent hover:shadow-xl hover:shadow-accent/20 motion-safe:hover:scale-[1.02] motion-safe:active:scale-95 transition-all duration-200 ease-in-out text-base font-bold group focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
                   <Link href="/services">
                     Get Support
                     <ChevronRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform duration-200 ease-in-out" />
@@ -62,25 +88,34 @@ export default function HomePage() {
                 </Button>
                 <Button variant="ghost" asChild className="h-14 px-10 rounded-full border-2 border-primary text-primary hover:bg-primary hover:text-white transition-all duration-200 ease-in-out text-base font-bold group focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2">
                   <Link href="/opportunities">
-                    <PlayCircle className="mr-2 h-5 w-5 text-accent group-hover:scale-110 transition-transform duration-200" />
+                    <PlayCircle className="mr-2 h-5 w-5 text-accent motion-safe:group-hover:scale-110 transition-transform duration-200" />
                     For Organizations
                   </Link>
                 </Button>
               </div>
             </div>
 
-            {/* Right Column — Reserved for future content */}
-            <div className="hidden md:flex min-h-[500px] items-center justify-center">
-              {/* Right column — reserved for future content */}
+            {/* Right Column — Illustration Mockup */}
+            <div className="hidden md:flex relative min-h-[400px] lg:min-h-[500px] w-full items-center justify-center animate-in fade-in zoom-in-95 duration-1000 delay-300">
+              <Image
+                src="/hero-app-mockup.png"
+                alt="H.I.P.S. Peer Support Room Application Interface"
+                fill
+                priority
+                className="object-contain"
+                sizes="(max-width: 768px) 100vw, 50vw"
+                data-no-dark="true"
+              />
             </div>
           </div>
 
           {/* Partner / Trust Logo Strip — full width below grid */}
-          <div className="animate-in fade-in slide-in-from-bottom-16 duration-1000 delay-400 mt-4">
-            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-text-muted mb-8 font-ui">Partnering with leading mental health organizations</p>
-            <div className="flex flex-wrap items-center justify-start gap-8 md:gap-12 opacity-30">
-              {/* Placeholder partner logos - using text for now, replace with actual logo Image components */}
-              {['HIMS', 'Mindful', 'Calm', 'Headspace', 'BetterHelp'].map((partner) => (
+          <div className="animate-in fade-in slide-in-from-bottom-16 duration-1000 delay-400 mt-12 md:mt-20">
+            <p className="text-xs font-semibold uppercase tracking-[0.15em] text-text-muted mb-4 font-ui">
+              Built to integrate with leading platforms
+            </p>
+            <div aria-hidden="true" className="flex flex-wrap items-center justify-start gap-8 md:gap-12 opacity-60">
+              {['Partner One', 'Partner Two', 'Partner Three', 'Partner Four', 'Partner Five'].map((partner) => (
                 <span key={partner} className="text-sm font-bold uppercase tracking-[0.15em] text-primary font-ui">{partner}</span>
               ))}
             </div>
@@ -94,7 +129,7 @@ export default function HomePage() {
           {/* Header — centered, compact */}
           <div className="text-center mb-20">
             {/* Pill badge */}
-            <span className="inline-flex items-center rounded-full border border-accent/40 bg-accent/10 px-5 py-1.5 text-[10px] font-bold uppercase tracking-brand text-accent font-ui mb-6">
+            <span className="inline-flex items-center rounded-full border border-accent/40 bg-accent/10 px-5 py-1.5 text-xs font-bold uppercase tracking-brand text-accent font-ui mb-6">
               How It Works
             </span>
             {/* Display headline */}
@@ -123,7 +158,7 @@ export default function HomePage() {
                 <MousePointerClick className="w-7 h-7 text-accent" />
               </div>
               {/* Step number badge */}
-              <div className="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center text-sm font-bold font-heading mb-4">
+              <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-bold font-heading mb-4">
                 1
               </div>
               {/* Step title */}
@@ -143,7 +178,7 @@ export default function HomePage() {
                 <Zap className="w-7 h-7 text-accent" />
               </div>
               {/* Step number badge */}
-              <div className="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center text-sm font-bold font-heading mb-4">
+              <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-bold font-heading mb-4">
                 2
               </div>
               {/* Step title */}
@@ -163,7 +198,7 @@ export default function HomePage() {
                 <Shield className="w-7 h-7 text-accent" />
               </div>
               {/* Step number badge */}
-              <div className="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center text-sm font-bold font-heading mb-4">
+              <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-bold font-heading mb-4">
                 3
               </div>
               {/* Step title */}
@@ -172,7 +207,7 @@ export default function HomePage() {
               </h3>
               {/* Description */}
               <p className="text-sm text-text-muted leading-relaxed font-body max-w-[28ch] mx-auto">
-                Enter your camera-free 3D avatar room. Your voice is masked in transit, your identity is never logged, and a human facilitator ensures the space stays safe.
+                Enter your camera-free avatar room. Your voice is masked in transit, your identity is never logged, and a human facilitator ensures the space stays safe.
               </p>
             </div>
 
@@ -187,19 +222,19 @@ export default function HomePage() {
 
             {/* Dual CTA — match hero button styles exactly */}
             <div className="flex flex-col sm:flex-row items-center justify-center gap-5">
-              {/* Primary: Start Your Session */}
-              <Button asChild className="h-14 px-10 rounded-full bg-primary text-primary-foreground hover:bg-accent hover:shadow-xl hover:shadow-accent/20 hover:scale-[1.02] active:scale-95 transition-all duration-200 ease-in-out text-base font-bold group focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
-                <Link href="/services">
-                  Start Your Session
+              {/* Primary: Support the Foundation */}
+              <Button asChild className="h-14 px-10 rounded-full bg-primary text-primary-foreground hover:bg-accent hover:shadow-xl hover:shadow-accent/20 motion-safe:hover:scale-[1.02] motion-safe:active:scale-95 transition-all duration-200 ease-in-out text-base font-bold group focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
+                <Link href="/donate">
+                  Support the Foundation
                   <ChevronRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform duration-200" />
                 </Link>
               </Button>
 
-              {/* Ghost: Watch How It Works */}
+              {/* Ghost: Watch How It Works -> Try Demo Room */}
               <Button variant="ghost" asChild className="h-14 px-10 rounded-full border-2 border-primary text-primary hover:bg-primary hover:text-white transition-all duration-200 ease-in-out text-base font-bold group focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2">
-                <Link href="/how-it-works">
-                  <PlayCircle className="mr-2 h-5 w-5 text-accent group-hover:scale-110 transition-transform duration-200" />
-                  Watch How It Works
+                <Link href="/demo-room">
+                  <PlayCircle className="mr-2 h-5 w-5 text-accent motion-safe:group-hover:scale-110 transition-transform duration-200" />
+                  Try Demo Room
                 </Link>
               </Button>
             </div>
@@ -214,7 +249,7 @@ export default function HomePage() {
           {/* Section Header — centered, tight */}
           <div className="text-center mb-16">
             {/* Pill badge */}
-            <span className="inline-flex items-center rounded-full border border-accent/40 bg-accent/10 px-5 py-1.5 text-[10px] font-bold uppercase tracking-brand text-accent font-ui mb-6">
+            <span className="inline-flex items-center rounded-full border border-accent/40 bg-accent/10 px-5 py-1.5 text-xs font-bold uppercase tracking-brand text-accent font-ui mb-6">
               Core Features
             </span>
             {/* Display headline */}
@@ -227,328 +262,11 @@ export default function HomePage() {
             </p>
           </div>
 
-          {/* 4-Column Tab Strip */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-12">
-            {/* Tab 0 — Identity Vault */}
-            <button
-              onClick={() => setActiveIndex(0)}
-              className={`flex flex-col items-start gap-2 rounded-xl p-5 text-left transition-all duration-200 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${
-                activeIndex === 0
-                  ? "bg-accent/10 border border-accent/30 shadow-sm"
-                  : "bg-surface border border-border hover:bg-muted"
-              }`}
-              aria-selected={activeIndex === 0}
-              role="tab"
-            >
-              <div className="w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center">
-                <Lock className="w-4 h-4 text-accent" />
-              </div>
-              <span className="text-sm font-bold text-primary font-heading leading-tight">Identity Vault</span>
-              <span className="text-xs text-text-muted font-body leading-snug">Isolated, encrypted PII storage — zero trace</span>
-            </button>
-
-            {/* Tab 1 — Avatar Privacy */}
-            <button
-              onClick={() => setActiveIndex(1)}
-              className={`flex flex-col items-start gap-2 rounded-xl p-5 text-left transition-all duration-200 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${
-                activeIndex === 1
-                  ? "bg-accent/10 border border-accent/30 shadow-sm"
-                  : "bg-surface border border-border hover:bg-muted"
-              }`}
-              aria-selected={activeIndex === 1}
-              role="tab"
-            >
-              <div className="w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center">
-                <EyeOff className="w-4 h-4 text-accent" />
-              </div>
-              <span className="text-sm font-bold text-primary font-heading leading-tight">Avatar Privacy</span>
-              <span className="text-xs text-text-muted font-body leading-snug">No cameras. Curated 3D avatars only.</span>
-            </button>
-
-            {/* Tab 2 — Safety Engine */}
-            <button
-              onClick={() => setActiveIndex(2)}
-              className={`flex flex-col items-start gap-2 rounded-xl p-5 text-left transition-all duration-200 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${
-                activeIndex === 2
-                  ? "bg-accent/10 border border-accent/30 shadow-sm"
-                  : "bg-surface border border-border hover:bg-muted"
-              }`}
-              aria-selected={activeIndex === 2}
-              role="tab"
-            >
-              <div className="w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center">
-                <Shield className="w-4 h-4 text-accent" />
-              </div>
-              <span className="text-sm font-bold text-primary font-heading leading-tight">Safety Engine</span>
-              <span className="text-xs text-text-muted font-body leading-snug">Human-in-the-loop monitoring, zero identity exposure</span>
-            </button>
-
-            {/* Tab 3 — Session Token */}
-            <button
-              onClick={() => setActiveIndex(3)}
-              className={`flex flex-col items-start gap-2 rounded-xl p-5 text-left transition-all duration-200 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${
-                activeIndex === 3
-                  ? "bg-accent/10 border border-accent/30 shadow-sm"
-                  : "bg-surface border border-border hover:bg-muted"
-              }`}
-              aria-selected={activeIndex === 3}
-              role="tab"
-            >
-              <div className="w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center">
-                <Key className="w-4 h-4 text-accent" />
-              </div>
-              <span className="text-sm font-bold text-primary font-heading leading-tight">Hard Anonymity</span>
-              <span className="text-xs text-text-muted font-body leading-snug">Cryptographically enforced session tokens</span>
-            </button>
-          </div>
-
-          {/* Two-Column Detail Panel */}
-          <div className="grid grid-cols-1 lg:grid-cols-[1fr_1.5fr] gap-8 lg:gap-12 items-start">
-
-            {/* Left: Accordion Column */}
-            <div className="flex flex-col gap-3" role="tablist" aria-label="Feature details">
-              {/* Accordion Item 0 */}
-              <div
-                className={`rounded-xl border transition-all duration-200 ${
-                  activeIndex === 0
-                    ? "bg-surface border-primary/30 shadow-md"
-                    : "bg-surface border-border hover:border-primary/20"
-                }`}
-              >
-                <button
-                  onClick={() => setActiveIndex(0)}
-                  className="flex items-center justify-between w-full px-6 py-5 text-left focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 rounded-xl"
-                  role="tab"
-                  aria-selected={activeIndex === 0}
-                  aria-controls="accordion-panel-0"
-                  id="accordion-tab-0"
-                >
-                  <span className="text-sm font-bold text-primary font-heading">Identity Vault</span>
-                  <ChevronRight className={`w-4 h-4 text-text-muted shrink-0 transition-transform duration-200 ${activeIndex === 0 ? "rotate-90" : ""}`} />
-                </button>
-                <div
-                  id="accordion-panel-0"
-                  role="tabpanel"
-                  aria-labelledby="accordion-tab-0"
-                  className={`overflow-hidden transition-all duration-300 ${activeIndex === 0 ? "max-h-48 opacity-100" : "max-h-0 opacity-0"}`}
-                >
-                  <div className="px-6 pb-6">
-                    <p className="text-sm text-text-muted font-body leading-relaxed mb-4">
-                      Your PII is stored in an isolated, encrypted vault that never touches session servers. No email, no name, no trace — ever. The architecture was designed by security engineers who understand that protection requires isolation, not just obfuscation.
-                    </p>
-                    <Button variant="ghost" asChild className="h-9 px-5 rounded-lg border border-primary/40 text-primary hover:bg-primary hover:text-white text-xs font-bold transition-all duration-200">
-                      <Link href="/features#identity-vault">
-                        Learn more
-                        <ChevronRight className="ml-1.5 h-3.5 w-3.5" />
-                      </Link>
-                    </Button>
-                  </div>
-                </div>
-              </div>
-
-              {/* Accordion Item 1 */}
-              <div
-                className={`rounded-xl border transition-all duration-200 ${
-                  activeIndex === 1
-                    ? "bg-surface border-primary/30 shadow-md"
-                    : "bg-surface border-border hover:border-primary/20"
-                }`}
-              >
-                <button
-                  onClick={() => setActiveIndex(1)}
-                  className="flex items-center justify-between w-full px-6 py-5 text-left focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 rounded-xl"
-                  role="tab"
-                  aria-selected={activeIndex === 1}
-                  aria-controls="accordion-panel-1"
-                  id="accordion-tab-1"
-                >
-                  <span className="text-sm font-bold text-primary font-heading">Avatar Native</span>
-                  <ChevronRight className={`w-4 h-4 text-text-muted shrink-0 transition-transform duration-200 ${activeIndex === 1 ? "rotate-90" : ""}`} />
-                </button>
-                <div
-                  id="accordion-panel-1"
-                  role="tabpanel"
-                  aria-labelledby="accordion-tab-1"
-                  className={`overflow-hidden transition-all duration-300 ${activeIndex === 1 ? "max-h-48 opacity-100" : "max-h-0 opacity-0"}`}
-                >
-                  <div className="px-6 pb-6">
-                    <p className="text-sm text-text-muted font-body leading-relaxed mb-4">
-                      No cameras. You are represented by a curated 3D abstract avatar that protects your visual identity completely. Choose from a library of non-identifiable personas, each designed to express emotion without revealing anything about your real appearance.
-                    </p>
-                    <Button variant="ghost" asChild className="h-9 px-5 rounded-lg border border-primary/40 text-primary hover:bg-primary hover:text-white text-xs font-bold transition-all duration-200">
-                      <Link href="/features#avatar-native">
-                        Learn more
-                        <ChevronRight className="ml-1.5 h-3.5 w-3.5" />
-                      </Link>
-                    </Button>
-                  </div>
-                </div>
-              </div>
-
-              {/* Accordion Item 2 */}
-              <div
-                className={`rounded-xl border transition-all duration-200 ${
-                  activeIndex === 2
-                    ? "bg-surface border-primary/30 shadow-md"
-                    : "bg-surface border-border hover:border-primary/20"
-                }`}
-              >
-                <button
-                  onClick={() => setActiveIndex(2)}
-                  className="flex items-center justify-between w-full px-6 py-5 text-left focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 rounded-xl"
-                  role="tab"
-                  aria-selected={activeIndex === 2}
-                  aria-controls="accordion-panel-2"
-                  id="accordion-tab-2"
-                >
-                  <span className="text-sm font-bold text-primary font-heading">Safety Engine</span>
-                  <ChevronRight className={`w-4 h-4 text-text-muted shrink-0 transition-transform duration-200 ${activeIndex === 2 ? "rotate-90" : ""}`} />
-                </button>
-                <div
-                  id="accordion-panel-2"
-                  role="tabpanel"
-                  aria-labelledby="accordion-tab-2"
-                  className={`overflow-hidden transition-all duration-300 ${activeIndex === 2 ? "max-h-48 opacity-100" : "max-h-0 opacity-0"}`}
-                >
-                  <div className="px-6 pb-6">
-                    <p className="text-sm text-text-muted font-body leading-relaxed mb-4">
-                      Human-in-the-loop safety monitoring detects distress signals without compromising anonymity. Trained facilitators observe behavioral patterns, never content, and can intervene without ever knowing who they are helping.
-                    </p>
-                    <Button variant="ghost" asChild className="h-9 px-5 rounded-lg border border-primary/40 text-primary hover:bg-primary hover:text-white text-xs font-bold transition-all duration-200">
-                      <Link href="/features#safety-engine">
-                        Learn more
-                        <ChevronRight className="ml-1.5 h-3.5 w-3.5" />
-                      </Link>
-                    </Button>
-                  </div>
-                </div>
-              </div>
-
-              {/* Accordion Item 3 */}
-              <div
-                className={`rounded-xl border transition-all duration-200 ${
-                  activeIndex === 3
-                    ? "bg-surface border-primary/30 shadow-md"
-                    : "bg-surface border-border hover:border-primary/20"
-                }`}
-              >
-                <button
-                  onClick={() => setActiveIndex(3)}
-                  className="flex items-center justify-between w-full px-6 py-5 text-left focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 rounded-xl"
-                  role="tab"
-                  aria-selected={activeIndex === 3}
-                  aria-controls="accordion-panel-3"
-                  id="accordion-tab-3"
-                >
-                  <span className="text-sm font-bold text-primary font-heading">Hard Anonymity</span>
-                  <ChevronRight className={`w-4 h-4 text-text-muted shrink-0 transition-transform duration-200 ${activeIndex === 3 ? "rotate-90" : ""}`} />
-                </button>
-                <div
-                  id="accordion-panel-3"
-                  role="tabpanel"
-                  aria-labelledby="accordion-tab-3"
-                  className={`overflow-hidden transition-all duration-300 ${activeIndex === 3 ? "max-h-48 opacity-100" : "max-h-0 opacity-0"}`}
-                >
-                  <div className="px-6 pb-6">
-                    <p className="text-sm text-text-muted font-body leading-relaxed mb-4">
-                      Session tokens are cryptographically enforced and carry zero linkage to identity. Tokens expire automatically, leave no audit trail, and are signed with short-lived keys that cannot be correlated across sessions.
-                    </p>
-                    <Button variant="ghost" asChild className="h-9 px-5 rounded-lg border border-primary/40 text-primary hover:bg-primary hover:text-white text-xs font-bold transition-all duration-200">
-                      <Link href="/features#hard-anonymity">
-                        Learn more
-                        <ChevronRight className="ml-1.5 h-3.5 w-3.5" />
-                      </Link>
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Right: Mockup Panel */}
-            <div className="relative">
-              <>
-                {activeIndex === 0 && (
-                  <div className="rounded-2xl overflow-hidden shadow-lg border border-border min-h-[380px] lg:min-h-[440px] relative animate-in fade-in zoom-in-95 duration-300">
-                    <Image
-                      src="https://images.unsplash.com/photo-1555949963-ff9fe0c870eb?w=1200&q=85"
-                      alt="Identity Vault — encrypted security architecture"
-                      fill
-                      className="object-cover"
-                      priority
-                      quality={85}
-                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 60vw, 800px"
-                      placeholder="blur"
-                      blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAn/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9kADAMBAAIRAxEAPwAAAGAAAAAB//9k="
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-primary/80 via-primary/20 to-transparent flex flex-col items-center justify-end p-8">
-                      <p className="text-white/50 text-[10px] font-bold uppercase tracking-widest font-ui mb-2">Identity Vault</p>
-                      <p className="text-white/90 text-sm font-body text-center max-w-[28ch] leading-relaxed">Your personal data is isolated in an encrypted vault — completely unreachable from session infrastructure.</p>
-                    </div>
-                  </div>
-                )}
-
-                {activeIndex === 1 && (
-                  <div className="rounded-2xl overflow-hidden shadow-lg border border-border min-h-[380px] lg:min-h-[440px] relative animate-in fade-in zoom-in-95 duration-300">
-                    <Image
-                      src="https://images.unsplash.com/photo-1633265486064-1c3c5b5e1d9c?w=1200&q=85"
-                      alt="Avatar Privacy — anonymous digital identity"
-                      fill
-                      className="object-cover"
-                      quality={85}
-                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 60vw, 800px"
-                      placeholder="blur"
-                      blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAn/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9kADAMBAAIRAxEAPwAAAGAAAAAB//9k="
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-primary/80 via-primary/20 to-transparent flex flex-col items-center justify-end p-8">
-                      <p className="text-accent text-[10px] font-bold uppercase tracking-widest font-ui mb-2">Avatar Native</p>
-                      <p className="text-white/90 text-sm font-body text-center max-w-[28ch] leading-relaxed">Your identity is expressed only through a curated abstract avatar — never your actual face or appearance.</p>
-                    </div>
-                  </div>
-                )}
-
-                {activeIndex === 2 && (
-                  <div className="rounded-2xl overflow-hidden shadow-lg border border-border min-h-[380px] lg:min-h-[440px] relative animate-in fade-in zoom-in-95 duration-300">
-                    <Image
-                      src="https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?w=1200&q=85"
-                      alt="Safety Engine — human monitoring with anonymity"
-                      fill
-                      className="object-cover"
-                      quality={85}
-                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 60vw, 800px"
-                      placeholder="blur"
-                      blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAn/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9kADAMBAAIRAxEAPwAAAGAAAAAB//9k="
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-success/80 via-success/20 to-transparent flex flex-col items-center justify-end p-8">
-                      <p className="text-success text-[10px] font-bold uppercase tracking-widest font-ui mb-2">Safety Engine</p>
-                      <p className="text-white/90 text-sm font-body text-center max-w-[28ch] leading-relaxed">Behavioral safety monitoring with human oversight — keeping sessions safe without ever accessing identity.</p>
-                    </div>
-                  </div>
-                )}
-
-                {activeIndex === 3 && (
-                  <div className="rounded-2xl overflow-hidden shadow-lg border border-border min-h-[380px] lg:min-h-[440px] relative animate-in fade-in zoom-in-95 duration-300">
-                    <Image
-                      src="https://images.unsplash.com/photo-1638775513788-3b4b8a6c0e5f?w=1200&q=85"
-                      alt="Hard Anonymity — cryptographic session tokens"
-                      fill
-                      className="object-cover"
-                      quality={85}
-                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 60vw, 800px"
-                      placeholder="blur"
-                      blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAn/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9kADAMBAAIRAxEAPwAAAGAAAAAB//9k="
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-primary/80 via-primary/20 to-transparent flex flex-col items-center justify-end p-8">
-                      <p className="text-accent text-[10px] font-bold uppercase tracking-widest font-ui mb-2">Hard Anonymity</p>
-                      <p className="text-white/90 text-sm font-body text-center max-w-[28ch] leading-relaxed">Every session token is ephemeral, cryptographically signed, and completely unlinkable across visits.</p>
-                    </div>
-                  </div>
-                )}
-              </>
-            </div>
-          </div>
+          <FeatureTabs />
 
         </div>
       </section>
+      <OrganizationJsonLd />
     </main>
   )
 }

@@ -131,7 +131,7 @@ export default function SafetyMonitor({
   const headerIcon = isLight ? 'text-accent' : 'text-text';
   const flagIdle = isLight
     ? 'p-1.5 rounded-lg hover:bg-destructive/10 text-text-muted hover:text-destructive transition-colors'
-    : 'p-1.5 rounded-lg hover:bg-destructive0/10 text-text-muted0 hover:text-destructive transition-colors';
+    : 'p-1.5 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors';
   const safetyBadge = isLight
     ? 'flex items-center gap-1.5 px-2 py-1 rounded-full bg-accent/10 border border-accent/30'
     : 'flex items-center gap-1.5 px-2 py-1 rounded-full bg-primary/10 border border-primary/20';
@@ -139,7 +139,7 @@ export default function SafetyMonitor({
   const safetyLabel = isLight
     ? 'text-[10px] uppercase tracking-wider text-accent font-bold'
     : 'text-[10px] uppercase tracking-wider text-text font-bold';
-  const timestamp = isLight ? 'text-[10px] text-text-muted mb-1 px-1' : 'text-[10px] text-text-muted0 mb-1 px-1';
+  const timestamp = isLight ? 'text-[10px] text-text-muted mb-1 px-1' : 'text-[10px] text-muted-foreground mb-1 px-1';
   const ownBubble = isLight
     ? 'bg-primary text-primary-foreground rounded-tr-none shadow-sm shadow-primary/20'
     : 'bg-primary text-white rounded-tr-none shadow-lg shadow-primary/20';
@@ -151,13 +151,13 @@ export default function SafetyMonitor({
     : 'w-12 h-12 rounded-full bg-text flex items-center justify-center';
   const emptyIcon = isLight ? 'w-6 h-6 text-text-muted' : 'w-6 h-6 text-text';
   const emptyTitle = isLight ? 'text-primary font-medium' : 'text-text font-medium';
-  const emptyBody = isLight ? 'text-text-muted text-xs mt-1' : 'text-text-muted0 text-xs mt-1';
+  const emptyBody = isLight ? 'text-text-muted text-xs mt-1' : 'text-muted-foreground text-xs mt-1';
   const inputShell = isLight
     ? 'p-4 bg-background/80 backdrop-blur-md border-t border-border'
     : 'p-4 bg-text/80 backdrop-blur-md border-t border-border-strong';
   const inputField = isLight
     ? 'flex-1 bg-surface text-primary rounded-xl px-4 py-2.5 text-sm border border-border focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-all placeholder:text-text-muted'
-    : 'flex-1 bg-text text-white rounded-xl px-4 py-2.5 text-sm border border-border-strong focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all placeholder:text-text-muted0';
+    : 'flex-1 bg-text text-white rounded-xl px-4 py-2.5 text-sm border border-border-strong focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all placeholder:text-muted-foreground';
   const sendBtn = isLight
     ? 'bg-primary hover:bg-primary-dark disabled:opacity-50 disabled:hover:bg-primary text-primary-foreground px-4 py-2 rounded-xl transition-colors flex items-center justify-center'
     : 'bg-primary hover:bg-primary disabled:opacity-50 disabled:hover:bg-primary text-white px-4 py-2 rounded-xl transition-colors flex items-center justify-center';

@@ -6,7 +6,8 @@ import * as admin from 'firebase-admin';
 import { db, isFirebaseAdminReady } from '@/lib/firebase-admin';
 import { checkRateLimit, getRateLimitHeaders } from '@/lib/rate-limit';
 import { authorizeSessionAccess } from '@/lib/session-authz';
-import { verifyFirebaseIdToken } from '@/lib/auth-edge';
+import { getPrisma } from '@/lib/prisma';
+import { getRedis } from '@/lib/redis';
 
 const palettes = ['coastal', 'sunrise', 'forest'] as const;
 
@@ -19,39 +20,38 @@ function makeAvatar(seed: string) {
   const first = seed.charCodeAt(0) || 1;
   const second = seed.charCodeAt(1) || 2;
 
-  return {
-    style: (first % 12) + 1,
-    palette: palettes[second % palettes.length] || 'coastal',
-    gesture: 'idle',
-    locked: true,
-  };
-}
+	  return {
+	    style: (first % 12) as any,
+	    palette: palettes[second % palettes.length] || 'coastal',
+	    gesture: 'idle',
+		    bodyType: (first % 2) as 0 | 1,
+	    skinTone: ['#E8B092', '#C58A63', '#905C38', '#5C3826'][first % 4],
+		    hairStyle: first % 16,
+	    hairColor: ['#1c1917', '#292524', '#44403c', '#78716c', '#ca8a04', '#d97706', '#8b5cf6', '#0ea5e9'][second % 8],
+	    eyeColor: ['#1c1917', '#3f2d20', '#6b7280', '#2563eb', '#059669', '#a16207'][second % 6],
+	    faceShape: first % 4,
+	    noseStyle: second % 4,
+	    eyeStyle: (second % 7) as any,
+	    eyebrowStyle: (first % 4) as any,
+	    mouthStyle: (second % 4) as any,
+	    clothingType: (second % 6) as any,
+	    clothingColor: ['#173B57', '#C59A35', '#10B981', '#FBBF24', '#EF4444', '#06B6D4'][first % 6],
+	    accessoryType: (first % 6) as any,
+	  };
+	}
+
+import { Phase5Session, Phase5SessionSchema } from '@/lib/schemas/session';
 
 // Session lifecycle states
 type SessionStatus = 'pending' | 'active' | 'ended' | 'flagged';
-
-interface Phase5Session {
-  id: string;
-  status: SessionStatus;
-  createdAt: string;
-  activeAt?: string;
-  endedAt?: string;
-  startsAt?: string;
-  endsAt?: string;
-  participantCount: number;
-  participantIdentities?: string[];
-  facilitatorId?: string;
-  flagged: boolean;
-  flaggedBy?: string;
-  flaggedReason?: string;
-}
 
 async function getOrCreateSession(sessionId: string): Promise<Phase5Session> {
   const sessionRef = db.collection('phase5_sessions').doc(sessionId);
   const doc = await sessionRef.get();
 
   if (doc.exists) {
-    return doc.data() as Phase5Session;
+    const parsed = Phase5SessionSchema.safeParse({ id: doc.id, ...doc.data() });
+    if (parsed.success) return parsed.data;
   }
 
   // Create new session
@@ -60,6 +60,8 @@ async function getOrCreateSession(sessionId: string): Promise<Phase5Session> {
     status: 'pending',
     createdAt: new Date().toISOString(),
     participantCount: 0,
+    maxParticipants: 2,
+    roomName: sessionId,
     participantIdentities: [],
     flagged: false,
   };
@@ -158,7 +160,11 @@ export async function POST(req: NextRequest) {
       if (!sessionDoc.exists) {
         return NextResponse.json({ error: 'Session not found' }, { status: 404 });
       }
-      sessionData = sessionDoc.data() as Partial<Phase5Session>;
+      const parsed = Phase5SessionSchema.safeParse({ id: sessionDoc.id, ...sessionDoc.data() });
+      if (!parsed.success) {
+        return NextResponse.json({ error: 'Invalid session structure' }, { status: 500 });
+      }
+      sessionData = parsed.data;
     }
 
     // Authorize the caller. The helper accepts either a Firebase ID token (the
@@ -195,10 +201,69 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Phase 5: Stable pseudonymous identity hashed via HMAC-SHA256 with apiSecret
+    // Retrieve or generate a cryptographically random, non-reversible identity
     const uidToHash = principal.kind === 'firebase' ? principal.uid : principal.ref;
-    const anonymousIdentity = crypto.createHmac('sha256', apiSecret).update(uidToHash).digest('hex');
+    let anonymousIdentity = '';
+
+    if (adminReady) {
+      try {
+        const participantDocRef = db.collection('session_participants').doc(`${sessionId}_${uidToHash}`);
+        const participantDoc = await participantDocRef.get();
+        if (participantDoc.exists) {
+          const data = participantDoc.data();
+          if (data?.anonymousIdentity && typeof data.anonymousIdentity === 'string') {
+            anonymousIdentity = data.anonymousIdentity;
+          }
+        }
+      } catch (err) {
+        console.warn('[LiveKitAPI] Failed to fetch existing anonymous identity:', err);
+      }
+    }
+
+    if (!anonymousIdentity) {
+      anonymousIdentity = crypto.randomBytes(32).toString('hex');
+    }
+
     const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour max
+
+    // Redis caching check: before setting up the token, check if we have a valid cached token
+    const cacheKey = `lk_token:${sessionId}:${anonymousIdentity}`;
+    const redis = getRedis();
+    if (redis) {
+      try {
+        const cachedToken = await redis.get(cacheKey);
+        if (cachedToken) {
+          console.log(`[LiveKitAPI] Returning cached token for room: ${roomName}, identity: ${anonymousIdentity}`);
+          
+          // Make sure to still transition/record session in background/db if needed
+          let session: Partial<Phase5Session> = { id: sessionId, status: 'active', createdAt: new Date().toISOString(), participantCount: 0, flagged: false };
+          if (adminReady) {
+            try {
+              const sessionRecord = await getOrCreateSession(sessionId);
+              if (sessionRecord.status === 'pending') {
+                await transitionSession(sessionId, 'active');
+                sessionRecord.status = 'active';
+                sessionRecord.activeAt = new Date().toISOString();
+              }
+              session = sessionRecord;
+            } catch (err) {
+              console.warn('[LiveKitAPI] Session lifecycle error in cache hit path:', err);
+            }
+          }
+          
+          return NextResponse.json({
+            token: cachedToken,
+            roomName,
+            anonymousIdentity,
+            avatar: makeAvatar(anonymousIdentity),
+            expiresAt: expiresAt.toISOString(),
+            sessionStatus: session.status,
+          });
+        }
+      } catch (err) {
+        console.warn('[LiveKitAPI] Redis read error:', err);
+      }
+    }
 
     // Session lifecycle — ensure session exists and transition to active
     let session: Partial<Phase5Session> = { id: sessionId, status: 'active', createdAt: new Date().toISOString(), participantCount: 0, flagged: false };
@@ -234,14 +299,15 @@ export async function POST(req: NextRequest) {
 
     // Add metadata forFacilitator identification
     let userRole = 'PARTICIPANT';
-    if (principal.kind === 'firebase' && token) {
+    if (principal.kind === 'firebase') {
       try {
-        const decoded = await verifyFirebaseIdToken(token);
-        if (decoded.role) {
-          userRole = decoded.role as string;
-        }
+        const dbUser = await getPrisma().user.findFirst({
+          where: { firebaseUid: principal.uid, deletedAt: null },
+          select: { role: true },
+        });
+        if (dbUser) userRole = dbUser.role;
       } catch (err) {
-        console.warn('[LiveKitAPI] Failed to verify token for role:', err);
+        console.warn('[LiveKitAPI] Failed to load database role:', err);
       }
     }
 
@@ -253,8 +319,17 @@ export async function POST(req: NextRequest) {
 
     const tokenJwt = await at.toJwt();
 
+    // Cache the newly generated token in Redis (expire in 50 minutes)
+    if (redis && tokenJwt) {
+      try {
+        await redis.set(cacheKey, tokenJwt, 'EX', 50 * 60);
+      } catch (err) {
+        console.warn('[LiveKitAPI] Redis write error:', err);
+      }
+    }
+
     // Record participant identity for future authorization and reconnection.
-    // We persist the (sessionId, firebaseUid) → anonymousIdentity mapping
+    // We persist the (sessionId, uidToHash) → anonymousIdentity mapping
     // explicitly so the reconnect endpoint can look up the original identity
     // server-side without trusting client input. See H7 in the audit report.
     if (anonymousIdentity && adminReady) {
@@ -269,25 +344,25 @@ export async function POST(req: NextRequest) {
         // Non-fatal — token already issued
       }
 
-      if (principal.kind === 'firebase') {
-        try {
-          await db
-            .collection('session_participants')
-            .doc(`${sessionId}_${principal.uid}`)
-            .set(
-              {
-                sessionId,
-                firebaseUid: principal.uid,
-                anonymousIdentity,
-                joinedAt: new Date().toISOString(),
-                lastSeenAt: new Date().toISOString(),
-              },
-              { merge: true }
-            );
-        } catch {
-          console.warn('[LiveKitAPI] Could not record session_participants mapping');
-          // Non-fatal — token already issued
-        }
+      try {
+        await db
+          .collection('session_participants')
+          .doc(`${sessionId}_${uidToHash}`)
+          .set(
+            {
+              sessionId,
+              ...(principal.kind === 'firebase'
+                ? { firebaseUid: principal.uid }
+                : { sessionRef: principal.ref }),
+              anonymousIdentity,
+              joinedAt: new Date().toISOString(),
+              lastSeenAt: new Date().toISOString(),
+            },
+            { merge: true }
+          );
+      } catch (err) {
+        console.warn('[LiveKitAPI] Could not record session_participants mapping:', err);
+        // Non-fatal — token already issued
       }
     }
 

@@ -79,7 +79,7 @@ const formatDateTime = (iso: string): string =>
 const statusConfig: Record<AppointmentStatus, { label: string; icon: typeof CheckCircle; className: string }> = {
   UPCOMING: { label: "Upcoming", icon: Clock, className: "bg-indigo-50 text-indigo-600 border-indigo-200" },
   IN_PROGRESS: { label: "In Progress", icon: Play, className: "bg-emerald-50 text-emerald-600 border-emerald-200" },
-  COMPLETED: { label: "Completed", icon: CheckCircle, className: "bg-bg-subtle text-text-muted0 border-border" },
+  COMPLETED: { label: "Completed", icon: CheckCircle, className: "bg-bg-subtle text-muted-foreground border-border" },
   CANCELLED: { label: "Cancelled", icon: XCircle, className: "bg-destructive text-destructive border-destructive" },
 };
 
@@ -240,7 +240,7 @@ export default function HostAppointmentsPage() {
                       </span>
                       {(appt.status === "UPCOMING" || appt.status === "IN_PROGRESS") && (
                         <Link
-                          href={`/session/host-${appt.id}?role=host`}
+                          href={`/session/host-${appt.id}`}
                           aria-label={`Join session with ${appt.clientHandle}`}
                           className="hidden group-hover:flex items-center gap-1 px-3 py-1.5 rounded-lg bg-primary text-white text-[10px] font-bold font-ui transition-all"
                         >

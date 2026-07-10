@@ -72,7 +72,7 @@ describe('VaultController - GET /records/:ref', () => {
 
   it('should reject requests without vault secret', async () => {
     await expect(
-      controller.getRecord('subject-001', undefined, 'admin', 'ADMIN_ACCESS')
+      controller.getRecord('subject-001', undefined as any, 'admin', 'ADMIN_ACCESS')
     ).rejects.toThrow('Invalid vault secret');
   });
 

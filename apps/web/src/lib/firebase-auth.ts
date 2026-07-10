@@ -1,4 +1,6 @@
 import { adminAuth } from './firebase-admin';
+import { getPrisma } from './prisma';
+import { logger } from './logger';
 
 export interface FirebaseTokenPayload {
   uid: string;
@@ -12,6 +14,29 @@ export interface FirebaseTokenPayload {
   sub: string;
   iat: number;
   exp: number;
+}
+
+function isPrismaUnavailable(error: unknown) {
+  const code =
+    typeof error === 'object' && error !== null && 'code' in error
+      ? String((error as { code?: unknown }).code)
+      : undefined;
+  const message = error instanceof Error ? error.message : String(error);
+
+  return (
+    code === 'P1001' ||
+    message.includes("Can't reach database server") ||
+    message.includes('ECONNREFUSED')
+  );
+}
+
+function canBypassCommerceUserCheck(payload: FirebaseTokenPayload, error: unknown) {
+  return (
+    process.env.NODE_ENV !== 'production' &&
+    process.env.NEXT_PUBLIC_DEMO_MODE === 'true' &&
+    Boolean(payload.uid) &&
+    isPrismaUnavailable(error)
+  );
 }
 
 /**
@@ -32,5 +57,27 @@ export async function verifyFirebaseIdToken(
     throw new Error('Bearer token is missing from Authorization header');
   }
 
-  return adminAuth.verifyIdToken(token) as Promise<FirebaseTokenPayload>;
+  const payload = await adminAuth.verifyIdToken(token, true) as FirebaseTokenPayload;
+  let activeUser: { id: string } | null;
+  try {
+    activeUser = await getPrisma().user.findFirst({
+      where: { firebaseUid: payload.uid, deletedAt: null },
+      select: { id: true },
+    });
+  } catch (error) {
+    if (canBypassCommerceUserCheck(payload, error)) {
+      logger.warn(
+        '[FirebaseAuth] Commerce DB unavailable; allowing Firebase-verified identity in local demo mode.',
+        { uidSuffix: payload.uid.slice(-6) }
+      );
+      return payload;
+    }
+
+    throw error;
+  }
+
+  if (!activeUser) {
+    throw new Error('Authenticated user is missing or disabled');
+  }
+  return payload;
 }

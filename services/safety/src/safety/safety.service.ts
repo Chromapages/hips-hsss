@@ -2,6 +2,7 @@ import { Injectable, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { PrismaService } from '../prisma.service.js';
+import { getRedis } from './redis.js';
 
 type GenerativeModel = ReturnType<GoogleGenerativeAI['getGenerativeModel']>;
 
@@ -12,14 +13,25 @@ type HarmAssessment = {
   reason: string;
 };
 
+const SEVERITIES = ['LOW', 'MEDIUM', 'HIGH', 'CRITICAL'] as const;
+const CATEGORIES = ['NONE', 'HARM', 'SELF_HARM', 'HARASSMENT', 'DISCLOSURE'] as const;
+
 function parseAssessment(value: string): HarmAssessment {
-  const parsed = JSON.parse(value.replace(/```json|```/g, '')) as Partial<HarmAssessment>;
+  let cleaned = value.trim();
+  const jsonMatch = cleaned.match(/\{[\s\S]*\}/);
+  if (jsonMatch) {
+    cleaned = jsonMatch[0];
+  }
+
+  const parsed = JSON.parse(cleaned) as Partial<HarmAssessment>;
 
   if (
     typeof parsed.isSafe !== 'boolean' ||
     !parsed.severity ||
     !parsed.category ||
-    typeof parsed.reason !== 'string'
+    typeof parsed.reason !== 'string' ||
+    !SEVERITIES.includes(parsed.severity as any) ||
+    !CATEGORIES.includes(parsed.category as any)
   ) {
     throw new Error('Invalid safety assessment payload');
   }
@@ -90,15 +102,26 @@ export class SafetyService implements OnModuleInit {
     }
 
     // 2. Add to buffer
-    this.touchBuffer(sessionId);
-    let buffer = this.transcriptBuffers.get(sessionId) || [];
-    buffer.push(`[${participantId}]: ${text}`);
-    
-    // 3. Keep buffer within limits
-    if (buffer.length > this.MAX_BUFFER_SIZE * 2) {
-      buffer = buffer.slice(-this.MAX_BUFFER_SIZE);
+    const client = getRedis();
+    let buffer: string[] = [];
+    if (client) {
+      const redisKey = `transcript:${sessionId}`;
+      await client.rpush(redisKey, `[${participantId}]: ${text}`);
+      await client.expire(redisKey, 1800); // 30 minutes TTL
+      const len = await client.llen(redisKey);
+      if (len > this.MAX_BUFFER_SIZE * 2) {
+        await client.ltrim(redisKey, -this.MAX_BUFFER_SIZE, -1);
+      }
+      buffer = await client.lrange(redisKey, 0, -1);
+    } else {
+      this.touchBuffer(sessionId);
+      buffer = this.transcriptBuffers.get(sessionId) || [];
+      buffer.push(`[${participantId}]: ${text}`);
+      if (buffer.length > this.MAX_BUFFER_SIZE * 2) {
+        buffer = buffer.slice(-this.MAX_BUFFER_SIZE);
+      }
+      this.transcriptBuffers.set(sessionId, buffer);
     }
-    this.transcriptBuffers.set(sessionId, buffer);
 
     // 4. Trigger classification every few sentences
     if (buffer.length >= this.MAX_BUFFER_SIZE) {
@@ -113,32 +136,59 @@ export class SafetyService implements OnModuleInit {
     if (!this.model) return { status: 'error', reason: 'model_not_ready' };
 
     try {
-      const prompt = `
-        Analyze the following transcript from a peer support session for immediate safety risks.
-        Categories: HARM (physical violence), SELF_HARM, HARASSMENT, DISCLOSURE (sharing PII).
-        
-        Transcript:
-        "${text}"
-        
-        Response format (JSON only):
+      const contents = [
         {
-          "isSafe": boolean,
-          "severity": "LOW" | "MEDIUM" | "HIGH" | "CRITICAL",
-          "category": "NONE" | "HARM" | "SELF_HARM" | "HARASSMENT" | "DISCLOSURE",
-          "reason": "short explanation"
+          role: 'user',
+          parts: [
+            {
+              text: `Analyze the following transcript from a peer support session for immediate safety risks.
+Categories: HARM (physical violence), SELF_HARM, HARASSMENT, DISCLOSURE (sharing PII).
+The response MUST be valid JSON conforming strictly to the requested schema. Do not include any markdown styling like \`\`\`json or extra text outside the JSON object.`
+            },
+            {
+              text: `Transcript:\n"${text}"`
+            },
+            {
+              text: `Response format (JSON only):
+{
+  "isSafe": boolean,
+  "severity": "LOW" | "MEDIUM" | "HIGH" | "CRITICAL",
+  "category": "NONE" | "HARM" | "SELF_HARM" | "HARASSMENT" | "DISCLOSURE",
+  "reason": "short explanation"
+}`
+            }
+          ]
         }
-      `;
+      ];
 
-      const result = await this.model.generateContent(prompt);
+      const result = await this.model.generateContent({ contents });
       const responseText = result.response.text().trim();
       const assessment = parseAssessment(responseText);
+
+      // Post-classification assertion: if the LLM returns isSafe: true but a keyword matched
+      if (assessment.isSafe) {
+        const lowerText = text.toLowerCase();
+        const matchedKeyword = this.KEYWORD_BLOCKLIST.find(k => lowerText.includes(k));
+        if (matchedKeyword) {
+          assessment.isSafe = false;
+          assessment.severity = 'CRITICAL';
+          assessment.category = 'SELF_HARM';
+          assessment.reason = `Keyword blocklist fallback matched: "${matchedKeyword}"`;
+        }
+      }
 
       if (!assessment.isSafe) {
         await this.handleUnsafeContent(sessionId, assessment, text, participantId);
       }
 
       // Clear part of the buffer after successful classification to prevent redundant checks
-      this.transcriptBuffers.set(sessionId, []);
+      const client = getRedis();
+      if (client) {
+        const redisKey = `transcript:${sessionId}`;
+        await client.del(redisKey);
+      } else {
+        this.transcriptBuffers.set(sessionId, []);
+      }
 
       return assessment;
     } catch (error) {
@@ -172,7 +222,7 @@ export class SafetyService implements OnModuleInit {
       data: {
         sessionId,
         severity: assessment.severity,
-        category: assessment.category,
+        category: assessment.category as any,
         anonymizedReason: assessment.reason,
         transcriptChunk: transcriptChunk,
       },
@@ -189,7 +239,7 @@ export class SafetyService implements OnModuleInit {
     await this.prisma.safetyMitigation.create({
       data: {
         alertId: alert.id,
-        action: mitigationAction,
+        action: mitigationAction as any,
         success: true,
         metadata: {
           assessment: {
@@ -209,6 +259,8 @@ export class SafetyService implements OnModuleInit {
 
     if (webhookUrl) {
       try {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 10_000);
         await fetch(`${webhookUrl}/api/safety/mitigate`, {
           method: 'POST',
           headers: {
@@ -221,8 +273,10 @@ export class SafetyService implements OnModuleInit {
             assessment,
             alertId: alert.id,
             mitigationAction
-          })
+          }),
+          signal: controller.signal,
         });
+        clearTimeout(timeout);
       } catch {
         console.error('Failed to send safety webhook');
       }
@@ -285,9 +339,16 @@ export class SafetyService implements OnModuleInit {
     }
     const vaultSecret = this.configService.get<string>('VAULT_API_SECRET');
 
-    // We assume the participantId is stored in the alert or can be derived
-    // For this demo, we'll use a placeholder subjectRef
-    const subjectRef = `participant:${alert.sessionId}`; 
+    // Retrieve PII for emergency response by looking up the actual participantId from safety strikes
+    let participantId = alert.sessionId;
+    const strikeRecord = await this.prisma.safetyStrike.findFirst({
+      where: { sessionId: alert.sessionId },
+      orderBy: { lastStrikeAt: 'desc' },
+    });
+    if (strikeRecord?.participantId) {
+      participantId = strikeRecord.participantId;
+    }
+    const subjectRef = `participant:${participantId}`; 
 
     try {
       const response = await fetch(`${vaultUrl}/records/${subjectRef}?actor=${actorId}&purpose=${encodeURIComponent(reason)}`, {
@@ -301,17 +362,6 @@ export class SafetyService implements OnModuleInit {
       }
 
       const piiData = await response.json();
-
-      // 2. Create durable audit log for PII access (Phase 5 requirement)
-      await this.prisma.vaultAccessLog.create({
-        data: {
-          subjectRef,
-          actorId,
-          purpose: reason,
-          outcome: 'SUCCESS',
-          ipAddress: null, // Actor IP not available in this context
-        },
-      });
 
       // 3. Mark alert as escalated
       await this.prisma.safetyAlert.update({
@@ -347,5 +397,74 @@ export class SafetyService implements OnModuleInit {
       take,
       skip,
     });
+  }
+
+  async findAlertById(id: string) {
+    return this.prisma.safetyAlert.findUnique({
+      where: { id },
+      include: {
+        mitigations: {
+          orderBy: { createdAt: 'desc' },
+          take: 20,
+        },
+      },
+    });
+  }
+
+  /**
+   * Update the resolution status of a safety alert.
+   * Allowed transitions: open (isResolved=false) <-> resolved (isResolved=true).
+   * Records the actor and a reason in the SafetyMitigation metadata for audit trail.
+   */
+  async updateAlertStatus(
+    alertId: string,
+    status: 'OPEN' | 'RESOLVED',
+    actorId: string,
+    reason: string,
+  ) {
+    const alert = await this.prisma.safetyAlert.findUnique({
+      where: { id: alertId },
+    });
+    if (!alert) {
+      throw new Error('Alert not found');
+    }
+
+    const isResolved = status === 'RESOLVED';
+    const updated = await this.prisma.safetyAlert.update({
+      where: { id: alertId },
+      data: { isResolved },
+    });
+
+    // Record durable audit log entry for the status change
+    await this.prisma.safetyMitigation.create({
+      data: {
+        alertId: alert.id,
+        action: isResolved ? 'WARNING' : 'WARNING',
+        success: true,
+        metadata: {
+          event: 'STATUS_UPDATE',
+          newStatus: status,
+          previousStatus: alert.isResolved ? 'RESOLVED' : 'OPEN',
+          actorId,
+          reason,
+        },
+      },
+    });
+
+    // Append to the durable audit log for compliance
+    await this.prisma.safetyAuditLog.create({
+      data: {
+        action: isResolved ? 'ALERT_RESOLVED' : 'ALERT_REOPENED',
+        actor: actorId,
+        metadata: {
+          alertId: alert.id,
+          sessionId: alert.sessionId,
+          severity: alert.severity,
+          reason,
+        },
+      },
+    });
+
+    return updated;
   }
 }

@@ -14,6 +14,7 @@ enum UserRole {
   ORGBUYER
   FACILITATOR
   ADMIN
+  SUPER_ADMIN
 }
 
 enum ServiceCategory {
@@ -64,15 +65,64 @@ model User {
   email       String       @unique
   role        UserRole     @default(PARTICIPANT)
   deletedAt   DateTime?
+  suspendedAt DateTime?
+  suspendedBy String?
+  suspensionReason String?
+  // ── MFA (Layer 4) ────────────────────────────────────────────────────────
+  // The TOTP secret is encrypted at rest with AES-256-GCM. The encryption
+  // key is MFA_ENCRYPTION_KEY (32 raw bytes → 44 base64 chars). The IV
+  // and auth tag are stored alongside the ciphertext so decrypt is
+  // deterministic per (key, IV) pair.
+  mfaEnabled         Boolean   @default(false)
+  mfaSecretEnc       String?
+  mfaSecretIv        String?
+  mfaSecretTag       String?
+  mfaEnrolledAt      DateTime?
+  lastMfaVerifiedAt  DateTime?
+  // ────────────────────────────────────────────────────────────────────────
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
   sessions    Session[]
   packages    Package[]
   scholarships Scholarship[]
   donations   Donation[]
+  mfaBackupCodes MfaBackupCode[]
 
   @@index([role])
   @@index([deletedAt])
+  @@index([suspendedAt])
+  @@index([mfaEnabled])
+}
+
+// MFA backup codes — single-use, hashed with bcrypt. 10 issued at enrollment
+// and at each backup-code regeneration.
+model MfaBackupCode {
+  id        String    @id @default(cuid())
+  userId    String    @db.Uuid
+  codeHash  String
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([usedAt])
+}
+
+// MFA pending tokens — issued at login when user.mfaEnabled, consumed when
+// the user successfully verifies the TOTP. 5-minute TTL. Single-use.
+model MfaPendingToken {
+  id         String   @id @default(cuid())
+  userId     String   @db.Uuid
+  tokenHash  String   @unique
+  purpose    String   // 'login' | 'sudo' | 'enrollment'
+  destination String? // where to redirect after success
+  expiresAt  DateTime
+  consumedAt DateTime?
+  createdAt  DateTime @default(now())
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@index([tokenHash])
 }
 
 model Service {
@@ -105,9 +155,9 @@ model Session {
   stripePaymentId String?
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
-  user            User          @relation(fields: [userId], references: [id])
-  service         Service       @relation(fields: [serviceId], references: [id])
-  package         Package?      @relation(fields: [packageId], references: [id])
+  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  service         Service       @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  package         Package?      @relation(fields: [packageId], references: [id], onDelete: SetNull)
 
   @@index([userId])
   @@index([serviceId])
@@ -118,17 +168,18 @@ model Session {
 }
 
 model Package {
-  id            String    @id @default(uuid()) @db.Uuid
-  userId        String    @db.Uuid
-  serviceId     String    @db.Uuid
-  totalSessions Int
-  usedSessions  Int       @default(0)
-  expiresAt     DateTime
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  user          User      @relation(fields: [userId], references: [id])
-  service       Service   @relation(fields: [serviceId], references: [id])
-  sessions      Session[]
+  id              String    @id @default(uuid()) @db.Uuid
+  userId          String    @db.Uuid
+  serviceId       String    @db.Uuid
+  totalSessions   Int
+  usedSessions    Int       @default(0)
+  stripePaymentId String?   @unique
+  expiresAt       DateTime
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  service         Service   @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  sessions        Session[]
 
   @@index([userId])
   @@index([serviceId])
@@ -144,7 +195,7 @@ model Scholarship {
   note           String?
   createdAt      DateTime          @default(now())
   updatedAt      DateTime          @updatedAt
-  user           User              @relation(fields: [userId], references: [id])
+  user           User              @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([status])
@@ -155,33 +206,90 @@ model Donation {
   userId          String?      @db.Uuid
   tier            DonationTier
   amountCents     Int
-  stripePaymentId String       @unique
+  stripePaymentId String?      @unique
   createdAt       DateTime     @default(now())
-  user            User?        @relation(fields: [userId], references: [id])
+  updatedAt       DateTime     @updatedAt
+  user            User?        @relation(fields: [userId], references: [id], onDelete: SetNull)
 
   @@index([userId])
   @@index([tier])
-  @@index([createdAt])
 }
 
 model OrgInquiry {
-  id              String               @id @default(uuid()) @db.Uuid
+  id              String              @id @default(uuid()) @db.Uuid
   orgName         String
   contactName     String
   email           String
-  isNonprofit     Boolean              @default(false)
+  status          InquiryStatus       @default(NEW)
+  isNonprofit     Boolean             @default(false)
   ein             String?
   eventType       OrgInquiryEventType
   headcount       Int
   preferredStart  DateTime
   preferredEnd    DateTime
-  status          InquiryStatus        @default(NEW)
   message         String?
-  createdAt       DateTime             @default(now())
-  updatedAt       DateTime             @updatedAt
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
 
   @@index([email])
   @@index([status])
+  @@index([createdAt])
+  @@index([orgName])
+}
+
+model AdminAuditLog {
+  id            String   @id @default(cuid())
+  correlationId String
+  actorId       String
+  actorEmail    String
+  action        String
+  targetType    String?
+  targetId      String?
+  before        Json?
+  after         Json?
+  justification String?
+  result        String
+  ip            String?
+  userAgent     String?
+  createdAt     DateTime @default(now())
+
+  @@index([actorId])
+  @@index([action])
+  @@index([createdAt])
+}
+
+/// Attachment records -- storage key lives in S3/R2/Firebase Storage.
+/// Clients upload directly via signed URL; the API never proxies bytes.
+model Attachment {
+  id         String @id @default(uuid()) @db.Uuid
+  ownerId   String @db.Uuid
+  namespace String
+  storageKey String
+  filename  String
+  mimeType String
+  sizeBytes Int
+  uploadedAt DateTime @default(now())
+
+  @@index([ownerId])
+  @@index([namespace])
+}
+
+model SecurityEventLog {
+  id            String   @id @default(cuid())
+  eventType     String
+  outcome       String
+  correlationId String?
+  actorId       String?
+  actorRole     String?
+  targetType    String?
+  targetId      String?
+  failureReason String?
+  ip            String?
+  userAgent     String?
+  metadata      Json?
+  createdAt     DateTime @default(now())
+
   @@index([eventType])
+  @@index([actorId])
   @@index([createdAt])
 }

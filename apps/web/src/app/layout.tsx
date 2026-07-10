@@ -1,12 +1,39 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { DM_Sans, Source_Sans_3, Montserrat } from "next/font/google";
 import { ToastProvider } from "@/components/polish/ToastProvider";
 import { GlobalFooter } from "@/components/polish/GlobalFooter";
 import { AuthProvider } from "@/components/auth/AuthProvider";
 import { ThemeProvider } from "@/components/theme/ThemeProvider";
 import { AnalyticsTracker } from "@/components/analytics/AnalyticsTracker";
+import { SessionTimeoutWarning } from "@/components/auth/SessionTimeoutWarning";
 import "./globals.css";
-import "./trust-strip-animations.css";
+
+
+/**
+ * Inline pre-paint script: reads the persisted theme from localStorage and
+ * applies data-theme to <html> BEFORE first paint, preventing a flash of
+ * the wrong theme. Runs synchronously in the document <head> and is
+ * intentionally minimal. Must stay in sync with ThemeProvider.STORAGE_KEY.
+ *
+ * Also sets data-theme-ready="" so the smooth theme transition (defined in
+ * globals.css on html) is suppressed until the body has mounted. The
+ * ThemeProvider then clears/re-sets data-theme-ready on every user-driven
+ * theme change so transitions only animate when the user clicks the toggle.
+ */
+const themeBootstrapScript = `
+(function(){
+  try {
+    var stored = localStorage.getItem('hips-theme');
+    var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    var theme = (stored === 'dark' || stored === 'light') ? stored : (prefersDark ? 'dark' : 'light');
+    document.documentElement.setAttribute('data-theme', theme);
+  } catch (e) {
+    document.documentElement.setAttribute('data-theme', 'light');
+  }
+  // Mark first paint complete so the transition kicks in on subsequent toggles.
+  document.documentElement.setAttribute('data-theme-ready', '');
+})();
+`.trim();
 
 /**
  * Inline pre-paint script: reads the persisted theme from localStorage and
@@ -56,6 +83,7 @@ const montserrat = Montserrat({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? 'https://hips.foundation'),
   title: "H.I.P.S. Foundation Platform",
   description: "Anonymous peer support with hard anonymity boundaries.",
   icons: {
@@ -67,6 +95,12 @@ export const metadata: Metadata = {
       { rel: 'icon', type: 'image/png', sizes: '16x16', url: '/favicon-16x16.png' },
     ],
   },
+};
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  viewportFit: 'cover',
 };
 
 export default function RootLayout({
@@ -82,13 +116,22 @@ export default function RootLayout({
     >
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeBootstrapScript }} />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link rel="dns-prefetch" href="https://fonts.gstatic.com" />
       </head>
       <body className="min-h-full flex flex-col pb-[env(safe-area-inset-bottom)] font-body text-text-primary" suppressHydrationWarning>
+        <a
+          href="#main"
+          className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[9999] focus:px-4 focus:py-2 focus:rounded-lg focus:bg-primary focus:text-white focus:font-bold"
+        >
+          Skip to main content
+        </a>
         <ThemeProvider>
           <AuthProvider>
             <ToastProvider>
               <AnalyticsTracker />
               {children}
+              <SessionTimeoutWarning />
               <GlobalFooter />
             </ToastProvider>
           </AuthProvider>

@@ -1,4 +1,4 @@
-import { Injectable, OnModuleInit, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, OnModuleInit, OnModuleDestroy, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import crypto from 'crypto';
 import { PrismaClient } from '@prisma/client';
@@ -9,7 +9,7 @@ import type { EscalationQueueQueryDto, EscalateAlertDto, ResolveAlertDto } from 
 // (not imported from packages/db/generated/session) to maintain service boundary.
 // The safety service must never import session service source or generated code.
 // This is the approved cross-service AuditEvent bridge pattern.
-type SessionPrismaClient = PrismaClient;
+type SessionPrismaClient = any;
 
 /**
  * Flagged session with identity hidden - for admin eyes only.
@@ -73,7 +73,8 @@ interface AlertWithMitigations {
 }
 
 @Injectable()
-export class EscalationQueueService implements OnModuleInit {
+export class EscalationQueueService implements OnModuleInit, OnModuleDestroy {
+  private readonly logger = new Logger(EscalationQueueService.name);
   private sessionPrisma!: SessionPrismaClient;
 
   constructor(
@@ -99,6 +100,10 @@ export class EscalationQueueService implements OnModuleInit {
         },
       },
     }) as SessionPrismaClient;
+  }
+
+  async onModuleDestroy() {
+    await this.sessionPrisma?.$disconnect();
   }
 
   /**
@@ -329,7 +334,7 @@ export class EscalationQueueService implements OnModuleInit {
       await tx.safetyMitigation.create({
         data: {
           alertId: dto.alertId,
-          action: dto.resolution,
+          action: (dto.resolution === 'ESCALATED' ? 'ESCALATE' : 'WARNING') as any,
           success: true,
           metadata: {
             resolvedBy: adminUid,
@@ -420,7 +425,14 @@ export class EscalationQueueService implements OnModuleInit {
    * Generate anonymous participant hash from session ID using HMAC-SHA256.
    */
   private hashParticipant(sessionId: string): string {
-    const hmac = crypto.createHmac('sha256', process.env.PARTICIPANT_HASH_KEY || 'dev-key');
+    const key = process.env.PARTICIPANT_HASH_KEY;
+    if (!key) {
+      if (process.env.NODE_ENV === 'production') {
+        throw new Error('PARTICIPANT_HASH_KEY environment variable is required in production');
+      }
+      this.logger.warn('[EscalationQueue] PARTICIPANT_HASH_KEY not set — using dev fallback (NOT SAFE for production)');
+    }
+    const hmac = crypto.createHmac('sha256', key || 'dev-key');
     hmac.update(`hips-anon-${sessionId}`);
     return `P${hmac.digest('hex').substring(0, 8).toUpperCase()}`;
   }

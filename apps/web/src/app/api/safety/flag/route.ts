@@ -1,9 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { verifyFirebaseIdToken } from '@/lib/auth-edge';
+import { verifyFirebaseIdToken } from '@/lib/firebase-auth';
 import { db } from '@/lib/firebase-admin';
+import { checkRateLimit, getRateLimitHeaders } from '@/lib/rate-limit';
+import { createServiceToken, SCOPES, AUDIENCES } from '@/lib/auth/serviceToken';
+import { z } from 'zod';
+import { Phase5SessionSchema } from '@/lib/schemas/session';
+import { getInternalServiceUrl } from '@/lib/internal-service-url';
 
-const SAFETY_ENGINE_URL = process.env.SAFETY_ENGINE_URL || 'http://localhost:3003';
-const SESSION_SERVICE_SECRET = process.env.SESSION_SERVICE_SECRET;
+const SAFETY_ENGINE_URL = getInternalServiceUrl('SAFETY_ENGINE_URL', 'http://localhost:3003');
 
 // In-memory idempotency store: key → { response, timestamp }
 // TTL: 60 seconds
@@ -22,12 +26,17 @@ async function isSessionMember(firebaseUid: string, sessionId: string): Promise<
   try {
     const sessionDoc = await db.collection('phase5_sessions').doc(sessionId).get();
     if (!sessionDoc.exists) return false;
-    const data = sessionDoc.data()!;
-    return (
-      data['facilitatorId'] === firebaseUid ||
-      (Array.isArray(data['participantIdentities']) &&
-        data['participantIdentities'].includes(firebaseUid))
-    );
+    const parsed = Phase5SessionSchema.safeParse({ id: sessionDoc.id, ...sessionDoc.data() });
+    if (!parsed.success) return false;
+    const data = parsed.data;
+    if (data.facilitatorId === firebaseUid || data.metadata?.facilitatorId === firebaseUid) {
+      return true;
+    }
+    const participantDoc = await db
+      .collection('session_participants')
+      .doc(`${sessionId}_${firebaseUid}`)
+      .get();
+    return participantDoc.exists;
   } catch {
     return false;
   }
@@ -38,6 +47,13 @@ export async function POST(req: NextRequest) {
     // 1. Idempotency check — must be first to avoid duplicate work
     const idempotencyKey = req.headers.get('X-Idempotency-Key');
     if (idempotencyKey) {
+      // Validate idempotency key format: max 128 chars, alphanumeric with dashes only
+      if (typeof idempotencyKey !== 'string' || idempotencyKey.length > 128 || !/^[a-zA-Z0-9-]+$/.test(idempotencyKey)) {
+        return NextResponse.json(
+          { error: 'Invalid X-Idempotency-Key header: must be alphanumeric with dashes, max 128 chars' },
+          { status: 400 }
+        );
+      }
       const cached = idempotencyStore.get(idempotencyKey);
       if (cached && Date.now() - cached.timestamp < IDEMPOTENCY_TTL_MS) {
         return NextResponse.json(cached.response, { status: 200 });
@@ -61,13 +77,20 @@ export async function POST(req: NextRequest) {
 
     const body = await req.json();
 
-    // Validate input before proxying
-    if (!body.sessionId || !body.reporterId || !body.level || !body.reason) {
+    // Validate input with Zod schema
+    const levelSchema = z.enum(['HIGH', 'CRITICAL']);
+    const parsedLevel = levelSchema.safeParse(body.level);
+    if (!body.sessionId || !body.reporterId || !body.reason || !parsedLevel.success) {
       return NextResponse.json({ error: 'Invalid input' }, { status: 400 });
     }
 
-    if (!['HIGH', 'CRITICAL'].includes(body.level)) {
-      return NextResponse.json({ error: 'Invalid level' }, { status: 400 });
+    // Rate limit: 20 flag submissions per minute per authenticated user
+    const rateLimitResult = checkRateLimit(firebaseUid, 20, 60_000);
+    if (!rateLimitResult.allowed) {
+      return NextResponse.json(
+        { error: 'Rate limit exceeded. Please slow down.' },
+        { status: 429, headers: getRateLimitHeaders(rateLimitResult.resetAt, rateLimitResult.remaining, 20) }
+      );
     }
 
     // Verify the caller is a member of this session
@@ -78,13 +101,21 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    const serviceToken = await createServiceToken([SCOPES.SAFETY_REPORT], AUDIENCES.SAFETY, {
+      subject: 'hips-web',
+      ref: body.sessionId,
+    });
+
     const response = await fetch(`${SAFETY_ENGINE_URL}/safety/flag`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${SESSION_SERVICE_SECRET}`,
+        'Authorization': `Bearer ${serviceToken}`,
       },
-      body: JSON.stringify(body),
+      body: JSON.stringify({
+        ...body,
+        level: parsedLevel.data, // use validated enum value
+      }),
     });
 
     if (!response.ok) {

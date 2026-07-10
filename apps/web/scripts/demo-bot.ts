@@ -120,7 +120,7 @@ async function createSilentAudioTrack(): Promise<LocalAudioTrack> {
     noiseSuppression: false,
   });
 
-  console.log(`[DemoBot] Created silent audio track: ${track.trackSid}`);
+  console.log(`[DemoBot] Created silent audio track: ${track.mediaStreamTrack.id}`);
   return track;
 }
 
@@ -232,7 +232,7 @@ class DemoBot {
   private async publishAudioTrack(room: Room): Promise<void> {
     try {
       this.audioTrack = await createSilentAudioTrack();
-      await room.localParticipant.publishTrack(this.audioTrack);
+      await room.localParticipant.publishTrack(this.audioTrack as any);
       console.log('[DemoBot] Silent audio track published successfully.');
     } catch (error) {
       console.warn(`[DemoBot] Could not publish audio track: ${error instanceof Error ? error.message : String(error)}`);

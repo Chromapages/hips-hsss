@@ -6,8 +6,7 @@ import { Home, ArrowLeft, Search } from "lucide-react";
 
 export default function ServicesNotFound() {
   return (
-    <main
-      id="main-content"
+    <main id="main" tabIndex={-1}
       className="grid min-h-screen place-items-center bg-background p-6 pt-24 text-text-primary"
     >
       <div

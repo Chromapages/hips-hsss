@@ -17,7 +17,16 @@ async function bootstrap() {
 
   // Session Service listens on internal port 3001
   const port = process.env.PORT || 3001;
+  
+  app.getHttpAdapter().get('/health', (req, res) => {
+    res.status(200).json({ status: 'ok', service: 'session' });
+  });
+
   await app.listen(port);
   console.log(`H.I.P.S. Session Engine running on port ${port}`);
+
+  if (process.send) {
+    process.send('ready');
+  }
 }
 bootstrap();

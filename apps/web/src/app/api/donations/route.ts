@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { getStripeServerClient } from '@/lib/stripe';
 import { prisma } from '@/lib/prisma';
-import { verifyFirebaseIdToken } from '@/lib/auth-edge';
+import { verifyFirebaseIdToken } from '@/lib/firebase-auth';
 
 const donationSchema = z.object({
   tier: z.enum(['SUPPORTER', 'BUILDER', 'SUSTAINER', 'CATALYST']),
@@ -39,7 +39,17 @@ export async function POST(req: NextRequest) {
 
     const { tier, amountCents } = result.data;
 
-    // 3. Create Payment Intent
+    // 3. Create Payment Intent or Bypass if Demo Mode
+    const isDemoMode = process.env.NEXT_PUBLIC_DEMO_MODE === 'true';
+
+    if (isDemoMode) {
+      const mockSecret = `demo_donation_${tier}_${amountCents}`;
+      console.log(`[Demo Mode] Bypassed Stripe donation intent creation for tier ${tier}, amount: ${amountCents}`);
+      return NextResponse.json({
+        clientSecret: mockSecret,
+      });
+    }
+
     const stripe = getStripeServerClient();
     const paymentIntent = await stripe.paymentIntents.create({
       amount: amountCents,

@@ -84,7 +84,7 @@ export function MediaToolbar({
             aria-expanded={openMicMenu}
             aria-label="Select microphone"
           >
-            <Settings className="h-3.5 w-3.5 text-text-muted0" />
+            <Settings className="h-3.5 w-3.5 text-muted-foreground" />
           </button>
 
           {openMicMenu && (
@@ -93,7 +93,7 @@ export function MediaToolbar({
               role="menu"
               aria-label="Microphone selection"
             >
-              <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-text-muted0">
+              <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
                 Microphone
               </p>
               <div className="space-y-1">
@@ -131,7 +131,7 @@ export function MediaToolbar({
           'flex h-9 w-9 items-center justify-center rounded-full transition-all',
           cameraEnabled
             ? 'border border-border bg-bg-subtle text-text hover:bg-border'
-            : 'border border-border bg-bg-subtle text-text-muted0',
+            : 'border border-border bg-bg-subtle text-muted-foreground',
         ].join(' ')}
       >
         {cameraEnabled ? <Video className="h-4 w-4" /> : <VideoOff className="h-4 w-4" />}
@@ -157,7 +157,7 @@ export function MediaToolbar({
               role="menu"
               aria-label="Speaker output selection"
             >
-              <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-text-muted0">
+              <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
                 Speaker Output
               </p>
               <div className="space-y-1">

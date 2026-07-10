@@ -3,6 +3,7 @@ import { AccessToken, RoomServiceClient } from 'livekit-server-sdk';
 import { z } from 'zod';
 import crypto from 'crypto';
 import { checkRateLimit, getRateLimitHeaders } from '@/lib/rate-limit';
+import { logger } from '@/lib/logger';
 
 const DemoTokenSchema = z.object({
   token: z.string(),
@@ -34,18 +35,20 @@ async function ensureDemoRoomExists(
     const exists = rooms.some((r) => r.name === DEMO_ROOM_NAME);
 
     if (!exists) {
-      console.log(`[DemoTokenAPI] Creating demo room "${DEMO_ROOM_NAME}"...`);
+      logger.info('[DemoTokenAPI] Creating demo room', { roomName: DEMO_ROOM_NAME });
       await roomService.createRoom({
         name: DEMO_ROOM_NAME,
         emptyTimeout: 0, // Never auto-delete — room persists without participants
         maxParticipants: 10,
         metadata: JSON.stringify({ isDemoRoom: true }),
       });
-      console.log(`[DemoTokenAPI] Demo room "${DEMO_ROOM_NAME}" created.`);
+      logger.info('[DemoTokenAPI] Demo room created', { roomName: DEMO_ROOM_NAME });
     }
   } catch (error) {
     // Non-fatal: room may already exist or server prevents creation
-    console.warn(`[DemoTokenAPI] Room creation warning: ${error instanceof Error ? error.message : String(error)}`);
+    logger.warn('[DemoTokenAPI] Room creation warning', {
+      error: error instanceof Error ? error.message : String(error)
+    });
   }
 }
 
@@ -70,7 +73,7 @@ export async function POST(req: NextRequest) {
     const apiSecret = process.env.LIVEKIT_API_SECRET || 'secret';
 
     if (process.env.NODE_ENV === 'production' && (apiKey === 'devkey' || apiSecret === 'secret')) {
-      console.error('[DemoTokenAPI] MISSING CREDENTIALS IN PRODUCTION', {
+      logger.error('[DemoTokenAPI] MISSING CREDENTIALS IN PRODUCTION', {
         apiKey: apiKey !== 'devkey',
         apiSecret: apiSecret !== 'secret',
       });
@@ -84,7 +87,7 @@ export async function POST(req: NextRequest) {
     }
 
     if (!process.env.LIVEKIT_API_KEY || !process.env.LIVEKIT_API_SECRET) {
-      console.warn('[DemoTokenAPI] Using development fallback credentials (devkey/secret).');
+      logger.warn('[DemoTokenAPI] Using development fallback credentials (devkey/secret).');
     }
 
     // Ensure the demo room exists before issuing a token
@@ -99,7 +102,10 @@ export async function POST(req: NextRequest) {
     // while maintaining anonymity (no PII stored).
     const visitorIdentity = `demo-${ip.replace(/\./g, '-')}-${crypto.randomUUID().slice(0, 8)}`;
 
-    console.log(`[DemoTokenAPI] Issuing demo token for room: ${DEMO_ROOM_NAME}, identity: ${visitorIdentity}`);
+    logger.info('[DemoTokenAPI] Issuing demo token', {
+      roomName: DEMO_ROOM_NAME,
+      identitySuffix: visitorIdentity.slice(-6),
+    });
 
     const at = new AccessToken(apiKey, apiSecret, {
       identity: visitorIdentity,
@@ -133,7 +139,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(DemoTokenSchema.parse(response));
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    console.error('[DemoTokenAPI] CRITICAL Error:', {
+    logger.error('[DemoTokenAPI] CRITICAL Error', {
       message: errorMessage,
       code: error && typeof error === 'object' && 'code' in error ? (error as { code: unknown }).code : undefined,
     });

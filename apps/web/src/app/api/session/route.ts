@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { db, getDb, isFirebaseAdminReady } from '@/lib/firebase-admin';
-import { verifyFirebaseIdToken } from '@/lib/auth-edge';
 import crypto from 'crypto';
+import { FACILITATOR_ROLES } from '@/lib/roles';
+import { requireRole } from '@/lib/request-auth';
+import { verifyFirebaseIdToken } from '@/lib/firebase-auth';
 
 /**
  * Phase 5 — Session Lifecycle Manager (5.3)
@@ -14,27 +16,9 @@ import crypto from 'crypto';
  *   active → flagged (when safety concern raised)
  */
 
-type SessionStatus = 'pending' | 'active' | 'ended' | 'flagged';
+import { Phase5Session, Phase5SessionSchema } from '@/lib/schemas/session';
 
-interface Phase5Session {
-  id: string;
-  status: SessionStatus;
-  createdAt: string;
-  activeAt?: string;
-  endedAt?: string;
-  participantCount: number;
-  maxParticipants: number;
-  roomName: string;
-  flagged: boolean;
-  flaggedBy?: string;
-  flaggedReason?: string;
-  flaggedAt?: string;
-  createdBy: string;
-  metadata?: {
-    serviceType?: string;
-    facilitatorId?: string;
-  };
-}
+type SessionStatus = 'pending' | 'active' | 'ended' | 'flagged';
 
 // Whitelist of allowed metadata keys — any unrecognised key is dropped.
 // This prevents callers from smuggling facilitatorId or other privileged
@@ -62,7 +46,9 @@ async function getSession(sessionId: string): Promise<Phase5Session | null> {
     const sessionRef = getSessionRef(sessionId);
     const doc = await sessionRef.get();
     if (!doc.exists) return null;
-    return doc.data() as Phase5Session;
+    const parsed = Phase5SessionSchema.safeParse({ id: doc.id, ...doc.data() });
+    if (!parsed.success) return null;
+    return parsed.data;
   } catch (err) {
     console.warn('[SessionLifecycle] Could not read session');
     return null;
@@ -98,28 +84,16 @@ async function transitionSession(sessionId: string, newStatus: SessionStatus, ad
  * impersonating another user. See audit finding A3.
  */
 export async function POST(req: NextRequest) {
+  const authResult = await requireRole(req, ...FACILITATOR_ROLES);
+  if (authResult.error) return authResult.error;
+
   if (!isFirebaseAdminReady()) {
     return NextResponse.json({
       error: 'Service temporarily unavailable. Please try again later.',
     }, { status: 503 });
   }
 
-  const authHeader = req.headers.get('authorization');
-  const token = authHeader?.startsWith('Bearer ') ? authHeader.split(' ')[1] : null;
-  if (!token) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
-  let callerUid: string;
-  try {
-    const payload = await verifyFirebaseIdToken(token);
-    callerUid = payload.sub;
-    if (!callerUid) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-  } catch {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  const callerUid = authResult.user.uid;
 
   try {
     const body = await req.json().catch(() => ({}));
@@ -148,7 +122,7 @@ export async function POST(req: NextRequest) {
       roomName,
       flagged: false,
       metadata: {
-        serviceType,
+        ...(serviceType ? { serviceType } : {}),
         facilitatorId: callerUid,
         ...(metadata || {}),
       },
@@ -203,18 +177,18 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    await verifyFirebaseIdToken(token);
-  } catch {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+    const decoded = await verifyFirebaseIdToken(token);
+    const callerUid = decoded.sub as string;
 
-  try {
     const { searchParams } = new URL(req.url);
     const status = searchParams.get('status') as SessionStatus | null;
     const limit = parseInt(searchParams.get('limit') || '20', 10);
     const limitClamped = Math.min(Math.max(1, limit), 100);
 
-    let query: FirebaseFirestore.Query = db.collection('phase5_sessions');
+    // SECURITY: Always filter by caller's UID — prevents session enumeration
+    let query: FirebaseFirestore.Query = db
+      .collection('phase5_sessions')
+      .where('createdBy', '==', callerUid);
 
     if (status && ['pending', 'active', 'ended', 'flagged'].includes(status)) {
       query = query.where('status', '==', status);
@@ -225,7 +199,12 @@ export async function GET(req: NextRequest) {
     let sessions: Phase5Session[] = [];
     try {
       const snapshot = await query.get();
-      sessions = snapshot.docs.map(doc => doc.data() as Phase5Session);
+      sessions = snapshot.docs
+        .map(doc => {
+          const parsed = Phase5SessionSchema.safeParse({ id: doc.id, ...doc.data() });
+          return parsed.success ? parsed.data : null;
+        })
+        .filter((s): s is Phase5Session => s !== null);
     } catch (err) {
       console.warn('[SessionLifecycle] Could not query sessions');
     }

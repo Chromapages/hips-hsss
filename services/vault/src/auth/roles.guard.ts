@@ -26,7 +26,12 @@ export class RolesGuard implements CanActivate {
     }
 
     const request = context.switchToHttp().getRequest();
-    const role = request.user?.role;
+    // VaultAuthGuard must run first and set request.user — if not, deny access
+    const user = request.user;
+    if (!user) {
+      throw new UnauthorizedException('User not authenticated');
+    }
+    const role = user.role;
 
     if (!role || !requiredRoles.includes(role)) {
       throw new UnauthorizedException('Insufficient permissions');

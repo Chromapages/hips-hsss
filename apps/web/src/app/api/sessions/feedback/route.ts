@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { getDb } from '@/lib/firebase-admin';
-import { verifyFirebaseIdToken } from '@/lib/auth-edge';
+import { verifyFirebaseIdToken } from '@/lib/firebase-auth';
 
 const feedbackSchema = z.object({
   sessionId: z.string().min(1, 'Session ID is required'),
@@ -48,6 +48,15 @@ export async function POST(req: NextRequest) {
       const sessionData = sessionDoc.data();
       if (sessionData?.userId !== firebaseUid) {
         return NextResponse.json({ error: 'Forbidden: You cannot provide feedback for this session' }, { status: 403 });
+      }
+
+      // Only accept feedback for completed or ended sessions
+      const sessionStatus = sessionData?.status;
+      if (sessionStatus !== 'COMPLETED' && sessionStatus !== 'ENDED') {
+        return NextResponse.json(
+          { error: 'Feedback can only be submitted for completed sessions' },
+          { status: 400 }
+        );
       }
 
       // Add feedback anonymously (do NOT store userId directly in feedback to ensure anonymity)

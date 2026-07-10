@@ -33,7 +33,7 @@ export function VoiceControlsBar({
             rounded-2xl border border-white/10 font-bold transition-all 
             hover:bg-surface/10 focus:outline-none focus:ring-2 focus:ring-primary
             ${isMuted 
-              ? 'bg-destructive0/10 border-destructive/30 text-destructive' 
+              ? 'bg-destructive/10 border-destructive/30 text-destructive' 
               : 'border-white/10 text-white hover:bg-surface/10'
             }
           `}
@@ -87,7 +87,7 @@ export function VoiceControlsBar({
           aria-label="Leave the session"
           className="flex items-center gap-2 sm:gap-3 px-4 sm:px-6 py-3 sm:py-4 
             rounded-xl bg-destructive text-white font-bold transition-all 
-            hover:bg-destructive0 focus:outline-none focus:ring-2 focus:ring-red-500
+            hover:bg-destructive/10 focus:outline-none focus:ring-2 focus:ring-red-500
             ml-0 sm:ml-3 leave-btn"
         >
           <span className="text-lg sm:text-xl">📞</span>

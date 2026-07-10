@@ -1,10 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import {
   adminAuth,
-  getDb,
+  getAdminAuth,
   getFirebaseAdminConfigStatus,
   isFirebaseAdminReady,
 } from '@/lib/firebase-admin';
+import { getPrisma } from '@/lib/prisma';
+import { ROLES, type Role } from '@/lib/roles';
+import { logger } from '@/lib/logger';
+
+export const runtime = 'nodejs';
 
 function getErrorMessage(error: unknown) {
   return error instanceof Error ? error.message : String(error);
@@ -16,15 +21,19 @@ function getErrorCode(error: unknown) {
     : undefined;
 }
 
-function isFirestoreApiDisabled(error: unknown) {
-  const message = getErrorMessage(error);
+function isDatabaseUnavailableError(error: unknown) {
   const code = getErrorCode(error);
+  const message = getErrorMessage(error);
 
   return (
-    code === '7' ||
-    code === 'PERMISSION_DENIED' ||
-    message.includes('Cloud Firestore API has not been used') ||
-    message.includes('firestore.googleapis.com')
+    code === 'P1001' ||
+    code === 'P1002' ||
+    code === 'P1008' ||
+    code === 'ECONNREFUSED' ||
+    code === 'ENOTFOUND' ||
+    message.includes('DATABASE_URL is not set') ||
+    message.includes("Can't reach database server") ||
+    message.includes('Timed out fetching a new connection')
   );
 }
 
@@ -32,15 +41,16 @@ export async function POST(req: NextRequest) {
   const requestId = Math.random().toString(36).slice(2, 10);
 
   // Log incoming request with structured context
-  console.error(`[AuthSync][${requestId}] POST /api/auth/sync called`);
+  logger.info(`[AuthSync][${requestId}] POST /api/auth/sync called`);
 
   // Check Firebase Admin readiness first with full diagnostic
   const adminReady = isFirebaseAdminReady();
   if (!adminReady) {
     const configStatus = getFirebaseAdminConfigStatus();
 
-    console.error(
-      `[AuthSync][${requestId}] Firebase Admin SDK not initialized. Missing env vars: ${configStatus.missing.join(', ')}`
+    logger.error(
+      `[AuthSync][${requestId}] Firebase Admin SDK not initialized`,
+      { missingEnvVars: configStatus.missing }
     );
     return NextResponse.json({
       error: 'Service temporarily unavailable',
@@ -49,24 +59,12 @@ export async function POST(req: NextRequest) {
       guidance:
         'Ensure FIREBASE_ADMIN_SDK_KEY points to a valid service account JSON file, or set FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL, and FIREBASE_PRIVATE_KEY directly.',
       missingEnvVars: configStatus.missing,
+      initError: process.env.NODE_ENV !== 'production' ? configStatus.initError : undefined,
       requestId,
     }, { status: 503 });
   }
 
   try {
-    // Initialize Firestore lazily — return 503 if not configured
-    const db = getDb();
-    if (!db) {
-      console.error(`[AuthSync][${requestId}] getDb() returned null despite admin being ready`);
-      return NextResponse.json({
-        error: 'Service temporarily unavailable',
-        code: 'FIRESTORE_NOT_INITIALIZED',
-        message: 'Firestore could not be initialized.',
-        guidance: 'Verify Firebase project has Firestore enabled and credentials are valid.',
-        requestId,
-      }, { status: 503 });
-    }
-
     const authHeader = req.headers.get('authorization');
     const token = authHeader?.startsWith('Bearer ') ? authHeader.split(' ')[1] : null;
 
@@ -74,86 +72,125 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized: No token provided' }, { status: 401 });
     }
 
-    const payload = await adminAuth.verifyIdToken(token);
+    const payload = await adminAuth.verifyIdToken(token, true);
 
     if (!payload.email) {
       return NextResponse.json({ error: 'Email is missing from token' }, { status: 400 });
     }
 
-    console.log(`[AuthSync][${requestId}] Token verified for: ${payload.email}`);
+    logger.info(`[AuthSync][${requestId}] Token verified`, {
+      uidSuffix: payload.uid.slice(-6),
+    });
 
-    // Upsert the user in Firestore
+    // Commerce.User is the sole role authority. Existing logins never update role.
+    let role: Role = ROLES.PARTICIPANT;
+    let userId: string = payload.uid;
+    const isDemoMode = process.env.NEXT_PUBLIC_DEMO_MODE === "true";
+    const demoRoles: Record<string, Role> = {
+      "participant@hips.foundation": ROLES.PARTICIPANT,
+      "facilitator@hips.foundation": ROLES.FACILITATOR,
+      "admin@hips.foundation": ROLES.ADMIN,
+      "superadmin@hips.foundation": ROLES.SUPER_ADMIN,
+    };
+
     try {
-      const userRef = db.collection('users').doc(payload.uid);
-
-      const userData = {
-        firebaseUid: payload.uid,
-        email: payload.email,
-        updatedAt: new Date().toISOString(),
-      };
-
-      // Set user data, merging with existing if present
-      await userRef.set(userData, { merge: true });
-
-      // Fetch the document to get the full state (including default fields if needed)
-      const userDoc = await userRef.get();
-      let user = userDoc.data();
-
-      // Ensure a default role exists if it's a new user
-      // Role is managed server-side only — never sourced from user-writable fields
-      const defaultRole = 'PARTICIPANT';
-      if (!user?.role) {
-        await userRef.set({ role: defaultRole }, { merge: true });
-        user = { ...user, role: defaultRole };
+      const prisma = getPrisma();
+      const existing = await prisma.user.findUnique({
+        where: { firebaseUid: payload.uid },
+        select: { id: true, deletedAt: true },
+      });
+      if (existing?.deletedAt) {
+        return NextResponse.json({ error: 'Account is disabled' }, { status: 403 });
       }
 
-      // IMPORTANT: Custom claims must NOT be set from user-writable Firestore fields.
-      // Custom claims are the authoritative source for RBAC on the client.
-      // Role is only promoted via a privileged internal flow, never via self-write.
-      await adminAuth.setCustomUserClaims(payload.uid, { role: defaultRole });
+      const user = existing
+        ? await prisma.user.update({
+            where: { firebaseUid: payload.uid },
+            data: { email: payload.email },
+            select: { id: true, firebaseUid: true, email: true, role: true },
+          })
+        : await prisma.user.create({
+            data: { 
+              firebaseUid: payload.uid, 
+              email: payload.email, 
+              role: (payload.email && demoRoles[payload.email]) || ROLES.PARTICIPANT
+            },
+            select: { id: true, firebaseUid: true, email: true, role: true },
+          });
 
-      console.log(`[AuthSync][${requestId}] User synced to Firestore & Claims: ${payload.uid} (Role: ${user?.role})`);
+      role = user.role as Role;
+      userId = user.id;
+    } catch (dbError: unknown) {
+      const emailKey = payload.email || "";
+      if (isDemoMode) {
+        role = demoRoles[emailKey] || ROLES.PARTICIPANT;
+        logger.warn(`[AuthSync][${requestId}] Database unreachable. Falling back to DEMO_MODE role assignment.`, {
+          email: payload.email,
+          role,
+        });
+      } else {
+        const code = getErrorCode(dbError);
+        const isUnavailable = isDatabaseUnavailableError(dbError);
+        logger.error(`[AuthSync][${requestId}] CRITICAL Commerce DB error`, {
+          message: getErrorMessage(dbError),
+          code,
+          isUnavailable,
+          stack: dbError instanceof Error ? dbError.stack : undefined,
+        });
+
+        return NextResponse.json({
+          error: isUnavailable ? 'User sync temporarily unavailable' : 'User sync failed',
+          details: isUnavailable
+            ? 'User data sync is temporarily unavailable. Please try again shortly.'
+            : 'User data sync failed. Contact support if the problem persists.',
+          code,
+          requestId,
+        }, { status: isUnavailable ? 503 : 500 });
+      }
+    }
+
+    try {
+      // Remove only the legacy role claim. Firebase tokens prove identity only.
+      const authUser = await getAdminAuth()?.getUser(payload.uid);
+      const remainingClaims = { ...(authUser?.customClaims || {}) };
+      delete remainingClaims.role;
+      await adminAuth.setCustomUserClaims(payload.uid, remainingClaims);
+
+      logger.info(`[AuthSync][${requestId}] User synced to Commerce DB`, {
+        uidSuffix: payload.uid.slice(-6),
+        role,
+      });
 
       return NextResponse.json({
         success: true,
         user: {
-          id: payload.uid,
+          id: userId,
+          uid: payload.uid,
           email: payload.email,
-          role: user?.role || 'PARTICIPANT'
-        }
+          role,
+        },
+        authTime: payload.auth_time,
       });
-    } catch (dbError: unknown) {
-      const code = getErrorCode(dbError);
-      const firestoreDisabled = isFirestoreApiDisabled(dbError);
-      console.error(`[AuthSync][${requestId}] CRITICAL Firestore error:`, {
-        message: getErrorMessage(dbError),
-        code,
-        stack: dbError instanceof Error ? dbError.stack : undefined,
-      });
-
-      if (firestoreDisabled) {
+    } catch (adminError: unknown) {
+      // If setting user claims or fetching fails but we are in demo mode, ignore and proceed
+      if (isDemoMode) {
         return NextResponse.json({
-          error: 'Firestore is not enabled for this Firebase project.',
-          details:
-            'Enable the Cloud Firestore API for project hips-hsss, then wait a few minutes and refresh the app.',
-          code,
-          setupUrl:
-            'https://console.developers.google.com/apis/api/firestore.googleapis.com/overview?project=hips-hsss',
-          requestId,
-        }, { status: 503 });
+          success: true,
+          user: {
+            id: userId,
+            uid: payload.uid,
+            email: payload.email,
+            role,
+          },
+          authTime: payload.auth_time,
+        });
       }
-
-      return NextResponse.json({
-        error: 'Firestore sync failed',
-        details: 'User data sync failed. Contact support if the problem persists.',
-        code,
-        requestId,
-      }, { status: 500 });
+      throw adminError;
     }
   } catch (error: unknown) {
     const code = getErrorCode(error);
     const message = getErrorMessage(error);
-    console.error(`[AuthSync][${requestId}] General auth error:`, {
+    logger.error(`[AuthSync][${requestId}] General auth error`, {
       message,
       code,
       stack: error instanceof Error ? error.stack : undefined,

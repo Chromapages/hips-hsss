@@ -23,6 +23,11 @@ export type IdentityRecord = $Result.DefaultSelection<Prisma.$IdentityRecordPayl
  * 
  */
 export type VaultAccessLog = $Result.DefaultSelection<Prisma.$VaultAccessLogPayload>
+/**
+ * Model VaultAccessRequest
+ * 
+ */
+export type VaultAccessRequest = $Result.DefaultSelection<Prisma.$VaultAccessRequestPayload>
 
 /**
  * Enums
@@ -185,6 +190,16 @@ export class PrismaClient<
     * ```
     */
   get vaultAccessLog(): Prisma.VaultAccessLogDelegate<ExtArgs>;
+
+  /**
+   * `prisma.vaultAccessRequest`: Exposes CRUD operations for the **VaultAccessRequest** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more VaultAccessRequests
+    * const vaultAccessRequests = await prisma.vaultAccessRequest.findMany()
+    * ```
+    */
+  get vaultAccessRequest(): Prisma.VaultAccessRequestDelegate<ExtArgs>;
 }
 
 export namespace Prisma {
@@ -626,7 +641,8 @@ export namespace Prisma {
 
   export const ModelName: {
     IdentityRecord: 'IdentityRecord',
-    VaultAccessLog: 'VaultAccessLog'
+    VaultAccessLog: 'VaultAccessLog',
+    VaultAccessRequest: 'VaultAccessRequest'
   };
 
   export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -642,7 +658,7 @@ export namespace Prisma {
 
   export type TypeMap<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, ClientOptions = {}> = {
     meta: {
-      modelProps: "identityRecord" | "vaultAccessLog"
+      modelProps: "identityRecord" | "vaultAccessLog" | "vaultAccessRequest"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -783,6 +799,76 @@ export namespace Prisma {
           count: {
             args: Prisma.VaultAccessLogCountArgs<ExtArgs>
             result: $Utils.Optional<VaultAccessLogCountAggregateOutputType> | number
+          }
+        }
+      }
+      VaultAccessRequest: {
+        payload: Prisma.$VaultAccessRequestPayload<ExtArgs>
+        fields: Prisma.VaultAccessRequestFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.VaultAccessRequestFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$VaultAccessRequestPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.VaultAccessRequestFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$VaultAccessRequestPayload>
+          }
+          findFirst: {
+            args: Prisma.VaultAccessRequestFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$VaultAccessRequestPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.VaultAccessRequestFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$VaultAccessRequestPayload>
+          }
+          findMany: {
+            args: Prisma.VaultAccessRequestFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$VaultAccessRequestPayload>[]
+          }
+          create: {
+            args: Prisma.VaultAccessRequestCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$VaultAccessRequestPayload>
+          }
+          createMany: {
+            args: Prisma.VaultAccessRequestCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.VaultAccessRequestCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$VaultAccessRequestPayload>[]
+          }
+          delete: {
+            args: Prisma.VaultAccessRequestDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$VaultAccessRequestPayload>
+          }
+          update: {
+            args: Prisma.VaultAccessRequestUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$VaultAccessRequestPayload>
+          }
+          deleteMany: {
+            args: Prisma.VaultAccessRequestDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.VaultAccessRequestUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          upsert: {
+            args: Prisma.VaultAccessRequestUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$VaultAccessRequestPayload>
+          }
+          aggregate: {
+            args: Prisma.VaultAccessRequestAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateVaultAccessRequest>
+          }
+          groupBy: {
+            args: Prisma.VaultAccessRequestGroupByArgs<ExtArgs>
+            result: $Utils.Optional<VaultAccessRequestGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.VaultAccessRequestCountArgs<ExtArgs>
+            result: $Utils.Optional<VaultAccessRequestCountAggregateOutputType> | number
           }
         }
       }
@@ -1924,6 +2010,7 @@ export namespace Prisma {
     subjectRef: string | null
     purpose: $Enums.VaultAccessPurpose | null
     actorRef: string | null
+    action: string | null
     requestId: string | null
     createdAt: Date | null
   }
@@ -1933,6 +2020,7 @@ export namespace Prisma {
     subjectRef: string | null
     purpose: $Enums.VaultAccessPurpose | null
     actorRef: string | null
+    action: string | null
     requestId: string | null
     createdAt: Date | null
   }
@@ -1942,6 +2030,7 @@ export namespace Prisma {
     subjectRef: number
     purpose: number
     actorRef: number
+    action: number
     requestId: number
     createdAt: number
     _all: number
@@ -1953,6 +2042,7 @@ export namespace Prisma {
     subjectRef?: true
     purpose?: true
     actorRef?: true
+    action?: true
     requestId?: true
     createdAt?: true
   }
@@ -1962,6 +2052,7 @@ export namespace Prisma {
     subjectRef?: true
     purpose?: true
     actorRef?: true
+    action?: true
     requestId?: true
     createdAt?: true
   }
@@ -1971,6 +2062,7 @@ export namespace Prisma {
     subjectRef?: true
     purpose?: true
     actorRef?: true
+    action?: true
     requestId?: true
     createdAt?: true
     _all?: true
@@ -2053,6 +2145,7 @@ export namespace Prisma {
     subjectRef: string
     purpose: $Enums.VaultAccessPurpose
     actorRef: string
+    action: string | null
     requestId: string
     createdAt: Date
     _count: VaultAccessLogCountAggregateOutputType | null
@@ -2079,6 +2172,7 @@ export namespace Prisma {
     subjectRef?: boolean
     purpose?: boolean
     actorRef?: boolean
+    action?: boolean
     requestId?: boolean
     createdAt?: boolean
   }, ExtArgs["result"]["vaultAccessLog"]>
@@ -2088,6 +2182,7 @@ export namespace Prisma {
     subjectRef?: boolean
     purpose?: boolean
     actorRef?: boolean
+    action?: boolean
     requestId?: boolean
     createdAt?: boolean
   }, ExtArgs["result"]["vaultAccessLog"]>
@@ -2097,6 +2192,7 @@ export namespace Prisma {
     subjectRef?: boolean
     purpose?: boolean
     actorRef?: boolean
+    action?: boolean
     requestId?: boolean
     createdAt?: boolean
   }
@@ -2110,6 +2206,7 @@ export namespace Prisma {
       subjectRef: string
       purpose: $Enums.VaultAccessPurpose
       actorRef: string
+      action: string | null
       requestId: string
       createdAt: Date
     }, ExtArgs["result"]["vaultAccessLog"]>
@@ -2509,6 +2606,7 @@ export namespace Prisma {
     readonly subjectRef: FieldRef<"VaultAccessLog", 'String'>
     readonly purpose: FieldRef<"VaultAccessLog", 'VaultAccessPurpose'>
     readonly actorRef: FieldRef<"VaultAccessLog", 'String'>
+    readonly action: FieldRef<"VaultAccessLog", 'String'>
     readonly requestId: FieldRef<"VaultAccessLog", 'String'>
     readonly createdAt: FieldRef<"VaultAccessLog", 'DateTime'>
   }
@@ -2800,6 +2898,928 @@ export namespace Prisma {
 
 
   /**
+   * Model VaultAccessRequest
+   */
+
+  export type AggregateVaultAccessRequest = {
+    _count: VaultAccessRequestCountAggregateOutputType | null
+    _min: VaultAccessRequestMinAggregateOutputType | null
+    _max: VaultAccessRequestMaxAggregateOutputType | null
+  }
+
+  export type VaultAccessRequestMinAggregateOutputType = {
+    id: string | null
+    subjectRef: string | null
+    requesterRef: string | null
+    justification: string | null
+    status: string | null
+    accessedAt: Date | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type VaultAccessRequestMaxAggregateOutputType = {
+    id: string | null
+    subjectRef: string | null
+    requesterRef: string | null
+    justification: string | null
+    status: string | null
+    accessedAt: Date | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type VaultAccessRequestCountAggregateOutputType = {
+    id: number
+    subjectRef: number
+    requesterRef: number
+    justification: number
+    status: number
+    accessedAt: number
+    metadata: number
+    createdAt: number
+    updatedAt: number
+    _all: number
+  }
+
+
+  export type VaultAccessRequestMinAggregateInputType = {
+    id?: true
+    subjectRef?: true
+    requesterRef?: true
+    justification?: true
+    status?: true
+    accessedAt?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type VaultAccessRequestMaxAggregateInputType = {
+    id?: true
+    subjectRef?: true
+    requesterRef?: true
+    justification?: true
+    status?: true
+    accessedAt?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type VaultAccessRequestCountAggregateInputType = {
+    id?: true
+    subjectRef?: true
+    requesterRef?: true
+    justification?: true
+    status?: true
+    accessedAt?: true
+    metadata?: true
+    createdAt?: true
+    updatedAt?: true
+    _all?: true
+  }
+
+  export type VaultAccessRequestAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which VaultAccessRequest to aggregate.
+     */
+    where?: VaultAccessRequestWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of VaultAccessRequests to fetch.
+     */
+    orderBy?: VaultAccessRequestOrderByWithRelationInput | VaultAccessRequestOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: VaultAccessRequestWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` VaultAccessRequests from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` VaultAccessRequests.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned VaultAccessRequests
+    **/
+    _count?: true | VaultAccessRequestCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: VaultAccessRequestMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: VaultAccessRequestMaxAggregateInputType
+  }
+
+  export type GetVaultAccessRequestAggregateType<T extends VaultAccessRequestAggregateArgs> = {
+        [P in keyof T & keyof AggregateVaultAccessRequest]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateVaultAccessRequest[P]>
+      : GetScalarType<T[P], AggregateVaultAccessRequest[P]>
+  }
+
+
+
+
+  export type VaultAccessRequestGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: VaultAccessRequestWhereInput
+    orderBy?: VaultAccessRequestOrderByWithAggregationInput | VaultAccessRequestOrderByWithAggregationInput[]
+    by: VaultAccessRequestScalarFieldEnum[] | VaultAccessRequestScalarFieldEnum
+    having?: VaultAccessRequestScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: VaultAccessRequestCountAggregateInputType | true
+    _min?: VaultAccessRequestMinAggregateInputType
+    _max?: VaultAccessRequestMaxAggregateInputType
+  }
+
+  export type VaultAccessRequestGroupByOutputType = {
+    id: string
+    subjectRef: string
+    requesterRef: string
+    justification: string
+    status: string
+    accessedAt: Date | null
+    metadata: JsonValue
+    createdAt: Date
+    updatedAt: Date
+    _count: VaultAccessRequestCountAggregateOutputType | null
+    _min: VaultAccessRequestMinAggregateOutputType | null
+    _max: VaultAccessRequestMaxAggregateOutputType | null
+  }
+
+  type GetVaultAccessRequestGroupByPayload<T extends VaultAccessRequestGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<VaultAccessRequestGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof VaultAccessRequestGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], VaultAccessRequestGroupByOutputType[P]>
+            : GetScalarType<T[P], VaultAccessRequestGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type VaultAccessRequestSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    subjectRef?: boolean
+    requesterRef?: boolean
+    justification?: boolean
+    status?: boolean
+    accessedAt?: boolean
+    metadata?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }, ExtArgs["result"]["vaultAccessRequest"]>
+
+  export type VaultAccessRequestSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    subjectRef?: boolean
+    requesterRef?: boolean
+    justification?: boolean
+    status?: boolean
+    accessedAt?: boolean
+    metadata?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }, ExtArgs["result"]["vaultAccessRequest"]>
+
+  export type VaultAccessRequestSelectScalar = {
+    id?: boolean
+    subjectRef?: boolean
+    requesterRef?: boolean
+    justification?: boolean
+    status?: boolean
+    accessedAt?: boolean
+    metadata?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }
+
+
+  export type $VaultAccessRequestPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "VaultAccessRequest"
+    objects: {}
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      subjectRef: string
+      requesterRef: string
+      justification: string
+      status: string
+      accessedAt: Date | null
+      metadata: Prisma.JsonValue
+      createdAt: Date
+      updatedAt: Date
+    }, ExtArgs["result"]["vaultAccessRequest"]>
+    composites: {}
+  }
+
+  type VaultAccessRequestGetPayload<S extends boolean | null | undefined | VaultAccessRequestDefaultArgs> = $Result.GetResult<Prisma.$VaultAccessRequestPayload, S>
+
+  type VaultAccessRequestCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = 
+    Omit<VaultAccessRequestFindManyArgs, 'select' | 'include' | 'distinct'> & {
+      select?: VaultAccessRequestCountAggregateInputType | true
+    }
+
+  export interface VaultAccessRequestDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['VaultAccessRequest'], meta: { name: 'VaultAccessRequest' } }
+    /**
+     * Find zero or one VaultAccessRequest that matches the filter.
+     * @param {VaultAccessRequestFindUniqueArgs} args - Arguments to find a VaultAccessRequest
+     * @example
+     * // Get one VaultAccessRequest
+     * const vaultAccessRequest = await prisma.vaultAccessRequest.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends VaultAccessRequestFindUniqueArgs>(args: SelectSubset<T, VaultAccessRequestFindUniqueArgs<ExtArgs>>): Prisma__VaultAccessRequestClient<$Result.GetResult<Prisma.$VaultAccessRequestPayload<ExtArgs>, T, "findUnique"> | null, null, ExtArgs>
+
+    /**
+     * Find one VaultAccessRequest that matches the filter or throw an error with `error.code='P2025'` 
+     * if no matches were found.
+     * @param {VaultAccessRequestFindUniqueOrThrowArgs} args - Arguments to find a VaultAccessRequest
+     * @example
+     * // Get one VaultAccessRequest
+     * const vaultAccessRequest = await prisma.vaultAccessRequest.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends VaultAccessRequestFindUniqueOrThrowArgs>(args: SelectSubset<T, VaultAccessRequestFindUniqueOrThrowArgs<ExtArgs>>): Prisma__VaultAccessRequestClient<$Result.GetResult<Prisma.$VaultAccessRequestPayload<ExtArgs>, T, "findUniqueOrThrow">, never, ExtArgs>
+
+    /**
+     * Find the first VaultAccessRequest that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {VaultAccessRequestFindFirstArgs} args - Arguments to find a VaultAccessRequest
+     * @example
+     * // Get one VaultAccessRequest
+     * const vaultAccessRequest = await prisma.vaultAccessRequest.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends VaultAccessRequestFindFirstArgs>(args?: SelectSubset<T, VaultAccessRequestFindFirstArgs<ExtArgs>>): Prisma__VaultAccessRequestClient<$Result.GetResult<Prisma.$VaultAccessRequestPayload<ExtArgs>, T, "findFirst"> | null, null, ExtArgs>
+
+    /**
+     * Find the first VaultAccessRequest that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {VaultAccessRequestFindFirstOrThrowArgs} args - Arguments to find a VaultAccessRequest
+     * @example
+     * // Get one VaultAccessRequest
+     * const vaultAccessRequest = await prisma.vaultAccessRequest.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends VaultAccessRequestFindFirstOrThrowArgs>(args?: SelectSubset<T, VaultAccessRequestFindFirstOrThrowArgs<ExtArgs>>): Prisma__VaultAccessRequestClient<$Result.GetResult<Prisma.$VaultAccessRequestPayload<ExtArgs>, T, "findFirstOrThrow">, never, ExtArgs>
+
+    /**
+     * Find zero or more VaultAccessRequests that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {VaultAccessRequestFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all VaultAccessRequests
+     * const vaultAccessRequests = await prisma.vaultAccessRequest.findMany()
+     * 
+     * // Get first 10 VaultAccessRequests
+     * const vaultAccessRequests = await prisma.vaultAccessRequest.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const vaultAccessRequestWithIdOnly = await prisma.vaultAccessRequest.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends VaultAccessRequestFindManyArgs>(args?: SelectSubset<T, VaultAccessRequestFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$VaultAccessRequestPayload<ExtArgs>, T, "findMany">>
+
+    /**
+     * Create a VaultAccessRequest.
+     * @param {VaultAccessRequestCreateArgs} args - Arguments to create a VaultAccessRequest.
+     * @example
+     * // Create one VaultAccessRequest
+     * const VaultAccessRequest = await prisma.vaultAccessRequest.create({
+     *   data: {
+     *     // ... data to create a VaultAccessRequest
+     *   }
+     * })
+     * 
+     */
+    create<T extends VaultAccessRequestCreateArgs>(args: SelectSubset<T, VaultAccessRequestCreateArgs<ExtArgs>>): Prisma__VaultAccessRequestClient<$Result.GetResult<Prisma.$VaultAccessRequestPayload<ExtArgs>, T, "create">, never, ExtArgs>
+
+    /**
+     * Create many VaultAccessRequests.
+     * @param {VaultAccessRequestCreateManyArgs} args - Arguments to create many VaultAccessRequests.
+     * @example
+     * // Create many VaultAccessRequests
+     * const vaultAccessRequest = await prisma.vaultAccessRequest.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends VaultAccessRequestCreateManyArgs>(args?: SelectSubset<T, VaultAccessRequestCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many VaultAccessRequests and returns the data saved in the database.
+     * @param {VaultAccessRequestCreateManyAndReturnArgs} args - Arguments to create many VaultAccessRequests.
+     * @example
+     * // Create many VaultAccessRequests
+     * const vaultAccessRequest = await prisma.vaultAccessRequest.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many VaultAccessRequests and only return the `id`
+     * const vaultAccessRequestWithIdOnly = await prisma.vaultAccessRequest.createManyAndReturn({ 
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends VaultAccessRequestCreateManyAndReturnArgs>(args?: SelectSubset<T, VaultAccessRequestCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$VaultAccessRequestPayload<ExtArgs>, T, "createManyAndReturn">>
+
+    /**
+     * Delete a VaultAccessRequest.
+     * @param {VaultAccessRequestDeleteArgs} args - Arguments to delete one VaultAccessRequest.
+     * @example
+     * // Delete one VaultAccessRequest
+     * const VaultAccessRequest = await prisma.vaultAccessRequest.delete({
+     *   where: {
+     *     // ... filter to delete one VaultAccessRequest
+     *   }
+     * })
+     * 
+     */
+    delete<T extends VaultAccessRequestDeleteArgs>(args: SelectSubset<T, VaultAccessRequestDeleteArgs<ExtArgs>>): Prisma__VaultAccessRequestClient<$Result.GetResult<Prisma.$VaultAccessRequestPayload<ExtArgs>, T, "delete">, never, ExtArgs>
+
+    /**
+     * Update one VaultAccessRequest.
+     * @param {VaultAccessRequestUpdateArgs} args - Arguments to update one VaultAccessRequest.
+     * @example
+     * // Update one VaultAccessRequest
+     * const vaultAccessRequest = await prisma.vaultAccessRequest.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends VaultAccessRequestUpdateArgs>(args: SelectSubset<T, VaultAccessRequestUpdateArgs<ExtArgs>>): Prisma__VaultAccessRequestClient<$Result.GetResult<Prisma.$VaultAccessRequestPayload<ExtArgs>, T, "update">, never, ExtArgs>
+
+    /**
+     * Delete zero or more VaultAccessRequests.
+     * @param {VaultAccessRequestDeleteManyArgs} args - Arguments to filter VaultAccessRequests to delete.
+     * @example
+     * // Delete a few VaultAccessRequests
+     * const { count } = await prisma.vaultAccessRequest.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends VaultAccessRequestDeleteManyArgs>(args?: SelectSubset<T, VaultAccessRequestDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more VaultAccessRequests.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {VaultAccessRequestUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many VaultAccessRequests
+     * const vaultAccessRequest = await prisma.vaultAccessRequest.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends VaultAccessRequestUpdateManyArgs>(args: SelectSubset<T, VaultAccessRequestUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create or update one VaultAccessRequest.
+     * @param {VaultAccessRequestUpsertArgs} args - Arguments to update or create a VaultAccessRequest.
+     * @example
+     * // Update or create a VaultAccessRequest
+     * const vaultAccessRequest = await prisma.vaultAccessRequest.upsert({
+     *   create: {
+     *     // ... data to create a VaultAccessRequest
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the VaultAccessRequest we want to update
+     *   }
+     * })
+     */
+    upsert<T extends VaultAccessRequestUpsertArgs>(args: SelectSubset<T, VaultAccessRequestUpsertArgs<ExtArgs>>): Prisma__VaultAccessRequestClient<$Result.GetResult<Prisma.$VaultAccessRequestPayload<ExtArgs>, T, "upsert">, never, ExtArgs>
+
+
+    /**
+     * Count the number of VaultAccessRequests.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {VaultAccessRequestCountArgs} args - Arguments to filter VaultAccessRequests to count.
+     * @example
+     * // Count the number of VaultAccessRequests
+     * const count = await prisma.vaultAccessRequest.count({
+     *   where: {
+     *     // ... the filter for the VaultAccessRequests we want to count
+     *   }
+     * })
+    **/
+    count<T extends VaultAccessRequestCountArgs>(
+      args?: Subset<T, VaultAccessRequestCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], VaultAccessRequestCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a VaultAccessRequest.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {VaultAccessRequestAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends VaultAccessRequestAggregateArgs>(args: Subset<T, VaultAccessRequestAggregateArgs>): Prisma.PrismaPromise<GetVaultAccessRequestAggregateType<T>>
+
+    /**
+     * Group by VaultAccessRequest.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {VaultAccessRequestGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends VaultAccessRequestGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: VaultAccessRequestGroupByArgs['orderBy'] }
+        : { orderBy?: VaultAccessRequestGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, VaultAccessRequestGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetVaultAccessRequestGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the VaultAccessRequest model
+   */
+  readonly fields: VaultAccessRequestFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for VaultAccessRequest.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__VaultAccessRequestClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the VaultAccessRequest model
+   */ 
+  interface VaultAccessRequestFieldRefs {
+    readonly id: FieldRef<"VaultAccessRequest", 'String'>
+    readonly subjectRef: FieldRef<"VaultAccessRequest", 'String'>
+    readonly requesterRef: FieldRef<"VaultAccessRequest", 'String'>
+    readonly justification: FieldRef<"VaultAccessRequest", 'String'>
+    readonly status: FieldRef<"VaultAccessRequest", 'String'>
+    readonly accessedAt: FieldRef<"VaultAccessRequest", 'DateTime'>
+    readonly metadata: FieldRef<"VaultAccessRequest", 'Json'>
+    readonly createdAt: FieldRef<"VaultAccessRequest", 'DateTime'>
+    readonly updatedAt: FieldRef<"VaultAccessRequest", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * VaultAccessRequest findUnique
+   */
+  export type VaultAccessRequestFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the VaultAccessRequest
+     */
+    select?: VaultAccessRequestSelect<ExtArgs> | null
+    /**
+     * Filter, which VaultAccessRequest to fetch.
+     */
+    where: VaultAccessRequestWhereUniqueInput
+  }
+
+  /**
+   * VaultAccessRequest findUniqueOrThrow
+   */
+  export type VaultAccessRequestFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the VaultAccessRequest
+     */
+    select?: VaultAccessRequestSelect<ExtArgs> | null
+    /**
+     * Filter, which VaultAccessRequest to fetch.
+     */
+    where: VaultAccessRequestWhereUniqueInput
+  }
+
+  /**
+   * VaultAccessRequest findFirst
+   */
+  export type VaultAccessRequestFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the VaultAccessRequest
+     */
+    select?: VaultAccessRequestSelect<ExtArgs> | null
+    /**
+     * Filter, which VaultAccessRequest to fetch.
+     */
+    where?: VaultAccessRequestWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of VaultAccessRequests to fetch.
+     */
+    orderBy?: VaultAccessRequestOrderByWithRelationInput | VaultAccessRequestOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for VaultAccessRequests.
+     */
+    cursor?: VaultAccessRequestWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` VaultAccessRequests from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` VaultAccessRequests.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of VaultAccessRequests.
+     */
+    distinct?: VaultAccessRequestScalarFieldEnum | VaultAccessRequestScalarFieldEnum[]
+  }
+
+  /**
+   * VaultAccessRequest findFirstOrThrow
+   */
+  export type VaultAccessRequestFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the VaultAccessRequest
+     */
+    select?: VaultAccessRequestSelect<ExtArgs> | null
+    /**
+     * Filter, which VaultAccessRequest to fetch.
+     */
+    where?: VaultAccessRequestWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of VaultAccessRequests to fetch.
+     */
+    orderBy?: VaultAccessRequestOrderByWithRelationInput | VaultAccessRequestOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for VaultAccessRequests.
+     */
+    cursor?: VaultAccessRequestWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` VaultAccessRequests from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` VaultAccessRequests.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of VaultAccessRequests.
+     */
+    distinct?: VaultAccessRequestScalarFieldEnum | VaultAccessRequestScalarFieldEnum[]
+  }
+
+  /**
+   * VaultAccessRequest findMany
+   */
+  export type VaultAccessRequestFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the VaultAccessRequest
+     */
+    select?: VaultAccessRequestSelect<ExtArgs> | null
+    /**
+     * Filter, which VaultAccessRequests to fetch.
+     */
+    where?: VaultAccessRequestWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of VaultAccessRequests to fetch.
+     */
+    orderBy?: VaultAccessRequestOrderByWithRelationInput | VaultAccessRequestOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing VaultAccessRequests.
+     */
+    cursor?: VaultAccessRequestWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` VaultAccessRequests from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` VaultAccessRequests.
+     */
+    skip?: number
+    distinct?: VaultAccessRequestScalarFieldEnum | VaultAccessRequestScalarFieldEnum[]
+  }
+
+  /**
+   * VaultAccessRequest create
+   */
+  export type VaultAccessRequestCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the VaultAccessRequest
+     */
+    select?: VaultAccessRequestSelect<ExtArgs> | null
+    /**
+     * The data needed to create a VaultAccessRequest.
+     */
+    data: XOR<VaultAccessRequestCreateInput, VaultAccessRequestUncheckedCreateInput>
+  }
+
+  /**
+   * VaultAccessRequest createMany
+   */
+  export type VaultAccessRequestCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many VaultAccessRequests.
+     */
+    data: VaultAccessRequestCreateManyInput | VaultAccessRequestCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * VaultAccessRequest createManyAndReturn
+   */
+  export type VaultAccessRequestCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the VaultAccessRequest
+     */
+    select?: VaultAccessRequestSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * The data used to create many VaultAccessRequests.
+     */
+    data: VaultAccessRequestCreateManyInput | VaultAccessRequestCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * VaultAccessRequest update
+   */
+  export type VaultAccessRequestUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the VaultAccessRequest
+     */
+    select?: VaultAccessRequestSelect<ExtArgs> | null
+    /**
+     * The data needed to update a VaultAccessRequest.
+     */
+    data: XOR<VaultAccessRequestUpdateInput, VaultAccessRequestUncheckedUpdateInput>
+    /**
+     * Choose, which VaultAccessRequest to update.
+     */
+    where: VaultAccessRequestWhereUniqueInput
+  }
+
+  /**
+   * VaultAccessRequest updateMany
+   */
+  export type VaultAccessRequestUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update VaultAccessRequests.
+     */
+    data: XOR<VaultAccessRequestUpdateManyMutationInput, VaultAccessRequestUncheckedUpdateManyInput>
+    /**
+     * Filter which VaultAccessRequests to update
+     */
+    where?: VaultAccessRequestWhereInput
+  }
+
+  /**
+   * VaultAccessRequest upsert
+   */
+  export type VaultAccessRequestUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the VaultAccessRequest
+     */
+    select?: VaultAccessRequestSelect<ExtArgs> | null
+    /**
+     * The filter to search for the VaultAccessRequest to update in case it exists.
+     */
+    where: VaultAccessRequestWhereUniqueInput
+    /**
+     * In case the VaultAccessRequest found by the `where` argument doesn't exist, create a new VaultAccessRequest with this data.
+     */
+    create: XOR<VaultAccessRequestCreateInput, VaultAccessRequestUncheckedCreateInput>
+    /**
+     * In case the VaultAccessRequest was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<VaultAccessRequestUpdateInput, VaultAccessRequestUncheckedUpdateInput>
+  }
+
+  /**
+   * VaultAccessRequest delete
+   */
+  export type VaultAccessRequestDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the VaultAccessRequest
+     */
+    select?: VaultAccessRequestSelect<ExtArgs> | null
+    /**
+     * Filter which VaultAccessRequest to delete.
+     */
+    where: VaultAccessRequestWhereUniqueInput
+  }
+
+  /**
+   * VaultAccessRequest deleteMany
+   */
+  export type VaultAccessRequestDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which VaultAccessRequests to delete
+     */
+    where?: VaultAccessRequestWhereInput
+  }
+
+  /**
+   * VaultAccessRequest without action
+   */
+  export type VaultAccessRequestDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the VaultAccessRequest
+     */
+    select?: VaultAccessRequestSelect<ExtArgs> | null
+  }
+
+
+  /**
    * Enums
    */
 
@@ -2836,11 +3856,27 @@ export namespace Prisma {
     subjectRef: 'subjectRef',
     purpose: 'purpose',
     actorRef: 'actorRef',
+    action: 'action',
     requestId: 'requestId',
     createdAt: 'createdAt'
   };
 
   export type VaultAccessLogScalarFieldEnum = (typeof VaultAccessLogScalarFieldEnum)[keyof typeof VaultAccessLogScalarFieldEnum]
+
+
+  export const VaultAccessRequestScalarFieldEnum: {
+    id: 'id',
+    subjectRef: 'subjectRef',
+    requesterRef: 'requesterRef',
+    justification: 'justification',
+    status: 'status',
+    accessedAt: 'accessedAt',
+    metadata: 'metadata',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
+  };
+
+  export type VaultAccessRequestScalarFieldEnum = (typeof VaultAccessRequestScalarFieldEnum)[keyof typeof VaultAccessRequestScalarFieldEnum]
 
 
   export const SortOrder: {
@@ -2849,6 +3885,13 @@ export namespace Prisma {
   };
 
   export type SortOrder = (typeof SortOrder)[keyof typeof SortOrder]
+
+
+  export const JsonNullValueInput: {
+    JsonNull: typeof JsonNull
+  };
+
+  export type JsonNullValueInput = (typeof JsonNullValueInput)[keyof typeof JsonNullValueInput]
 
 
   export const QueryMode: {
@@ -2865,6 +3908,15 @@ export namespace Prisma {
   };
 
   export type NullsOrder = (typeof NullsOrder)[keyof typeof NullsOrder]
+
+
+  export const JsonNullValueFilter: {
+    DbNull: typeof DbNull,
+    JsonNull: typeof JsonNull,
+    AnyNull: typeof AnyNull
+  };
+
+  export type JsonNullValueFilter = (typeof JsonNullValueFilter)[keyof typeof JsonNullValueFilter]
 
 
   /**
@@ -2925,6 +3977,13 @@ export namespace Prisma {
    * Reference to a field of type 'VaultAccessPurpose[]'
    */
   export type ListEnumVaultAccessPurposeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'VaultAccessPurpose[]'>
+    
+
+
+  /**
+   * Reference to a field of type 'Json'
+   */
+  export type JsonFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Json'>
     
 
 
@@ -3040,6 +4099,7 @@ export namespace Prisma {
     subjectRef?: StringFilter<"VaultAccessLog"> | string
     purpose?: EnumVaultAccessPurposeFilter<"VaultAccessLog"> | $Enums.VaultAccessPurpose
     actorRef?: StringFilter<"VaultAccessLog"> | string
+    action?: StringNullableFilter<"VaultAccessLog"> | string | null
     requestId?: StringFilter<"VaultAccessLog"> | string
     createdAt?: DateTimeFilter<"VaultAccessLog"> | Date | string
   }
@@ -3049,6 +4109,7 @@ export namespace Prisma {
     subjectRef?: SortOrder
     purpose?: SortOrder
     actorRef?: SortOrder
+    action?: SortOrderInput | SortOrder
     requestId?: SortOrder
     createdAt?: SortOrder
   }
@@ -3061,6 +4122,7 @@ export namespace Prisma {
     subjectRef?: StringFilter<"VaultAccessLog"> | string
     purpose?: EnumVaultAccessPurposeFilter<"VaultAccessLog"> | $Enums.VaultAccessPurpose
     actorRef?: StringFilter<"VaultAccessLog"> | string
+    action?: StringNullableFilter<"VaultAccessLog"> | string | null
     requestId?: StringFilter<"VaultAccessLog"> | string
     createdAt?: DateTimeFilter<"VaultAccessLog"> | Date | string
   }, "id">
@@ -3070,6 +4132,7 @@ export namespace Prisma {
     subjectRef?: SortOrder
     purpose?: SortOrder
     actorRef?: SortOrder
+    action?: SortOrderInput | SortOrder
     requestId?: SortOrder
     createdAt?: SortOrder
     _count?: VaultAccessLogCountOrderByAggregateInput
@@ -3085,8 +4148,81 @@ export namespace Prisma {
     subjectRef?: StringWithAggregatesFilter<"VaultAccessLog"> | string
     purpose?: EnumVaultAccessPurposeWithAggregatesFilter<"VaultAccessLog"> | $Enums.VaultAccessPurpose
     actorRef?: StringWithAggregatesFilter<"VaultAccessLog"> | string
+    action?: StringNullableWithAggregatesFilter<"VaultAccessLog"> | string | null
     requestId?: StringWithAggregatesFilter<"VaultAccessLog"> | string
     createdAt?: DateTimeWithAggregatesFilter<"VaultAccessLog"> | Date | string
+  }
+
+  export type VaultAccessRequestWhereInput = {
+    AND?: VaultAccessRequestWhereInput | VaultAccessRequestWhereInput[]
+    OR?: VaultAccessRequestWhereInput[]
+    NOT?: VaultAccessRequestWhereInput | VaultAccessRequestWhereInput[]
+    id?: UuidFilter<"VaultAccessRequest"> | string
+    subjectRef?: StringFilter<"VaultAccessRequest"> | string
+    requesterRef?: StringFilter<"VaultAccessRequest"> | string
+    justification?: StringFilter<"VaultAccessRequest"> | string
+    status?: StringFilter<"VaultAccessRequest"> | string
+    accessedAt?: DateTimeNullableFilter<"VaultAccessRequest"> | Date | string | null
+    metadata?: JsonFilter<"VaultAccessRequest">
+    createdAt?: DateTimeFilter<"VaultAccessRequest"> | Date | string
+    updatedAt?: DateTimeFilter<"VaultAccessRequest"> | Date | string
+  }
+
+  export type VaultAccessRequestOrderByWithRelationInput = {
+    id?: SortOrder
+    subjectRef?: SortOrder
+    requesterRef?: SortOrder
+    justification?: SortOrder
+    status?: SortOrder
+    accessedAt?: SortOrderInput | SortOrder
+    metadata?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type VaultAccessRequestWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    AND?: VaultAccessRequestWhereInput | VaultAccessRequestWhereInput[]
+    OR?: VaultAccessRequestWhereInput[]
+    NOT?: VaultAccessRequestWhereInput | VaultAccessRequestWhereInput[]
+    subjectRef?: StringFilter<"VaultAccessRequest"> | string
+    requesterRef?: StringFilter<"VaultAccessRequest"> | string
+    justification?: StringFilter<"VaultAccessRequest"> | string
+    status?: StringFilter<"VaultAccessRequest"> | string
+    accessedAt?: DateTimeNullableFilter<"VaultAccessRequest"> | Date | string | null
+    metadata?: JsonFilter<"VaultAccessRequest">
+    createdAt?: DateTimeFilter<"VaultAccessRequest"> | Date | string
+    updatedAt?: DateTimeFilter<"VaultAccessRequest"> | Date | string
+  }, "id">
+
+  export type VaultAccessRequestOrderByWithAggregationInput = {
+    id?: SortOrder
+    subjectRef?: SortOrder
+    requesterRef?: SortOrder
+    justification?: SortOrder
+    status?: SortOrder
+    accessedAt?: SortOrderInput | SortOrder
+    metadata?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    _count?: VaultAccessRequestCountOrderByAggregateInput
+    _max?: VaultAccessRequestMaxOrderByAggregateInput
+    _min?: VaultAccessRequestMinOrderByAggregateInput
+  }
+
+  export type VaultAccessRequestScalarWhereWithAggregatesInput = {
+    AND?: VaultAccessRequestScalarWhereWithAggregatesInput | VaultAccessRequestScalarWhereWithAggregatesInput[]
+    OR?: VaultAccessRequestScalarWhereWithAggregatesInput[]
+    NOT?: VaultAccessRequestScalarWhereWithAggregatesInput | VaultAccessRequestScalarWhereWithAggregatesInput[]
+    id?: UuidWithAggregatesFilter<"VaultAccessRequest"> | string
+    subjectRef?: StringWithAggregatesFilter<"VaultAccessRequest"> | string
+    requesterRef?: StringWithAggregatesFilter<"VaultAccessRequest"> | string
+    justification?: StringWithAggregatesFilter<"VaultAccessRequest"> | string
+    status?: StringWithAggregatesFilter<"VaultAccessRequest"> | string
+    accessedAt?: DateTimeNullableWithAggregatesFilter<"VaultAccessRequest"> | Date | string | null
+    metadata?: JsonWithAggregatesFilter<"VaultAccessRequest">
+    createdAt?: DateTimeWithAggregatesFilter<"VaultAccessRequest"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"VaultAccessRequest"> | Date | string
   }
 
   export type IdentityRecordCreateInput = {
@@ -3199,6 +4335,7 @@ export namespace Prisma {
     subjectRef: string
     purpose: $Enums.VaultAccessPurpose
     actorRef: string
+    action?: string | null
     requestId: string
     createdAt?: Date | string
   }
@@ -3208,6 +4345,7 @@ export namespace Prisma {
     subjectRef: string
     purpose: $Enums.VaultAccessPurpose
     actorRef: string
+    action?: string | null
     requestId: string
     createdAt?: Date | string
   }
@@ -3217,6 +4355,7 @@ export namespace Prisma {
     subjectRef?: StringFieldUpdateOperationsInput | string
     purpose?: EnumVaultAccessPurposeFieldUpdateOperationsInput | $Enums.VaultAccessPurpose
     actorRef?: StringFieldUpdateOperationsInput | string
+    action?: NullableStringFieldUpdateOperationsInput | string | null
     requestId?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -3226,6 +4365,7 @@ export namespace Prisma {
     subjectRef?: StringFieldUpdateOperationsInput | string
     purpose?: EnumVaultAccessPurposeFieldUpdateOperationsInput | $Enums.VaultAccessPurpose
     actorRef?: StringFieldUpdateOperationsInput | string
+    action?: NullableStringFieldUpdateOperationsInput | string | null
     requestId?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -3235,6 +4375,7 @@ export namespace Prisma {
     subjectRef: string
     purpose: $Enums.VaultAccessPurpose
     actorRef: string
+    action?: string | null
     requestId: string
     createdAt?: Date | string
   }
@@ -3244,6 +4385,7 @@ export namespace Prisma {
     subjectRef?: StringFieldUpdateOperationsInput | string
     purpose?: EnumVaultAccessPurposeFieldUpdateOperationsInput | $Enums.VaultAccessPurpose
     actorRef?: StringFieldUpdateOperationsInput | string
+    action?: NullableStringFieldUpdateOperationsInput | string | null
     requestId?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -3253,8 +4395,93 @@ export namespace Prisma {
     subjectRef?: StringFieldUpdateOperationsInput | string
     purpose?: EnumVaultAccessPurposeFieldUpdateOperationsInput | $Enums.VaultAccessPurpose
     actorRef?: StringFieldUpdateOperationsInput | string
+    action?: NullableStringFieldUpdateOperationsInput | string | null
     requestId?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type VaultAccessRequestCreateInput = {
+    id?: string
+    subjectRef: string
+    requesterRef: string
+    justification: string
+    status?: string
+    accessedAt?: Date | string | null
+    metadata?: JsonNullValueInput | InputJsonValue
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type VaultAccessRequestUncheckedCreateInput = {
+    id?: string
+    subjectRef: string
+    requesterRef: string
+    justification: string
+    status?: string
+    accessedAt?: Date | string | null
+    metadata?: JsonNullValueInput | InputJsonValue
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type VaultAccessRequestUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    subjectRef?: StringFieldUpdateOperationsInput | string
+    requesterRef?: StringFieldUpdateOperationsInput | string
+    justification?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    accessedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    metadata?: JsonNullValueInput | InputJsonValue
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type VaultAccessRequestUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    subjectRef?: StringFieldUpdateOperationsInput | string
+    requesterRef?: StringFieldUpdateOperationsInput | string
+    justification?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    accessedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    metadata?: JsonNullValueInput | InputJsonValue
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type VaultAccessRequestCreateManyInput = {
+    id?: string
+    subjectRef: string
+    requesterRef: string
+    justification: string
+    status?: string
+    accessedAt?: Date | string | null
+    metadata?: JsonNullValueInput | InputJsonValue
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type VaultAccessRequestUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    subjectRef?: StringFieldUpdateOperationsInput | string
+    requesterRef?: StringFieldUpdateOperationsInput | string
+    justification?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    accessedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    metadata?: JsonNullValueInput | InputJsonValue
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type VaultAccessRequestUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    subjectRef?: StringFieldUpdateOperationsInput | string
+    requesterRef?: StringFieldUpdateOperationsInput | string
+    justification?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    accessedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    metadata?: JsonNullValueInput | InputJsonValue
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type UuidFilter<$PrismaModel = never> = {
@@ -3458,11 +4685,27 @@ export namespace Prisma {
     not?: NestedEnumVaultAccessPurposeFilter<$PrismaModel> | $Enums.VaultAccessPurpose
   }
 
+  export type StringNullableFilter<$PrismaModel = never> = {
+    equals?: string | StringFieldRefInput<$PrismaModel> | null
+    in?: string[] | ListStringFieldRefInput<$PrismaModel> | null
+    notIn?: string[] | ListStringFieldRefInput<$PrismaModel> | null
+    lt?: string | StringFieldRefInput<$PrismaModel>
+    lte?: string | StringFieldRefInput<$PrismaModel>
+    gt?: string | StringFieldRefInput<$PrismaModel>
+    gte?: string | StringFieldRefInput<$PrismaModel>
+    contains?: string | StringFieldRefInput<$PrismaModel>
+    startsWith?: string | StringFieldRefInput<$PrismaModel>
+    endsWith?: string | StringFieldRefInput<$PrismaModel>
+    mode?: QueryMode
+    not?: NestedStringNullableFilter<$PrismaModel> | string | null
+  }
+
   export type VaultAccessLogCountOrderByAggregateInput = {
     id?: SortOrder
     subjectRef?: SortOrder
     purpose?: SortOrder
     actorRef?: SortOrder
+    action?: SortOrder
     requestId?: SortOrder
     createdAt?: SortOrder
   }
@@ -3472,6 +4715,7 @@ export namespace Prisma {
     subjectRef?: SortOrder
     purpose?: SortOrder
     actorRef?: SortOrder
+    action?: SortOrder
     requestId?: SortOrder
     createdAt?: SortOrder
   }
@@ -3481,6 +4725,7 @@ export namespace Prisma {
     subjectRef?: SortOrder
     purpose?: SortOrder
     actorRef?: SortOrder
+    action?: SortOrder
     requestId?: SortOrder
     createdAt?: SortOrder
   }
@@ -3493,6 +4738,105 @@ export namespace Prisma {
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedEnumVaultAccessPurposeFilter<$PrismaModel>
     _max?: NestedEnumVaultAccessPurposeFilter<$PrismaModel>
+  }
+
+  export type StringNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: string | StringFieldRefInput<$PrismaModel> | null
+    in?: string[] | ListStringFieldRefInput<$PrismaModel> | null
+    notIn?: string[] | ListStringFieldRefInput<$PrismaModel> | null
+    lt?: string | StringFieldRefInput<$PrismaModel>
+    lte?: string | StringFieldRefInput<$PrismaModel>
+    gt?: string | StringFieldRefInput<$PrismaModel>
+    gte?: string | StringFieldRefInput<$PrismaModel>
+    contains?: string | StringFieldRefInput<$PrismaModel>
+    startsWith?: string | StringFieldRefInput<$PrismaModel>
+    endsWith?: string | StringFieldRefInput<$PrismaModel>
+    mode?: QueryMode
+    not?: NestedStringNullableWithAggregatesFilter<$PrismaModel> | string | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedStringNullableFilter<$PrismaModel>
+    _max?: NestedStringNullableFilter<$PrismaModel>
+  }
+  export type JsonFilter<$PrismaModel = never> = 
+    | PatchUndefined<
+        Either<Required<JsonFilterBase<$PrismaModel>>, Exclude<keyof Required<JsonFilterBase<$PrismaModel>>, 'path'>>,
+        Required<JsonFilterBase<$PrismaModel>>
+      >
+    | OptionalFlat<Omit<Required<JsonFilterBase<$PrismaModel>>, 'path'>>
+
+  export type JsonFilterBase<$PrismaModel = never> = {
+    equals?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+    path?: string[]
+    string_contains?: string | StringFieldRefInput<$PrismaModel>
+    string_starts_with?: string | StringFieldRefInput<$PrismaModel>
+    string_ends_with?: string | StringFieldRefInput<$PrismaModel>
+    array_contains?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_starts_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_ends_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    lt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    lte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+  }
+
+  export type VaultAccessRequestCountOrderByAggregateInput = {
+    id?: SortOrder
+    subjectRef?: SortOrder
+    requesterRef?: SortOrder
+    justification?: SortOrder
+    status?: SortOrder
+    accessedAt?: SortOrder
+    metadata?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type VaultAccessRequestMaxOrderByAggregateInput = {
+    id?: SortOrder
+    subjectRef?: SortOrder
+    requesterRef?: SortOrder
+    justification?: SortOrder
+    status?: SortOrder
+    accessedAt?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type VaultAccessRequestMinOrderByAggregateInput = {
+    id?: SortOrder
+    subjectRef?: SortOrder
+    requesterRef?: SortOrder
+    justification?: SortOrder
+    status?: SortOrder
+    accessedAt?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+  export type JsonWithAggregatesFilter<$PrismaModel = never> = 
+    | PatchUndefined<
+        Either<Required<JsonWithAggregatesFilterBase<$PrismaModel>>, Exclude<keyof Required<JsonWithAggregatesFilterBase<$PrismaModel>>, 'path'>>,
+        Required<JsonWithAggregatesFilterBase<$PrismaModel>>
+      >
+    | OptionalFlat<Omit<Required<JsonWithAggregatesFilterBase<$PrismaModel>>, 'path'>>
+
+  export type JsonWithAggregatesFilterBase<$PrismaModel = never> = {
+    equals?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+    path?: string[]
+    string_contains?: string | StringFieldRefInput<$PrismaModel>
+    string_starts_with?: string | StringFieldRefInput<$PrismaModel>
+    string_ends_with?: string | StringFieldRefInput<$PrismaModel>
+    array_contains?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_starts_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_ends_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    lt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    lte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedJsonFilter<$PrismaModel>
+    _max?: NestedJsonFilter<$PrismaModel>
   }
 
   export type StringFieldUpdateOperationsInput = {
@@ -3517,6 +4861,10 @@ export namespace Prisma {
 
   export type EnumVaultAccessPurposeFieldUpdateOperationsInput = {
     set?: $Enums.VaultAccessPurpose
+  }
+
+  export type NullableStringFieldUpdateOperationsInput = {
+    set?: string | null
   }
 
   export type NestedUuidFilter<$PrismaModel = never> = {
@@ -3688,6 +5036,20 @@ export namespace Prisma {
     not?: NestedEnumVaultAccessPurposeFilter<$PrismaModel> | $Enums.VaultAccessPurpose
   }
 
+  export type NestedStringNullableFilter<$PrismaModel = never> = {
+    equals?: string | StringFieldRefInput<$PrismaModel> | null
+    in?: string[] | ListStringFieldRefInput<$PrismaModel> | null
+    notIn?: string[] | ListStringFieldRefInput<$PrismaModel> | null
+    lt?: string | StringFieldRefInput<$PrismaModel>
+    lte?: string | StringFieldRefInput<$PrismaModel>
+    gt?: string | StringFieldRefInput<$PrismaModel>
+    gte?: string | StringFieldRefInput<$PrismaModel>
+    contains?: string | StringFieldRefInput<$PrismaModel>
+    startsWith?: string | StringFieldRefInput<$PrismaModel>
+    endsWith?: string | StringFieldRefInput<$PrismaModel>
+    not?: NestedStringNullableFilter<$PrismaModel> | string | null
+  }
+
   export type NestedEnumVaultAccessPurposeWithAggregatesFilter<$PrismaModel = never> = {
     equals?: $Enums.VaultAccessPurpose | EnumVaultAccessPurposeFieldRefInput<$PrismaModel>
     in?: $Enums.VaultAccessPurpose[] | ListEnumVaultAccessPurposeFieldRefInput<$PrismaModel>
@@ -3696,6 +5058,45 @@ export namespace Prisma {
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedEnumVaultAccessPurposeFilter<$PrismaModel>
     _max?: NestedEnumVaultAccessPurposeFilter<$PrismaModel>
+  }
+
+  export type NestedStringNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: string | StringFieldRefInput<$PrismaModel> | null
+    in?: string[] | ListStringFieldRefInput<$PrismaModel> | null
+    notIn?: string[] | ListStringFieldRefInput<$PrismaModel> | null
+    lt?: string | StringFieldRefInput<$PrismaModel>
+    lte?: string | StringFieldRefInput<$PrismaModel>
+    gt?: string | StringFieldRefInput<$PrismaModel>
+    gte?: string | StringFieldRefInput<$PrismaModel>
+    contains?: string | StringFieldRefInput<$PrismaModel>
+    startsWith?: string | StringFieldRefInput<$PrismaModel>
+    endsWith?: string | StringFieldRefInput<$PrismaModel>
+    not?: NestedStringNullableWithAggregatesFilter<$PrismaModel> | string | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedStringNullableFilter<$PrismaModel>
+    _max?: NestedStringNullableFilter<$PrismaModel>
+  }
+  export type NestedJsonFilter<$PrismaModel = never> = 
+    | PatchUndefined<
+        Either<Required<NestedJsonFilterBase<$PrismaModel>>, Exclude<keyof Required<NestedJsonFilterBase<$PrismaModel>>, 'path'>>,
+        Required<NestedJsonFilterBase<$PrismaModel>>
+      >
+    | OptionalFlat<Omit<Required<NestedJsonFilterBase<$PrismaModel>>, 'path'>>
+
+  export type NestedJsonFilterBase<$PrismaModel = never> = {
+    equals?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+    path?: string[]
+    string_contains?: string | StringFieldRefInput<$PrismaModel>
+    string_starts_with?: string | StringFieldRefInput<$PrismaModel>
+    string_ends_with?: string | StringFieldRefInput<$PrismaModel>
+    array_contains?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_starts_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_ends_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    lt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    lte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
   }
 
 
