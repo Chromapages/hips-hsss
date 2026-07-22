@@ -1,15 +1,6 @@
 "use client";
 
-import type { Avatar2DConfig } from "@hips/types";
 import { Sliders } from "lucide-react";
-
-interface IdentityPanelProps {
-  bodyType: 0 | 1;
-  setBodyType: (body: 0 | 1) => void;
-  skinOffset: number;
-  setSkinOffset: (offset: number) => void;
-  setLocalAvatar2D: (config: Partial<Avatar2DConfig>) => void;
-}
 
 export function IdentityPanel({
   bodyType,
@@ -17,56 +8,58 @@ export function IdentityPanel({
   skinOffset,
   setSkinOffset,
   setLocalAvatar2D,
-}: IdentityPanelProps) {
+}) {
   return (
     <div className="space-y-6">
       <div>
-        <h3 className="text-[10px] font-bold uppercase tracking-widest text-white/55 font-ui mb-3">
+        <h3 className="text-[10px] font-bold uppercase tracking-widest text-av-text-subtle font-ui mb-3">
           Select Model
         </h3>
-        <div className="grid grid-cols-2 gap-3" role="radiogroup" aria-label="Select Model">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3" role="radiogroup" aria-label="Select model">
           <button
             onClick={() => {
               setBodyType(0);
               setLocalAvatar2D({ hairStyle: "hair_short_01" });
             }}
-            className={`py-3 px-4 rounded-xl text-left border transition-all ${
+            className={`min-h-[44px] py-3 px-4 rounded-lg text-left border transition ${
               bodyType === 0
-                ? "border-accent bg-accent/8 text-accent font-bold"
-                : "border-white/10 text-white/60 hover:border-white/20"
+                ? "border-av-accent bg-av-bg-accent text-av-accent-fg font-bold"
+                : "border-av-border bg-av-bg-input text-av-text-secondary hover:border-av-accent"
             }`}
             type="button"
             role="radio"
             aria-checked={bodyType === 0}
+            aria-label="Man model"
           >
             <div className="text-xs font-bold font-ui">Man</div>
-            <div className="text-[9px] opacity-70 font-body mt-0.5">Short hair style model</div>
+            <div className="text-[9px] text-av-text-subtle font-body mt-0.5">Short hair style model</div>
           </button>
           <button
             onClick={() => {
               setBodyType(1);
               setLocalAvatar2D({ hairStyle: "hair_long_01", facialHair: null });
             }}
-            className={`py-3 px-4 rounded-xl text-left border transition-all ${
+            className={`min-h-[44px] py-3 px-4 rounded-lg text-left border transition ${
               bodyType === 1
-                ? "border-accent bg-accent/8 text-accent font-bold"
-                : "border-white/10 text-white/60 hover:border-white/20"
+                ? "border-av-accent bg-av-bg-accent text-av-accent-fg font-bold"
+                : "border-av-border bg-av-bg-input text-av-text-secondary hover:border-av-accent"
             }`}
             type="button"
             role="radio"
             aria-checked={bodyType === 1}
+            aria-label="Woman model"
           >
             <div className="text-xs font-bold font-ui">Woman</div>
-            <div className="text-[9px] opacity-70 font-body mt-0.5">Long hair style model</div>
+            <div className="text-[9px] text-av-text-subtle font-body mt-0.5">Long hair style model</div>
           </button>
         </div>
       </div>
 
       <div>
         {/* Fine range slider for micro adjustments in OKLCH */}
-        <div className="p-3 rounded-xl bg-zinc-900 border border-white/5">
+        <div className="p-3 rounded-lg bg-av-bg-input border border-av-border">
           <div className="flex items-center justify-between mb-2">
-            <label htmlFor="skin-slider" className="text-[10px] font-bold uppercase tracking-wider text-white/60 font-ui flex items-center gap-1">
+            <label htmlFor="skin-slider" className="text-[10px] font-bold uppercase tracking-wider text-av-text-subtle font-ui flex items-center gap-1">
               <Sliders className="w-3.5 h-3.5" />
               Fine Adjustment (Luminance)
             </label>
@@ -82,9 +75,9 @@ export function IdentityPanel({
             step={0.01}
             value={skinOffset}
             onChange={(e) => setSkinOffset(Number(e.target.value))}
-            className="w-full accent-accent bg-zinc-800 cursor-ew-resize"
+            className="min-h-[44px] w-full accent-[#F4A261] bg-av-border-strong cursor-ew-resize"
           />
-          <div className="flex justify-between text-[9px] text-white/40 font-mono mt-1">
+          <div className="flex justify-between text-[9px] text-av-text-muted font-mono mt-1">
             <span>Lighter</span>
             <span>Neutral</span>
             <span>Darker</span>

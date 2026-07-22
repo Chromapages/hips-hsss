@@ -25,7 +25,6 @@ export function useAvatarDraft(initialConfig: any, defaultAvatar2D: Avatar2DConf
   const [voiceLevel, setVoiceLevel] = useState(0);
   const [isPreviewing, setIsPreviewing] = useState(false);
   const [neuralBackendAvailable, setNeuralBackendAvailable] = useState(false);
-  const [showConfetti, setShowConfetti] = useState(false);
   const [baseSkinTone, setBaseSkinTone] = useState(initialConfig?.avatar2D?.skinTone || defaultAvatar2D.skinTone || "#C68642");
   const [skinOffset, setSkinOffset] = useState(0);
   const [savingState, setSavingState] = useState(false);
@@ -46,8 +45,6 @@ export function useAvatarDraft(initialConfig: any, defaultAvatar2D: Avatar2DConf
     setIsPreviewing,
     neuralBackendAvailable,
     setNeuralBackendAvailable,
-    showConfetti,
-    setShowConfetti,
     baseSkinTone,
     setBaseSkinTone,
     skinOffset,

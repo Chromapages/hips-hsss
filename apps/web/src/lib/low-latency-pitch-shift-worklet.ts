@@ -20,6 +20,8 @@ class LowLatencyPitchShiftProcessor extends AudioWorkletProcessor {
     // ── Pitch shift ───────────────────────────────────────────────
     const semitones = options.processorOptions?.semitones ?? 4;
     this.ratio = Math.pow(2, semitones / 12);
+    this.targetRatio = this.ratio;
+    this.parameterSmoothing = 0.0012; // ~17 ms at 48 kHz
 
     // ── Ring modulation (Cyber voice preset) ───────────────────────
     this.ringModFreq = options.processorOptions?.ringModFreq ?? 0;
@@ -47,6 +49,7 @@ class LowLatencyPitchShiftProcessor extends AudioWorkletProcessor {
     const minDelay = 64;
     const baseDelay = this.ratio > 1.0 ? minDelay + this.L * (this.ratio - 1.0) : minDelay;
     this.D = Math.ceil(baseDelay + 32); // safety margin
+    this.targetD = this.D;
 
     this.anchor1 = (this.wp - this.D + this.SIZE) & this.MASK;
 
@@ -65,9 +68,9 @@ class LowLatencyPitchShiftProcessor extends AudioWorkletProcessor {
     this.port.onmessage = (event) => {
       if (event.data.type === 'update-params') {
         if (typeof event.data.semitones === 'number') {
-          this.ratio = Math.pow(2, event.data.semitones / 12);
-          const baseDelay = this.ratio > 1.0 ? 64 + this.L * (this.ratio - 1.0) : 64;
-          this.D = Math.ceil(baseDelay + 32);
+          this.targetRatio = Math.pow(2, event.data.semitones / 12);
+          const baseDelay = this.targetRatio > 1.0 ? 64 + this.L * (this.targetRatio - 1.0) : 64;
+          this.targetD = Math.ceil(baseDelay + 32);
         }
         if (typeof event.data.gateThresholdDb === 'number') {
           this.gateThresholdDb  = event.data.gateThresholdDb;
@@ -144,6 +147,9 @@ class LowLatencyPitchShiftProcessor extends AudioWorkletProcessor {
     }
 
     for (let i = 0; i < src.length; i++) {
+      // Smooth live preset changes to avoid discontinuities at grain boundaries.
+      this.ratio += (this.targetRatio - this.ratio) * this.parameterSmoothing;
+      this.D += (this.targetD - this.D) * this.parameterSmoothing;
       // 1. Write to circular buffer
       this.buf[this.wp] = src[i];
 

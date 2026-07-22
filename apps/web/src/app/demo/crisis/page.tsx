@@ -1,5 +1,6 @@
 import Link from 'next/link';
-import { ShieldAlert, AlertTriangle, Lock, Users, ChevronRight, Eye, EyeOff, Check, ArrowRight, MessageCircle, ArrowLeft } from 'lucide-react';
+import { ShieldAlert, AlertTriangle, Lock, ChevronRight, EyeOff, Check, ArrowRight, MessageCircle } from 'lucide-react';
+import { ThemeToggle } from '@/components/theme/ThemeToggle';
 
 export const metadata = {
   title: 'Crisis Safety Demo — H.I.P.S.',
@@ -12,21 +13,33 @@ const CRISIS_CATEGORIES = [
     label: 'Self-harm',
     keywords: ['want to die', 'kill myself', 'end my life', 'suicide', 'harm myself', 'cutting'],
     icon: '🔪',
-    color: 'red',
+    accent: 'red',
   },
   {
     label: 'Harm to others',
     keywords: ['hurt someone', 'kill them', 'harm others', 'violent thoughts'],
     icon: '⚠️',
-    color: 'amber',
+    accent: 'amber',
   },
   {
     label: 'Substance crisis',
     keywords: ['overdose', 'too much to drink', 'can\'t stop using', 'relapsed'],
     icon: '💊',
-    color: 'violet',
+    accent: 'violet',
   },
 ];
+
+// Static accent styles — avoids dynamic Tailwind class names (bg-{var}/10 etc.)
+// which get purged at build time since they can't be statically analyzed.
+type Accent = 'red' | 'amber' | 'violet' | 'indigo' | 'emerald';
+
+const ACCENT_STYLES: Record<Accent, { chipBg: string; chipText: string; iconText: string }> = {
+  red:     { chipBg: 'bg-red-100 dark:bg-red-500/20',     chipText: 'text-red-800 dark:text-red-200',     iconText: 'text-red-700 dark:text-red-400' },
+  amber:   { chipBg: 'bg-amber-100 dark:bg-amber-500/20', chipText: 'text-amber-800 dark:text-amber-200', iconText: 'text-amber-700 dark:text-amber-400' },
+  violet:  { chipBg: 'bg-violet-100 dark:bg-violet-500/20',chipText: 'text-violet-800 dark:text-violet-200',iconText: 'text-violet-700 dark:text-violet-400' },
+  indigo:  { chipBg: 'bg-indigo-500/15',                  chipText: 'text-indigo-700 dark:text-indigo-200',iconText: 'text-indigo-700 dark:text-indigo-400' },
+  emerald: { chipBg: 'bg-emerald-500/15',                 chipText: 'text-emerald-700 dark:text-emerald-200',iconText: 'text-emerald-700 dark:text-emerald-400' },
+};
 
 // Example anonymous messages in a peer support session
 const SESSION_MESSAGES = [
@@ -37,9 +50,18 @@ const SESSION_MESSAGES = [
   { id: 5, sender: 'anon_facilitator', text: 'Remember — everything shared here is anonymous and safe.', time: '2:38 PM', facilitator: true },
 ];
 
+// Detection pipeline steps — accent color is referenced via the static lookup
+// table so Tailwind v4 can statically analyze the class strings.
+const PIPELINE_STEPS: { step: number; title: string; desc: string; icon: React.ReactNode; accent: Accent }[] = [
+  { step: 1, title: 'Message sent', desc: 'All messages processed locally — no human reads raw content', icon: <MessageCircle className="h-4 w-4" />, accent: 'indigo' },
+  { step: 2, title: 'Keyword pattern match', desc: 'NLP + keyword categories: self-harm, harm-to-others, substance crisis', icon: <AlertTriangle className="h-4 w-4" />, accent: 'amber' },
+  { step: 3, title: 'Severity scoring', desc: 'If score exceeds threshold → trigger safety overlay immediately', icon: <ShieldAlert className="h-4 w-4" />, accent: 'red' },
+  { step: 4, title: 'Anonymous escalation', desc: 'Participant sees overlay with crisis resources — no identity exposed', icon: <Lock className="h-4 w-4" />, accent: 'emerald' },
+];
+
 export default function CrisisDemoPage() {
   return (
-    <main id="main" tabIndex={-1} className="min-h-screen bg-[#030712] text-white">
+    <main id="main" tabIndex={-1} className="min-h-screen bg-bg text-text-primary">
       <a
         href="#main"
         className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[9999] focus:px-4 focus:py-2 focus:rounded-lg focus:bg-primary focus:text-white focus:font-bold"
@@ -47,43 +69,44 @@ export default function CrisisDemoPage() {
         Skip to main content
       </a>
       {/* ── Minimal nav bar ── */}
-      <nav className="flex items-center justify-between border-b border-white/8 px-6 py-4">
+      <nav className="flex items-center justify-between border-b border-border px-6 py-4">
         <div className="flex items-center gap-2.5">
           <Link
             href="/demo"
-            className="flex items-center gap-2 text-xs text-white/40 hover:text-white/70 font-ui uppercase tracking-wider transition-colors"
+            className="flex items-center gap-2 text-xs text-text-muted hover:text-text-secondary font-ui uppercase tracking-wider transition-colors"
             aria-label="Back to demo overview"
           >
             ← Overview
           </Link>
-          <div className="h-4 w-px bg-white/10 mx-1" aria-hidden="true" />
+          <div className="h-4 w-px bg-border mx-1" aria-hidden="true" />
           <div className="h-7 w-7 rounded-lg bg-amber-500/20 ring-1 ring-amber-500/40 flex items-center justify-center">
-            <ShieldAlert className="h-4 w-4 text-amber-400" />
+            <ShieldAlert className="h-4 w-4 text-amber-700 dark:text-amber-400" />
           </div>
-          <span className="font-bold text-sm tracking-widest uppercase text-white/80 font-ui">
+          <span className="font-bold text-sm tracking-widest uppercase text-text-primary font-ui">
             H.I.P.S.
           </span>
-          <span className="rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-amber-300 border border-amber-500/20">
+          <span className="rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-amber-800 dark:text-amber-300 border border-amber-500/30">
             Crisis Safety
           </span>
         </div>
         <Link
           href="/demo/live"
-          className="flex items-center gap-1.5 rounded-xl bg-[#C59A35] px-4 py-2 text-xs font-bold uppercase tracking-wider text-white transition-all hover:bg-[#A67F28] shadow-lg shadow-amber-500/20"
+          className="flex items-center gap-1.5 rounded-xl bg-accent px-4 py-2 text-xs font-bold uppercase tracking-wider text-white transition-all hover:bg-accent-dark shadow-lg shadow-amber-500/20"
         >
           Live Demo →
         </Link>
+        <ThemeToggle className="text-text-secondary hover:text-text-primary" />
       </nav>
 
       {/* ── Hero ── */}
       <section className="mx-auto max-w-4xl px-6 pt-12 pb-8 text-center">
-        <p className="brand-caps text-[11px] text-amber-400 mb-4">
+        <p className="brand-caps text-[11px] text-amber-700 dark:text-amber-400 mb-4">
           Interactive Demonstration
         </p>
-        <h1 className="font-heading text-4xl font-bold text-white md:text-5xl mb-4">
+        <h1 className="font-heading text-4xl font-bold text-text-primary md:text-5xl mb-4">
           Crisis Safety System
         </h1>
-        <p className="mx-auto max-w-xl text-base text-white/55 font-body leading-relaxed">
+        <p className="mx-auto max-w-xl text-base text-text-secondary font-body leading-relaxed">
           H.I.P.S. detects crisis language in real time and triggers a safety overlay — connecting
           participants with professional help without ever revealing their identity.
         </p>
@@ -93,15 +116,15 @@ export default function CrisisDemoPage() {
       <section className="mx-auto max-w-4xl px-6 pb-10 grid md:grid-cols-2 gap-6">
 
         {/* LEFT — Interactive session simulation */}
-        <div className="rounded-2xl border border-white/10 bg-white/[0.03] overflow-hidden">
-          <div className="px-5 py-4 border-b border-white/8 flex items-center justify-between">
+        <div className="rounded-2xl border border-border bg-bg-subtle overflow-hidden">
+          <div className="px-5 py-4 border-b border-border flex items-center justify-between">
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-widest text-white/40 font-ui">Live Session Simulation</p>
-              <h2 className="text-base font-bold text-white mt-0.5">Peer Support Room — 4 participants</h2>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-text-muted font-ui">Live Session Simulation</p>
+              <h2 className="text-base font-bold text-text-primary mt-0.5">Peer Support Room — 4 participants</h2>
             </div>
-            <div className="flex items-center gap-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 px-3 py-1">
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
-              <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-300">Active</span>
+            <div className="flex items-center gap-1.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 px-3 py-1">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 dark:bg-emerald-400 animate-pulse" />
+              <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-800 dark:text-emerald-300">Active</span>
             </div>
           </div>
 
@@ -111,26 +134,26 @@ export default function CrisisDemoPage() {
               <div key={msg.id} className={`flex flex-col ${msg.facilitator ? 'items-center' : 'items-start'}`}>
                 <div className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-sm ${
                   msg.facilitator
-                    ? 'bg-amber-500/15 border border-amber-500/20 text-amber-200 text-center mx-auto'
+                    ? 'bg-amber-500/15 border border-amber-500/30 text-amber-800 dark:text-amber-200 text-center mx-auto'
                     : msg.sender === 'anon_3f8a'
-                    ? 'bg-indigo-500/15 border border-indigo-500/20 text-indigo-200 ml-0'
-                    : 'bg-white/5 border border-white/10 text-white/70'
+                    ? 'bg-indigo-500/15 border border-indigo-500/30 text-indigo-800 dark:text-indigo-200 ml-0'
+                    : 'bg-bg-subtle border border-border text-text-secondary'
                 }`}>
                   {!msg.facilitator && (
-                    <p className="text-[10px] font-mono text-white/30 mb-0.5">{msg.sender}</p>
+                    <p className="text-[10px] font-mono text-text-muted mb-0.5">{msg.sender}</p>
                   )}
                   <p className="text-sm leading-relaxed">{msg.text}</p>
-                  <p className="text-[10px] text-white/30 mt-1 text-right">{msg.time}</p>
+                  <p className="text-[10px] text-text-muted mt-1 text-right">{msg.time}</p>
                 </div>
               </div>
             ))}
           </div>
 
           {/* Keyword detection notice */}
-          <div className="px-4 py-3 border-t border-white/8 bg-amber-500/5">
+          <div className="px-4 py-3 border-t border-border bg-amber-500/10 dark:bg-amber-500/5">
             <div className="flex items-start gap-2">
-              <AlertTriangle className="h-4 w-4 text-amber-400 flex-shrink-0 mt-0.5" aria-hidden="true" />
-              <p className="text-xs text-amber-200/80 font-body leading-relaxed">
+              <AlertTriangle className="h-4 w-4 text-amber-700 dark:text-amber-400 flex-shrink-0 mt-0.5" aria-hidden="true" />
+              <p className="text-xs text-amber-800 dark:text-amber-200/80 font-body leading-relaxed">
                 Crisis language detection runs on all messages in real time. No human reads messages
                 unless crisis signals are detected — and even then, identity remains anonymous.
               </p>
@@ -141,51 +164,49 @@ export default function CrisisDemoPage() {
         {/* RIGHT — How detection works */}
         <div className="flex flex-col gap-5">
           {/* Crisis detection pipeline */}
-          <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-white/40 font-ui mb-4">
+          <div className="rounded-2xl border border-border bg-bg-subtle p-5">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-text-muted font-ui mb-4">
               How crisis detection works
             </p>
             <ol className="space-y-3" aria-label="Crisis detection pipeline">
-              {[
-                { step: 1, title: 'Message sent', desc: 'All messages processed locally — no human reads raw content', icon: <MessageCircle className="h-4 w-4" />, color: 'indigo' },
-                { step: 2, title: 'Keyword pattern match', desc: 'NLP + keyword categories: self-harm, harm-to-others, substance crisis', icon: <AlertTriangle className="h-4 w-4" />, color: 'amber' },
-                { step: 3, title: 'Severity scoring', desc: 'If score exceeds threshold → trigger safety overlay immediately', icon: <ShieldAlert className="h-4 w-4" />, color: 'red' },
-                { step: 4, title: 'Anonymous escalation', desc: 'Participant sees overlay with crisis resources — no identity exposed', icon: <Lock className="h-4 w-4" />, color: 'emerald' },
-              ].map((item) => (
-                <li key={item.step} className="flex items-start gap-3">
-                  <div className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-${item.color}-500/20 text-${item.color}-400 text-xs font-bold`}>
-                    {item.step}
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <div className={`text-${item.color}-400`}>{item.icon}</div>
-                      <p className="text-sm font-semibold text-white">{item.title}</p>
+              {PIPELINE_STEPS.map((item) => {
+                const styles = ACCENT_STYLES[item.accent];
+                return (
+                  <li key={item.step} className="flex items-start gap-3">
+                    <div className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full ${styles.chipBg} ${styles.chipText} text-xs font-bold`}>
+                      {item.step}
                     </div>
-                    <p className="text-xs text-white/40 font-body mt-0.5 leading-relaxed">{item.desc}</p>
-                  </div>
-                </li>
-              ))}
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <div className={styles.iconText}>{item.icon}</div>
+                        <p className="text-sm font-semibold text-text-primary">{item.title}</p>
+                      </div>
+                      <p className="text-xs text-text-secondary font-body mt-0.5 leading-relaxed">{item.desc}</p>
+                    </div>
+                  </li>
+                );
+              })}
             </ol>
           </div>
 
           {/* Crisis keyword categories */}
-          <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-white/40 font-ui mb-3">
+          <div className="rounded-2xl border border-border bg-bg-subtle p-5">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-text-muted font-ui mb-3">
               What triggers the overlay
             </p>
             <div className="space-y-2.5">
               {CRISIS_CATEGORIES.map((cat) => (
                 <div key={cat.label} className="flex items-start gap-2.5">
                   <div
-                    className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-white/5 text-sm"
+                    className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-bg-subtle text-sm"
                     role="img"
                     aria-label={cat.label}
                   >
                     {cat.icon}
                   </div>
                   <div>
-                    <p className="text-xs font-semibold text-white">{cat.label}</p>
-                    <p className="text-[10px] text-white/40 font-body mt-0.5 leading-relaxed">
+                    <p className="text-xs font-semibold text-text-primary">{cat.label}</p>
+                    <p className="text-[10px] text-text-secondary font-body mt-0.5 leading-relaxed">
                       {cat.keywords.join(' · ')}
                     </p>
                   </div>
@@ -198,32 +219,33 @@ export default function CrisisDemoPage() {
 
       {/* ── The overlay modal preview ── */}
       <section className="mx-auto max-w-4xl px-6 pb-10">
-        <div className="rounded-2xl border border-amber-500/25 bg-amber-500/5 overflow-hidden">
-          <div className="px-5 py-4 border-b border-amber-500/15">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-amber-400 font-ui">What the participant sees</p>
-            <h2 className="text-base font-bold text-white mt-0.5">The Crisis Safety Overlay</h2>
+        <div className="rounded-2xl border border-amber-500/30 dark:border-amber-500/25 bg-amber-500/10 dark:bg-amber-500/5 overflow-hidden">
+          <div className="px-5 py-4 border-b border-amber-500/25 dark:border-amber-500/15">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-amber-700 dark:text-amber-400 font-ui">What the participant sees</p>
+            <h2 className="text-base font-bold text-text-primary mt-0.5">The Crisis Safety Overlay</h2>
           </div>
 
           {/* Simulated overlay modal */}
           <div className="p-6">
-            <div className="max-w-md mx-auto rounded-[2rem] border border-white/10 bg-[#0a0a0a]/95 shadow-2xl overflow-hidden">
+            <div className="max-w-md mx-auto rounded-[2rem] border border-border bg-surface-raised dark:bg-[#0a0a0a]/95 shadow-2xl overflow-hidden">
               {/* Radial glow at top */}
-              <div className="h-32 bg-[radial-gradient(ellipse_at_top,rgba(245,158,11,0.15)_0%,transparent_70%)]" />
+              <div className="h-32 bg-[radial-gradient(ellipse_at_top,rgba(245,158,11,0.20)_0%,transparent_70%)] dark:bg-[radial-gradient(ellipse_at_top,rgba(245,158,11,0.15)_0%,transparent_70%)]" />
 
               {/* Content */}
               <div className="px-8 pb-8 -mt-8">
                 <div className="flex flex-col items-center text-center mb-8">
                   {/* Pulsing shield icon */}
-                  <div className="flex items-center justify-center h-20 w-20 rounded-full bg-amber-500/10 border border-amber-500/20 shadow-[0_0_50px_rgba(245,158,11,0.2)] mb-6">
-                    <ShieldAlert className="h-10 w-10 text-amber-400 animate-pulse" />
+                  <div className="flex items-center justify-center h-20 w-20 rounded-full bg-amber-500/15 border border-amber-500/30 shadow-[0_0_50px_rgba(245,158,11,0.25)] mb-6">
+                    <ShieldAlert className="h-10 w-10 text-amber-700 dark:text-amber-400 animate-pulse" />
                   </div>
-                  <h3 className="font-heading text-3xl font-extrabold text-white mb-2">
+                  <h3 className="font-heading text-3xl font-extrabold text-text-primary mb-2">
                     You are not alone.
                   </h3>
-                  <p className="text-base text-white/60">Professional help is available right now.</p>
+                  <p className="text-base text-text-secondary">Professional help is available right now.</p>
                 </div>
 
-                {/* Crisis resources */}
+                {/* Crisis resources — fixed palette so the 988 hotline stays
+                    WCAG-AA legible regardless of theme. */}
                 <div className="space-y-3 mb-8">
                   {[
                     { label: '988 Suicide & Crisis Lifeline', action: 'Call or Text 988', href: 'tel:988', primary: true },
@@ -232,14 +254,14 @@ export default function CrisisDemoPage() {
                     <a
                       key={resource.label}
                       href={resource.href}
-                      className={`flex flex-col items-center justify-center text-center rounded-2xl border p-5 transition-all ${
+                      className={`flex flex-col items-center justify-center text-center rounded-2xl border-2 p-5 transition-all ${
                         resource.primary
-                          ? 'border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/15'
-                          : 'border-white/10 bg-white/5 hover:bg-white/10'
+                          ? 'border-amber-700 bg-amber-100 hover:bg-amber-200 dark:border-amber-400 dark:bg-amber-900/60 dark:hover:bg-amber-900/80'
+                          : 'border-slate-700 bg-slate-100 hover:bg-slate-200 dark:border-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700'
                       }`}
                     >
-                      <span className="text-sm font-bold text-white">{resource.label}</span>
-                      <span className="text-xs text-white/50 mt-1 uppercase tracking-wider">{resource.action}</span>
+                      <span className={`text-sm font-extrabold tracking-wide ${resource.primary ? 'text-amber-900 dark:text-amber-50' : 'text-slate-900 dark:text-slate-50'}`}>{resource.label}</span>
+                      <span className={`text-xs mt-1 uppercase tracking-wider font-semibold ${resource.primary ? 'text-amber-800 dark:text-amber-200' : 'text-slate-700 dark:text-slate-300'}`}>{resource.action}</span>
                     </a>
                   ))}
                 </div>
@@ -247,7 +269,7 @@ export default function CrisisDemoPage() {
                 {/* Action buttons */}
                 <div className="flex flex-col gap-3">
                   <button
-                    className="h-12 rounded-2xl border border-white/10 bg-transparent font-bold text-white hover:bg-white/5 transition-all text-sm"
+                    className="h-12 rounded-2xl border border-border bg-transparent font-bold text-text-primary hover:bg-bg-subtle transition-all text-sm"
                     type="button"
                   >
                     Stay in session
@@ -262,15 +284,15 @@ export default function CrisisDemoPage() {
               </div>
 
               {/* Anonymous note */}
-              <div className="px-8 py-4 bg-black/50 border-t border-white/5 flex items-center justify-center gap-2">
-                <Lock className="h-3 w-3 text-emerald-400" aria-hidden="true" />
-                <p className="text-[10px] text-emerald-400/70">
+              <div className="px-8 py-4 bg-bg-subtle dark:bg-black/50 border-t border-border flex items-center justify-center gap-2">
+                <Lock className="h-3 w-3 text-emerald-700 dark:text-emerald-400" aria-hidden="true" />
+                <p className="text-[10px] text-emerald-800/80 dark:text-emerald-400/70">
                   Your identity remains completely anonymous. No data linking you to this session is stored.
                 </p>
               </div>
             </div>
 
-            <p className="text-center text-xs text-white/40 font-body mt-4 leading-relaxed max-w-md mx-auto">
+            <p className="text-center text-xs text-text-secondary font-body mt-4 leading-relaxed max-w-md mx-auto">
               The overlay appears instantly when crisis language is detected. Participants can connect with
               professional crisis resources without leaving the anonymous session — or choose to stay and
               continue with peer support.
@@ -281,21 +303,21 @@ export default function CrisisDemoPage() {
 
       {/* ── Anonymity guarantee during crisis ── */}
       <section className="mx-auto max-w-4xl px-6 pb-10">
-        <div className="rounded-2xl border border-white/10 bg-white/[0.02] overflow-hidden">
-          <div className="px-5 py-4 border-b border-white/8">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-white/40 font-ui">Critical guarantee</p>
-            <h2 className="text-base font-bold text-white mt-0.5">
+        <div className="rounded-2xl border border-border bg-bg-subtle overflow-hidden">
+          <div className="px-5 py-4 border-b border-border">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-text-muted font-ui">Critical guarantee</p>
+            <h2 className="text-base font-bold text-text-primary mt-0.5">
               Anonymity is never broken — even during crisis
             </h2>
           </div>
-          <div className="grid md:grid-cols-2 divide-x divide-white/8">
+          <div className="grid md:grid-cols-2 divide-x divide-border">
             <div className="p-5">
               <div className="flex items-start gap-3 mb-4">
                 <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-danger/15 text-danger">
                   <EyeOff className="h-5 w-5" aria-hidden="true" />
                 </div>
                 <div>
-                  <p className="text-sm font-semibold text-white">What facilitators NEVER see</p>
+                  <p className="text-sm font-semibold text-text-primary">What facilitators NEVER see</p>
                 </div>
               </div>
               <ul className="space-y-2" role="list">
@@ -306,7 +328,7 @@ export default function CrisisDemoPage() {
                   'Identity linking code or token',
                   'The content of crisis messages',
                 ].map((item) => (
-                  <li key={item} className="flex items-center gap-2 text-xs text-white/60 font-body">
+                  <li key={item} className="flex items-center gap-2 text-xs text-text-secondary font-body">
                     <span className="text-danger">✗</span> {item}
                   </li>
                 ))}
@@ -314,11 +336,11 @@ export default function CrisisDemoPage() {
             </div>
             <div className="p-5">
               <div className="flex items-start gap-3 mb-4">
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-emerald-500/15 text-emerald-400">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-emerald-500/15 text-emerald-700 dark:text-emerald-400">
                   <Lock className="h-5 w-5" aria-hidden="true" />
                 </div>
                 <div>
-                  <p className="text-sm font-semibold text-white">What IS available to responders</p>
+                  <p className="text-sm font-semibold text-text-primary">What IS available to responders</p>
                 </div>
               </div>
               <ul className="space-y-2" role="list">
@@ -329,16 +351,16 @@ export default function CrisisDemoPage() {
                   'Anonymous chat transcript (session-scoped)',
                   'Anonymous connection to a trained facilitator',
                 ].map((item) => (
-                  <li key={item} className="flex items-center gap-2 text-xs text-white/60 font-body">
-                    <Check className="h-3.5 w-3.5 text-emerald-400 shrink-0" aria-hidden="true" /> {item}
+                  <li key={item} className="flex items-center gap-2 text-xs text-text-secondary font-body">
+                    <Check className="h-3.5 w-3.5 text-emerald-700 dark:text-emerald-400 shrink-0" aria-hidden="true" /> {item}
                   </li>
                 ))}
               </ul>
             </div>
           </div>
-          <div className="px-5 py-3 bg-emerald-500/5 border-t border-emerald-500/15 flex items-center gap-2">
-            <Check className="h-3.5 w-3.5 text-emerald-400 flex-shrink-0" aria-hidden="true" />
-            <p className="text-xs text-emerald-300/80 font-body">
+          <div className="px-5 py-3 bg-emerald-500/10 dark:bg-emerald-500/5 border-t border-emerald-500/30 dark:border-emerald-500/15 flex items-center gap-2">
+            <Check className="h-3.5 w-3.5 text-emerald-700 dark:text-emerald-400 flex-shrink-0" aria-hidden="true" />
+            <p className="text-xs text-emerald-800 dark:text-emerald-300/80 font-body">
               Crisis escalation works through a separate, isolated pathway. Facilitators see only anonymous
               session tokens — never any identifying information.
             </p>
@@ -351,20 +373,20 @@ export default function CrisisDemoPage() {
         <div className="rounded-2xl border border-border bg-surface p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div>
             <p className="text-sm font-semibold text-primary font-heading">Crisis safety is built into every H.I.P.S. session.</p>
-            <p className="text-xs text-secondary font-body mt-1">
+            <p className="text-xs text-text-secondary font-body mt-1">
               No other anonymous platform provides real-time crisis detection with anonymous human escalation.
             </p>
           </div>
           <div className="flex gap-3 shrink-0">
             <Link
               href="/board-demo"
-              className="inline-flex items-center gap-2 rounded-xl bg-[#C59A35] px-6 py-3 text-sm font-bold text-white uppercase tracking-wider font-ui hover:bg-[#A67F28] transition-all shadow-lg shadow-amber-500/20"
+              className="inline-flex items-center gap-2 rounded-xl bg-accent px-6 py-3 text-sm font-bold text-white uppercase tracking-wider font-ui hover:bg-accent-dark transition-all shadow-lg shadow-amber-500/20"
             >
               Full Board Guide →
             </Link>
             <Link
               href="/demo"
-              className="inline-flex items-center gap-2 rounded-xl border border-white/15 bg-white/5 px-4 py-3 text-sm font-bold text-white/70 uppercase tracking-wider font-ui hover:bg-white/10 transition-all"
+              className="inline-flex items-center gap-2 rounded-xl border border-border bg-bg-subtle px-4 py-3 text-sm font-bold text-text-secondary uppercase tracking-wider font-ui hover:bg-surface-offset transition-all"
             >
               ← Overview
             </Link>

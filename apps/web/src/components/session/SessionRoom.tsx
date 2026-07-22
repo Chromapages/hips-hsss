@@ -49,6 +49,7 @@ import { RaisedHandQueue } from './RaisedHandQueue';
 import type { VoicePreset } from '@/lib/voice-mask-presets';
 import type { VoiceWorkerControlMessage } from '@/lib/streaming-voice-client';
 import { asError } from '@/lib/errors';
+import { readSessionPersona, saveSessionPersona } from '@/lib/protected-persona-storage';
 
 import { parseAvatar2DConfigString, sanitizeLiveKitAttributes, migrateLegacySessionStorage } from '@/lib/avatar2d-schema';
 
@@ -438,7 +439,7 @@ function SessionContent({
   const [raisedHands, setRaisedHands] = useState<Set<string>>(new Set());
   const [localEmotion, setLocalEmotion] = useState<AvatarEmotion>(() => {
     if (typeof window !== "undefined") {
-      const hostConfigStr = localStorage.getItem("hips-host-avatar");
+      const hostConfigStr = readSessionPersona();
       if (hostConfigStr) {
         try {
           const config = JSON.parse(hostConfigStr);
@@ -455,12 +456,12 @@ function SessionContent({
     setLocalEmotion(emo);
     if (typeof window !== "undefined") {
       sessionStorage.setItem("hips-avatar-emotion", emo);
-      const hostConfigStr = localStorage.getItem("hips-host-avatar");
+      const hostConfigStr = readSessionPersona();
       if (hostConfigStr) {
         try {
           const config = JSON.parse(hostConfigStr);
           config.emotion = emo;
-          localStorage.setItem("hips-host-avatar", JSON.stringify(config));
+          saveSessionPersona(config);
         } catch {}
       }
     }
@@ -554,7 +555,7 @@ function SessionContent({
 
   useEffect(() => {
     // Try host config first
-    const hostConfigStr = localStorage.getItem("hips-host-avatar");
+    const hostConfigStr = readSessionPersona();
     if (hostConfigStr) {
       try {
         const config = JSON.parse(hostConfigStr);
@@ -658,7 +659,7 @@ function SessionContent({
     }
 
     // Try host configuration next
-    const hostConfigStr = localStorage.getItem("hips-host-avatar");
+    const hostConfigStr = readSessionPersona();
     if (hostConfigStr) {
       try {
         const config = JSON.parse(hostConfigStr);

@@ -44,7 +44,25 @@ export const avatar2DSchema = z.object({
   nose: z.enum(["nose_button_01"]).catch("nose_button_01"),
   mouth: z.enum(["mouth_neutral_01", "mouth_smile_01", "mouth_thin_01", "mouth_open_01"]).catch("mouth_neutral_01"),
   facialHair: z.enum(["beard_stubble_01", "beard_goatee_01", "beard_full_01"]).nullable().catch(null),
-  accessory: z.enum(["acc_glasses_round_01", "acc_headband_01"]).nullable().catch(null),
+  accessory: z.enum([
+    "acc_glasses_round_01",
+    "acc_headband_01",
+    "acc_visor_01",
+    "acc_cap_abstract_01",
+    "acc_signal_arc_01",
+  ]).nullable().catch(null),
+  pattern: z.enum([
+    "pattern_grid_01",
+    "pattern_wave_01",
+    "pattern_speckle_01",
+    "pattern_circuit_01",
+  ]).nullable().catch(null),
+  frameStyle: z.enum([
+    "frame_none",
+    "frame_orbit",
+    "frame_brackets",
+    "frame_signal",
+  ]).catch("frame_none"),
   clothingStyle: z.enum(["top_tshirt_01", "top_hoodie_01", "top_sweater_01", "top_blazer_01"]).catch("top_tshirt_01"),
   clothingColor: z.preprocess((val) => clampHexColor(val, "#252D37"), z.string()),
   background: z.enum([

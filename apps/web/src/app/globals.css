@@ -70,6 +70,34 @@
   --shadow-md: var(--shadow-md);
   --shadow-lg: var(--shadow-lg);
 
+  /* Avatar Customizer palette — semantic utility aliases. Each maps to the
+     source --av-* token that flips in [data-theme="dark"], so the avatar
+     preview stage stays theme-aware without per-component dark: variants. */
+  --color-av-bg-base: var(--av-bg-base);
+  --color-av-bg-elevated: var(--av-bg-elevated);
+  --color-av-bg-input: var(--av-bg-input);
+  --color-av-bg-section: var(--av-bg-section);
+  --color-av-bg-accent: var(--av-bg-accent);
+  --color-av-text-primary: var(--av-text-primary);
+  --color-av-text-secondary: var(--av-text-secondary);
+  --color-av-text-muted: var(--av-text-muted);
+  --color-av-text-subtle: var(--av-text-subtle);
+  --color-av-border: var(--av-border);
+  --color-av-border-strong: var(--av-border-strong);
+  --color-av-accent: var(--av-accent);
+  --color-av-accent-fg: var(--av-accent-fg);
+  --color-av-success: var(--av-success);
+  --color-av-success-fg: var(--av-success-fg);
+  --color-av-success-border: var(--av-success-border);
+  --color-av-success-bg: var(--av-success-bg);
+  --color-av-warn-bg: var(--av-warn-bg);
+  --color-av-warn-border: var(--av-warn-border);
+  --color-av-warn-border-soft: var(--av-warn-border-soft);
+  --color-av-error-bg: var(--av-error-bg);
+  --color-av-error-border: var(--av-error-border);
+  --color-av-error-fg: var(--av-error-fg);
+  --color-av-meter-inactive: var(--av-meter-inactive);
+
   /* Typography — pass-through to global tokens */
   --font-heading: var(--font-dm-sans), "Helvetica Neue", Arial, sans-serif;
   --font-display: var(--font-dm-sans), "Helvetica Neue", Arial, sans-serif;
@@ -228,6 +256,38 @@
   --leading-heading: 1.15;
   --leading-body: 1.65;
   --leading-relaxed: 1.8;
+
+  /* =========================================================================
+     Avatar Customizer Palette — tuned for the avatar preview "stage".
+     Light values target a warm off-white "studio" backdrop; dark values
+     stay close to the existing dark-mode palette so toggling the theme
+     feels coherent. Accents (orange, status colors) intentionally stay
+     similar across themes because they're tuned for legibility on both.
+     ========================================================================= */
+  --av-bg-base: #FAF7F2;
+  --av-bg-elevated: #FFFFFF;
+  --av-bg-input: #F4F2EE;
+  --av-bg-section: #F9F7F3;
+  --av-bg-accent: #FEF0D7;
+  --av-text-primary: #1A1D24;
+  --av-text-secondary: #4A5360;
+  --av-text-muted: #6B7280;
+  --av-text-subtle: #525866;
+  --av-border: #E5E0D8;
+  --av-border-strong: #C7C0B5;
+  --av-accent: #F4A261;
+  --av-accent-fg: #FFD6A5;
+  --av-success: #10B981;
+  --av-success-fg: #047857;
+  --av-success-border: #6FB89A;
+  --av-success-bg: #D1FAE5;
+  --av-warn-bg: #FEF3C7;
+  --av-warn-border: #D97706;
+  --av-warn-border-soft: #FCD34D;
+  --av-error-bg: #FEE2E2;
+  --av-error-border: #B91C1C;
+  --av-error-fg: #B91C1C;
+  --av-meter-inactive: #D1D5DB;
 }
 
 /* =========================================================================
@@ -291,6 +351,30 @@
   --sidebar-accent-foreground: 220 14% 95%;
   --sidebar-border: 0 0% 100% / 0.08;
   --sidebar-ring: 217 50% 70%;
+
+  /* Avatar Customizer Palette — dark "studio" stage. */
+  --av-bg-base: #151820;
+  --av-bg-elevated: #1A1D24;
+  --av-bg-input: #242832;
+  --av-bg-section: #20242D;
+  --av-bg-accent: #3A2D24;
+  --av-text-primary: #F4F0EA;
+  --av-text-secondary: #DDE2EA;
+  --av-text-muted: #7F8794;
+  --av-text-subtle: #B8C0CC;
+  --av-border: #3A404D;
+  --av-border-strong: #303642;
+  --av-success: #78B8A7;
+  --av-success-fg: #A8D5BF;
+  --av-success-border: #49675C;
+  --av-success-bg: #1E2B29;
+  --av-warn-bg: #2B2724;
+  --av-warn-border: #6B5643;
+  --av-warn-border-soft: #4A3C2F;
+  --av-error-bg: #382528;
+  --av-error-border: #8C4E4B;
+  --av-error-fg: #FFB0AA;
+  --av-meter-inactive: #59616E;
 }
 
 /* =========================================================================

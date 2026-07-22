@@ -11,17 +11,55 @@ export function PremiumAvatarFilters({ skinTone = "#C68642" }: PremiumAvatarFilt
     <svg width="0" height="0" className="absolute" aria-hidden="true" style={{ position: 'absolute', width: 0, height: 0 }}>
       <style dangerouslySetInnerHTML={{ __html: `
         @keyframes avatar-breathe {
-          0%, 100% { transform: translateY(0px); }
-          50% { transform: translateY(-3.5px); }
+          0%, 100% { transform: translateY(0) scaleY(1); }
+          50% { transform: translateY(-2px) scaleY(1.008); }
         }
-        @keyframes avatar-sway {
-          0%, 100% { transform: rotate(0deg); }
-          50% { transform: rotate(0.6deg); }
+        @keyframes avatar-idle-posture {
+          0%, 100% { transform: translate3d(0, 0, 0) rotate(-0.2deg); }
+          34% { transform: translate3d(1px, -1px, 0) rotate(0.35deg); }
+          68% { transform: translate3d(-1px, 0, 0) rotate(0.1deg); }
         }
         @keyframes avatar-blink {
-          0%, 96%, 100% { transform: scaleY(1); }
-          98% { transform: scaleY(0.08); }
+          0%, 43%, 45%, 76%, 78%, 100% { transform: scaleY(1); }
+          44%, 77% { transform: scaleY(0.08); }
         }
+        @keyframes avatar-frame-signal {
+          0%, 100% { opacity: 0.55; }
+          50% { opacity: 0.85; }
+        }
+        .avatar-idle-posture {
+          animation: avatar-idle-posture 10.5s ease-in-out infinite;
+          transform-origin: 50% 78%;
+          will-change: transform;
+        }
+        .avatar-idle-breathe {
+          animation: avatar-breathe 4.8s ease-in-out infinite;
+          transform-origin: 50% 82%;
+          will-change: transform;
+        }
+        .avatar-idle-blink {
+          animation: avatar-blink 8.6s linear infinite;
+          transform-origin: 50% 43%;
+          will-change: transform;
+        }
+        .avatar-idle-static,
+        .avatar-idle-static .avatar-idle-breathe,
+        .avatar-idle-static .avatar-idle-blink {
+          animation: none;
+          will-change: auto;
+        }
+        .avatar-frame-brackets {
+          background:
+            linear-gradient(#fff8 0 0) left top / 18% 1px no-repeat,
+            linear-gradient(#fff8 0 0) left top / 1px 18% no-repeat,
+            linear-gradient(#fff8 0 0) right top / 18% 1px no-repeat,
+            linear-gradient(#fff8 0 0) right top / 1px 18% no-repeat,
+            linear-gradient(#fff8 0 0) left bottom / 18% 1px no-repeat,
+            linear-gradient(#fff8 0 0) left bottom / 1px 18% no-repeat,
+            linear-gradient(#fff8 0 0) right bottom / 18% 1px no-repeat,
+            linear-gradient(#fff8 0 0) right bottom / 1px 18% no-repeat;
+        }
+        .avatar-frame-signal { animation: avatar-frame-signal 5s ease-in-out infinite; }
         [data-avatar-compositor] svg path {
           transition: fill 0.25s ease-out, stroke 0.25s ease-out, opacity 0.25s ease-out;
         }
@@ -38,6 +76,7 @@ export function PremiumAvatarFilters({ skinTone = "#C68642" }: PremiumAvatarFilt
           [data-avatar-compositor] {
             animation: none !important;
             transition: none !important;
+            will-change: auto !important;
           }
         }
       `}} />
@@ -94,4 +133,3 @@ export function PremiumAvatarFilters({ skinTone = "#C68642" }: PremiumAvatarFilt
     </svg>
   );
 }
-

@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import Link from "next/link";
 import { ArrowLeft, Zap } from "lucide-react";
+import { readSessionPersona } from "@/lib/protected-persona-storage";
 
 /**
  * Practice Mode — routes to the existing test-session page with host flags.
@@ -13,8 +14,8 @@ export default function HostPracticePage() {
   useEffect(() => {
     sessionStorage.setItem("hips-practice-mode", "true");
 
-    // Load avatar config from localStorage to pre-populate the session
-    const avatarConfig = localStorage.getItem("hips-host-avatar");
+    // Load this tab's session-only persona to pre-populate the session.
+    const avatarConfig = readSessionPersona();
     if (avatarConfig) {
       try {
         const parsed = JSON.parse(avatarConfig) as { avatarColor?: string; avatar2D?: unknown };
@@ -59,7 +60,7 @@ export default function HostPracticePage() {
           no clients can join.
         </p>
         <p className="text-xs text-text-muted/70 font-ui uppercase tracking-wider mb-8">
-          Your avatar and voice settings from setup will be active.
+          Your session-only avatar and voice settings from this tab will be active.
         </p>
 
         <div className="flex flex-col sm:flex-row gap-4">

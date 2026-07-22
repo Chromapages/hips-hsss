@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { VaultDemo } from '@/components/demo/VaultDemo';
-import { ArrowRight, Users } from 'lucide-react';
+import { ArrowRight, Users, Lock } from 'lucide-react';
+import { ThemeToggle } from '@/components/theme/ThemeToggle';
 
 export const metadata = {
   title: 'Identity Vault Demo · Phase 1C — H.I.P.S.',
@@ -16,32 +17,40 @@ export default function VaultDemoPage() {
       >
         Skip to main content
       </a>
-      {/* Back to overview */}
-      <div className="max-w-2xl mx-auto px-4 pt-6">
+      {/* Top nav — overview link + theme toggle */}
+      <nav className="flex items-center justify-between border-b border-border px-6 py-4">
         <Link
           href="/demo"
-          className="inline-flex items-center gap-1.5 text-xs text-text-muted hover:text-primary font-ui uppercase tracking-wider transition-colors"
+          className="inline-flex items-center gap-1.5 text-xs text-text-muted hover:text-text-secondary font-ui uppercase tracking-wider transition-colors"
+          aria-label="Back to demo overview"
         >
           ← Overview
         </Link>
-      </div>
+        <div className="flex items-center gap-2">
+          <div className="hidden sm:flex items-center gap-2 text-xs text-text-muted font-ui uppercase tracking-wider">
+            <Lock className="h-3.5 w-3.5" aria-hidden="true" />
+            Identity Vault
+          </div>
+          <ThemeToggle className="text-text-secondary hover:text-text-primary" />
+        </div>
+      </nav>
 
       {/* Vault demo */}
       <VaultDemo />
 
       {/* ── Next step narrative card ── */}
       <div className="max-w-2xl mx-auto px-4 pb-12">
-        <div className="rounded-2xl border border-indigo-500/25 bg-indigo-500/5 overflow-hidden">
-          <div className="bg-gradient-to-r from-indigo-500/10 to-transparent px-6 py-4 border-b border-indigo-500/15">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-indigo-400 brand-caps">
+        <div className="rounded-2xl border border-indigo-500/30 bg-indigo-500/10 dark:bg-indigo-500/5 overflow-hidden">
+          <div className="bg-gradient-to-r from-indigo-500/15 dark:from-indigo-500/10 to-transparent px-6 py-4 border-b border-indigo-500/20 dark:border-indigo-500/15">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-indigo-700 dark:text-indigo-400 brand-caps">
               Next — Experience it live
             </p>
-            <h2 className="font-heading text-lg font-semibold text-white mt-1">
+            <h2 className="font-heading text-lg font-semibold text-text-primary mt-1">
               See anonymity in action
             </h2>
           </div>
           <div className="p-6">
-            <p className="text-sm text-white/60 font-body leading-relaxed mb-5">
+            <p className="text-sm text-text-secondary font-body leading-relaxed mb-5">
               The Identity Vault protects <em>who you are</em> (your PII). The next demo shows how
               H.I.P.S. also protects <em>how you show up</em> — your voice and your visual presence
               in a session — through real-time voice masking and anonymous avatars.
@@ -57,7 +66,7 @@ export default function VaultDemoPage() {
               </Link>
               <Link
                 href="/demo"
-                className="inline-flex items-center gap-2 rounded-xl border border-white/15 bg-white/5 px-4 py-3 text-sm font-bold text-white/60 uppercase tracking-wider font-ui hover:bg-white/10 transition-all"
+                className="inline-flex items-center gap-2 rounded-xl border border-border bg-bg-subtle px-4 py-3 text-sm font-bold text-text-secondary uppercase tracking-wider font-ui hover:bg-surface-offset transition-all"
               >
                 ← Back to overview
               </Link>

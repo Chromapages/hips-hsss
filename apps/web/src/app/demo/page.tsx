@@ -14,7 +14,7 @@ const accentStyles: Record<string, { bg: string; text: string }> = {
   emerald: { bg: 'bg-emerald-100 dark:bg-emerald-500/25', text: 'text-emerald-700 dark:text-emerald-300' },
   indigo:  { bg: 'bg-indigo-100 dark:bg-indigo-500/25',   text: 'text-indigo-700 dark:text-indigo-300'   },
   amber:   { bg: 'bg-amber-100 dark:bg-amber-500/25',     text: 'text-amber-700 dark:text-amber-300'     },
-  gold:    { bg: 'bg-[#C59A35]/10 dark:bg-[#C59A35]/15', text: 'text-[#C59A35]' },
+  gold:    { bg: 'bg-accent/10 dark:bg-accent/15', text: 'text-accent' },
 };
 
 const demoCards = [

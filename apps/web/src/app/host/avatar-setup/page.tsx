@@ -2,9 +2,14 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { ArrowLeft, Play, Loader2 } from "lucide-react";
+import { ArrowLeft, Play, Loader2, ShieldCheck, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { AvatarCustomizer } from "@/components/session-ui/AvatarCustomizer";
+import {
+  deleteSessionPersona,
+  readSessionPersona,
+  saveSessionPersona,
+} from "@/lib/protected-persona-storage";
 
 export default function AvatarSetupPage() {
   const [config, setConfig] = useState<any>(null);
@@ -12,7 +17,7 @@ export default function AvatarSetupPage() {
   const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
-    const configStr = localStorage.getItem("hips-host-avatar");
+    const configStr = readSessionPersona();
     if (configStr) {
       try {
         setConfig(JSON.parse(configStr));
@@ -25,19 +30,24 @@ export default function AvatarSetupPage() {
 
   const handleSave = async (updatedConfig: any) => {
     setSaving(true);
-    // Persist to localStorage
-    localStorage.setItem("hips-host-avatar", JSON.stringify(updatedConfig));
+    saveSessionPersona(updatedConfig);
     // Simulate API delay for premium feel
     await new Promise((r) => setTimeout(r, 600));
     setConfig(updatedConfig);
     setSaving(false);
-    toast.success("Avatar and voice configuration updated successfully.");
+    toast.success("Protected persona saved for this tab only.");
+  };
+
+  const handleDeletePersona = () => {
+    deleteSessionPersona();
+    setConfig(null);
+    toast.success("Persona data deleted from this browser session.");
   };
 
   if (!hydrated) {
     return (
       <div className="flex h-screen items-center justify-center bg-zinc-950">
-        <Loader2 className="h-8 w-8 animate-spin text-accent" />
+        <Loader2 className="h-8 w-8 animate-spin text-accent motion-reduce:animate-none" />
       </div>
     );
   }
@@ -64,7 +74,7 @@ export default function AvatarSetupPage() {
             Avatar &amp; Voice Setup
           </h1>
           <p className="text-text-muted font-body">
-            Personalise your host presence. Your avatar and voice settings apply to all sessions on this device.
+            Personalise your protected presence using this tab&apos;s temporary session storage.
           </p>
         </div>
 
@@ -80,6 +90,32 @@ export default function AvatarSetupPage() {
           </Link>
         </div>
       </div>
+
+      <section
+        aria-labelledby="persona-storage-title"
+        className="mb-8 flex flex-col gap-4 rounded-2xl border border-emerald-400/20 bg-emerald-400/5 p-4 sm:flex-row sm:items-center sm:justify-between"
+      >
+        <div className="flex min-w-0 items-start gap-3">
+          <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-emerald-400" aria-hidden="true" />
+          <div>
+            <h2 id="persona-storage-title" className="text-sm font-bold text-text">
+              Session-only persona
+            </h2>
+            <p className="mt-1 max-w-2xl text-xs leading-5 text-text-muted">
+              Saved avatar and voice settings use temporary storage for this tab. They are not designed for cross-session persistence, uploaded for storage, or linked to your account.
+            </p>
+          </div>
+        </div>
+        <button
+          type="button"
+          onClick={handleDeletePersona}
+          disabled={!config}
+          className="inline-flex min-h-11 w-full shrink-0 items-center justify-center gap-2 rounded-xl border border-red-400/30 px-4 text-xs font-bold text-red-300 transition-colors hover:bg-red-400/10 disabled:cursor-not-allowed disabled:opacity-40 sm:w-auto"
+        >
+          <Trash2 className="h-4 w-4" aria-hidden="true" />
+          Delete this session&apos;s persona
+        </button>
+      </section>
 
       <div className="rounded-3xl border border-white/5 bg-zinc-900/10 p-1">
         <AvatarCustomizer

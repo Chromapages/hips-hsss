@@ -61,7 +61,6 @@ export function SvgLayer({ src, className }: SvgLayerProps) {
   // Apply premium filters and styles based on layer type
   let premiumFilterClass = "";
   let targetOpacity = 1.0;
-  const animationClasses: string[] = [];
 
   if (src?.includes("/face/") || src?.includes("/body/")) {
     premiumFilterClass = "[filter:url(#premium-fitzpatrick-recolor)_url(#premium-inner-glow)]";
@@ -78,29 +77,10 @@ export function SvgLayer({ src, className }: SvgLayerProps) {
     premiumFilterClass = "[filter:url(#premium-feature-shadow)]";
   }
 
-  // Determine if it is a head-related layer for head sway
-  const isHeadLayer =
-    src?.includes("/face/") ||
-    src?.includes("/eyes/") ||
-    src?.includes("/brows/") ||
-    src?.includes("/nose/") ||
-    src?.includes("/mouth/") ||
-    src?.includes("/beard/") ||
-    src?.includes("/hair-front/") ||
-    src?.includes("/accessories/");
-
-  if (isHeadLayer) {
-    animationClasses.push("animate-[avatar-sway_6s_ease-in-out_infinite] origin-[200px_280px]");
-  }
-
-  if (src?.includes("/eyes/")) {
-    animationClasses.push("animate-[avatar-blink_4s_infinite] origin-[200px_180px]");
-  }
-
   return (
     <div
       aria-hidden="true"
-      className={`absolute inset-0 ${premiumFilterClass} ${animationClasses.join(" ")} ${className ?? ""}`}
+      className={`absolute inset-0 ${premiumFilterClass} ${className ?? ""}`}
       style={{ opacity: targetOpacity }}
     >
       <div

@@ -15,6 +15,18 @@ const parseStoredAvatar2D = (): Avatar2DConfig | undefined => {
   return parseAvatar2DConfigString(raw) ?? undefined;
 };
 
+type StoredAvatarConfig = {
+  avatar2D: Avatar2DConfig;
+  emotion?: string;
+  voicePreset?: string;
+  semitones?: number;
+  reverbLevel?: string;
+  anonymizationMode?: string;
+  selectedPersona?: string;
+  isAntiCadenceEnabled: boolean;
+  isEnhancedNeuralConsentAccepted: boolean;
+};
+
 export function AvatarSelectorModal() {
   const [open, setOpen] = useState(
     () =>
@@ -66,7 +78,7 @@ export function AvatarSelectorModal() {
     return null;
   }
 
-  const getInitialConfig = () => {
+  const getInitialConfig = (): StoredAvatarConfig => {
     if (typeof window === "undefined") {
       return {
         avatar2D: DEFAULT_AVATAR_2D,
@@ -76,7 +88,7 @@ export function AvatarSelectorModal() {
       };
     }
 
-    const config: any = {
+    const config: StoredAvatarConfig = {
       avatar2D: parseStoredAvatar2D() || DEFAULT_AVATAR_2D,
       isAntiCadenceEnabled: sessionStorage.getItem("hips-voice-anticadence") === "true",
       isEnhancedNeuralConsentAccepted: sessionStorage.getItem("hips-voice-enhanced-neural-consent") === "true",
@@ -108,7 +120,7 @@ export function AvatarSelectorModal() {
     return config;
   };
 
-  const handleSave = (config: any) => {
+  const handleSave = (config: StoredAvatarConfig) => {
     if (config.avatar2D) {
       sessionStorage.setItem("hips-avatar-2d", JSON.stringify(config.avatar2D));
     }
@@ -146,11 +158,16 @@ export function AvatarSelectorModal() {
       >
         <div className="px-6 pt-5 pb-2">
           <h2 className="text-xl font-bold font-heading text-white" id="avatar-title">
-            Personalise Your Sanctuary Presence
+            Shape your protected presence
           </h2>
           <p className="text-xs text-text-muted font-body mt-1">
-            Choose your humanoid avatar proportions, styles, and voice protection filter. All profiles are stored in your temporary browser session.
+            Choose a stylized presence and voice-protection settings for this session. Your choices stay in this tab&apos;s temporary browser storage.
           </p>
+          <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-[11px] font-body text-text-muted" aria-label="Privacy details">
+            <span>No photo, camera, or face scan is needed.</span>
+            <span>Style choices are not used for face matching.</span>
+            <span>Anonymous avatar + browser-based voice-masking options.</span>
+          </div>
         </div>
 
         <AvatarCustomizer

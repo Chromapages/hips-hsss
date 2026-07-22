@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { WellbeingCheckIn } from "@/components/host/WellbeingCheckIn";
 import { HostAvailabilitySlots } from "@/components/host/HostAvailabilitySlots";
+import { readSessionPersona } from "@/lib/protected-persona-storage";
 
 export const dynamic = "force-dynamic";
 
@@ -98,9 +99,9 @@ export default function HostDashboard() {
   const [avatarConfigured, setAvatarConfigured] = useState(false);
 
   useEffect(() => {
-    // Check if avatar has been configured (stored in localStorage)
+    // A protected persona is configured only for the current browser tab.
     const savedAvatar = typeof window !== "undefined"
-      ? localStorage.getItem("hips-host-avatar")
+      ? readSessionPersona()
       : null;
     setAvatarConfigured(!!savedAvatar);
 

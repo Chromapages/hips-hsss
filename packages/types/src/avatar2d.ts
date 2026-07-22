@@ -46,7 +46,22 @@ export type AvatarFacialHair =
 
 export type AvatarAccessory =
   | "acc_glasses_round_01"
-  | "acc_headband_01";
+  | "acc_headband_01"
+  | "acc_visor_01"
+  | "acc_cap_abstract_01"
+  | "acc_signal_arc_01";
+
+export type AvatarPattern =
+  | "pattern_grid_01"
+  | "pattern_wave_01"
+  | "pattern_speckle_01"
+  | "pattern_circuit_01";
+
+export type AvatarFrameStyle =
+  | "frame_none"
+  | "frame_orbit"
+  | "frame_brackets"
+  | "frame_signal";
 
 export type AvatarClothingStyle =
   | "top_tshirt_01"
@@ -82,6 +97,8 @@ export interface Avatar2DConfig {
   mouth: AvatarMouth;
   facialHair: AvatarFacialHair | null;
   accessory: AvatarAccessory | null;
+  pattern?: AvatarPattern | null;
+  frameStyle?: AvatarFrameStyle;
   clothingStyle: AvatarClothingStyle;
   clothingColor: string;
   background: AvatarBackground;
@@ -101,6 +118,8 @@ export const DEFAULT_AVATAR_2D: Avatar2DConfig = {
   mouth: "mouth_neutral_01",
   facialHair: null,
   accessory: null,
+  pattern: null,
+  frameStyle: "frame_none",
   clothingStyle: "top_tshirt_01",
   clothingColor: "#252D37",
   background: "bg_gradient_cool",
