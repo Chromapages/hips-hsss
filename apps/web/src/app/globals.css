@@ -118,6 +118,13 @@
   --color-accent: #C59A35;
   --color-accent-dark: #A67F28;
   --color-accent-soft: #DFC06A;
+  --color-action-primary: #ea580c;
+  --color-action-primary-hover: #c2410c;
+  --color-action-primary-foreground: #1c1917;
+  --color-action-conversion: #d4af37;
+  --color-action-conversion-hover: #b88a24;
+  --color-action-conversion-foreground: #1f2937;
+  --color-action-secondary: #78716c;
 
   /* Backgrounds */
   --color-bg: #FFFFFF;
@@ -275,8 +282,8 @@
   --av-text-subtle: #525866;
   --av-border: #E5E0D8;
   --av-border-strong: #C7C0B5;
-  --av-accent: #F4A261;
-  --av-accent-fg: #FFD6A5;
+  --av-accent: var(--color-action-primary);
+  --av-accent-fg: #c2410c;
   --av-success: #10B981;
   --av-success-fg: #047857;
   --av-success-border: #6FB89A;
@@ -329,6 +336,13 @@
   --color-accent: oklch(0.78 0.13 85);
   --color-accent-dark: oklch(0.70 0.12 85);
   --color-accent-soft: oklch(0.85 0.10 85);
+  --color-action-primary: #ea580c;
+  --color-action-primary-hover: #fb923c;
+  --color-action-primary-foreground: #1c1917;
+  --color-action-conversion: #d4af37;
+  --color-action-conversion-hover: #f2d16b;
+  --color-action-conversion-foreground: #1f2937;
+  --color-action-secondary: #a8a29e;
 
   /* Semantic — lifted for dark contrast */
   --color-destructive: oklch(0.65 0.18 25);
@@ -375,6 +389,8 @@
   --av-error-border: #8C4E4B;
   --av-error-fg: #FFB0AA;
   --av-meter-inactive: #59616E;
+  --av-accent: var(--color-action-primary);
+  --av-accent-fg: #fdba74;
 }
 
 /* =========================================================================
@@ -483,6 +499,64 @@ h1, h2, h3 { font-weight: 700; }
 
 .heading-fluid-xl { font-size: var(--heading-xl); line-height: var(--leading-tight); }
 .heading-fluid-lg { font-size: var(--heading-lg); line-height: var(--leading-heading); }
+
+@layer components {
+  .hips-pill {
+    border-radius: 9999px;
+    padding: 6px 14px;
+    font-size: 13px;
+    font-weight: 500;
+    line-height: 1.15;
+  }
+
+  .hips-eyebrow {
+    font-family: var(--font-ui);
+    text-transform: uppercase;
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1.2;
+    letter-spacing: 0.05em;
+    color: var(--color-action-primary);
+  }
+
+  .hips-section-h2 {
+    font-family: var(--font-heading);
+    font-size: 28px;
+    font-weight: 700;
+    line-height: var(--leading-heading);
+    letter-spacing: 0;
+  }
+
+  .hips-supporting-text {
+    font-size: 16px;
+    font-weight: 400;
+    line-height: var(--leading-body);
+    color: var(--color-text-muted);
+  }
+
+  .hips-action-primary {
+    background: var(--color-action-primary);
+    color: var(--color-action-primary-foreground);
+  }
+
+  .hips-action-primary:hover {
+    background: var(--color-action-primary-hover);
+  }
+
+  .hips-action-conversion {
+    background: var(--color-action-conversion);
+    color: var(--color-action-conversion-foreground);
+  }
+
+  .hips-action-conversion:hover {
+    background: var(--color-action-conversion-hover);
+  }
+
+  .hips-action-secondary {
+    border-color: color-mix(in srgb, var(--color-action-secondary) 45%, transparent);
+    color: var(--color-action-secondary);
+  }
+}
 
 /* =========================================================================
    Marquee Animations

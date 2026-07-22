@@ -7,7 +7,7 @@ interface LiveSyncProps {
   baseSkinTone: string;
   skinOffset: number;
   presentConfig: Avatar2DConfig;
-  setLocalAvatar2D: (config: Partial<Avatar2DConfig>) => void;
+  setLocalAvatar2D: (config: Partial<Avatar2DConfig>, options?: { preserveSkinToneControls?: boolean }) => void;
   handleRandomizeAvatar: () => void;
 }
 
@@ -26,7 +26,7 @@ export function useAvatarLiveSync({
       try {
         const adjusted = darken(baseSkinTone, -skinOffset);
         if (presentConfig.skinTone !== adjusted) {
-          setLocalAvatar2D({ skinTone: adjusted });
+          setLocalAvatar2D({ skinTone: adjusted }, { preserveSkinToneControls: true });
         }
       } catch (e) {
         console.error(e);

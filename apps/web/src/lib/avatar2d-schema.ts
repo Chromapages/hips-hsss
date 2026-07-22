@@ -1,5 +1,13 @@
 import { z } from "zod";
-import type { Avatar2DConfig } from "@hips/types";
+import type {
+  Avatar2DConfig,
+  AvatarAccessory,
+  AvatarClothingStyle,
+  AvatarEyebrow,
+  AvatarFaceShape,
+  AvatarHairStyle,
+  AvatarMouth,
+} from "@hips/types";
 import { DEFAULT_AVATAR_2D } from "@hips/types";
 
 export function clampHexColor(color: unknown, fallback: string): string {
@@ -40,9 +48,29 @@ export const avatar2DSchema = z.object({
   hairColor: z.preprocess((val) => clampHexColor(val, "#2B211D"), z.string()),
   eyeShape: z.enum(["eyes_almond_01", "eyes_sleepy_01"]).catch("eyes_almond_01"),
   eyeColor: z.preprocess((val) => clampHexColor(val, "#1F1B18"), z.string()),
-  eyebrow: z.enum(["brow_arch_01", "brow_soft_01", "brow_straight_01"]).catch("brow_arch_01"),
+  eyebrow: z.enum([
+    "brow_natural_01",
+    "brow_raised_01",
+    "brow_furrowed_01",
+    "brow_soft_curved_01",
+    "brow_thick_natural_01",
+    "brow_flat_neutral_01",
+    "brow_arch_01",
+    "brow_soft_01",
+    "brow_straight_01",
+  ]).catch("brow_natural_01"),
   nose: z.enum(["nose_button_01"]).catch("nose_button_01"),
-  mouth: z.enum(["mouth_neutral_01", "mouth_smile_01", "mouth_thin_01", "mouth_open_01"]).catch("mouth_neutral_01"),
+  mouth: z.enum([
+    "mouth_neutral_01",
+    "mouth_smile_01",
+    "mouth_gentle_grin_01",
+    "mouth_concerned_01",
+    "mouth_talking_01",
+    "mouth_smirk_01",
+    "mouth_reserved_01",
+    "mouth_thin_01",
+    "mouth_open_01",
+  ]).catch("mouth_neutral_01"),
   facialHair: z.enum(["beard_stubble_01", "beard_goatee_01", "beard_full_01"]).nullable().catch(null),
   accessory: z.enum([
     "acc_glasses_round_01",
@@ -97,7 +125,7 @@ export function parseAvatar2DConfigString(raw: string | null | undefined): Avata
   }
 }
 
-export function sanitizeLiveKitAttributes(attrs: Record<string, any>): Record<string, string> {
+export function sanitizeLiveKitAttributes(attrs: Record<string, unknown>): Record<string, string> {
   const result: Record<string, string> = {};
   for (const [key, value] of Object.entries(attrs)) {
     if (value === null || value === undefined) {
@@ -123,7 +151,6 @@ export function migrateLegacySessionStorage(): Avatar2DConfig | null {
   const hairColorRaw = sessionStorage.getItem("hips-avatar-hair-color");
   const eyeColorRaw = sessionStorage.getItem("hips-avatar-eye-color");
   const faceShapeRaw = sessionStorage.getItem("hips-avatar-face-shape");
-  const noseRaw = sessionStorage.getItem("hips-avatar-nose");
   const eyebrowRaw = sessionStorage.getItem("hips-avatar-eyebrow");
   const mouthRaw = sessionStorage.getItem("hips-avatar-mouth");
   const clothingRaw = sessionStorage.getItem("hips-avatar-clothing");
@@ -146,11 +173,11 @@ export function migrateLegacySessionStorage(): Avatar2DConfig | null {
 
   if (hairStyleRaw) {
     const idx = parseInt(hairStyleRaw, 10);
-    const manHairs = ["hair_short_01", "hair_curly_tight_01", "hair_locs_long_01", "hair_shaved_01"];
-    const womanHairs = ["hair_long_01", "hair_bob_01", "hair_bun_01", "hair_curly_tight_01", "hair_locs_long_01", "cover_hijab_01", "hair_pixie_01", "hair_waves_01", "hair_spacebuns_01"];
+    const manHairs: AvatarHairStyle[] = ["hair_short_01", "hair_curly_tight_01", "hair_locs_long_01", "hair_shaved_01"];
+    const womanHairs: AvatarHairStyle[] = ["hair_long_01", "hair_bob_01", "hair_bun_01", "hair_curly_tight_01", "hair_locs_long_01", "cover_hijab_01", "hair_pixie_01", "hair_waves_01", "hair_spacebuns_01"];
     migrated.hairStyle = body === 0
-      ? ((manHairs[idx] || "hair_short_01") as any)
-      : ((womanHairs[idx] || "hair_long_01") as any);
+      ? (manHairs[idx] || "hair_short_01")
+      : (womanHairs[idx] || "hair_long_01");
   }
 
   if (hairColorRaw) migrated.hairColor = hairColorRaw;
@@ -158,36 +185,36 @@ export function migrateLegacySessionStorage(): Avatar2DConfig | null {
 
   if (faceShapeRaw) {
     const idx = parseInt(faceShapeRaw, 10);
-    const faces = ["face_oval_01", "face_round_01", "face_square_01", "face_heart_01"];
-    migrated.faceShape = (faces[idx] || "face_oval_01") as any;
+    const faces: AvatarFaceShape[] = ["face_oval_01", "face_round_01", "face_square_01", "face_heart_01"];
+    migrated.faceShape = faces[idx] || "face_oval_01";
   }
 
   migrated.nose = "nose_button_01"; // default nose
 
   if (mouthRaw) {
     const idx = parseInt(mouthRaw, 10);
-    const mouths = ["mouth_neutral_01", "mouth_smile_01", "mouth_thin_01", "mouth_open_01"];
-    migrated.mouth = (mouths[idx] || "mouth_neutral_01") as any;
+    const mouths: AvatarMouth[] = ["mouth_neutral_01", "mouth_smile_01", "mouth_gentle_grin_01", "mouth_concerned_01", "mouth_talking_01", "mouth_smirk_01", "mouth_reserved_01"];
+    migrated.mouth = mouths[idx] || "mouth_neutral_01";
   }
 
   if (eyebrowRaw) {
     const idx = parseInt(eyebrowRaw, 10);
-    const brows = ["brow_arch_01", "brow_soft_01", "brow_straight_01"];
-    migrated.eyebrow = (brows[idx] || "brow_arch_01") as any;
+    const brows: AvatarEyebrow[] = ["brow_natural_01", "brow_raised_01", "brow_furrowed_01", "brow_soft_curved_01", "brow_thick_natural_01", "brow_flat_neutral_01"];
+    migrated.eyebrow = brows[idx] || "brow_natural_01";
   }
 
   if (clothingRaw) {
     const idx = parseInt(clothingRaw, 10);
-    const clothing = ["top_tshirt_01", "top_hoodie_01", "top_sweater_01", "top_blazer_01"];
-    migrated.clothingStyle = (clothing[idx] || "top_tshirt_01") as any;
+    const clothing: AvatarClothingStyle[] = ["top_tshirt_01", "top_hoodie_01", "top_sweater_01", "top_blazer_01"];
+    migrated.clothingStyle = clothing[idx] || "top_tshirt_01";
   }
 
   if (clothingColorRaw) migrated.clothingColor = clothingColorRaw;
 
   if (accessoryRaw) {
     const idx = parseInt(accessoryRaw, 10);
-    const accs = [null, "acc_glasses_round_01", "acc_headband_01"];
-    migrated.accessory = (accs[idx] || null) as any;
+    const accs: Array<AvatarAccessory | null> = [null, "acc_glasses_round_01", "acc_headband_01"];
+    migrated.accessory = accs[idx] || null;
   }
 
   const finalConfig = {

@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400">
+  <g fill="none" stroke="var(--avatar-hair)" stroke-linecap="round" stroke-width="5">
+    <path d="M142 147h42"/>
+    <path d="M216 147h42"/>
+  </g>
+</svg>

@@ -24,6 +24,12 @@ export type AvatarEyeShape =
   | "eyes_sleepy_01";
 
 export type AvatarEyebrow =
+  | "brow_natural_01"
+  | "brow_raised_01"
+  | "brow_furrowed_01"
+  | "brow_soft_curved_01"
+  | "brow_thick_natural_01"
+  | "brow_flat_neutral_01"
   | "brow_arch_01"
   | "brow_soft_01"
   | "brow_straight_01";
@@ -36,6 +42,11 @@ export type AvatarNose =
 export type AvatarMouth =
   | "mouth_neutral_01"
   | "mouth_smile_01"
+  | "mouth_gentle_grin_01"
+  | "mouth_concerned_01"
+  | "mouth_talking_01"
+  | "mouth_smirk_01"
+  | "mouth_reserved_01"
   | "mouth_thin_01"
   | "mouth_open_01";
 
@@ -113,7 +124,7 @@ export const DEFAULT_AVATAR_2D: Avatar2DConfig = {
   hairColor: "#2B211D",
   eyeShape: "eyes_almond_01",
   eyeColor: "#1F1B18",
-  eyebrow: "brow_arch_01",
+  eyebrow: "brow_natural_01",
   nose: "nose_button_01",
   mouth: "mouth_neutral_01",
   facialHair: null,

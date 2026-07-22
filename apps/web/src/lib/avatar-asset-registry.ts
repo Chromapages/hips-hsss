@@ -48,18 +48,23 @@ export const avatar2DOptions = {
     { id: "eyes_sleepy_01", label: "Soft" },
   ],
   eyebrows: [
-    { id: "brow_arch_01", label: "Arch" },
-    { id: "brow_soft_01", label: "Soft" },
-    { id: "brow_straight_01", label: "Straight" },
+    { id: "brow_natural_01", label: "Natural Default" },
+    { id: "brow_raised_01", label: "Raised" },
+    { id: "brow_furrowed_01", label: "Furrowed" },
+    { id: "brow_soft_curved_01", label: "Soft Curved" },
+    { id: "brow_thick_natural_01", label: "Thick Natural" },
+    { id: "brow_flat_neutral_01", label: "Flat Neutral" },
   ],
   noses: [
     { id: "nose_button_01", label: "Button" },
   ],
   mouths: [
     { id: "mouth_neutral_01", label: "Neutral" },
-    { id: "mouth_smile_01", label: "Smile" },
-    { id: "mouth_thin_01", label: "Calm" },
-    { id: "mouth_open_01", label: "Open" },
+    { id: "mouth_gentle_grin_01", label: "Gentle Grin" },
+    { id: "mouth_concerned_01", label: "Concerned" },
+    { id: "mouth_talking_01", label: "Talking" },
+    { id: "mouth_smirk_01", label: "Smirk" },
+    { id: "mouth_reserved_01", label: "Reserved" },
   ],
   facialHair: [
     { id: null, label: "None" },
@@ -116,12 +121,15 @@ export const expressionPresets: Record<Avatar2DExpression, {
   mouth: AvatarMouth;
   brow: AvatarEyebrow;
 }> = {
-  neutral: { eyes: "eyes_almond_01", mouth: "mouth_neutral_01", brow: "brow_arch_01" },
-  happy: { eyes: "eyes_sleepy_01", mouth: "mouth_smile_01", brow: "brow_soft_01" },
-  thinking: { eyes: "eyes_almond_01", mouth: "mouth_thin_01", brow: "brow_arch_01" },
-  surprised: { eyes: "eyes_wide_01", mouth: "mouth_open_01", brow: "brow_arch_01" },
-  concerned: { eyes: "eyes_almond_01", mouth: "mouth_thin_01", brow: "brow_straight_01" },
+  neutral: { eyes: "eyes_almond_01", mouth: "mouth_neutral_01", brow: "brow_natural_01" },
+  happy: { eyes: "eyes_sleepy_01", mouth: "mouth_smile_01", brow: "brow_soft_curved_01" },
+  thinking: { eyes: "eyes_almond_01", mouth: "mouth_reserved_01", brow: "brow_flat_neutral_01" },
+  surprised: { eyes: "eyes_wide_01", mouth: "mouth_talking_01", brow: "brow_raised_01" },
+  concerned: { eyes: "eyes_almond_01", mouth: "mouth_concerned_01", brow: "brow_furrowed_01" },
 };
+
+// Suggested pairings (not enforced):
+// furrowed + concerned, raised + gentleGrin, softCurved + smile, flatNeutral + reserved.
 
 function src(folder: string, file: string | null) {
   return file ? `${avatarAssetRoot}/${folder}/${file}.svg` : null;

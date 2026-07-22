@@ -7,6 +7,9 @@ import {
   ChevronRight,
   Fingerprint,
   Loader2,
+  LockKeyhole,
+  UserCheck,
+  ClipboardCheck,
 } from "lucide-react";
 import { AvatarCustomizer } from "@/components/session-ui/AvatarCustomizer";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
@@ -126,13 +129,13 @@ export default function LiveDemoPage() {
             ← Overview
           </Link>
           <div className="h-4 w-px bg-border mx-1" aria-hidden="true" />
-          <div className="h-7 w-7 rounded-lg bg-indigo-500/15 ring-1 ring-indigo-500/40 flex items-center justify-center">
-            <Shield className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
+          <div className="h-7 w-7 rounded-lg bg-[color-mix(in_srgb,var(--color-action-primary)_14%,transparent)] ring-1 ring-[color-mix(in_srgb,var(--color-action-primary)_40%,transparent)] flex items-center justify-center">
+            <Shield className="h-4 w-4 text-[var(--color-action-primary)]" />
           </div>
           <span className="font-bold text-sm tracking-widest uppercase text-text-primary font-ui">
             H.I.P.S.
           </span>
-          <span className="rounded-full bg-indigo-500/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-indigo-700 dark:text-indigo-300 border border-indigo-500/30">
+          <span className="hips-pill border border-[color-mix(in_srgb,var(--color-action-primary)_30%,transparent)] bg-[color-mix(in_srgb,var(--color-action-primary)_12%,transparent)] text-[var(--color-action-primary)]">
             Live Demo
           </span>
         </div>
@@ -145,7 +148,7 @@ export default function LiveDemoPage() {
           </Link>
           <Link
             href="/book"
-            className="flex items-center gap-1.5 rounded-xl bg-accent px-3 py-2 text-xs font-bold uppercase tracking-wider text-white transition-all hover:bg-accent-dark shadow-lg shadow-amber-500/20 sm:px-4"
+            className="hips-action-conversion flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-bold uppercase tracking-wider transition-all shadow-lg shadow-amber-500/20 sm:px-4"
             aria-label="Book a real session"
           >
             Book a Session
@@ -155,9 +158,9 @@ export default function LiveDemoPage() {
         </div>
       </nav>
 
-      <details id="privacy-data" onKeyDown={(event) => { if (event.key === "Escape") event.currentTarget.removeAttribute("open"); }} className="group fixed bottom-20 right-3 z-50 w-auto max-w-sm rounded-2xl border border-indigo-500/40 bg-bg/95 shadow-2xl backdrop-blur [&[open]]:w-[calc(100%-1.5rem)] sm:bottom-6 sm:right-6 sm:[&[open]]:w-full">
-        <summary className="flex min-h-[48px] cursor-pointer list-none items-center gap-2 rounded-2xl px-4 py-3 text-sm font-bold text-text-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500 [&::-webkit-details-marker]:hidden">
-          <Shield className="h-4 w-4 text-indigo-600 dark:text-indigo-300" aria-hidden="true" />
+      <details id="privacy-data" onKeyDown={(event) => { if (event.key === "Escape") event.currentTarget.removeAttribute("open"); }} className="group fixed bottom-[calc(6.5rem+env(safe-area-inset-bottom))] right-3 z-30 max-h-[min(68vh,34rem)] w-auto max-w-sm overflow-y-auto rounded-2xl border border-[color-mix(in_srgb,var(--color-action-primary)_34%,transparent)] bg-bg/95 shadow-2xl backdrop-blur [&[open]]:w-[calc(100%-1.5rem)] sm:bottom-6 sm:right-6 sm:z-50 sm:[&[open]]:w-full">
+        <summary className="hips-pill flex min-h-[48px] cursor-pointer list-none items-center gap-2 text-sm font-bold text-text-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-action-primary)] [&::-webkit-details-marker]:hidden">
+          <Shield className="h-4 w-4 text-[var(--color-action-primary)]" aria-hidden="true" />
           Privacy &amp; Data
           <span className="ml-auto text-xs font-normal text-text-muted group-open:hidden">Open</span>
           <span className="ml-auto hidden text-xs font-normal text-text-muted group-open:inline">Close</span>
@@ -175,25 +178,25 @@ export default function LiveDemoPage() {
 
       {/* ── Hero ── */}
       <section className="mx-auto max-w-7xl px-4 pt-10 pb-6 text-center sm:px-6 sm:pt-12">
-        <p className="brand-caps text-[11px] text-indigo-600 dark:text-indigo-400 mb-4">
+        <p className="hips-eyebrow mb-4">
           Interactive Demonstration
         </p>
-        <h1 className="font-heading text-4xl font-bold text-text-primary md:text-5xl lg:text-6xl mb-4">
+        <h1 className="font-heading text-4xl font-bold tracking-normal text-text-primary md:text-5xl lg:text-6xl mb-4">
           Hiding In Plain Sight
         </h1>
-        <p className="mx-auto max-w-xl text-base text-text-secondary font-body leading-relaxed">
+        <p className="hips-supporting-text mx-auto max-w-xl">
           Experience the two core privacy technologies that protect every H.I.P.S. session —
           your <strong className="text-text-primary">anonymous avatar</strong> and the browser-based{" "}
           <strong className="text-text-primary">voice masking controls</strong> — live, right here in your browser.
         </p>
-        <div className="mx-auto mt-5 inline-flex items-center gap-2 rounded-full border border-indigo-500/30 bg-indigo-500/10 px-3 py-2 text-xs text-indigo-700 dark:text-indigo-200" aria-label={`Temporary in-memory demo token ${sessionToken}`}>
+        <div className="hips-pill mx-auto mt-5 inline-flex items-center gap-2 border border-[color-mix(in_srgb,var(--color-action-primary)_30%,transparent)] bg-[color-mix(in_srgb,var(--color-action-primary)_10%,transparent)] text-[var(--color-action-primary)]" aria-label={`Temporary in-memory demo token ${sessionToken}`}>
           <Fingerprint className="h-3.5 w-3.5" aria-hidden="true" />
           Temporary demo token <span className="font-mono font-bold tracking-wider">{sessionToken}</span>
         </div>
       </section>
 
       {/* ── Interactive Customizer Section ── */}
-      <section className="mx-auto max-w-7xl px-4 py-6 sm:px-6">
+      <section className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-10">
         {hydrated ? (
           <div className="rounded-3xl border border-border bg-surface-offset dark:bg-zinc-950 p-1">
             <AvatarCustomizer
@@ -211,27 +214,47 @@ export default function LiveDemoPage() {
       </section>
 
       {/* ── Next action ── */}
-      <section className="mx-auto max-w-7xl px-6 py-10">
-        <div className="rounded-2xl border border-amber-500/30 dark:border-amber-500/25 bg-gradient-to-br from-amber-500/10 to-amber-600/10 dark:from-amber-500/5 dark:to-amber-600/5 overflow-hidden">
+      <section className="mx-auto max-w-7xl px-4 py-10 sm:px-6 sm:py-12">
+        <div className="rounded-2xl border border-[color-mix(in_srgb,var(--color-action-conversion)_34%,transparent)] bg-[color-mix(in_srgb,var(--color-action-conversion)_10%,transparent)] overflow-hidden">
           <div className="p-6">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-amber-700 dark:text-amber-400 brand-caps">Next step</p>
-            <h2 className="mt-1 font-heading text-xl font-semibold text-text-primary">Bring your protected setup into a guided session</h2>
-            <p className="mb-5 mt-2 max-w-2xl text-sm leading-relaxed text-text-secondary">Book a session with a trained facilitator, or preview the board guide before you decide.</p>
+            <p className="hips-eyebrow text-[var(--color-action-conversion)]">Next step</p>
+            <h2 className="hips-section-h2 mt-1 text-text-primary">Bring your protected setup into a guided session</h2>
+            <p className="hips-supporting-text mb-5 mt-2 max-w-2xl">Book a session with a trained facilitator, or preview the board guide before you decide.</p>
             <div className="flex flex-col sm:flex-row gap-3">
               <Link
                 href="/book"
-                className="inline-flex items-center justify-center gap-2 rounded-xl bg-accent px-6 py-3 text-sm font-bold text-white uppercase tracking-wider font-ui hover:bg-accent-dark transition-all shadow-lg shadow-amber-500/20"
+                className="hips-action-conversion inline-flex items-center justify-center gap-2 rounded-xl px-6 py-3 text-sm font-bold uppercase tracking-wider font-ui transition-all shadow-lg shadow-amber-500/20"
               >
                 Book a Real Session →
               </Link>
               <Link
                 href="/board-demo"
-                className="inline-flex items-center justify-center gap-2 rounded-xl border border-border bg-bg-subtle px-4 py-3 text-sm font-bold text-text-secondary uppercase tracking-wider font-ui hover:bg-surface-offset transition-all"
+                className="hips-action-secondary inline-flex items-center justify-center gap-2 rounded-xl border bg-bg-subtle px-4 py-3 text-sm font-bold uppercase tracking-wider font-ui hover:bg-surface-offset transition-all"
               >
                 Preview the Board Guide
               </Link>
             </div>
           </div>
+        </div>
+      </section>
+
+      <section className="mx-auto max-w-7xl px-4 pb-10 sm:px-6 sm:pb-12">
+        <div className="grid gap-3 border-y border-border py-5 sm:grid-cols-3">
+          {[
+            { icon: UserCheck, label: "Facilitator-led", text: "Guided sessions are moderated by trained H.I.P.S. facilitators." },
+            { icon: ClipboardCheck, label: "Predictable flow", text: "You enter with your avatar, privacy level, and voice setup already chosen." },
+            { icon: LockKeyhole, label: "Privacy-bound", text: "No camera scan, biometric identity model, or uploaded voice sample is required." },
+          ].map(({ icon: Icon, label, text }) => (
+            <div key={label} className="flex gap-3 py-2">
+              <span className="mt-1 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[color-mix(in_srgb,var(--color-action-primary)_10%,transparent)] text-[var(--color-action-primary)]">
+                <Icon className="h-4 w-4" aria-hidden="true" />
+              </span>
+              <div>
+                <p className="hips-eyebrow">{label}</p>
+                <p className="mt-1 text-sm leading-6 text-text-secondary">{text}</p>
+              </div>
+            </div>
+          ))}
         </div>
       </section>
 

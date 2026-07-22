@@ -6,7 +6,6 @@ import { MiniAvatarPreview } from "./MiniAvatarPreview";
 import { clothingColors } from "./creator-constants";
 
 export function WardrobePanel({
-  bodyType,
   avatar2D,
   setLocalAvatar2D,
 }) {
@@ -90,38 +89,6 @@ export function WardrobePanel({
           />
         </div>
       </div>
-
-      {bodyType === 0 && (
-        <div>
-          <h3 className="text-[10px] font-bold uppercase tracking-widest text-av-text-subtle font-ui mb-3">
-            Facial Hair
-          </h3>
-          <div className="grid grid-cols-3 sm:grid-cols-4 gap-2.5" role="radiogroup" aria-label="Facial hair">
-            {avatar2DOptions.facialHair.map((item) => {
-              const isSelected = avatar2D.facialHair === item.id;
-              return (
-                <button
-                  key={item.id ?? "none"}
-                  onClick={() => setLocalAvatar2D({ facialHair: item.id })}
-                  className={`group relative min-h-[56px] min-w-[56px] rounded-lg overflow-hidden border flex items-center justify-center transition ${
-                    isSelected
-                      ? "border-av-accent bg-av-bg-accent"
-                      : "border-av-border bg-av-bg-input hover:border-av-accent"
-                  }`}
-                  type="button"
-                  role="radio"
-                  aria-checked={isSelected}
-                  aria-label={item.label}
-                  title={item.label}
-                >
-                  <MiniAvatarPreview partType="facialHair" partId={item.id} />
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
     </div>
   );
 }

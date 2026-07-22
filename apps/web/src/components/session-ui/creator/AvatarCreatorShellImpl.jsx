@@ -51,7 +51,6 @@ export function AvatarCreatorShell(props) {
   const [voicePreviewStatus, setVoicePreviewStatus] = useState(null);
   const [voicePreviewAudioUrl, setVoicePreviewAudioUrl] = useState(null);
   const [avatarChangeAnnouncement, setAvatarChangeAnnouncement] = useState("");
-  const [advancedOpen, setAdvancedOpen] = useState(false);
   const hasMountedLiveRegionRef = useRef(false);
   const baseForm = useWizardStore((state) => state.baseForm);
   const backdrop = useWizardStore((state) => state.backdrop);
@@ -75,7 +74,11 @@ export function AvatarCreatorShell(props) {
     });
   }, [hydrateAvatarConfig, initialConfig]);
 
-  const setLocalAvatar2D = (config) => {
+  const setLocalAvatar2D = (config, options = {}) => {
+    if (typeof config.skinTone === "string" && !options.preserveSkinToneControls) {
+      draft.setBaseSkinTone(config.skinTone);
+      draft.setSkinOffset(0);
+    }
     history.set({
       ...history.state.present,
       ...config,
@@ -560,17 +563,18 @@ export function AvatarCreatorShell(props) {
     const resetByStep = [
       null,
       { hairStyle: "hair_short_01", facialHair: null },
+      { eyebrow: "brow_natural_01", mouth: "mouth_neutral_01", facialHair: null, expression: "neutral" },
       { background: "bg_gradient_cool" },
-      { accessory: null },
-      { expression: "neutral" },
+      { accessory: null, clothingStyle: "top_tshirt_01", clothingColor: "#173B57" },
+      {},
       {},
     ];
     setLocalAvatar2D(resetByStep[wizardStep] || {});
     const wizard = useWizardStore.getState();
-    if (wizardStep === 2) wizard.setBackdrop(null);
-    if (wizardStep === 3) wizard.setAccent(null);
-    if (wizardStep === 4) wizard.setPrivacy(null);
-    if (wizardStep === 5) wizard.setVoiceMode(null);
+    if (wizardStep === 3) wizard.setBackdrop(null);
+    if (wizardStep === 4) wizard.setAccent(null);
+    if (wizardStep === 5) wizard.setPrivacy(null);
+    if (wizardStep === 6) wizard.setVoiceMode(null);
     if (wizardStep === 1) {
       draft.setSkinOffset(0);
       resetWizard();
@@ -667,7 +671,7 @@ export function AvatarCreatorShell(props) {
       <div className="sr-only" aria-live="polite" aria-atomic="true">
         {avatarChangeAnnouncement}
       </div>
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-8 h-full items-start bg-av-bg-base text-av-text-primary">
+      <div className="grid grid-cols-1 gap-6 bg-av-bg-base text-av-text-primary sm:gap-8 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)] lg:items-start">
         <AvatarPreviewStage
           deferredAvatar2D={deferredAvatar2D} baseForm={baseForm} backdrop={backdrop} accent={accent} privacy={privacy}
           anonymizationMode={store.anonymizationMode}
@@ -688,16 +692,17 @@ export function AvatarCreatorShell(props) {
           handleResetAvatar={handleResetAvatar}
         />
 
-        <GuidedAvatarWizard
-          advancedOpen={advancedOpen} setAdvancedOpen={setAdvancedOpen}
-          avatar2D={history.state.present} bodyType={draft.bodyType} setBodyType={draft.setBodyType}
-          skinOffset={draft.skinOffset} setSkinOffset={draft.setSkinOffset} setLocalAvatar2D={setLocalAvatar2D}
-          setAvatarConfig={store.setAvatarConfig} chooseBaseForm={chooseBaseForm} chooseBackdrop={chooseBackdrop} chooseAccent={chooseAccent}
-          onRandomize={handleRandomizeAvatar} onReset={handleResetAvatar} onSave={handleSaveConfig}
-          saving={saving || draft.savingState} onCancel={onCancel} canUndo={history.canUndo} canRedo={history.canRedo}
-          onUndo={history.undo} onRedo={history.redo} showVoice={showVoice} voiceProps={{ voicePreset: store.voicePreset, semitones: store.semitones, reverbLevel: store.reverbLevel, anonymizationMode: store.anonymizationMode, selectedPersona: store.selectedPersona, isAntiCadenceEnabled: store.isAntiCadenceEnabled, isEnhancedNeuralConsentAccepted: store.isEnhancedNeuralConsentAccepted, neuralBackendAvailable: draft.neuralBackendAvailable, isPreviewing: draft.isPreviewing, isSpeaking: draft.isSpeaking, effectiveSemitones, voicePreviewStatus, voicePreviewAudioUrl, handleSpeakerTest, handleRawMicSample, handlePreviewVoice }}
-          onSessionSetupChange={props.onSessionSetupChange}
-        />
+        <div className="min-w-0 lg:max-h-[calc(100vh-7rem)] lg:overflow-y-auto lg:pr-1">
+          <GuidedAvatarWizard
+            avatar2D={history.state.present} bodyType={draft.bodyType} setBodyType={draft.setBodyType}
+            skinOffset={draft.skinOffset} setSkinOffset={draft.setSkinOffset} setLocalAvatar2D={setLocalAvatar2D}
+            setAvatarConfig={store.setAvatarConfig} chooseBaseForm={chooseBaseForm} chooseBackdrop={chooseBackdrop} chooseAccent={chooseAccent}
+            onRandomize={handleRandomizeAvatar} onReset={handleResetAvatar} onSave={handleSaveConfig}
+            saving={saving || draft.savingState} onCancel={onCancel} canUndo={history.canUndo} canRedo={history.canRedo}
+            onUndo={history.undo} onRedo={history.redo} showVoice={showVoice} voiceProps={{ voicePreset: store.voicePreset, semitones: store.semitones, reverbLevel: store.reverbLevel, anonymizationMode: store.anonymizationMode, selectedPersona: store.selectedPersona, isAntiCadenceEnabled: store.isAntiCadenceEnabled, isEnhancedNeuralConsentAccepted: store.isEnhancedNeuralConsentAccepted, neuralBackendAvailable: draft.neuralBackendAvailable, isPreviewing: draft.isPreviewing, isSpeaking: draft.isSpeaking, effectiveSemitones, voicePreviewStatus, voicePreviewAudioUrl, handleSpeakerTest, handleRawMicSample, handlePreviewVoice }}
+            onSessionSetupChange={props.onSessionSetupChange}
+          />
+        </div>
       </div>
     </>
   );

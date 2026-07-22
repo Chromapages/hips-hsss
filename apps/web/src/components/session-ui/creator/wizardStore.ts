@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import type { BaseForm } from "./avatarOptions";
 
-export type WizardStep = 1 | 2 | 3 | 4 | 5 | 6;
+export type WizardStep = 1 | 2 | 3 | 4 | 5 | 6 | 7;
 
 type WizardState = {
   step: WizardStep;

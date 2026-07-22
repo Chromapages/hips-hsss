@@ -83,7 +83,7 @@ export function AvatarPreviewStage({
   }, [deferredAvatar2D]);
   const moodBackdrop = preview.backdrop.includes("warm") ? "from-[#72563F] via-[#313943] to-[#1C2028]" : preview.backdrop.includes("mint") ? "from-[#36534D] via-[#293B3E] to-[#1C2028]" : preview.backdrop.includes("charcoal") ? "from-[#38344A] via-[#29313C] to-[#1C2028]" : preview.backdrop.includes("rose") ? "from-[#5A414B] via-[#34333E] to-[#1C2028]" : "from-[#4A5962] via-[#303943] to-[#1C2028]";
   const secondaryButtonClass =
-    "min-h-[44px] min-w-[92px] flex-1 rounded-lg border border-av-border bg-av-bg-input px-3 text-[11px] font-semibold uppercase tracking-wide text-av-text-secondary transition hover:bg-[#2B303B] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#F4A261] disabled:opacity-40 disabled:pointer-events-none flex items-center justify-center gap-2";
+    "hips-action-secondary min-h-[44px] min-w-[92px] flex-1 rounded-lg border bg-av-bg-input px-3 text-[11px] font-semibold uppercase tracking-wide transition hover:bg-av-bg-section focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-action-primary)] disabled:opacity-40 disabled:pointer-events-none flex items-center justify-center gap-2";
 
   return (
     <div className="order-first relative flex self-start flex-col items-center justify-center overflow-hidden rounded-2xl border border-[#3D414A] bg-[#1C2028] p-4 sm:p-6 lg:sticky lg:top-4 lg:z-auto">
@@ -93,19 +93,19 @@ export function AvatarPreviewStage({
         <div aria-hidden="true" className="absolute top-[13%] left-1/2 h-20 w-20 -translate-x-1/2 rounded-full bg-[#F5C99C]/10 blur-2xl" />
         <div aria-hidden="true" className={`absolute inset-[10%] rounded-full blur-3xl transition-colors duration-500 motion-reduce:transition-none ${maskVisual.glow}`} />
         <div className={`h-[90%] w-[90%] ${compareVersions && previousVersion ? "grid grid-cols-2 gap-1" : "flex items-center justify-center"}`}>
-          {compareVersions && previousVersion ? <div className="relative h-full overflow-hidden rounded-l-xl border-r border-av-text-primary/20"><AvatarCompositor config={previousVersion} className="h-full w-[200%] max-w-none -translate-x-1/4 opacity-75 transition-opacity duration-300 motion-reduce:transition-none" /><span className="absolute bottom-2 left-2 rounded bg-av-bg-elevated/85 px-2 py-1 text-[9px] font-semibold uppercase tracking-wide text-av-text-secondary">Previous</span></div> : null}
+          {compareVersions && previousVersion ? <div className="relative h-full overflow-hidden rounded-l-xl border-r border-av-text-primary/20"><AvatarCompositor config={previousVersion} className="h-full w-[200%] max-w-none -translate-x-1/4 opacity-75 transition-opacity duration-300 motion-reduce:transition-none" /><span className="hips-pill absolute bottom-2 left-2 border border-av-border bg-av-bg-elevated/85 text-[10px] text-av-text-secondary">Previous</span></div> : null}
           <div className="relative h-full w-full overflow-hidden"><AvatarCompositor
             config={deferredAvatar2D}
             className={`w-full h-full transition-[transform,opacity,filter] duration-500 ease-out motion-reduce:transition-none ${maskVisual.filter} ${isSpeaking ? "scale-[1.025] motion-reduce:scale-100" : ""}`}
-          />{compareVersions && previousVersion ? <span className="absolute bottom-2 right-2 rounded bg-av-bg-elevated/85 px-2 py-1 text-[9px] font-semibold uppercase tracking-wide text-av-accent-fg">Current</span> : null}</div>
+          />{compareVersions && previousVersion ? <span className="hips-pill absolute bottom-2 right-2 border border-av-border bg-av-bg-elevated/85 text-[10px] text-av-accent-fg">Current</span> : null}</div>
         </div>
-        <div className="absolute top-3 left-3 flex items-center gap-1.5 rounded-full border border-[#EBC7A4]/25 bg-[#1C2028]/85 px-2.5 py-1.5 shadow-sm backdrop-blur-sm pointer-events-none transition duration-200 group-hover:scale-95">
+        <div className="hips-pill absolute top-3 left-3 flex items-center gap-1.5 border border-[#EBC7A4]/25 bg-[#1C2028]/85 shadow-sm backdrop-blur-sm pointer-events-none transition duration-200 group-hover:scale-95">
           <ShieldCheck className="h-3.5 w-3.5 text-[#F4B978]" aria-hidden="true" />
           <span className="text-[9px] font-bold uppercase tracking-[0.14em] text-[#F5D8BB] font-ui">
             Protected persona
           </span>
         </div>
-        <div className="absolute right-3 top-3 rounded-full border border-[#B4DDD5]/20 bg-[#1C2028]/85 px-2.5 py-1.5 text-[9px] font-semibold text-[#D4E8E3] backdrop-blur-sm" aria-live="polite">
+        <div className="hips-pill absolute right-3 top-3 border border-[#B4DDD5]/20 bg-[#1C2028]/85 text-[10px] text-[#D4E8E3] backdrop-blur-sm" aria-live="polite">
           Voice-linked · {maskVisual.label}
         </div>
         {isShuffling ? (
@@ -120,7 +120,7 @@ export function AvatarPreviewStage({
 
       <div className="mb-4 flex w-full max-w-[560px] flex-col gap-2 rounded-xl border border-av-border bg-av-bg-section px-3 py-2.5 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-xs font-medium text-av-text-secondary" aria-live="polite" aria-atomic="true">{preview.caption}</p>
-        <div><label className="flex min-h-[36px] cursor-pointer items-center gap-2 text-xs font-semibold text-av-accent-fg"><input type="checkbox" className="h-4 w-4 accent-[#F4A261]" checked={compareVersions} disabled={!previousVersion} onChange={(event) => setCompareVersions(event.target.checked)} />Compare recent edits in this session</label><p className="text-[10px] leading-4 text-[#9FA8B5]">Held in this tab only. H.I.P.S. does not create a cross-session edit record.</p></div>
+        <div><label className={`flex min-h-[36px] items-center gap-2 text-xs font-semibold ${previousVersion ? "cursor-pointer text-av-accent-fg" : "cursor-not-allowed text-av-text-muted"}`}><input type="checkbox" className="h-4 w-4 accent-[var(--color-action-primary)]" checked={compareVersions} disabled={!previousVersion} onChange={(event) => setCompareVersions(event.target.checked)} />Show before/after split view</label><p className="text-[10px] leading-4 text-[#9FA8B5]">{previousVersion ? "Displays the previous avatar beside the current one. Held in this tab only." : "Make one avatar edit to enable before/after comparison."}</p></div>
       </div>
 
       <div className="w-full max-w-[560px]"><p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.12em] text-av-text-muted">Avatar actions</p><div className="flex flex-col gap-3 sm:flex-row sm:items-stretch">

@@ -1,18 +1,19 @@
 "use client";
 
-import { Check } from "lucide-react";
+import { Sliders } from "lucide-react";
 import { avatar2DOptions } from "@/lib/avatar-asset-registry";
 import { MiniAvatarPreview } from "./MiniAvatarPreview";
 import {
   MAN_HAIR_STYLES,
   WOMAN_HAIR_STYLES,
-  hairColors,
 } from "./creator-constants";
 
 export function HairPanel({
   bodyType,
   avatar2D,
   setLocalAvatar2D,
+  skinOffset,
+  setSkinOffset,
 }) {
   return (
     <div className="space-y-6">
@@ -55,31 +56,38 @@ export function HairPanel({
 
       <div>
         <h3 className="text-[10px] font-bold uppercase tracking-widest text-av-text-subtle font-ui mb-3">
-          Select Hair Color
+          Skin Tone
         </h3>
-        <div className="grid grid-cols-4 sm:grid-cols-6 gap-2" role="radiogroup" aria-label="Hair color">
-          {hairColors.map((color) => {
-            const isSelected = avatar2D.hairColor.toLowerCase() === color.hex.toLowerCase();
-            return (
-              <button
-                key={color.hex}
-                onClick={() => {
-                  setLocalAvatar2D({ hairColor: color.hex });
-                }}
-                className="min-h-[44px] min-w-[44px] rounded-lg border-2 flex items-center justify-center transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#F4A261]"
-                style={{
-                  backgroundColor: color.hex,
-                  borderColor: isSelected ? "#F4A261" : "#3A404D",
-                }}
-                type="button"
-                role="radio"
-                aria-checked={isSelected}
-                aria-label={color.label}
-              >
-                {isSelected && <Check className="h-4 w-4 text-white" />}
-              </button>
-            );
-          })}
+        <div className="rounded-lg border border-av-border bg-av-bg-input p-3">
+          <div className="mb-2 flex items-center justify-between gap-3">
+            <label htmlFor="skin-tone-slider" className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-av-text-subtle font-ui">
+              <Sliders className="h-3.5 w-3.5" aria-hidden="true" />
+              Fine Adjustment
+            </label>
+            <span className="rounded bg-av-bg-elevated px-2 py-1 text-xs font-bold font-mono text-av-text-primary">
+              {skinOffset > 0 ? `+${Math.round(skinOffset * 100)}` : Math.round(skinOffset * 100)}%
+            </span>
+          </div>
+          <input
+            id="skin-tone-slider"
+            type="range"
+            min={-0.12}
+            max={0.12}
+            step={0.01}
+            value={skinOffset}
+            onChange={(event) => setSkinOffset(Number(event.target.value))}
+            className="min-h-[44px] w-full cursor-ew-resize accent-[var(--color-action-primary)]"
+            aria-label="Adjust skin tone luminance"
+          />
+          <div className="mt-1 flex justify-between text-[9px] text-av-text-muted font-mono">
+            <span>Darker</span>
+            <span>Neutral</span>
+            <span>Lighter</span>
+          </div>
+          <div className="mt-3 flex items-center gap-2 text-[10px] text-av-text-muted">
+            <span className="h-5 w-5 rounded border border-av-border" style={{ backgroundColor: avatar2D.skinTone }} aria-hidden="true" />
+            Current tone <span className="font-mono text-av-text-secondary">{avatar2D.skinTone}</span>
+          </div>
         </div>
       </div>
     </div>
