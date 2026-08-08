@@ -6,39 +6,45 @@ import { useTheme } from "@/components/theme/ThemeProvider";
 import { cn } from "@/lib/utils";
 
 /**
- * ThemeToggle — cycles through light → dark → system → light.
+ * ThemeToggle — binary light/dark toggle.
  *
- * The icon for the current state is shown; the next click advances the
- * cycle. The icon element is keyed on the current `theme` value so it
- * remounts on each transition and triggers the `.theme-icon-enter`
- * keyframe defined in globals.css.
+ * The icon reflects the CURRENT theme; the button's aria-label describes
+ * the ACTION the next click will perform, not the current state. This is
+ * the accessible pattern for theme switches — a screen-reader-friendly
+ * instruction rather than a debug-style narration of where the toggle is
+ * pointing.
  *
  * Accessibility:
- *   - `aria-label` describes the CURRENT state and what the next click does.
+ *   - `aria-label` describes the action ("Switch to dark mode" /
+ *     "Switch to light mode").
+ *   - `aria-pressed` reflects whether dark mode is currently active so
+ *     assistive tech can announce the toggle's state.
  *   - The button is keyboard-focusable and shows a focus ring via the
  *     `hips-theme-toggle` class.
  *   - The icon is decorative (`aria-hidden`).
  */
-export function ThemeToggle({ className }: { className?: string }) {
+type ThemeToggleProps = {
+  className?: string;
+  showLabel?: boolean;
+  tabIndex?: number;
+};
+
+export function ThemeToggle({ className, showLabel = false, tabIndex }: ThemeToggleProps) {
   const { theme, setTheme } = useTheme();
+  const isDark = theme === "dark";
 
-  function cycle() {
-    setTheme(theme === "light" ? "dark" : theme === "dark" ? "system" : "light");
-  }
-
-  const { Icon, label, nextLabel } = (() => {
-    if (theme === "light") {
-      return { Icon: Sun, label: "Light mode", nextLabel: "dark" as const };
-    }
-    return { Icon: Moon, label: "Dark mode", nextLabel: "light" as const };
-  })();
+  const Icon = isDark ? Moon : Sun;
+  const ariaLabel = isDark ? "Switch to light mode" : "Switch to dark mode";
+  const tooltip = isDark ? "Light mode" : "Dark mode";
 
   return (
     <button
       type="button"
-      onClick={cycle}
-      aria-label={`Theme: ${label} (click to switch to ${nextLabel})`}
-      title={label}
+      onClick={() => setTheme(isDark ? "light" : "dark")}
+      aria-label={ariaLabel}
+      aria-pressed={isDark}
+      tabIndex={tabIndex}
+      title={tooltip}
       data-theme-toggle=""
       className={cn("hips-theme-toggle", className)}
     >
@@ -47,6 +53,7 @@ export function ThemeToggle({ className }: { className?: string }) {
         className="theme-icon-enter h-5 w-5"
         aria-hidden="true"
       />
+      {showLabel && <span className="hips-theme-label" aria-hidden="true">{tooltip}</span>}
     </button>
   );
 }

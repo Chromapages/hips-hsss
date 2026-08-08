@@ -5,6 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod/v3";
 import { Mail, MessageSquare, Building2, ShieldAlert, Newspaper, CreditCard, Send, Check, Loader2 } from "lucide-react";
+import { Navbar } from "@/components/polish/Navbar";
 
 const contactSchema = z.object({
   submitterName: z.string().min(2, "Please share your name (at least 2 characters)").max(120),
@@ -74,7 +75,9 @@ export default function ContactPage() {
   };
 
   return (
-    <main id="main" tabIndex={-1} className="min-h-screen bg-surface text-primary">
+    <>
+      <Navbar />
+      <main id="main" tabIndex={-1} className="min-h-screen bg-surface text-primary">
       <div className="mx-auto max-w-4xl px-6 py-20">
         <p className="text-sm font-semibold uppercase tracking-wide text-accent">Contact</p>
         <h1 className="mt-3 font-heading text-4xl font-bold text-primary leading-tight">
@@ -282,6 +285,7 @@ export default function ContactPage() {
           <p>Partnerships: <span className="text-accent">partnerships@hips-support.org</span></p>
         </div>
       </div>
-    </main>
+      </main>
+    </>
   );
 }

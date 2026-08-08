@@ -1,4 +1,5 @@
 import { Metadata } from 'next';
+import { Navbar } from '@/components/polish/Navbar';
 
 export const metadata: Metadata = {
   title: 'Privacy Policy — H.I.P.S.',
@@ -7,7 +8,9 @@ export const metadata: Metadata = {
 
 export default function PrivacyPage() {
   return (
-    <main id="main" tabIndex={-1} className="min-h-screen bg-surface text-primary">
+    <>
+      <Navbar />
+      <main id="main" tabIndex={-1} className="min-h-screen bg-surface text-primary">
       <div className="mx-auto max-w-3xl px-6 py-20">
         {/* H1 - ceremonial serif heading */}
         <h1 className="font-heading text-4xl font-bold tracking-tight mb-8 text-primary leading-tight">Privacy Policy</h1>
@@ -38,6 +41,7 @@ export default function PrivacyPage() {
           </p>
         </div>
       </div>
-    </main>
+      </main>
+    </>
   );
 }
